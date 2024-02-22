@@ -436,7 +436,7 @@ add_custom_command(
     COMMENT "Copying libfdk-aac.so to build directory"
 )
 
-#add_dependencies(kiwi.bin copy_files_target)
+add_dependencies(kiwi.bin copy_files_target)
 add_dependencies(kiwi.bin copy_config_target)
 add_dependencies(kiwi.bin copy_libfdk_target)
 

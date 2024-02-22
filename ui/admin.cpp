@@ -899,7 +899,7 @@ void c2s_admin(void *param)
 // GPS
 ////////////////////////////////
 
-#ifdef USE_GPS
+#ifdef USE_GPS_notyet
             n = sscanf(cmd, "SET gps_IQ_data_ch=%d", &j);
             if (n == 1) {
                 gps.IQ_data_ch = j;

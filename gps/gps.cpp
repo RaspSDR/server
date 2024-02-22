@@ -1,5 +1,5 @@
 #include "gps.h"
-#include "gps/GNSS-SDRLIB/rtklib.h"
+//#include "gps/GNSS-SDRLIB/rtklib.h"
 // TODO: Use libgps to simulate the necessary APIs
 gps_t gps;
 

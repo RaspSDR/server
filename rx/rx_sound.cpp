@@ -70,7 +70,7 @@ Boston, MA  02110-1301, USA.
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <time.h>
 #include <sched.h>
 #include <math.h>

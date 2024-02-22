@@ -300,3 +300,8 @@ void GPSstat(STAT st, double, int=0, int=0, int=0, int=0, double=0);
 unsigned bin(char *s, int n);
 void StatTask(void *param);
 void GPSstat_init();
+
+typedef struct {        /* time struct */
+    time_t time;        /* time (s) expressed by standard time_t */
+    double sec;         /* fraction of second under 1 s */
+} gtime_t;

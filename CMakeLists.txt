@@ -437,8 +437,8 @@ add_custom_command(
 )
 
 #add_dependencies(kiwi.bin copy_files_target)
-#add_dependencies(kiwi.bin copy_config_target)
-#add_dependencies(kiwi.bin copy_libfdk_target)
+add_dependencies(kiwi.bin copy_config_target)
+add_dependencies(kiwi.bin copy_libfdk_target)
 
 SET(CPACK_PACKAGE_NAME "ZynqSDR")
 SET(CPACK_PACKAGE_VERSION_MAJOR 1)

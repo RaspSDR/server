@@ -711,7 +711,7 @@ static bool geoloc_json(conn_t *conn, const char *geo_host_ip_s, const char *cou
 {
 	char *cmd_p;
 	
-    asprintf(&cmd_p, "curl -s --ipv4 \"%s\" 2>&1", geo_host_ip_s);
+    asprintf(&cmd_p, "curl -L -s --ipv4 \"%s\" 2>&1", geo_host_ip_s);
     //cprintf(conn, "GEOLOC: <%s>\n", cmd_p);
     
     // NB: don't use non_blocking_cmd() here to prevent audio gliches

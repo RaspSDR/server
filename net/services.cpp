@@ -109,12 +109,12 @@ static void get_TZ(void *param)
 		#define TIMEZONE_DB_COM
 		#ifdef TIMEZONE_DB_COM
             #define TZ_SERVER "timezonedb.com"
-            asprintf(&cmd_p, "curl -sk --ipv4 \"https://api.timezonedb.com/v2.1/get-time-zone?key=HIHUSGTXYI55&format=json&by=position&lat=%f&lng=%f\" 2>&1",
+            asprintf(&cmd_p, "curl -L -sk --ipv4 \"https://api.timezonedb.com/v2.1/get-time-zone?key=HIHUSGTXYI55&format=json&by=position&lat=%f&lng=%f\" 2>&1",
                 lat, lon);
         #else
             #define TZ_SERVER "googleapis.com"
             time_t utc_sec = utc_time();
-            asprintf(&cmd_p, "curl -s --ipv4 \"https://maps.googleapis.com/maps/api/timezone/json?key=&location=%f,%f&timestamp=%lu&sensor=false\" 2>&1",
+            asprintf(&cmd_p, "curl -L -s --ipv4 \"https://maps.googleapis.com/maps/api/timezone/json?key=&location=%f,%f&timestamp=%lu&sensor=false\" 2>&1",
                 lat, lon, utc_sec);
         #endif
 
@@ -208,7 +208,7 @@ void my_kiwi_register(bool reg, int root_pwd_unset, int debian_pwd_default)
         cmd_p2 = kstr_asprintf(cmd_p2, "&r=%d&d=%d", root_pwd_unset, debian_pwd_default);
 
     char *kiwisdr_com = DNS_lookup_result("my_kiwi", "rx-888.com", &net.ips_kiwisdr_com);
-    asprintf(&cmd_p, "curl --silent --show-error --ipv4 --connect-timeout 5 "
+    asprintf(&cmd_p, "curl -L --silent --show-error --ipv4 --connect-timeout 5 "
         "\"%s/php/my_kiwi.php?auth=308bb2580afb041e0514cd0d4f21919c&reg=%d&pub=%s&pvt=%s&port=%d&serno=%d&jq=%d&deb=%d.%d&ver=%d.%d%s\"",
         kiwisdr_com, reg? 1:0, net.ip_pub, net.ip_pvt, net.use_ssl? net.port_http_local : net.port, net.serno,
         kiwi_file_exists("/usr/bin/jq"), debian_maj, debian_min, version_maj, version_min, kstr_sp(cmd_p2));
@@ -393,7 +393,7 @@ static bool ipinfo_json(int https, const char *url, const char *path, const char
 	    }
 	#endif
 	
-    asprintf(&cmd_p, "curl -s --ipv4 --connect-timeout 5 \"http%s://%s/%s\"  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)' 2>&1", https? "s":"", url, path);
+    asprintf(&cmd_p, "curl -L -s --ipv4 --connect-timeout 5 \"http%s://%s/%s\"  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)' 2>&1", https? "s":"", url, path);
     //printf("IPINFO: <%s>\n", cmd_p);
     
     reply = non_blocking_cmd(cmd_p, &stat);

@@ -515,7 +515,7 @@ void c2s_admin(void *param)
 				const char *proxy_server = admcfg_string("proxy_server", NULL, CFG_REQUIRED);
 
 			    char *reply;
-		        asprintf(&cmd_p, "curl -s --ipv4 --connect-timeout 15 \"%s/?u=%s&h=%s\"", proxy_server, user_m, host_m);
+		        asprintf(&cmd_p, "curl -L -s --ipv4 --connect-timeout 15 \"%s/?u=%s&h=%s\"", proxy_server, user_m, host_m);
                 reply = non_blocking_cmd(cmd_p, &status);
                 printf("proxy register: %s\n", cmd_p);
                 kiwi_asfree(cmd_p);
@@ -723,7 +723,7 @@ void c2s_admin(void *param)
                 int server_port = (dom_sel == DOM_SEL_REV)? PROXY_SERVER_PORT : net.port_ext;
                 int status;
 			    char *reply;
-		        asprintf(&cmd_p, "curl -s --ipv4 --connect-timeout 15 \"kiwisdr.com/php/check_port_open.php/?url=%s:%d\"",
+		        asprintf(&cmd_p, "curl -L -s --ipv4 --connect-timeout 15 \"kiwisdr.com/php/check_port_open.php/?url=%s:%d\"",
 		            server_url, server_port);
                 reply = non_blocking_cmd(cmd_p, &status);
                 printf("check_port_open: %s\n", cmd_p);

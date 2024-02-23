@@ -118,9 +118,7 @@ int main(int argc, char *argv[])
 	version_maj = VERSION_MAJ;
 	version_min = VERSION_MIN;
 	
-	#ifdef MULTI_CORE
-	    is_multi_core = true;
-	#endif
+	is_multi_core = true;
 	
 	main_argc = argc;
 	main_argv = argv;
@@ -137,25 +135,10 @@ int main(int argc, char *argv[])
 		const struct rlimit unlim = { RLIM_INFINITY, RLIM_INFINITY };
 		scall("setrlimit", setrlimit(RLIMIT_CORE, &unlim));
 		system("rm -f /tmp/core-kiwi.*-*");     // remove old core files
-		set_cpu_affinity(0);
 	#endif
 	
-	#ifdef PLATFORM_beaglebone_black
-	    kiwi.platform = PLATFORM_BBG_BBB;
-	#endif
-	
-	#ifdef PLATFORM_beaglebone_ai
-	    kiwi.platform = PLATFORM_BB_AI;
-	#endif
-	
-	#ifdef PLATFORM_beaglebone_ai64
-	    kiwi.platform = PLATFORM_BB_AI64;
-	#endif
-	
-	#ifdef PLATFORM_raspberrypi
-	    kiwi.platform = PLATFORM_RPI;
-	#endif
-	
+	kiwi.platform = PLATFORM_ZYNQ;
+
 	kstr_init();
 	shmem_init();
 	printf_init();

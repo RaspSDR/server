@@ -13,8 +13,9 @@ var kiwi = {
    PLATFORM_BB_AI:   1,
    PLATFORM_BB_AI64: 2,
    PLATFORM_RPI:     3,
+   PLATFORM_ZYNQ:    4,
    platform: -1,
-   platform_s: [ 'BBG/B', 'BBAI', 'BBAI-64', 'RPi' ],
+   platform_s: [ 'BBG/B', 'BBAI', 'BBAI-64', 'RPi', "Zynq" ],
    
    cfg:   { seq:0, name:'cfg',   cmd:'save_cfg',   lock:0, timeout:null },
    dxcfg: { seq:0, name:'dxcfg', cmd:'save_dxcfg', lock:0, timeout:null },

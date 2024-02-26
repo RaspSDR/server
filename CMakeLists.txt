@@ -338,19 +338,19 @@ foreach(file ${FILES_EMBED_FILES})
     if(${file} MATCHES "\\.css$")
         add_custom_command(
             TARGET copy_files_target
-            COMMAND ${MINIFY_COMMAND} --type css
+            COMMAND uglifycss
             ${UPSTREAM_DIR}/web/${file} # Source file path
-            -o ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
+            > ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
             COMMENT "Minify CSS ${file} to ${target_path}"
         )
-    # elseif(${file} MATCHES "\\.js$")
-    #     add_custom_command(
-    #         TARGET copy_files_target
-    #         COMMAND ${MINIFY_COMMAND} --type js --js-keep-var-names
-    #         ${UPSTREAM_DIR}/web/${file} # Source file path
-    #         -o ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
-    #         COMMENT "Minify JS ${file} to ${target_path}"
-    #     )
+    elseif(${file} MATCHES "\\.js$")
+        add_custom_command(
+            TARGET copy_files_target
+            COMMAND uglifyjs
+            ${UPSTREAM_DIR}/web/${file} # Source file path
+            > ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
+            COMMENT "Minify JS ${file} to ${target_path}"
+        )
     elseif(${file} MATCHES "\\.html$")
         add_custom_command(
             TARGET copy_files_target

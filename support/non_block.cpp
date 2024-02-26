@@ -45,10 +45,8 @@ Boston, MA  02110-1301, USA.
 #include <time.h>
 #include <sys/mman.h>
 
-#ifdef HOST
-	#include <wait.h>
-    #include <sys/prctl.h>
-#endif
+#include <wait.h>
+#include <sys/prctl.h>
 
 typedef struct {
     #define ZEXP 4      // >= 2
@@ -127,13 +125,12 @@ int child_task(const char *pname, funcP_t func, int poll_msec, void *param)
 	if (child_pid == 0) {   // child
 		TaskForkChild();
 
-        #ifdef HOST
-            // terminate all children when parent exits
-            scall("PR_SET_PDEATHSIG", prctl(PR_SET_PDEATHSIG, SIGTERM));
+		// terminate all children when parent exits
+		scall("PR_SET_PDEATHSIG", prctl(PR_SET_PDEATHSIG, SIGTERM));
 
-            // rename process as seen by top command
-            prctl(PR_SET_NAME, (unsigned long) pname, 0, 0, 0);
-        #endif
+		// rename process as seen by top command
+		prctl(PR_SET_NAME, (unsigned long) pname, 0, 0, 0);
+
         // rename process as seen by ps command
         int sl = strlen(main_argv[0]);
         kiwi_snprintf_ptr(main_argv[0], sl, "%-*.*s", sl-1, sl-1, pname);    // have to blank fill, and not overrun, old argv[0]

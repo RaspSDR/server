@@ -305,7 +305,7 @@ static void snd_service()
         int avail_data = fpga_status->rx_fifo;
         for (int i = 0; i < nrx_samps;)
         {
-            if (avail_data >= 2 * rx_chans)
+            if (avail_data >= 2)
             {
                 s4_t data[MAX_RX_CHANS * 2];
                 memcpy(data, (void*)fpga_rx_data, sizeof(s4_t) * 2 * rx_chans);
@@ -322,14 +322,15 @@ static void snd_service()
                     i_samps[ch]++;
                 }
                 i++;
-                avail_data -= 2 * rx_chans;
+                avail_data -= 2;
             }
             else
             {
                 avail_data = fpga_status->rx_fifo;
-                while(avail_data < 2 * rx_chans)
+                while(avail_data < 128)
                 {
-                    TaskSleepReason("wait for interrupt");
+                    // 1/12k * 128 = 
+                    TaskSleepReasonMsec("wait for RX data", 20);
                     avail_data = fpga_status->rx_fifo;
                 }
             }

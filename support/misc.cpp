@@ -318,26 +318,6 @@ void input_msg_internal(conn_t *conn, const char *fmt, ...)
 	kiwi_asfree(s, "input_msg_internal");
 }
 
-float ecpu_use()
-{
-	typedef struct {
-		u1_t f0, g0, f1, g1, f2, g2, f3, g3;
-	} ctr_t;
-	ctr_t *c;
-	
-	if (down || do_fft) return 0;
-
-	SPI_MISO *cpu = get_misc_miso();
-	spi_get_noduplex(CmdGetCPUCtr, cpu, sizeof(u2_t[3]));
-	release_misc_miso();
-	c = (ctr_t*) &cpu->word[0];
-	u4_t gated = (c->g3 << 24) | (c->g2 << 16) | (c->g1 << 8) | c->g0;
-	u4_t free_run = (c->f3 << 24) | (c->f2 << 16) | (c->f1 << 8) | c->f0;
-
-	if (free_run == 0) return 0;
-	return ((float) gated / (float) free_run * 100);
-}
-
 struct print_max_min_int_t {
 	int min_i, max_i;
 	double min_f, max_f;

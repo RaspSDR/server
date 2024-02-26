@@ -36,8 +36,6 @@ void release_misc_miso(int which = 0);
 SPI_MOSI *get_misc_mosi();
 void release_misc_mosi();
 
-float ecpu_use();
-
 int qsort_floatcomp(const void *elem1, const void *elem2);
 int qsort_doublecomp(const void *elem1, const void *elem2);
 int qsort_intcomp(const void *elem1, const void *elem2);

@@ -192,8 +192,8 @@ static void webserver_collect_print_stats(int print)
 			cpu_stats_buf = NULL;
 			kstr_free(ks);
 		}
-		ks = kstr_asprintf(NULL, "\"ct\":%d,\"ce\":%.0f,\"cf\":%d,\"cc\":%.0f,",
-			timer_sec(), ecpu_use(), cpufreq_kHz / 1000, (float) temp_deg_mC / 1000);
+		ks = kstr_asprintf(NULL, "\"ct\":%d,\"cf\":%d,\"cc\":%.0f,",
+			timer_sec(), cpufreq_kHz / 1000, (float) temp_deg_mC / 1000);
 
 		ks = kstr_cat(ks, kstr_list_int("\"cu\":[", "%d", "],", &del_usi[0][0], ncpu));
 		ks = kstr_cat(ks, kstr_list_int("\"cs\":[", "%d", "],", &del_usi[1][0], ncpu));
@@ -456,18 +456,6 @@ void stat_task(void *param)
 
 		NextTask("stat task");
 		eeprom_test();
-
-		if ((print_stats & STATS_TASK) && !(print_stats & STATS_GPS)) {
-			if (!background_mode) {
-				if (do_sdr) {
-					printf("ECPU %4.1f%%, cmds %d/%d, malloc #%d|hi:%d|%s",
-						ecpu_use(), ecpu_cmds, ecpu_tcmds, mem.nmt, mem.hiwat, toUnits(mem.size));
-					ecpu_cmds = ecpu_tcmds = 0;
-				}
-				//printf(", "); TaskDump(PRINTF_REG);
-				printf("\n");
-			}
-		}
 
 		// update on a regular interval
 		u64_t now_us = timer_us64();

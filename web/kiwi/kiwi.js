@@ -2418,7 +2418,7 @@ var kiwi_cpu_stats_str_long = '';
 var kiwi_config_str = '';
 var kiwi_config_str_long = '';
 
-function cpu_stats_cb(o, uptime_secs, ecpu, waterfall_fps)
+function cpu_stats_cb(o, uptime_secs, waterfall_fps)
 {
    idle %= 100;   // handle multi-core cpus
    var cputempC = o.cc? o.cc : 0;
@@ -2432,9 +2432,7 @@ function cpu_stats_cb(o, uptime_secs, ecpu, waterfall_fps)
 	   w3_text('w3-text-css-orange', platform +' ') +
 	   w3_text('', o.cu[0] +','+ o.cs[0] +','+ o.ci[0] +' usi% ') +
 	   (cputempC? w3_text(temp_color, cputemp) :'') +
-	   w3_text('', cpufreq +' ') +
-	   w3_text('w3-text-css-orange', 'eCPU') +
-	   w3_text('', ecpu.toFixed(0) +'%');
+	   w3_text('', cpufreq);
 	kiwi.wf_fps = waterfall_fps;
 
    var user = '', sys = '', idle = '';
@@ -2455,8 +2453,7 @@ function cpu_stats_cb(o, uptime_secs, ecpu, waterfall_fps)
 	   w3_inline('',
          w3_text('w3-text-black', platform +': '+ cpus +' '+ user +' usr | '+ sys +' sys | '+ idle +' idle,' + (cputempC? '':' ')) +
          (cputempC? ('&nbsp;'+ w3_text(temp_color +' w3-text-outline w3-large', cputemp) +'&nbsp;') :'') +
-         w3_text('w3-text-black', cpufreq + ', ') +
-         w3_text('w3-text-black', 'FPGA eCPU: '+ ecpu.toFixed(0) +'%')
+         w3_text('w3-text-black', cpufreq)
       );
 
 	var t = uptime_secs;
@@ -3126,8 +3123,8 @@ function kiwi_msg(param, ws)
 			var o = kiwi_JSON_parse('stats_cb', param[1]);
 			if (o) {
 				//console.log(o);
-				if (o.ce != undefined)
-				   cpu_stats_cb(o, o.ct, o.ce, o.fc);
+				if (o.ct != undefined)
+				   cpu_stats_cb(o, o.ct, o.fc);
 				xfer_stats_cb(o.ac, o.wc, o.fc, o.ah, o.as);
 				extint.srate = o.sr;
 				extint.nom_srate = o.nsr;

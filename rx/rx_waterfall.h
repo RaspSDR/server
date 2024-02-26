@@ -54,7 +54,7 @@ Boston, MA  02110-1301, USA.
 #define	WF_BETTER_LOOKING	1	// increase in FFT size for better looking display
 #else
 #define	WF_USING_HALF_FFT	2	// the result is contained in the first half of the complex FFT
-#define	WF_USING_HALF_CIC	2	// only use half of the remaining FFT after a CIC
+#define	WF_USING_HALF_CIC	1	// only use half of the remaining FFT after a CIC
 #define	WF_BETTER_LOOKING	2	// increase in FFT size for better looking display
 #endif
 
@@ -103,7 +103,7 @@ struct wf_pkt_t {
 
 enum { WF_SELECT_OFF = 0, WF_SELECT_1FPS = 1, WF_SELECT_SLOW = 2, WF_SELECT_MED = 3, WF_SELECT_FAST = 4 };
 
-#define WF_ZOOM_MIN     0
+#define WF_ZOOM_MIN     4
 #define WF_ZOOM_MAX     15
 
 #define WF_COMP_OFF     0

@@ -330,10 +330,15 @@ LIST(FILTER FILES_EMBED_FILES EXCLUDE REGEX ".*Makefile$")
 add_custom_target(copy_files_target)
 add_custom_target(copy_config_target)
 
+
+
 foreach(file ${FILES_EMBED_FILES})
     # string(REPLACE "openwebrx/" "" target_path "${file}")
     # string(REPLACE "kiwi/gfx/" "gfx/" target_path "${target_path}")
     set(target_path ${file})
+
+    get_filename_component(FOLDER ${target_path} DIRECTORY)
+    file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/htdoc/${FOLDER}")
 
     if(${file} MATCHES "\\.css$")
         add_custom_command(

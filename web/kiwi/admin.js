@@ -2712,34 +2712,21 @@ function console_html()
 	w3_div('id-console w3-margin-top w3-text-teal w3-hide',
 		w3_div('w3-container',
 		   w3_div('',
-            w3_label('w3-show-inline', 'Beagle Debian console'),
+            w3_label('w3-show-inline', 'Alipne Linux console'),
             w3_button('w3-aqua|margin-left:10px', 'Connect', 'console_connect_cb'),
 
-            (dbgUs)?
-               w3_button('w3-aqua|margin-left:16px', 'ANSI', 'console_cmd_cb', 'console_input_cb|cd tools;mr')
-               :
-               w3_button('w3-green|margin-left:32px', 'monitor build progress', 'console_cmd_cb',
-                  'console_input_cb|tail -fn 500 /root/build.log'),
 
-            w3_button('w3-aqua|margin-left:16px', 'htop', 'console_cmd_cb', 'console_input_cb|htop'),
+            w3_button('w3-aqua|margin-left:16px', 'htop', 'console_cmd_cb', 'console_input_cb|TERM=xterm htop'),
             
-            w3_button('w3-yellow|margin-left:16px', 'disk free', 'console_cmd_cb', 'console_input_cb|df .'),
+            w3_button('w3-yellow|margin-left:16px', 'disk free', 'console_cmd_cb', 'console_input_cb|df -H /media/mmcblk0p1'),
 
-            (0 && dbgUs)?
-               w3_button('w3-aqua|margin-left:16px', 'nano j', 'console_cmd_cb', 'console_input_cb|nano j')
-               :
-               w3_button('w3-red|margin-left:16px|' +
-                  'title="CAUTION: Do not use unless git clone in\n&slash;root&slash;Beagle_SDR_GPS has become corrupted"',
-                  're-clone sources', 'console_reclone_confirm'),
-
-            w3_button('w3-blue|margin-left:16px', 'check github', 'console_cmd_cb',
-               'console_input_cb|cdp; git show origin:Makefile &vbar; head -n 2'),
+            w3_button('w3-aqua|margin-left:16px', 'nano j', 'console_cmd_cb', 'console_input_cb|nano j'),
 
             w3_button('w3-blue|margin-left:16px', 'ping DNS', 'console_cmd_cb',
                'console_input_cb|ping -c3 1.1.1.1; ping -c3 8.8.8.8'),
 
-            w3_button('w3-blue|margin-left:16px', 'ping kiwisdr', 'console_cmd_cb',
-               'console_input_cb|ping -c3 kiwisdr.com')
+            w3_button('w3-blue|margin-left:16px', 'ping rx-888', 'console_cmd_cb',
+               'console_input_cb|ping -c3 rx-888.com')
          ),
          
 			w3_div('id-console-msg w3-margin-T-8 w3-text-output w3-scroll-always-y w3-scroll-down w3-small w3-text-black|background-color:#a8a8a8',
@@ -2750,10 +2737,7 @@ function console_html()
             w3_text('id-console-debug w3-text-black w3-margin-T-8',
                kiwi_isWindows()?
                   'Windows: Type <x1>control-v</x1> twice (quickly) for clipboard paste. Once to get a normal <x1>control-v</x1>. ' +
-                  'Control-w alternatives: nano <x1>fn-f6</x1>, bash <x1>esc</x1> <x1>control-h</x1> (see ' +
-                  w3_link('w3-link-darker-color',
-                     'https://forum.kiwisdr.com/index.php?p=/discussion/2927/windows-and-running-nano-text-editor-in-admin-console#p1',
-                     'forum') +')'
+                  'Control-w alternatives: nano <x1>fn-f6</x1>, bash <x1>esc</x1> <x1>control-h</x1>'
                :
                   'Mac: Type <x1>command-v</x1> for clipboard paste.'
             )
@@ -2782,18 +2766,6 @@ function console_html()
 		)
 	);
 	return s;
-}
-
-function console_reclone_confirm(cmd)
-{
-   control_confirm_show('Really re-clone? Will overwrite /root/Beagle_SDR_GPS directory.',
-      function() {
-         console_cmd_cb('console_reclone_confirm',
-            'console_input_cb|cd /root; rm -rf Beagle_SDR_GPS; git clone https://github.com/'+ admin.repo_git);
-         control_confirm_cancel_cb();
-      }
-   );
-   
 }
 
 function console_is_char_oriented(is_char_oriented)

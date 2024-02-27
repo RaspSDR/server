@@ -62,10 +62,9 @@ Boston, MA  02110-1301, USA.
 kiwi_t kiwi;
 
 int version_maj, version_min;
-int fw_sel, fpga_id, rx_chans, wf_chans, nrx_bufs, nrx_samps, nrx_samps_loop, nrx_samps_rem,
-    snd_rate, rx_decim;
+int fw_sel, fpga_id, rx_chans, wf_chans, nrx_bufs, nrx_samps, snd_rate, rx_decim;
 
-int p0=0, p1=0, p2=0, wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
+int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
 	rx_cordic, rx_cic, rx_cic2, rx_dump, wf_cordic, wf_cic, wf_mult, wf_mult_gen, do_slice=-1,
 	rx_yield=1000, gps_chans=GPS_MAX_CHANS, spi_clkg, spi_speed=SPI_48M, wf_max, rx_num, wf_num,
 	do_gps, do_sdr=1, navg=1, wf_olap, meas, spi_delay=100, do_fft, debian_ver, monitors_max,
@@ -230,9 +229,6 @@ int main(int argc, char *argv[])
 		if (ARG("-spi")) { ARGL(spi_delay); } else
 		if (ARG("-ch")) { ARGL(gps_chans); } else
 		if (ARG("-y")) { ARGL(rx_yield); } else
-		if (ARG("-p0")) { ARGL(p0); printf("-p0 = %d\n", p0); } else
-		if (ARG("-p1")) { ARGL(p1); printf("-p1 = %d\n", p1); } else
-		if (ARG("-p2")) { ARGL(p2); printf("-p2 = %d\n", p2); } else
 		
 		lprintf("unknown arg: \"%s\"\n", argv[ai]);
 
@@ -378,13 +374,11 @@ int main(int argc, char *argv[])
         assert(wf_chans <= MAX_WF_CHANS);
 
         nrx_samps = NRX_SAMPS_CHANS(rx_chans);
-        nrx_samps_loop = nrx_samps * rx_chans / NRX_SAMPS_RPT;
-        nrx_samps_rem = (nrx_samps * rx_chans) - (nrx_samps_loop * NRX_SAMPS_RPT);
         snd_intr_usec = 1e6 / ((float) snd_rate/nrx_samps);
         lprintf("firmware: RX rx_decim=%d RX1_STD_DECIM=%d RX2_STD_DECIM=%d USE_RX_CICF=%d\n",
             rx_decim, RX1_STD_DECIM, RX2_STD_DECIM, VAL_USE_RX_CICF);
-        lprintf("firmware: RX srate=%.3f(%d) bufs=%d samps=%d loop=%d rem=%d intr_usec=%d\n",
-            ext_update_get_sample_rateHz(ADC_CLK_TYP), snd_rate, nrx_bufs, nrx_samps, nrx_samps_loop, nrx_samps_rem, snd_intr_usec);
+        lprintf("firmware: RX srate=%.3f(%d) bufs=%d samps=%d intr_usec=%d\n",
+            ext_update_get_sample_rateHz(ADC_CLK_TYP), snd_rate, nrx_bufs, nrx_samps, snd_intr_usec);
 
         assert(nrx_bufs <= MAX_NRX_BUFS);
         assert(nrx_samps <= MAX_NRX_SAMPS);

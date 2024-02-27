@@ -303,20 +303,11 @@ static void misc_NET(void *param)
 
         status = non_blocking_cmd_system_child("kiwi.chk_pwd", "grep -q '^root::' /etc/shadow", POLL_MSEC(250));
         root_pwd_unset = (WEXITSTATUS(status) == 0)? 1:0;
-        if (!root_pwd_unset && debian_ver >= 11) {
-            status = non_blocking_cmd_system_child("kiwi.chk_pwd", "grep -q '^root:$y$j9T$lTPmWl28QqgcbJAEAXpLG.$uZrtdkucDJ.DhOP32b2/9taPXDYIgNCNzYIcxZmCV18:' /etc/shadow", POLL_MSEC(250));
+        if (!root_pwd_unset) {
+            status = non_blocking_cmd_system_child("kiwi.chk_pwd", "grep -q '^root:$6$FjpLanWVcro3pzE2$LOcGHwDyY4GMGG3PPTAl92jkE/YOgmigsGuvUjQXuTKVgLbYY/AwvOHVt54Tvn7O8DGKQH7..VYIMYp3J5X/g.:' /etc/shadow", POLL_MSEC(250));
             root_pwd_unset = (WEXITSTATUS(status) == 0)? 1:0;
         }
         
-        const char *what = "set to the default";
-        status = non_blocking_cmd_system_child("kiwi.chk_pwd", "grep -q '^debian:rcdjoac1gVi9g:' /etc/shadow", POLL_MSEC(250));
-        debian_pwd_default = (WEXITSTATUS(status) == 0)? 1:0;
-        if (debian_pwd_default == 0) {
-            status = non_blocking_cmd_system_child("kiwi.chk_pwd", "grep -q '^debian::' /etc/shadow", POLL_MSEC(250));
-            debian_pwd_default = (WEXITSTATUS(status) == 0)? 1:0;
-            what = "unset";
-        }
-
         const char *which;
 
         #ifdef CRYPT_PW
@@ -350,16 +341,6 @@ static void misc_NET(void *param)
             status = child_task("kiwi.set_pwd", set_pwd_task, POLL_MSEC(250), cmd_p);
             status = WEXITSTATUS(status);
             lprintf("SECURITY: \"root\" password set returned status=%d (%s)\n", status, status? "FAIL":"OK");
-            kiwi_asfree(cmd_p);
-        }
-
-        if (debian_pwd_default) {
-            lprintf("SECURITY: WARNING Linux \"debian\" account password is %s!\n", what);
-            lprintf("SECURITY: Setting it to %s\n", which);
-            asprintf(&cmd_p, "debian:%s", cmd_p2);
-            status = child_task("kiwi.set_pwd", set_pwd_task, POLL_MSEC(250), cmd_p);
-            status = WEXITSTATUS(status);
-            lprintf("SECURITY: \"debian\" password set returned status=%d (%s)\n", status, status? "FAIL":"OK");
             kiwi_asfree(cmd_p);
         }
 
@@ -515,7 +496,7 @@ static void UPnP_port_open_task(void *param)
             net.port_ext);
     } else {
         asprintf(&cmd_p, "upnpc %s%s-a %s %d %d TCP 2>&1",
-            (debian_ver != 7)? "-e KiwiSDR " : "",
+            "-e KiwiSDR ",
             (net.pvt_valid == IPV6)? "-6 " : "",
             net.ip_pvt, net.port, net.port_ext);
     }
@@ -535,7 +516,7 @@ static void UPnP_port_open_task(void *param)
 
         if (net.use_ssl && net.port_ext != 80) {
             asprintf(&cmd_p, "upnpc %s%s-a %s 80 80 TCP 2>&1",
-                (debian_ver != 7)? "-e KiwiSDR " : "",
+                "-e KiwiSDR ",
                 (net.pvt_valid == IPV6)? "-6 " : "",
                 net.ip_pvt);
             printf("UPnP: %s\n", cmd_p);
@@ -552,7 +533,7 @@ static void UPnP_port_open_task(void *param)
         #ifdef TEST_HTTP_LOCAL
             if (net.use_ssl) {
                 asprintf(&cmd_p, "upnpc %s%s-a %s %d %d TCP 2>&1",
-                    (debian_ver != 7)? "-e KiwiSDR " : "",
+                    "-e KiwiSDR ",
                     (net.pvt_valid == IPV6)? "-6 " : "",
                     net.ip_pvt, net.port_http_local, net.port_http_local);
                 printf("UPnP: %s\n", cmd_p);

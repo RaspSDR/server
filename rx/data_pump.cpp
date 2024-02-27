@@ -303,37 +303,26 @@ static void snd_service()
         }
 
         int avail_data = fpga_status->rx_fifo;
-        for (int i = 0; i < nrx_samps;)
+        if (avail_data < nrx_samps * 2)
+            printf("RX Underflow\n");
+        for (int i = 0; i < nrx_samps;i++)
         {
-            if (avail_data >= 2)
+            s4_t data[MAX_RX_CHANS * 2];
+            memcpy(data, (void*)fpga_rx_data, sizeof(s4_t) * 2 * rx_chans);
+            for (int ch = 0; ch < rx_chans; ch++)
             {
-                s4_t data[MAX_RX_CHANS * 2];
-                memcpy(data, (void*)fpga_rx_data, sizeof(s4_t) * 2 * rx_chans);
-                for (int ch = 0; ch < rx_chans; ch++)
-                {
-                    s4_t i, q;
-                    i = data[ch * 2];
-                    q = data[ch * 2 + 1];
+                s4_t i, q;
+                i = data[ch * 2];
+                q = data[ch * 2 + 1];
 
-                    // NB: I/Q reversed to get correct sideband polarity; fixme: why?
-                    // [probably because mixer NCO polarity is wrong, i.e. cos/sin should really be cos/-sin]
-                    i_samps[ch]->re = i * rescale + DC_offset_I;
-                    i_samps[ch]->im = q * rescale + DC_offset_Q;
-                    i_samps[ch]++;
-                }
-                i++;
-                avail_data -= 2;
+                // NB: I/Q reversed to get correct sideband polarity; fixme: why?
+                // [probably because mixer NCO polarity is wrong, i.e. cos/sin should really be cos/-sin]
+                i_samps[ch]->re = i * rescale + DC_offset_I;
+                i_samps[ch]->im = q * rescale + DC_offset_Q;
+                i_samps[ch]++;
             }
-            else
-            {
-                avail_data = fpga_status->rx_fifo;
-                while(avail_data < 128)
-                {
-                    // 1/12k * 128 = 
-                    TaskSleepReasonMsec("wait for RX data", 20);
-                    avail_data = fpga_status->rx_fifo;
-                }
-            }
+
+            NextTaskFast("RX Read");
         }
 
         // move wr_pos to inform reader to consume
@@ -462,12 +451,7 @@ static void data_pump(void *param)
                 cps++;
             }
         #else
-            int current = fpga_status->rx_fifo;
-            if (current < 512)
-            {
-                int delta = 512 - current;
-                TaskSleepUsec(delta * 1000000/12000);
-            }
+            TaskSleepReason("wait for interrupt");
         #endif
 
 		evDP(EC_EVENT, EV_DPUMP, -1, "data_pump", evprintf("WAKEUP: SPI CTRL_SND_INTR %d",
@@ -546,7 +530,7 @@ void data_pump_init()
 	
 	//printf("data pump: rescale=%.6g\n", rescale);
 
-	CreateTaskF(data_pump, 0, DATAPUMP_PRIORITY, 0);
+	CreateTaskF(data_pump, 0, DATAPUMP_PRIORITY, CTF_POLL_INTR);
 }
 
 #endif

@@ -893,8 +893,7 @@ bool itask_run;
 static ipoll_from_e last_from = CALLED_FROM_INIT;
 static const char *poll_from[] = { "INIT", "NEXTTASK", "LOCK", "SPI", "FASTINTR" };
 
-#if 0
-static void TaskPollForInterrupt(ipoll_from_e from)
+void TaskPollForInterrupt(ipoll_from_e from)
 {
 	if (!itask) {
 		return;
@@ -923,6 +922,7 @@ static void TaskPollForInterrupt(ipoll_from_e from)
 	}
 }
 
+#if 0
 void TaskFastIntr()
 {
 	if (GPIO_READ_BIT(SND_INTR)) {
@@ -1105,7 +1105,7 @@ void _NextTask(const char *where, u4_t param, u_int64_t pc)
     do {
         now_us = timer_us64();
 
-		// TaskPollForInterrupt(CALLED_WITHIN_NEXTTASK);
+		TaskPollForInterrupt(CALLED_WITHIN_NEXTTASK);
 		
 		// check for lock deadlock, but only on main Linux process
         #ifdef LOCK_CHECK_HANG

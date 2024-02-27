@@ -41,7 +41,6 @@ Boston, MA  02110-1301, USA.
 #include "dx.h"
 #include "wspr.h"
 #include "FT8.h"
-#include "kiwi_ui.h"
 
 #ifdef USE_SDR
  #include "data_pump.h"

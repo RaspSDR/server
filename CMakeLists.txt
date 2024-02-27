@@ -327,11 +327,6 @@ LIST(FILTER FILES_EMBED_FILES EXCLUDE REGEX ".*\\.min\\.css(\\.gz)?$")
 LIST(FILTER FILES_EMBED_FILES EXCLUDE REGEX ".*\\.min\\.html(\\.gz)?$")
 LIST(FILTER FILES_EMBED_FILES EXCLUDE REGEX ".*Makefile$")
 
-add_custom_target(copy_files_target)
-add_custom_target(copy_config_target)
-
-
-
 foreach(file ${FILES_EMBED_FILES})
     # string(REPLACE "openwebrx/" "" target_path "${file}")
     # string(REPLACE "kiwi/gfx/" "gfx/" target_path "${target_path}")
@@ -340,36 +335,41 @@ foreach(file ${FILES_EMBED_FILES})
     get_filename_component(FOLDER ${target_path} DIRECTORY)
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/htdoc/${FOLDER}")
 
+    LIST(APPEND FILES_EMBED_FILES_OUTPUT ${PROJECT_BINARY_DIR}/htdoc/${target_path})
     if(${file} MATCHES "\\.css$")
         add_custom_command(
-            TARGET copy_files_target
+            OUTPUT ${PROJECT_BINARY_DIR}/htdoc/${target_path}
+            DEPENDS ${UPSTREAM_DIR}/web/${file}
             COMMAND uglifycss
-            ${UPSTREAM_DIR}/web/${file} # Source file path
-            > ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
+                ${UPSTREAM_DIR}/web/${file} # Source file path
+                > ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
             COMMENT "Minify CSS ${file} to ${target_path}"
         )
     elseif(${file} MATCHES "\\.js$")
         add_custom_command(
-            TARGET copy_files_target
+            OUTPUT ${PROJECT_BINARY_DIR}/htdoc/${target_path}
+            DEPENDS ${UPSTREAM_DIR}/web/${file}
             COMMAND uglifyjs
-            ${UPSTREAM_DIR}/web/${file} # Source file path
-            > ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
+                ${UPSTREAM_DIR}/web/${file} # Source file path
+                > ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
             COMMENT "Minify JS ${file} to ${target_path}"
         )
     elseif(${file} MATCHES "\\.html$")
         add_custom_command(
-            TARGET copy_files_target
+            OUTPUT ${PROJECT_BINARY_DIR}/htdoc/${target_path}
+            DEPENDS ${UPSTREAM_DIR}/web/${file}
             COMMAND ${MINIFY_COMMAND} --type html
-            ${UPSTREAM_DIR}/web/${file} # Source file path
-            -o ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
+                ${UPSTREAM_DIR}/web/${file} # Source file path
+                -o ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
             COMMENT "Minify html ${file} to ${target_path}"
         )
     else()
         add_custom_command(
-            TARGET copy_files_target
+            OUTPUT ${PROJECT_BINARY_DIR}/htdoc/${target_path}
+            DEPENDS ${UPSTREAM_DIR}/web/${file}
             COMMAND ${CMAKE_COMMAND} -E copy
-            ${UPSTREAM_DIR}/web/${file} # Source file path
-            ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
+                ${UPSTREAM_DIR}/web/${file} # Source file path
+                ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
             COMMENT "Copying ${file} to ${target_path}"
         )
     endif()
@@ -397,13 +397,25 @@ file(GLOB FILES_ALWAYS RELATIVE ${UPSTREAM_DIR}/web
     ${UPSTREAM_DIR}/web/pkgs/font-awesome-4.6.3/css/font-awesome.min.css
 )
 
-list(SORT FILES_ALWAYS2)
-list(SORT FILES_ALWAYS2)
+list(SORT FILES_ALWAYS)
+SET(FILES_ALWAYS_FULLPATH ${FILES_ALWAYS})
+LIST(TRANSFORM FILES_ALWAYS_FULLPATH PREPEND ${UPSTREAM_DIR}/web/)
 add_custom_command(
     COMMAND perl ${UPSTREAM_DIR}/web/mkdata.pl edata_always ${FILES_ALWAYS} > ${CMAKE_BINARY_DIR}/edata_always.cpp
+    WORKING_DIRECTORY ${UPSTREAM_DIR}/web
+    OUTPUT ${CMAKE_BINARY_DIR}/edata_always.cpp
+    DEPENDS ${FILES_ALWAYS_FULLPATH}
+    COMMENT "Add files into cpp"
+)
+
+list(SORT FILES_ALWAYS2)
+SET(FILES_ALWAYS2_FULLPATH ${FILES_ALWAYS2})
+LIST(TRANSFORM FILES_ALWAYS2_FULLPATH PREPEND ${UPSTREAM_DIR}/web/)
+add_custom_command(
     COMMAND perl ${UPSTREAM_DIR}/web/mkdata.pl edata_always2 ${FILES_ALWAYS2} > ${CMAKE_BINARY_DIR}/edata_always2.cpp
     WORKING_DIRECTORY ${UPSTREAM_DIR}/web
-    OUTPUT ${CMAKE_BINARY_DIR}/edata_always.cpp ${CMAKE_BINARY_DIR}/edata_always2.cpp
+    OUTPUT ${CMAKE_BINARY_DIR}/edata_always2.cpp
+    DEPENDS ${FILES_ALWAYS2_FULLPATH}
     COMMENT "Add files into cpp"
 )
 
@@ -412,6 +424,7 @@ add_custom_command(
     COMMAND perl ${UPSTREAM_DIR}/web/mkdata.pl edata_embed ${FILES_EMBED_FILES} > ${CMAKE_BINARY_DIR}/edata_embed.cpp
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/htdoc
     OUTPUT ${CMAKE_BINARY_DIR}/edata_embed.cpp
+    DEPENDS ${FILES_EMBED_FILES_OUTPUT}
     COMMENT "Add files into cpp"
 )
 
@@ -420,28 +433,31 @@ file(GLOB_RECURSE config_FILES RELATIVE ${UPSTREAM_DIR}/unix_env
     ${UPSTREAM_DIR}/unix_env/kiwi.config/*.*
 )
 
+SET(FILES_CONFIG_OUTPUT ${config_FILES})
+LIST(TRANSFORM FILES_CONFIG_OUTPUT PREPEND ${UPSTREAM_DIR}/unix_env/)
 foreach(file ${config_FILES})
     string(REPLACE "kiwi.config/" "config/" target_path "${file}")
     string(REPLACE "dist." "" target_path "${target_path}")
     add_custom_command(
-        TARGET copy_config_target
         COMMAND ${CMAKE_COMMAND} -E copy
-        ${UPSTREAM_DIR}/unix_env/${file} # Source file path
-        ${PROJECT_BINARY_DIR}/${target_path} # Destination path in build directory
+            ${UPSTREAM_DIR}/unix_env/${file} # Source file path
+            ${PROJECT_BINARY_DIR}/${target_path} # Destination path in build directory
+        OUTPUT  ${PROJECT_BINARY_DIR}/${target_path}
+        DEPENDS ${UPSTREAM_DIR}/unix_env/${file}
         COMMENT "Copying ${file} to build directory"
     )
 endforeach()
+add_custom_target(copy_config_target DEPENDS ${FILES_CONFIG_OUTPUT})
 
-add_custom_target(copy_libfdk_target DEPENDS ${UPSTREAM_DIR}/extensions/DRM/FDK-AAC/lib/arm32/libfdk-aac.so.2.0.1)
 add_custom_command(
-    TARGET copy_libfdk_target
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${UPSTREAM_DIR}/extensions/DRM/FDK-AAC/lib/arm32/libfdk-aac.so.2.0.1
-    ${PROJECT_BINARY_DIR}/libfdk-aac.so
+        ${UPSTREAM_DIR}/extensions/DRM/FDK-AAC/lib/arm32/libfdk-aac.so.2.0.1
+        ${PROJECT_BINARY_DIR}/libfdk-aac.so
+    OUTPUT ${PROJECT_BINARY_DIR}/libfdk-aac.so
     COMMENT "Copying libfdk-aac.so to build directory"
 )
+add_custom_target(copy_libfdk_target DEPENDS ${PROJECT_BINARY_DIR}/libfdk-aac.so)
 
-add_dependencies(kiwi.bin copy_files_target)
 add_dependencies(kiwi.bin copy_config_target)
 add_dependencies(kiwi.bin copy_libfdk_target)
 

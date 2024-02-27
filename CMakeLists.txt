@@ -18,22 +18,8 @@ if(ZYNQ)
     FILE(GLOB PLATFORM_SRCS
         "${PLATFORM}/*.cpp"
     )
-elseif(RPI)
-    set(ARCH omap)
-    set(CPU BCM2837)
-    set(PLATFORM raspberrypi)
-    set(PLATFORM_INC "${UPSTREAM_DIR}/platform/${PLATFORM}")
-    FILE(GLOB PLATFORM_SRCS
-        "${UPSTREAM_DIR}/platform/${PLATFORM}/*.cpp"
-    )
 else()
-    set(PLATFORM simulator)
-    SET(CPU X86_64)
-    SET(ARCH Intel)
-    set(PLATFORM_INC ${PLATFORM})
-    FILE(GLOB PLATFORM_SRCS
-        "${PLATFORM}/*.cpp"
-    )
+    # Not supported
 endif()
 
 find_package(PkgConfig)

@@ -935,7 +935,7 @@ var network = {
    auto_nat_color:   null,
    show_updating: true,
    
-   ip_blacklist_file_base: 'rx-888.com/webconfig/ip_blacklist3.cjson',
+   ip_blacklist_file_base: 'www.rx-888.com/webconfig/ip_blacklist3.cjson',
    ip_blacklist_check_mtime: true,
    
    // this ordering gives a remapping of the old 0/1 values: 100M(0) => auto, 10M(1) => same

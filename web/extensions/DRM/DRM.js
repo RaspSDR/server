@@ -98,8 +98,8 @@ var drm = {
    database: 0,
    database_s: [ 'drmrx.org', 'kiwisdr.com' ],
    database_url: [
-      kiwi_SSL() +'drm.kiwisdr.com/drm/drmrx.cjson',
-      kiwi_SSL() +'drm.kiwisdr.com/drm/stations2.cjson'
+      kiwi_SSL() +'www.rx-888.com/webconfig/drmrx.cjson',
+      kiwi_SSL() +'www.rx-888.com/webconfig/stations2.cjson'
    ],
    
    last_occ: -1,

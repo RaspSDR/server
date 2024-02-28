@@ -380,7 +380,7 @@ function navtex_controls_setup()
 
 	w3_do_when_rendered('id-navtex-menus',
 	   function() {
-         nt.ext_url = kiwi_SSL() +'files.kiwisdr.com/navtex/NAVTEX_freq_menus.cjson';
+         nt.ext_url = kiwi_SSL() +'www.rx-888.com/webconfig/NAVTEX_freq_menus.cjson';
          nt.int_url = kiwi_url_origin() +'/extensions/NAVTEX/NAVTEX_freq_menus.cjson';
          nt.using_default = false;
          nt.double_fault = false;

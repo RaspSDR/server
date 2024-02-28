@@ -52,9 +52,6 @@ void clock_init()
     clk.do_corrections = cfg_int("ADC_clk2_corr", &err, CFG_OPTIONAL);
     if (err) clk.do_corrections = ADC_CLK_CORR_CONTINUOUS;
     clk.ext_ADC_clk = cfg_bool("ext_ADC_clk", &err, CFG_OPTIONAL);
-    #ifdef USE_GPS
-        strcpy(gps.a, "<hfz>1jqB5loF");
-    #endif
     if (err) clk.ext_ADC_clk = false;
     double ext_clk_freq = (double) cfg_int("ext_ADC_freq", &err, CFG_OPTIONAL);
     if (err) ext_clk_freq = (int) round(ADC_CLOCK_TYP);

@@ -279,7 +279,6 @@ typedef struct {
 	u4_t MAP_next, MAP_len, MAP_seq_w, MAP_seq_r;
 	
 	int gps_gain, kick_lo_pll_ch;
-	char a[32];
 } gps_t;
 
 extern gps_t gps;

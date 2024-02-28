@@ -37,18 +37,6 @@ if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
 endif(CCACHE_FOUND)
 
-# file(GLOB ASM_SRCS "${UPSTREAM_DIR}/e_cpu/asm/*.cpp")
-# add_executable(asm ${ASM_SRCS})
-# target_include_directories(asm PUBLIC "${UPSTREAM_DIR}/e_cpu/asm" "${UPSTREAM_DIR}/e_cpu")
-
-# file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/gen)
-# add_custom_target(kiwi_gen_h
-#     COMMAND asm -o ${PROJECT_BINARY_DIR}/gen
-#     WORKING_DIRECTORY "${UPSTREAM_DIR}/e_cpu/"
-#     DEPENDS asm ${ASM_SRCS}
-#     SOURCES ${ASM_SRCS}
-# )
-
 SET(EXT_SRCS ${PROJECT_BINARY_DIR}/extint.cpp ${UPSTREAM_DIR}/extensions/ext.cpp)
 
 SET(EXTENSIONS
@@ -419,11 +407,10 @@ file(GLOB_RECURSE config_FILES RELATIVE ${UPSTREAM_DIR}/unix_env
     ${UPSTREAM_DIR}/unix_env/kiwi.config/*.*
 )
 
-SET(FILES_CONFIG_OUTPUT ${config_FILES})
-LIST(TRANSFORM FILES_CONFIG_OUTPUT PREPEND ${UPSTREAM_DIR}/unix_env/)
 foreach(file ${config_FILES})
     string(REPLACE "kiwi.config/" "config/" target_path "${file}")
     string(REPLACE "dist." "" target_path "${target_path}")
+    LIST(APPEND FILES_CONFIG_OUTPUT ${PROJECT_BINARY_DIR}/${target_path})
     add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy
             ${UPSTREAM_DIR}/unix_env/${file} # Source file path

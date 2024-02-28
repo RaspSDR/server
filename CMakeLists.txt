@@ -215,7 +215,6 @@ install(FILES ${UPSTREAM_DIR}/unix_env/kiwid.service
 cmake_host_system_information(RESULT _host_name QUERY HOSTNAME)
 
 set(DIR_DATA /tmp/kiwi.data)
-set(ARCH_DIR arm32)
 
 target_compile_definitions(kiwi.bin PUBLIC
     VERSION_MAJ=1 VERSION_MIN=248
@@ -224,7 +223,6 @@ target_compile_definitions(kiwi.bin PUBLIC
     ARCH_${ARCH} CPU_${CPU} ARCH_CPU=${CPU} ARCH_CPU_S=STRINGIFY\(${CPU}\)
     DIR_CFG="/root/config"
     CFG_PREFIX=""
-    ARCH_DIR=STRINGIFY\(${ARCH_DIR}\)
     DIR_DATA=STRINGIFY\(${CMAKE_INSTALL_FULL_DATAROOTDIR}\)
     REPO_GIT="THISHOULDNOTUSE"
     REPO_NAME="Beagle_SDR_GPS"

@@ -546,10 +546,7 @@ void c2s_admin(void *param)
 				kiwi_asfree(user_m); kiwi_asfree(host_m);
                 admcfg_string_free(proxy_server);
 
-                if (background_mode)
-                    system("/usr/local/bin/frpc -c " DIR_CFG "/frpc.ini &");
-                else
-                    system("./pkgs/frp/" ARCH_DIR "/frpc -c " DIR_CFG "/frpc.ini &");
+                system("frpc -c " DIR_CFG "/frpc.ini &");
 				
 				continue;
 			} else

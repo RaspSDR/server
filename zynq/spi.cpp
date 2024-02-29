@@ -34,7 +34,7 @@ void spi_set3(SPI_CMD cmd, uint16_t wparam, uint32_t lparam, uint16_t w2param)
 
     case CmdSetGenFreq:
         //printf("CmdSetGenFreq %d=%d\n", wparam, lparam);
-        fpga_config->gen_freq = wparam >> 2;
+        // fpga_config->gen_freq = wparam >> 2;
         break;
 
     case CmdSetGenAttn:

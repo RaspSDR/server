@@ -59,7 +59,6 @@ SET(EXTENSIONS
     noise_filter
     S_meter
     s4285
-    sig_gen
     SSTV
     timecode
     waterfall

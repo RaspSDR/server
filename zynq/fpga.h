@@ -34,14 +34,13 @@ u64_t fpga_dna();
 
 typedef struct {
     uint32_t reset;
-    uint32_t rx_freq[8];
+    uint32_t rx_freq[16];
     struct {
         uint32_t wf_freq;
         uint32_t wf_decim;
     }wf_config[4];
-    uint32_t gen_freq;
 }__attribute__((packed)) FPGA_Config;
-static_assert(sizeof(FPGA_Config) == 576/8);
+static_assert(sizeof(FPGA_Config) == 800/8);
 
 typedef struct {
     uint32_t rx_fifo;

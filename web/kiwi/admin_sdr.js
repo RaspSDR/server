@@ -63,8 +63,6 @@ var AM_BCB_chan_i = [ '9 kHz', '10 kHz' ];
 
 var max_freq_i = [ '30 MHz', '32 MHz' ];
 
-var SPI_clock_i = [ '48 MHz', '24 MHz' ];
-
 var led_brightness_i = [ 'brighest', 'medium', 'dimmer', 'dimmest', 'off' ];
 
 var clone_host = '', clone_pwd = '';
@@ -83,7 +81,6 @@ function config_html()
 	var init_AM_BCB_chan = ext_get_cfg_param('init.AM_BCB_chan', 0);
 	var init_rf_attn = ext_get_cfg_param('init.rf_attn', 0);
 	var init_ITU_region = ext_get_cfg_param('init.ITU_region', 0);
-	var max_freq = ext_get_cfg_param('max_freq', 0);
 	var max_freq = ext_get_cfg_param('max_freq', 0);
 
 	var s1 =
@@ -222,13 +219,6 @@ function config_html()
 	var s4 =
 		'<hr>' +
 		w3_third('w3-margin-bottom w3-text-teal', 'w3-container',
-			w3_divs('w3-restart/w3-center w3-tspace-8',
-				w3_select_get_param('w3-width-auto', 'SPI clock', '', 'SPI_clock', SPI_clock_i, 'admin_select_cb', 0),
-				w3_div('w3-text-black',
-					'Set to 24 MHz to reduce interference <br> on 2 meters (144-148 MHz).'
-				)
-			),
-
 			w3_divs('w3-restart/w3-center w3-tspace-8',
 				w3_select_get_param('w3-width-auto', 'Status LED brightness', '', 'led_brightness', led_brightness_i, 'admin_select_cb', 0),
 				w3_div('w3-text-black',

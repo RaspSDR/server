@@ -63,9 +63,6 @@ var AM_BCB_chan_i = [ '9 kHz', '10 kHz' ];
 
 var led_brightness_i = [ 'brighest', 'medium', 'dimmer', 'dimmest', 'off' ];
 
-var clone_host = '', clone_pwd = '';
-var clone_files_s = [ 'complete config', 'dx label config only' ];
-
 function config_html()
 {
 	kiwi_get_init_settings();		// make sure defaults exist
@@ -224,32 +221,6 @@ function config_html()
 			)
 		);
 
-   var s5 =
-		'<hr>' +
-      w3_div('w3-valign w3-container w3-section',
-         '<header class="w3-container w3-yellow"><h6>' +
-         'Clone configuration from another Kiwi. <b>Use with care.</b> Current configuration is <b><i>not</i></b> saved. ' +
-         'This Kiwi immediately restarts after cloning.' +
-         '<ul>' +
-         '<li><b>CAUTION:</b> Kiwis running v1.602 or later must clone <b>ONLY</b> from Kiwis running v1.602 or later.</li>' +
-         '<li><b>CAUTION:</b> Kiwis running v1.601 or earlier must <b>NOT</b> clone from Kiwis running v1.602 or later.</li>' +
-         '</ul></h6></header>'
-      ) +
-		w3_inline_percent('w3-text-teal/w3-container',
-			w3_input('', 'Clone config from Kiwi host', 'clone_host', '', 'w3_string_cb', 'enter hostname (no port number)'), 25,
-			w3_input('', 'Kiwi host root password', 'clone_pwd', '', 'w3_string_cb', 'required'), 25,
-         w3_select('w3-center//', 'Config to clone', '', 'clone_files', 0, clone_files_s, 'w3_num_cb'), 15,
-         w3_button('w3-center//w3-red', 'Clone', 'config_clone_cb'), 10,
-         w3_label('w3-show-inline-block w3-margin-R-16 w3-text-teal', 'Status:') +
-         w3_div('id-config-clone-status w3-show-inline-block w3-text-black w3-background-pale-aqua', ''), 25
-		) +
-		w3_inline_percent('w3-margin-bottom w3-text-teal/w3-container',
-		   '', 25,
-         w3_div('w3-center w3-text-black',
-            'Either the root password you\'ve explicitly set or the Kiwi device serial number.'
-         ), 25
-		);
-
    // FIXME: this should really be in a tab defined by admin.js
    // but don't move it without leaving an explanation since old forum posts may refer to it as being here
    var s6 =
@@ -344,7 +315,7 @@ function config_html()
 		) +
 		'<hr>';
 
-	return w3_div('id-config w3-hide', s1 + s2 + s3 + s4 + s5 + s6 + s7);
+	return w3_div('id-config w3-hide', s1 + s2 + s3 + s4 + s6 + s7);
 }
 
 function config_mode_cb(path, idx, first)
@@ -671,52 +642,6 @@ function overload_mute_cb(path, val, complete, first)
 	var s = 'Passband overload mute '+ val +' dBm';
 	if (val >= -73) s += ' (S9+'+ (val - -73) +')';
 	w3_set_label(s, path);
-}
-
-function config_clone_cb(id, idx)
-{
-   var msg;
-
-   if (clone_host == '')
-      msg = 'please enter Kiwi host to clone from';
-   else
-   if (clone_pwd == '')
-      msg = 'please enter root password of Kiwi host';
-   else {
-      msg = 'cloning from '+ clone_host;
-      ext_send('SET config_clone host='+ encodeURIComponent(clone_host) +' pwd=x'+ encodeURIComponent(clone_pwd) +' files='+ clone_files);
-   }
-
-   w3_innerHTML('id-config-clone-status', msg);
-}
-
-function config_clone_status_cb(status)
-{
-   var msg;
-   
-   if (status >= 0 && status <= 0xff) {
-      var restart = true;
-      switch (status) {
-         case 0: msg = 'Full configuration cloned.'; break;
-         case 1: msg = 'DX configuration cloned.'; break;
-         case 2: msg = 'DX configuration cloned, but no dx_config.json file found on Kiwi host.'; break;
-         default: msg = 'undefined error #'+ status; restart = false; break;
-      }
-      if (restart) {
-         ext_send('SET restart');
-         wait_then_reload_page(60, msg +'<br>Restarting KiwiSDR server.');
-      }
-   } else {
-      status = (status >> 8) & 0xff;
-      switch (status) {
-         case 1: msg = 'host unknown/unresponsive.'; break;
-         case 5: msg = 'wrong password.'; break;
-         case 2: msg = 'DX configuration cloned, but no dx_config.json file found on Kiwi host.'; break;
-         default: msg = 'clone error #'+ status; break;
-      }
-   }
-   
-   w3_innerHTML('id-config-clone-status', msg);
 }
 
 function config_ext_clk_sel_cb(path, idx)

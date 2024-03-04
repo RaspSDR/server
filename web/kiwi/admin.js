@@ -3672,10 +3672,6 @@ function admin_recv(data)
 			   console.log('## console_done');
 				break;
 
-			case "config_clone_status":
-				config_clone_status_cb(parseInt(param[1]));
-				break;
-				
 			case "network_ip_blacklist_status":
 			   p = decodeURIComponent(param[1]).split(',')
 				network_ip_blacklist_status(parseInt(p[0]), p[1]);

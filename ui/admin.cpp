@@ -299,26 +299,6 @@ static void console_task(void *param)
     #undef NBUF
 }
 
-static int clone_cmd(char *cmd_p)
-{
-    char *reply;
-    int status;
-    lprintf("config clone: %s\n", cmd_p);
-    reply = non_blocking_cmd(cmd_p, &status);
-    kiwi_asfree(cmd_p);
-    char *rp = kstr_sp_less_trailing_nl(reply);
-    if (status < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-        lprintf("config clone: ERROR status=0x%x(%d) WIFEXITED=%d WEXITSTATUS=%d <%s>\n",
-            status, status, WIFEXITED(status), WEXITSTATUS(status), rp);
-        status = WEXITSTATUS(status);
-    } else {
-        lprintf("config clone: OK status=0 <%s>\n", rp);
-        status = 0;
-    }
-    kstr_free(reply);
-    return status;
-}
-
 bool DUC_enable_start, rev_enable_start;
 
 void c2s_admin(void *param)
@@ -552,75 +532,6 @@ void c2s_admin(void *param)
 			} else
 			if (n == 1)
                 kiwi_asfree(user_m);
-		
-
-////////////////////////////////
-// config
-////////////////////////////////
-            #define CLONED_FULL_CONFIG 0
-            #define CLONED_DX_CONFIG 1
-            #define CLONED_DX_CONFIG_NO_DX_CONFIG_JSON 2
-            #define CLONED_SCP_ERROR 0xff00
-            host_m = NULL;
-            char *pwd_m = NULL;
-            int clone_only_dx_files;
-			i = sscanf(cmd, "SET config_clone host=%64ms pwd=%64ms files=%d", &host_m, &pwd_m, &clone_only_dx_files);
-			if (i == 3) {
-				kiwi_str_decode_inplace(host_m);
-				kiwi_str_decode_inplace(pwd_m);
-				int rc = CLONED_SCP_ERROR;
-			    char *reply;
-			    const char *files;
-			    #define CLONE_FILE "sudo sshpass -p \'%s\' scp -o \"StrictHostKeyChecking no\" root@%s:/root/kiwi.config/%s /root/kiwi.config 2>&1 >/dev/null"
-
-			    if (clone_only_dx_files == 0) {
-		            asprintf(&cmd_p, CLONE_FILE, &pwd_m[1], host_m, "admin.json");
-                    status = clone_cmd(cmd_p);
-                    if (status == 0) {
-		                asprintf(&cmd_p, CLONE_FILE, &pwd_m[1], host_m, "kiwi.json");
-                        status = clone_cmd(cmd_p);
-                        if (status == 0) {
-                            asprintf(&cmd_p, CLONE_FILE, &pwd_m[1], host_m, "dx.json");
-                            status = clone_cmd(cmd_p);
-                            if (status == 0) {
-                                asprintf(&cmd_p, CLONE_FILE, &pwd_m[1], host_m, "dx_config.json");
-                                status = clone_cmd(cmd_p);
-                                // won't exist if source kiwi < v1.602
-                                if (status != 0)
-                                    rc = CLONED_DX_CONFIG_NO_DX_CONFIG_JSON;
-                                else
-                                    rc = CLONED_DX_CONFIG;
-                            }
-                        }
-                    }
-			    } else {
-			        //#define TEST_CLONE_UI
-			        #ifdef TEST_CLONE_UI
-			            rc = CLONED_DX_CONFIG_NO_DX_CONFIG_JSON;
-			        #else
-                        asprintf(&cmd_p, CLONE_FILE, &pwd_m[1], host_m, "dx.json");
-                        status = clone_cmd(cmd_p);
-                        if (status == 0) {
-                            asprintf(&cmd_p, CLONE_FILE, &pwd_m[1], host_m, "dx_config.json");
-                            status = clone_cmd(cmd_p);
-                            // won't exist if remote kiwi < v1.602
-                            if (status != 0)
-                                rc = CLONED_DX_CONFIG_NO_DX_CONFIG_JSON;
-                            else
-                                rc = CLONED_DX_CONFIG;
-                        }
-                    #endif
-		        }
-		        
-		        // forward actual scp error from status
-                if (rc == CLONED_SCP_ERROR) {
-                    rc = (status << 8) & CLONED_SCP_ERROR;
-                }
-				kiwi_asfree(host_m);
-				kiwi_asfree(pwd_m);
-				send_msg(conn, SM_NO_DEBUG, "ADM config_clone_status=%d", rc);
-				continue;
-			}
 			
 #ifdef USE_SDR
 			int ov_counts;

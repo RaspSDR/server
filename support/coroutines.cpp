@@ -122,8 +122,8 @@ struct run_t {
 
 #if 1
     #define STACK_SIZE_U64_T	    (8*K)
-    #define STACK_SIZE_REG          1       // 8k   largest is GPS channel with Galileo ~27%
-    #define STACK_SIZE_MED          4       // 32k  WF is ~25%
+    #define STACK_SIZE_REG          2       // 8k   largest is GPS channel with Galileo ~27%
+    #define STACK_SIZE_MED          5       // 32k  WF is ~25%
     #define STACK_SIZE_LARGE        8       // 64k  DRM
 #else
     #define STACK_SIZE_U64_T	    (16*K)

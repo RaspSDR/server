@@ -370,7 +370,7 @@ void c2s_waterfall(void *param)
                     did_cmd = true;
                     if (sscanf(cmd, "SET zoom=%d start=%f", &_zoom, &_start) == 2) {
                         //cprintf(conn, "WF: zoom=%d/%d start=%.3f(%.1f)\n", _zoom, zoom, _start, _start * HZperStart / kHz);
-                        _zoom = CLAMP(_zoom, 0, MAX_ZOOM);
+                        _zoom = CLAMP(_zoom, WF_ZOOM_MIN, MAX_ZOOM);
                         float halfSpan_Hz = (ui_srate / (1 << _zoom)) / 2;
                         cf = (_start * HZperStart) + halfSpan_Hz;
                         #ifdef OPTION_HONEY_POT
@@ -379,7 +379,7 @@ void c2s_waterfall(void *param)
                         zoom_start_chg = true;
                     } else
                     if (sscanf(cmd, "SET zoom=%d cf=%f", &_zoom, &cf) == 2) {
-                        _zoom = CLAMP(_zoom, 0, MAX_ZOOM);
+                        _zoom = CLAMP(_zoom, WF_ZOOM_MIN, MAX_ZOOM);
                         float halfSpan_Hz = (ui_srate / (1 << _zoom)) / 2;
                         cf *= kHz;
                         _start = (cf - halfSpan_Hz) / HZperStart;

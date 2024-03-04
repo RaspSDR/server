@@ -146,8 +146,7 @@ static int snr_interval[] = { 0, 1, 4, 6, 24 };
 
 void update_freqs(bool *update_cfg)
 {
-    int srate_idx = cfg_default_int("max_freq", 0, update_cfg);
-	ui_srate = srate_idx? 64*MHz : 62*MHz;
+	ui_srate = 125*MHz/2;
 	ui_srate_kHz = round(ui_srate/kHz);
     freq_offset_kHz = cfg_default_float("freq_offset", 0, update_cfg);
     freq_offmax_kHz = freq_offset_kHz + ui_srate_kHz;

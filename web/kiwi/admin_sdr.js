@@ -61,8 +61,6 @@ var ITU_region_i = [ 'R1: Europe, Africa', 'R2: North & South America', 'R3: Asi
 
 var AM_BCB_chan_i = [ '9 kHz', '10 kHz' ];
 
-var max_freq_i = [ '30 MHz', '32 MHz' ];
-
 var led_brightness_i = [ 'brighest', 'medium', 'dimmer', 'dimmest', 'off' ];
 
 var clone_host = '', clone_pwd = '';
@@ -81,8 +79,7 @@ function config_html()
 	var init_AM_BCB_chan = ext_get_cfg_param('init.AM_BCB_chan', 0);
 	var init_rf_attn = ext_get_cfg_param('init.rf_attn', 0);
 	var init_ITU_region = ext_get_cfg_param('init.ITU_region', 0);
-	var max_freq = ext_get_cfg_param('max_freq', 0);
-
+	
 	var s1 =
 		'<hr>' +
 		w3_text('w3-margin-B-8 w3-text-teal w3-bold', 'Initial values for:') +
@@ -166,13 +163,6 @@ function config_html()
 				w3_div('w3-text-black',
 					'Adds offset to frequency scale. <br> Useful when using a downconverter, e.g. set to <br>' +
 					'116000 kHz when 144-148 maps to 28-32 MHz.'
-				)
-			),
-			w3_divs('w3-restart/w3-center w3-tspace-8',
-				w3_select('w3-width-auto', 'Max receiver frequency', '', 'max_freq', max_freq, max_freq_i, 'admin_select_cb'),
-				w3_div('w3-text-black',
-				   '32 MHz necessary for some downconverters. But note <br>' +
-				   'there will be more spurs in the 30-32 MHz range.'
 				)
 			),
 			w3_div('',
@@ -1352,7 +1342,7 @@ function dx_html()
 	
 	// one-time conversion of kiwi.config/config.js bands[] to dx_config.json configuration file
 	if (isUndefined(dxcfg.bands) || isUndefined(dxcfg.band_svc) || isUndefined(dxcfg.dx_type)) {
-      bandwidth = [30, 32][cfg.max_freq] * 1e6;
+      bandwidth = 125e3 / 2;
       zoom_nom = ZOOM_NOMINAL;
       bands_init();
 	   console.log('BANDS: saving new dxcfg.bands ---------------------------------------------------');

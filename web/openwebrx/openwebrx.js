@@ -3287,7 +3287,7 @@ function export_waterfall() {
 
 function zoom_finally()
 {
-	w3_innerHTML('id-nav-optbar-wf', 'WF'+ zoom_level.toFixed(0));
+	w3_innerHTML('id-nav-optbar-wf', 'WF'+ (zoom_level-2).toFixed(0));
 	wf_gnd_value = wf_gnd_value_base - zoomCorrection();
    extint_environment_changed( { zoom:1, passband_screen_location:1 } );
 	freqset_select();
@@ -3295,6 +3295,7 @@ function zoom_finally()
 
 var ZOOM_NOMINAL = 10, ZOOM_BAND = 6;
 var zoom_nom = 0, zoom_old_nom = 0;
+var zoom_levels_min = 2;
 var zoom_levels_max = 0;
 var zoom_level = 0;
 var zoom_level_f = 0;
@@ -3333,12 +3334,11 @@ function zoom_step(dir, arg2)
 	//console.log('zoom_step dir='+ dir +' arg2='+ arg2);
 	if (dir == ext_zoom.MAX_OUT) {		// max out
 		out = true;
-		zoom_level = 0;
-		x_bin = 0;
+		zoom_level = zoom_levels_min;
 	} else {			// in/out, nom/max in, abs, band
 	
 		// clamp
-		if (not_band_and_not_abs && ((out && zoom_level == 0) || (dir_in && zoom_level >= zoom_levels_max))) { zoom_finally(); return; }
+		if (not_band_and_not_abs && ((out && zoom_level == zoom_levels_min) || (dir_in && zoom_level >= zoom_levels_max))) { zoom_finally(); return; }
 
 		if (dir == ext_zoom.TO_BAND) {
 			// zoom to band
@@ -3387,7 +3387,7 @@ function zoom_step(dir, arg2)
 			if (arg2 == undefined) { zoom_finally(); return; }		// no abs zoom value specified
 			var znew = arg2;
 			//console.log('zoom_step ABS znew='+ znew +' zmax='+ zoom_levels_max +' zcur='+ zoom_level);
-			if (znew < 0 || znew > zoom_levels_max || znew == zoom_level) { zoom_finally(); return; }
+			if (znew < zoom_levels_min || znew > zoom_levels_max || znew == zoom_level) { zoom_finally(); return; }
 			out = (znew < zoom_level);
 			zoom_level = znew;
 			// center waterfall at middle of passband
@@ -3450,7 +3450,7 @@ function zoom_step(dir, arg2)
 		zoom_old_nom = nom;
 	}
 	
-	if (zoom_level == 0 || ozoom == 0) {
+	if (zoom_level == zoom_levels_min || ozoom == zoom_levels_min) {
 		w3_show_hide('id-maxout', zoom_level != 0, 'w3-show-table-cell');
 		w3_show_hide('id-maxout-max', zoom_level == 0, 'w3-show-table-cell');
 	}
@@ -4858,7 +4858,7 @@ function waterfall_dequeue()
 	// demodulator must have been initialized before calling zoom_step()
 	if (!init_zoom_set && demodulators[0]) {
 		init_zoom = parseInt(init_zoom);
-		if (init_zoom < 0 || init_zoom > zoom_levels_max) init_zoom = 0;
+		if (init_zoom < zoom_levels_min || init_zoom > zoom_levels_max) init_zoom = zoom_levels_min;
 		//console.log("### init_zoom="+init_zoom);
 		zoom_step(ext_zoom.ABS, init_zoom);
 		init_zoom_set = true;
@@ -5602,7 +5602,7 @@ var freq_dsp_set_last;
 function freq_field_prec(f_kHz)
 {
    // limit to 9 characters max: 12345.789 or 123456.89
-   var limit = 100e3 - (cfg.max_freq? 32e3 : 30e3);
+   var limit = 100e3 - 64e3;
    var prec = (kiwi.freq_offset_kHz >= limit)? 2 : ((cfg.show_1Hz || url_1Hz)? 3 : 2);
    return prec;
 }
@@ -5637,7 +5637,7 @@ function freq_field_width()
 */
    
    // limit to 9 characters max: 12345.789 or 123456.89
-   var limit = 100e3 - (cfg.max_freq? 32e3 : 30e3);
+   var limit = 100e3 - 62.5e3;
    //var width = (kiwi.freq_offset_kHz >= limit)? 6.5 : ((cfg.show_1Hz || url_1Hz)? 6.5 : 6);
    var width = (kiwi.freq_offset_kHz >= limit)? 6.25 : ((cfg.show_1Hz || url_1Hz)? 6.25 : 5.75);
    return (width +'em');
@@ -6205,7 +6205,7 @@ function freq_memory_init()
       if (isNumber(s)) s = s.toString();
       var as = s.split(' ');
       var f_n = as[0].parseFloatWithUnits('kM', 1e-3);
-      fmem[i] = w3_clamp(f_n, 1, cfg.max_freq? 32000 : 30000).toFixed(prec);
+      fmem[i] = w3_clamp(f_n, 1, 62500).toFixed(prec);
       if (as[1]) fmem[i] += ' '+ as[1];      // add back mode
    });
 	
@@ -12114,7 +12114,7 @@ function owrx_msg_cb(param, ws)     // #msg-proc
 			break;
 		case "bandwidth":
 			bandwidth = parseInt(param[1]);
-			break;		
+			break;
 		case "center_freq":
 			center_freq = parseInt(param[1]);
 			break;

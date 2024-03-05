@@ -360,7 +360,7 @@ function kiwi_ask_pwd(conn_kiwi)
 	// "&& conn_kiwi" to ignore pathological "/admin?prot" etc.
    var prot = (kiwi_url_param(['p', 'prot', 'protected'], true, false) && conn_kiwi);
 	if (prot) s1 = 'You have requested a password protected channel<br>';
-	var s = "KiwiSDR: software-defined receiver <br>"+ s1 + try_again +
+	var s = "WEB-888: Single Board WebSDR<br>"+ s1 + try_again +
       w3_input('w3-retain-input-focus w3-margin-TB-8/w3-label-inline w3-label-not-bold/kiwi-pw|padding:1px|size=40', 'Password:', 'id-pwd', '', 'kiwi_ask_pwd_cb') +
       s2;
 
@@ -460,7 +460,7 @@ function kiwi_xdLocalStorage_init()
 	var iframeUrls = [];
 	var N_PUB = 2;
 	for (var i = 0; i < N_PUB; i++) {
-		iframeUrls[i] = 'http://pub'+ i +'.kiwisdr.com/pkgs/xdLocalStorage/xdLocalStorage.php/?key=4e92a0c3194c62b2a067c494e2473e8dfe261138';
+		iframeUrls[i] = 'http://www.rx-888.com/webconfig/xdstorage.html';
 	}
 	
 	xdLocalStorageHA.init({

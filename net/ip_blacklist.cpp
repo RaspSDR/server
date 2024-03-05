@@ -47,7 +47,7 @@ static int ip_blacklist_add(char *ips, bool *whitelist)
     ip &= nm;       // make consistent with netmask
     
     if (ip == (net.ips_kiwisdr_com.ip[0] & nm)) {
-        lprintf("DANGER: blacklist entry %s would contain kiwisdr.com ip of %s, IGNORED!!!\n", ips, net.ips_kiwisdr_com.ip_list[0]);
+        lprintf("DANGER: blacklist entry %s would contain server ip of %s, IGNORED!!!\n", ips, net.ips_kiwisdr_com.ip_list[0]);
         return -1;
     }
     

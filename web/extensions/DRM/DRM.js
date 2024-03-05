@@ -87,7 +87,7 @@ var drm = {
    stations: null,
    using_default: false,
    double_fault: false,
-   loading_msg: '&nbsp;loading data from kiwisdr.com ...',
+   loading_msg: '&nbsp;loading data from server ...',
    SINGLE: 0,
    MULTI: 1,
    REGION: 2,
@@ -96,7 +96,7 @@ var drm = {
    monitor: 0,
    
    database: 0,
-   database_s: [ 'drmrx.org', 'kiwisdr.com' ],
+   database_s: [ 'drmrx.org' ],
    database_url: [
       kiwi_SSL() +'www.rx-888.com/webconfig/drmrx.cjson',
       kiwi_SSL() +'www.rx-888.com/webconfig/stations2.cjson'
@@ -796,7 +796,7 @@ function drm_schedule_svc()
    if (!drm.stations) return '';
 
    var i;
-   var s = drm.using_default? w3_div('w3-yellow w3-padding w3-show-inline-block', 'can\'t contact kiwisdr.com<br>using default data') : '';
+   var s = drm.using_default? w3_div('w3-yellow w3-padding w3-show-inline-block', 'can\'t contact server<br>using default data') : '';
    var narrow = drm.narrow_listing;
    var toff = drm_tscale(narrow? 1.0 : 0.25);
 

@@ -976,10 +976,15 @@ void sample_wf(int rx_chan)
     iq_t data;
 
     uint32_t left = WF_C_NSAMPS;
-    WFSleepReasonUsec("fill pipe", wf->samp_wait_us/FIFO_RATIO+1);
     for (int i = 0; i < WF_C_NSAMPS; i++)
     {
         iq_t data;
+
+        if (fpga_status->wf_fifo[rx_chan] == 0)
+        {
+            WFSleepReasonUsec("fill pipe", wf->samp_wait_us/((WF_C_NSAMPS - i)/(FIFO_SIZE*0.5f))+1);
+        }
+
         *(uint32_t*)&data = *fpga_wf_data[rx_chan];
         ii = (s4_t) (s2_t) data.i;
         qq = (s4_t) (s2_t) data.q;
@@ -994,8 +999,6 @@ void sample_wf(int rx_chan)
         
         fft->hw_c_samps[i][I] = fi;
         fft->hw_c_samps[i][Q] = fq;
-
-        if (i % 512 == 0) NextTaskFast("wf compute");
     }
 
     #ifndef EV_MEAS_WF

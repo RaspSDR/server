@@ -21,7 +21,6 @@ void spi_set3(SPI_CMD cmd, uint16_t wparam, uint32_t lparam, uint16_t w2param)
 
     case CmdSetWFDecim:
         printf("CmdSetWFDecim[%d]=%d\n", wparam, lparam);
-        fpga_config->reset &= ~(RESET_WF0 << wparam);
         fpga_config->wf_config[wparam].wf_decim = lparam;
         break;
 

@@ -235,7 +235,6 @@ static void webserver_collect_print_stats(int print)
 	}
 	
     rx_autorun_restart_victims(false);
-	spi_stats();
 }
 
 //#ifdef CAT_TASK_CHILD

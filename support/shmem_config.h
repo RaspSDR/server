@@ -34,7 +34,6 @@ Boston, MA  02110-1301, USA.
     #define DRM_SHMEM_DISABLE
     #define RX_SHMEM_DISABLE
     #define WSPR_SHMEM_DISABLE
-    #define SPI_SHMEM_DISABLE
     #define WF_SHMEM_DISABLE
 #endif
 

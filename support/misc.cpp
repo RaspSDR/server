@@ -95,34 +95,6 @@ int median_i(int *i, int len, int *pct_1, int *pct_2)
      return i[len/2];
 }
 
-static int misc_miso_busy[2];
-
-SPI_MISO *get_misc_miso(int which)
-{
-    assert(misc_miso_busy[which] == 0);
-    misc_miso_busy[which]++;
-    return &SPI_SHMEM->misc_miso[which];
-}
-
-void release_misc_miso(int which)
-{
-    misc_miso_busy[which]--;
-}
-
-static int misc_mosi_busy;
-
-SPI_MOSI *get_misc_mosi()
-{
-    assert(misc_mosi_busy == 0);
-    misc_mosi_busy++;
-    return &SPI_SHMEM->misc_mosi;
-}
-
-void release_misc_mosi()
-{
-    misc_mosi_busy--;
-}
-
 void cmd_debug_print(conn_t *c, char *s, int slen, bool tx)
 {
     int sl = slen - 4;
@@ -733,12 +705,10 @@ int grid_to_distance_km(latLon_t *r_loc, char *grid)
 
 void set_cpu_affinity(int cpu)
 {
-#if defined(HOST) && defined(MULTI_CORE) && !defined(PLATFORM_raspberrypi)
     cpu_set_t cpu_set;
     CPU_ZERO(&cpu_set);
     CPU_SET(cpu, &cpu_set);
     scall("set_affinity", sched_setaffinity(getpid(), sizeof(cpu_set_t), &cpu_set));
-#endif
 }
 
 u4_t pos_wrap_diff(u4_t next, u4_t prev, u4_t size)

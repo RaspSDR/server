@@ -30,12 +30,6 @@ Boston, MA  02110-1301, USA.
 
 void misc_init();
 
-SPI_MISO *get_misc_miso(int which = 0);
-void release_misc_miso(int which = 0);
-
-SPI_MOSI *get_misc_mosi();
-void release_misc_mosi();
-
 int qsort_floatcomp(const void *elem1, const void *elem2);
 int qsort_doublecomp(const void *elem1, const void *elem2);
 int qsort_intcomp(const void *elem1, const void *elem2);

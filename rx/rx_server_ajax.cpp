@@ -438,10 +438,6 @@ fail:
 	//	Delivery restricted to the local network.
 	//	Returns JSON
 	case AJAX_ADC: {
-        typedef struct {
-            u1_t d0, d1, d2, d3;
-        } ctr_t;
-        ctr_t *c;
         static u4_t adc_level;
         
 		if (!isLocalIP) {
@@ -449,12 +445,7 @@ fail:
 			return (char *) -1;
 		}
 		//printf("/adc REQUESTED from %s\n", ip_unforwarded);
-		
-        SPI_MISO *adc_ctr = get_misc_miso();
-            spi_get_noduplex(CmdGetADCCtr, adc_ctr, sizeof(u2_t[3]));
-        release_misc_miso();
-        c = (ctr_t*) &adc_ctr->word[0];
-        u4_t adc_count = (c->d3 << 24) | (c->d2 << 16) | (c->d1 << 8) | c->d0;
+        u4_t adc_count = 0;
         
         //printf("/adc qs=<%s>\n", mc->query_string);
         u4_t level = 0;

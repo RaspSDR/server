@@ -29,7 +29,6 @@ Boston, MA  02110-1301, USA.
 #include "peri.h"
 #include "eeprom.h"
 #include "spi.h"
-#include "spi_dev.h"
 #include "gps.h"
 #include "gps_fe.h"
 #include "coroutines.h"
@@ -66,7 +65,7 @@ int fw_sel, fpga_id, rx_chans, wf_chans, nrx_bufs, nrx_samps, snd_rate, rx_decim
 
 int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
 	rx_cordic, rx_cic, rx_cic2, rx_dump, wf_cordic, wf_cic, wf_mult, wf_mult_gen, do_slice=-1,
-	rx_yield=1000, gps_chans=GPS_MAX_CHANS, spi_clkg, spi_speed=SPI_48M, wf_max, rx_num, wf_num,
+	rx_yield=1000, gps_chans=GPS_MAX_CHANS, wf_max, rx_num, wf_num,
 	do_gps, do_sdr=1, navg=1, wf_olap, meas, spi_delay=100, do_fft, debian_ver, monitors_max,
 	noisePwr=-160, unwrap=0, rev_iq, ineg, qneg, fft_file, fftsize=1024, fftuse=1024, bg,
 	print_stats, ecpu_cmds, ecpu_tcmds, use_spidev, debian_maj, debian_min, test_flag, dx_print,
@@ -218,15 +217,12 @@ int main(int argc, char *argv[])
 		if (ARG("-rdump")) rx_dump = 1; else
 		if (ARG("-wcordic")) wf_cordic = 1; else
 		if (ARG("-wcic")) wf_cic = 1; else
-		if (ARG("-clkg")) spi_clkg = 1; else
 		
 		if (ARG("-avg")) { ARGL(navg); } else
 		if (ARG("-tone")) { ARGL(tone); } else
 		if (ARG("-slc")) { ARGL(do_slice); } else
 		if (ARG("-rx")) { ARGL(rx_num); } else
 		if (ARG("-wf")) { ARGL(wf_num); } else
-		if (ARG("-spispeed")) { ARGL(spi_speed); } else
-		if (ARG("-spi")) { ARGL(spi_delay); } else
 		if (ARG("-ch")) { ARGL(gps_chans); } else
 		if (ARG("-y")) { ARGL(rx_yield); } else
 		
@@ -292,15 +288,6 @@ int main(int argc, char *argv[])
     assert(NOT_FOUND != FALSE);
     
     debug_printfs |= kiwi_file_exists(DIR_CFG "/opt.debug")? 1:0;
-
-    #ifndef PLATFORM_raspberrypi
-        // on reboot let ntpd and other stuff settle first
-        if (background_mode && !kiwi_file_exists("/tmp/.kiwi_no_restart_delay")) {
-            lprintf("background mode: delaying start 30 secs...\n");
-            system("touch /tmp/.kiwi_no_restart_delay");    // removed on reboot
-            sleep(30);
-        }
-    #endif
 
 	TaskInit();
 	misc_init();

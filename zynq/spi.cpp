@@ -1,12 +1,5 @@
 #include "spi.h"
-#include "spi_dev.h"
 #include "fpga.h"
-
-spi_t spi;
-u4_t spi_retry;
-
-static spi_shmem_t spi_shmem;
-spi_shmem_t  *spi_shmem_p = &spi_shmem;
 
 
 void spi_init(){}
@@ -47,7 +40,7 @@ void spi_set3(SPI_CMD cmd, uint16_t wparam, uint32_t lparam, uint16_t w2param)
         break;
 
     case CmdSetRXNsamps:
-        //printf("CmdSetRXNsamps %d\n", wparam);
+        printf("CmdSetRXNsamps %d\n", wparam);
         if (wparam == 0) {
             // reset RX
             fpga_config->reset &= ~RESET_RX;
@@ -68,29 +61,4 @@ void spi_set3(SPI_CMD cmd, uint16_t wparam, uint32_t lparam, uint16_t w2param)
 void spi_set(SPI_CMD cmd, uint16_t wparam, uint32_t lparam)
 {
     spi_set3(cmd, wparam, lparam, 0);
-}
-
-void spi_get_noduplex(SPI_CMD cmd, SPI_MISO *rx, int bytes, uint16_t wparam, uint32_t lparam)
-{
-    spi_get3_noduplex(cmd, rx, bytes, wparam, lparam, 0);
-}
-
-void spi_get3_noduplex(SPI_CMD cmd, SPI_MISO *rx, int bytes, uint16_t wparam, uint16_t w2param, uint16_t w3param)
-{
-    switch(cmd) {
-
-    case CmdGetSPRP:
-    case CmdGetADCCtr:
-        break;
-
-    case CmdGetCPUCtr:
-        rx->status = 0;
-        for (int i = 0; i < bytes; i++)
-            rx->byte[i] = 0;
-        break;
-
-    default:
-        printf("Cannot handle spi_get3_noduplex spi command %d: %d, %d\n", cmd, wparam);
-        break;
-    }
 }

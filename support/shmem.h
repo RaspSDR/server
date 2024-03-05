@@ -27,7 +27,6 @@ Boston, MA  02110-1301, USA.
 #include "spi.h"
 
 #include "data_pump.h"
-#include "spi_dev.h"
 #include "rx_waterfall.h"
 
 #ifdef USE_SDR
@@ -110,7 +109,6 @@ typedef struct {
     #define DRM_SHMEM_DISABLE
     #define RX_SHMEM_DISABLE
     #define WSPR_SHMEM_DISABLE
-    #define SPI_SHMEM_DISABLE
     #define WF_SHMEM_DISABLE
 #endif
 
@@ -129,12 +127,6 @@ typedef struct {
 	char status_str_large[N_SHMEM_STATUS_STR_LARGE];
 	
     shmem_ipc_t ipc[SIG_MAX_USED];
-    
-    #ifdef SPI_SHMEM_DISABLE
-    #else
-        // shared with SPI async i/o helper process
-        spi_shmem_t spi_shmem;
-    #endif
 
     #ifdef RX_SHMEM_DISABLE
     #else

@@ -282,11 +282,6 @@ static void _update_task(void *param)
 			version_maj, version_min, pending_maj, pending_min);
 		lprintf("UPDATE: building new version..\n");
 
-        #ifndef PLATFORM_raspberrypi
-            update_in_progress = true;  // NB: must be before rx_server_kick() to prevent new connections
-            rx_server_kick(KICK_ALL);      // kick everything (including autorun) off to speed up build
-            TaskSleepReasonSec("kick delay", 5);
-        #endif
 
 		// Run build in a Linux child process so the server can continue to respond to connection requests
 		// and display a "software update in progress" message.

@@ -7,7 +7,6 @@
 #include "web.h"
 #include "peri.h"
 #include "spi.h"
-#include "spi_dev.h"
 #include "gps.h"
 #include "coroutines.h"
 #include "debug.h"

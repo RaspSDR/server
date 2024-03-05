@@ -403,9 +403,9 @@ void TaskDump(u4_t flags)
 	#else
 	    const char *asan_used = "";
 	#endif
-	lfprintf(printf_type, "TASKS: used %d/%d(%d|%d|%d), soft_fail %d, spi_retry %d, spi_delay %d%s\n",
+	lfprintf(printf_type, "TASKS: used %d/%d(%d|%d|%d), soft_fail %d, %s\n",
 	    tused, MAX_TASKS, REG_STACK_TASKS, MED_STACK_TASKS, LARGE_STACK_TASKS,
-	    soft_fail, spi.retry, spi_delay, asan_used);
+	    soft_fail, asan_used);
 
 	if (flags & TDUMP_LOG)
 	//lfprintf(printf_type, "Tttt Pd# cccccccc xxx.xxx xxxxx.xxx xxx.x%% xxxxxx xxxxx xxxxx xxx xxxxx xxx xxxx.xxxuu xxx%% cN\n");

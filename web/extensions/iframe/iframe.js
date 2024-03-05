@@ -70,7 +70,7 @@ function iframe_controls_setup()
    if (iframe.width <= 0) iframe.width = 450;
    if (iframe.height <= 0) iframe.height = 450;
    if (iframe.helptext == '') iframe.helptext = '';
-   if (iframe.url == '') iframe.url = '/gfx/web-888.51x67.png';
+   if (iframe.url == '') iframe.url = '/gfx/web-888.51x60.png';
    if (iframe.title == '') iframe.title = 'iframe extension';
    //console_nv('iframe', 'iframe.url', 'iframe.html', 'iframe.title', 'iframe.width', 'iframe.height', 'iframe.helptext');
    

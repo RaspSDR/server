@@ -104,7 +104,7 @@ function hfdl_recv(data)
 			   if (dbgUs) console.log('lowres_latlon='+ latlon);
 			   latlon = JSON.parse(latlon);
 			   kiwi_map_add_marker_icon(hfdl.kmap, kmap.ADD_TO_MAP,
-			      'kiwi/gfx/web-888.51x67.png', latlon, [25, 33], 1.0,
+			      'kiwi/gfx/web-888.51x60.png', latlon, [25, 33], 1.0,
 			      function(el) {
                   w3_add(el, 'id-hfdl-kiwi-icon w3-hide');
                   el.style.zIndex = 99999;

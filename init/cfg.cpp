@@ -198,19 +198,7 @@ void cfg_reload()
     }
 
     bool err;
-    kiwi.model = (model_e) admcfg_int("kiwi_model", &err, CFG_OPTIONAL);
-    if (!err) {
-        lprintf("Kiwi model override from configuration: KiwiSDR %d\n", kiwi.model);
-    } else {
-        if (serno <= 0 || model <= 0) {
-            lprintf("can't read Kiwi model from EEPROM and no configuration override\n");
-            lprintf("assuming model: KiwiSDR 1\n");
-            kiwi.model = KiwiSDR_1;
-        } else {
-            kiwi.model = model;
-            lprintf("model: KiwiSDR %d\n", model);
-        }
-    }
+    kiwi.model = ZynqSDR_1;
 
     #ifdef USE_SDR
         dx_label_init();

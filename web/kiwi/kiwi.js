@@ -7,13 +7,15 @@ var kiwi = {
    
    KiwiSDR_1: 1,
    KiwiSDR_2: 2,
-   model: 1,   
+   ZynqSDR_1: 3,
+   model: 3,
    
    PLATFORM_BBG_BBB: 0,
    PLATFORM_BB_AI:   1,
    PLATFORM_BB_AI64: 2,
    PLATFORM_RPI:     3,
    PLATFORM_ZYNQ:    4,
+
    platform: -1,
    platform_s: [ 'BBG/B', 'BBAI', 'BBAI-64', 'RPi', "Zynq" ],
    
@@ -2489,7 +2491,7 @@ function config_str_update(rx_chans, gps_chans, vmaj, vmin)
 {
 	kiwi_config_str = 'v'+ vmaj +'.'+ vmin +', ch: '+ rx_chans +' SDR '+ gps_chans +' GPS';
 	w3_innerHTML('id-status-config', kiwi_config_str);
-	kiwi_config_str_long = 'KiwiSDR '+ kiwi.model +', v'+ vmaj +'.'+ vmin +', '+ rx_chans +' SDR channels, '+ gps_chans +' GPS channels';
+	kiwi_config_str_long = 'ZynqSDR, v'+ vmaj +'.'+ vmin +', '+ rx_chans +' SDR channels, '+ gps_chans +' GPS channels';
 	w3_innerHTML('id-msg-config', kiwi_config_str);
 }
 
@@ -2499,7 +2501,7 @@ function config_cb(rx_chans, gps_chans, serno, pub, port_ext, pvt, port_int, nm,
 {
 	var s;
 	config_str_update(rx_chans, gps_chans, vmaj, vmin);
-	w3_innerHTML('id-msg-debian', 'Debian '+ dmaj +'.'+ dmin);
+	w3_innerHTML('id-msg-debian', 'Alpine '+ dmaj +'.'+ dmin);
 	kiwi.debian_maj = dmaj;
 	kiwi.debian_min = dmin;
 

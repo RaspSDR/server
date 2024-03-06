@@ -43,7 +43,7 @@ Boston, MA  02110-1301, USA.
 #define CUTESDR_MAX_VAL ((float) ((1 << CUTESDR_SCALE) - 1))
 #define CUTESDR_MAX_PWR (CUTESDR_MAX_VAL * CUTESDR_MAX_VAL)
 
-typedef enum { KiwiSDR_1 = 1, KiwiSDR_2 = 2 } model_e;
+typedef enum { KiwiSDR_1 = 1, KiwiSDR_2 = 2, ZynqSDR_1 = 3 } model_e;
 
 typedef enum { PLATFORM_BBG_BBB = 0, PLATFORM_BB_AI = 1, PLATFORM_BB_AI64 = 2, PLATFORM_RPI = 3, PLATFORM_ZYNQ = 4 } platform_e;
 const char * const platform_s[] = { "beaglebone-black", "bbai", "bbai64", "rpi", "zynq" };

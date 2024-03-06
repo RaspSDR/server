@@ -2877,7 +2877,7 @@ function kiwi_init_cfg(stream_name)
    kiwi_set_freq_offset(cfg.freq_offset);
    
    var page_title = kiwi_decodeURIComponent('PAGE_TITLE', cfg.index_html_params.PAGE_TITLE);
-   if (page_title == '') page_title = 'KiwiSDR';
+   if (page_title == '') page_title = 'WEB-888';
    var el = w3_el('id-page-title');    // in user and admin html
    if (el) el.innerHTML = ((stream_name == 'admin')? 'Admin ':'') + page_title;
    w3_innerHTML('id-rx-photo-title', kiwi_decodeURIComponent('RX_PHOTO_TITLE', cfg.index_html_params.RX_PHOTO_TITLE));

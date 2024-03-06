@@ -94,7 +94,7 @@ typedef struct {
     #define DRM_MAX_RX 4
 #endif
 
-#define DRM_NREG_CHANS_DEFAULT 3
+#define DRM_NREG_CHANS_DEFAULT 16
 
 typedef struct {
     drm_t drm[DRM_MAX_RX];

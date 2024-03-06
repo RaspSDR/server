@@ -104,7 +104,6 @@ struct wf_pkt_t {
 enum { WF_SELECT_OFF = 0, WF_SELECT_1FPS = 1, WF_SELECT_SLOW = 2, WF_SELECT_MED = 3, WF_SELECT_FAST = 4 };
 
 #define WF_ZOOM_MIN     2
-#define WF_ZOOM_MAX     11
 
 #define WF_COMP_OFF     0
 #define WF_COMP_ON      1

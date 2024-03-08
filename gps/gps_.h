@@ -221,7 +221,6 @@ typedef struct {
 
 typedef struct {
     int n_Navstar, n_QZSS, n_E1B;
-    bool acq_Navstar, acq_QZSS, QZSS_prio, acq_Galileo;
 	bool acquiring, tLS_valid;
 	unsigned start, ttff;
 	int tracking, good, FFTch;

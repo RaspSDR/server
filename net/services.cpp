@@ -33,7 +33,7 @@ Boston, MA  02110-1301, USA.
 #include "ip_blacklist.h"
 #include "str.h"
 #include "jsmn.h"
-#include "gps.h"
+#include "gps_.h"
 #include "leds.h"
 #include "non_block.h"
 #include "eeprom.h"

@@ -27,7 +27,6 @@ Boston, MA  02110-1301, USA.
 #include "nbuf.h"
 #include "web.h"
 #include "spi.h"
-#include "gps.h"
 #include "coroutines.h"
 #include "debug.h"
 #include "data_pump.h"
@@ -145,7 +144,6 @@ struct wf_inst_t {
 	wf_pkt_t out;
 	int out_bytes;
 	bool check_overlapped_sampling, overlapped_sampling;
-	int samp_wait_ms, chunk_wait_us;
 	int samp_wait_us;
 	
 	int aper, aper_algo;
@@ -167,8 +165,9 @@ struct wf_shmem_t {
     wf_inst_t wf_inst[MAX_RX_CHANS];        // NB: MAX_RX_CHANS even though there may be fewer MAX_WF_CHANS
     fft_t fft_inst[MAX_WF_CHANS];           // NB: MAX_WF_CHANS not MAX_RX_CHANS
     float window_function[N_WF_WINF][WF_C_NSAMPS];
+	float samples[MAX_WF_CHANS][WF_C_NSAMPS];
     float CIC_comp[WF_C_NSAMPS];
-    int n_chunks;
+    bool empty;
 };     
 
 #include "shmem_config.h"

@@ -29,6 +29,7 @@ pkg_check_modules(FFTW3 REQUIRED fftw3f)
 pkg_check_modules(SNDFILE REQUIRED sndfile)
 pkg_check_modules(ZLIB REQUIRED zlib)
 pkg_check_modules(FDKAAC REQUIRED fdk-aac)
+pkg_check_modules(GPS REQUIRED libgps)
 
 find_program(CCACHE_FOUND ccache)
 
@@ -180,6 +181,7 @@ target_link_libraries(kiwi.bin PUBLIC
     ${FFTW3_STATIC_LIBRARIES}
     ${SNDFILE_LIBRARIES}
     ${ZLIB_LIBRARIES}
+    ${GPS_LIBRARIES}
     ${FDKAAC_LIBRARIES}
     util
 )

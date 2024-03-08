@@ -1,20 +1,45 @@
-#include "gps.h"
-//#include "gps/GNSS-SDRLIB/rtklib.h"
-// TODO: Use libgps to simulate the necessary APIs
+#include "types.h"
+#include "config.h"
+#include "kiwi.h"
+#include "coroutines.h"
+
+#include <gps.h>
+#include <math.h>
+#include "gps_.h"
+
 gps_t gps;
+SATELLITE Sats[MAX_SATS];
 
 const char *Week[] = {
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+#define MODE_STR_NUM 4
+static const char *mode_str[MODE_STR_NUM] = {
+    "n/a",
+    "None",
+    "2D",
+    "3D"
+};
+
+static struct gps_data_t gps_handle;
+
+static void gps_task(void *param);
 
 void gps_main(int argc, char *argv[])
 {
     memset(&gps, sizeof(gps), 0);
 
+    if (0 != gps_open("localhost", "2947", &gps_handle)) {
+        printf("open gpsd failed\n");
+        return;
+    }
+
     // create a task to pull gps
+    CreateTaskF(gps_task, 0, GPS_PRIORITY, CTF_NO_LOG);
 }
 
 void ChanRemove(sat_e type)
 {
+    
 }
 
 /* convert calendar day/time to time -------------------------------------------
@@ -51,4 +76,41 @@ gtime_t gpst2time(int week, double sec)
     t.time += 86400 * 7 * week + (int)sec;
     t.sec = sec - (int)sec;
     return t;
+}
+
+static void gps_task(void *param)
+{
+    for(;;)
+    {
+        if (-1 == gps_read(&gps_handle, NULL, 0)) {
+            printf("Read error.  Bye, bye\n");
+            break;
+        }
+        if (MODE_SET != (MODE_SET & gps_handle.set)) {
+            // did not even get mode, nothing to see here
+            continue;
+        }
+        if (0 > gps_handle.fix.mode ||
+            MODE_STR_NUM <= gps_handle.fix.mode) {
+            gps_handle.fix.mode = 0;
+        }
+        printf("Fix mode: %s (%d) Time: ",
+               mode_str[gps_handle.fix.mode],
+               gps_handle.fix.mode);
+        if (TIME_SET == (TIME_SET & gps_handle.set)) {
+            // not 32 bit safe
+            printf("%ld.%09ld ", gps_handle.fix.time.tv_sec,
+                   gps_handle.fix.time.tv_nsec);
+        } else {
+            puts("n/a ");
+        }
+        if (isfinite(gps_handle.fix.latitude) &&
+            isfinite(gps_handle.fix.longitude)) {
+            // Display data from the GPS receiver if valid.
+            printf("Lat %.6f Lon %.6f\n",
+                   gps_handle.fix.latitude, gps_handle.fix.longitude);
+        } else {
+            printf("Lat n/a Lon n/a\n");
+        }
+    }
 }

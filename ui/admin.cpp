@@ -32,7 +32,7 @@ Boston, MA  02110-1301, USA.
 #include "net.h"
 #include "peri.h"
 #include "spi.h"
-#include "gps.h"
+#include "gps_.h"
 #include "coroutines.h"
 #include "debug.h"
 #include "printf.h"
@@ -806,7 +806,7 @@ void c2s_admin(void *param)
 // GPS
 ////////////////////////////////
 
-#ifdef USE_GPS_notyet
+#ifdef USE_GPS
             n = sscanf(cmd, "SET gps_IQ_data_ch=%d", &j);
             if (n == 1) {
                 gps.IQ_data_ch = j;
@@ -1046,8 +1046,8 @@ void c2s_admin(void *param)
                     sb = kstr_asprintf(sb, ",\"lat\":0");
                 }
                     
-                sb = kstr_asprintf(sb, ",\"acq\":%d,\"track\":%d,\"good\":%d,\"fixes\":%d,\"fixes_min\":%d,\"adc_clk\":%.6f,\"adc_corr\":%d,\"is_corr\":%d,\"a\":\"%s\"}",
-                    gps.acquiring? 1:0, gps.tracking, gps.good, gps.fixes, gps.fixes_min, adc_clock_system()/1e6, clk.adc_gps_clk_corrections, clk.is_corr? 1:0, gps.a);
+                sb = kstr_asprintf(sb, ",\"acq\":%d,\"track\":%d,\"good\":%d,\"fixes\":%d,\"fixes_min\":%d,\"adc_clk\":%.6f,\"adc_corr\":%d,\"is_corr\":%d}",
+                    gps.acquiring? 1:0, gps.tracking, gps.good, gps.fixes, gps.fixes_min, adc_clock_system()/1e6, clk.adc_gps_clk_corrections, clk.is_corr? 1:0);
         
                 send_msg_encoded(conn, "MSG", "gps_update_cb", "%s", kstr_sp(sb));
                 kstr_free(sb);

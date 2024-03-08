@@ -4,7 +4,7 @@
 
 #include "kiwi.h"
 #include "net.h"
-#include "gps.h"
+#include "gps_.h"
 
 #include <stdio.h>
 #include <unistd.h>

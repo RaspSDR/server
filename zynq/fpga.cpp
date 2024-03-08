@@ -6,8 +6,6 @@
 #include "misc.h"
 #include "web.h"
 #include "peri.h"
-#include "spi.h"
-#include "gps.h"
 #include "coroutines.h"
 #include "debug.h"
 #include "fpga.h"

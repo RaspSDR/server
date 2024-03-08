@@ -29,7 +29,7 @@ Boston, MA  02110-1301, USA.
 #include "timer.h"
 #include "web.h"
 #include "spi.h"
-#include "gps.h"
+#include "gps_.h"
 #include "cfg.h"
 #include "coroutines.h"
 #include "net.h"
@@ -597,27 +597,6 @@ void update_vars_from_config(bool called_at_init)
 
         admcfg_default_bool("always_acq_gps", false, &update_admcfg);
         gps.set_date = admcfg_default_bool("gps_set_date", false, &update_admcfg);
-        gps.include_alert_gps = admcfg_default_bool("include_alert_gps", false, &update_admcfg);
-        //real_printf("gps.include_alert_gps=%d\n", gps.include_alert_gps);
-        gps.include_E1B = admcfg_default_bool("include_E1B", true, &update_admcfg);
-        //real_printf("gps.include_E1B=%d\n", gps.include_E1B);
-        admcfg_default_int("E1B_offset", 4, &update_admcfg);
-
-        gps.acq_Navstar = admcfg_default_bool("acq_Navstar", true, &update_admcfg);
-        if (!gps.acq_Navstar) ChanRemove(Navstar);
-        gps.acq_QZSS = admcfg_default_bool("acq_QZSS", true, &update_admcfg);
-        if (!gps.acq_QZSS) ChanRemove(QZSS);
-        gps.QZSS_prio = admcfg_default_bool("QZSS_prio", false, &update_admcfg);
-        gps.acq_Galileo = admcfg_default_bool("acq_Galileo", true, &update_admcfg);
-        if (!gps.acq_Galileo) ChanRemove(E1B);
-        //real_printf("Navstar=%d QZSS=%d Galileo=%d\n", gps.acq_Navstar, gps.acq_QZSS, gps.acq_Galileo);
-
-        // force plot_E1B true because there is no longer an option switch in the admin interface (to make room for new ones)
-        bool plot_E1B = admcfg_default_bool("plot_E1B", true, &update_admcfg);
-        if (!plot_E1B) {
-            admcfg_set_bool("plot_E1B", true);
-            update_admcfg = true;
-        }
     #endif
     
     #ifdef CRYPT_PW

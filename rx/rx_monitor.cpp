@@ -23,7 +23,7 @@ Boston, MA  02110-1301, USA.
 #include "misc.h"
 #include "str.h"
 #include "cfg.h"
-#include "gps.h"
+#include "gps_.h"
 #include "rx.h"
 #include "rx_util.h"
 

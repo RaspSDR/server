@@ -26,7 +26,6 @@ Boston, MA  02110-1301, USA.
 #include "nbuf.h"
 #include "web.h"
 #include "spi.h"
-#include "gps.h"
 #include "coroutines.h"
 #include "debug.h"
 #include "data_pump.h"
@@ -187,8 +186,6 @@ void c2s_waterfall_init()
     }
     //real_printf("\n\n");
 
-	WF_SHMEM->n_chunks = 1;
-	
 	assert(WF_C_NSAMPS == WF_C_NFFT);
 	assert(WF_C_NSAMPS <= 8192);	// hardware sample buffer length limitation
 	
@@ -282,7 +279,6 @@ void c2s_waterfall(void *param)
     wf->snd = &snd_inst[rx_chan];
 
     wf->check_overlapped_sampling = true;
-    int n_chunks = WF_SHMEM->n_chunks;
     strncpy(wf->out.id4, "W/F ", 4);
 
 	#define WF_IQ_T 4
@@ -450,12 +446,10 @@ void c2s_waterfall(void *param)
                         #endif
     #endif
                         samp_wait_us =  WF_C_NSAMPS * (1 << zm1) / conn->adc_clock_corrected * 1000000.0;
-                        wf->chunk_wait_us = (int) ceilf(samp_wait_us / n_chunks);
-                        wf->samp_wait_ms = (int) ceilf(samp_wait_us / 1000);
                         wf->samp_wait_us = (int) ceilf(samp_wait_us);
                         #ifdef WF_INFO
-                        if (!bg) cprintf(conn, "---- WF%d Z%d zm1 %d/%d R%04x n_chunks %d samp_wait_us %.1f samp_wait_ms %d chunk_wait_us %d\n",
-                            rx_chan, zoom, zm1, 1<<zm1, decim, n_chunks, samp_wait_us, wf->samp_wait_ms, wf->chunk_wait_us);
+                        if (!bg) cprintf(conn, "---- WF%d Z%d zm1 %d/%d R%04x samp_wait_us %.1f %d\n",
+                            rx_chan, zoom, zm1, 1<<zm1, decim, samp_wait_us);
                         #endif
                     
                         new_map = wf->new_map = wf->new_map2 = TRUE;

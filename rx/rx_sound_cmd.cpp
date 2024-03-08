@@ -33,7 +33,7 @@ Boston, MA  02110-1301, USA.
 #include "nbuf.h"
 #include "web.h"
 #include "spi.h"
-#include "gps.h"
+#include "gps_.h"
 #include "coroutines.h"
 #include "cuteSDR.h"
 #include "rx_noise.h"

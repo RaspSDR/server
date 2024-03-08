@@ -110,19 +110,8 @@ void clock_manual_adj(int manual_adj)
 
 // Compute corrected ADC clock based on GPS time.
 // Called on each GPS solution.
-void clock_correction(double t_rx, u64_t ticks)
+void clock_correction(u64_t ticks)
 {
-    // record stats
-    clk.gps_secs = t_rx;
-    clk.ticks = ticks;
-    
-    if (last_ticks == 0) {
-        last_ticks = ticks;
-        last_t_rx = t_rx;
-        clk_printf("CLK INIT\n");
-        return;
-    }
-
     bool initial_temp_correction = (clk.adc_clk_corrections <= 5);
 
     if (clk.do_corrections == ADC_CLK_CORR_DISABLED) {
@@ -131,16 +120,9 @@ void clock_correction(double t_rx, u64_t ticks)
         return;
     }
     
-    u64_t diff_ticks = time_diff48(ticks, last_ticks);
-    double gps_secs = t_rx - last_t_rx;
+    u64_t diff_ticks = ticks;
+    double gps_secs = 1.0;
     double new_adc_clock = diff_ticks / gps_secs;
-    static double prev_new;
-
-    //printf("GT %6.3f ticks %08x|%08x = %08x|%08x - %08x|%08x\n", gps_secs,
-    //    PRINTF_U64_ARG(diff_ticks), PRINTF_U64_ARG(ticks), PRINTF_U64_ARG(last_ticks));
-
-    last_ticks = ticks;
-    last_t_rx = t_rx;
     
     // First correction allows wider window to capture temperature error.
     // Subsequent corrections use a much tighter window to remove bad GPS solution outliers.
@@ -164,7 +146,6 @@ void clock_correction(double t_rx, u64_t ticks)
     
     // first correction handles XO temperature offset
     if (first_time_temp_correction) {
-        prev_new = new_adc_clock;
         clk.temp_correct_offset = offset;
     }
 
@@ -180,12 +161,11 @@ void clock_correction(double t_rx, u64_t ticks)
     clk.adc_gps_clk_corrections++;
     
     #ifdef CLK_PRINTF
-        double diff_mma = adc_clock_mma - clk.adc_clock_base, diff_new = new_adc_clock - prev_new;
+        double diff_mma = adc_clock_mma - clk.adc_clock_base;
     #endif
-    clk_printf("CLK CORR %3d offHz %2.0f winHz %4.0lf MMA %.3lf(%6.3f) %4.1f NEW %.3lf(%6.3f) ratio %.6f\n",
+    clk_printf("CLK CORR %3d offHz %2.0f winHz %4.0lf MMA %.3lf(%6.3f) %4.1f NEW %.3lf\n",
         clk.adc_clk_corrections, offset, offset_window,
-        adc_clock_mma, diff_mma, offset, new_adc_clock, diff_new, diff_new / diff_mma);
-    prev_new = new_adc_clock;
+        adc_clock_mma, diff_mma, offset, new_adc_clock);
 
     clk.manual_adj = 0;     // remove any manual adjustment now that we're automatically correcting
     clk.adc_clock_base = adc_clock_mma;

@@ -30,7 +30,7 @@ u64_t fpga_dna();
 #define RESET_WF1 (1 << 2)
 #define RESET_WF2 (1 << 3)
 #define RESET_WF3 (1 << 4)
-#define RESET_GEN (1 << 16)
+#define RESET_PPS (1 << 8)
 
 typedef struct {
     uint32_t reset;
@@ -52,5 +52,6 @@ static_assert(sizeof(FPGA_Status) == 256/8);
 
 extern const volatile int32_t *fpga_rx_data;
 extern const volatile uint32_t *fpga_wf_data[4];
+extern const volatile uint32_t *fpga_pps_data;
 extern volatile FPGA_Config *fpga_config;
 extern const volatile FPGA_Status *fpga_status;

@@ -21,6 +21,7 @@
 
 volatile FPGA_Config *fpga_config;
 const volatile FPGA_Status *fpga_status;
+const volatile uint32_t *fpga_pps_data;
 const volatile int32_t *fpga_rx_data;
 const volatile uint32_t *fpga_wf_data[4];
 
@@ -50,6 +51,8 @@ void fpga_init()
     {
         fpga_wf_data[i] = (const uint32_t *)mmap(NULL, 1 * sysconf(_SC_PAGESIZE), PROT_READ, MAP_SHARED, fd, 0x43000000 + 0x01000000 * i);
     }
+
+    fpga_pps_data =  (const uint32_t *)mmap(NULL, 1 * sysconf(_SC_PAGESIZE), PROT_READ, MAP_SHARED, fd, 0x47000000);
 
     close(fd);
 

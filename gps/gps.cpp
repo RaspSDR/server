@@ -2,10 +2,13 @@
 #include "config.h"
 #include "kiwi.h"
 #include "coroutines.h"
+#include "fpga.h"
+#include "gps_.h"
+#include "clk.h"
 
 #include <gps.h>
 #include <math.h>
-#include "gps_.h"
+
 
 gps_t gps;
 SATELLITE Sats[MAX_SATS];
@@ -35,11 +38,6 @@ void gps_main(int argc, char *argv[])
 
     // create a task to pull gps
     CreateTaskF(gps_task, 0, GPS_PRIORITY, CTF_NO_LOG);
-}
-
-void ChanRemove(sat_e type)
-{
-    
 }
 
 /* convert calendar day/time to time -------------------------------------------
@@ -80,8 +78,10 @@ gtime_t gpst2time(int week, double sec)
 
 static void gps_task(void *param)
 {
+    fpga_config->reset |= RESET_PPS;
     for(;;)
     {
+        /*
         if (-1 == gps_read(&gps_handle, NULL, 0)) {
             printf("Read error.  Bye, bye\n");
             break;
@@ -112,5 +112,14 @@ static void gps_task(void *param)
         } else {
             printf("Lat n/a Lon n/a\n");
         }
+        */
+
+        while (fpga_status->pps_fifo > 0)
+        {
+            u64_t ticks = *fpga_pps_data;
+            clock_correction(ticks);
+        }
+
+        TaskSleepMsec(100);
     }
 }

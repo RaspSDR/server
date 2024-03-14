@@ -94,7 +94,6 @@ void c2s_admin_setup(void *param)
 	    send_msg(conn, SM_NO_DEBUG, "ADM is_multi_core");
 	#endif
 	send_msg(conn, SM_NO_DEBUG, "ADM init=%d", rx_chans);
-	send_msg_encoded(conn, "ADM", "repo_git", "%s", REPO_GIT);
 }
 
 void c2s_admin_shutdown(void *param)
@@ -766,26 +765,6 @@ void c2s_admin(void *param)
 ////////////////////////////////
 
 #ifdef USE_GPS
-            n = sscanf(cmd, "SET gps_IQ_data_ch=%d", &j);
-            if (n == 1) {
-                gps.IQ_data_ch = j;
-                continue;
-            }
-        
-            n = sscanf(cmd, "SET gps_kick_pll_ch=%d", &j);
-            if (n == 1) {
-                gps.kick_lo_pll_ch = j+1;
-                printf("gps_kick_pll_ch=%d\n", gps.kick_lo_pll_ch);
-                continue;
-            }
-        
-            n = sscanf(cmd, "SET gps_gain=%d", &j);
-            if (n == 1) {
-                gps.gps_gain = j;
-                printf("gps_gain=%d\n", gps.gps_gain);
-                continue;
-            }
-
             n = strcmp(cmd, "SET gps_az_el_history");
             if (n == 0) {
                 int now; utc_hour_min_sec(NULL, &now);
@@ -850,8 +829,9 @@ void c2s_admin(void *param)
                 int first = 1;
                 for (int sat = 0; sat < MAX_SATS; sat++) {
                     if (!sat_seen[sat]) continue;
-                    char *prn_s = PRN(prn_seen[sat]-1);
-                    if (*prn_s == 'N') prn_s++;
+                    const char *prn_s = "N";
+                    // char *prn_s = PRN(prn_seen[sat]-1);
+                    // if (*prn_s == 'N') prn_s++;
                     sb = kstr_asprintf(sb, "%s\"%s\"", first? "":",", prn_s);
                     first = 0;
                 }
@@ -879,24 +859,7 @@ void c2s_admin(void *param)
             
             n = strcmp(cmd, "SET gps_update");
             if (n == 0) {
-                if (gps.IQ_seq_w != gps.IQ_seq_r) {
-                    sb = kstr_asprintf(NULL, "{\"ch\":%d,\"IQ\":[", 0);
-                    s4_t iq;
-                    for (j = 0; j < GPS_IQ_SAMPS*NIQ; j++) {
-                        #if GPS_INTEG_BITS == 16
-                            iq = S4(S2(gps.IQ_data[j*2+1]));
-                        #else
-                            iq = S32_16_16(gps.IQ_data[j*2], gps.IQ_data[j*2+1]);
-                        #endif
-                        sb = kstr_asprintf(sb, "%s%d", j? ",":"", iq);
-                    }
-                    sb = kstr_cat(sb, "]}");
-                    send_msg_encoded(conn, "MSG", "gps_IQ_data_cb", "%s", kstr_sp(sb));
-                    kstr_free(sb);
-                    gps.IQ_seq_r = gps.IQ_seq_w;
-                    NextTask("gps_update1");
-                }
-        
+#if 0
                 // sends a list of the last gps.POS_len entries per query
                 if (gps.POS_seq_w != gps.POS_seq_r) {
                     sb = kstr_asprintf(NULL, "{\"ref_lat\":%.6f,\"ref_lon\":%.6f,\"POS\":[", gps.ref_lat, gps.ref_lon);
@@ -926,12 +889,13 @@ void c2s_admin(void *param)
                 if (gps.MAP_seq_w != gps.MAP_seq_r) {
                     sb = kstr_asprintf(NULL, "{\"ref_lat\":%.6f,\"ref_lon\":%.6f,\"MAP\":[", gps.ref_lat, gps.ref_lon);
                     int any_new = 0;
+                    #define GPS_NMAP 3
                     for (j = 0; j < GPS_NMAP; j++) {
                         for (k = 0; k < gps.MAP_len; k++) {
-                            u4_t seq = gps.MAP_data_seq[k];
-                            if (seq <= gps.MAP_seq_r || gps.MAP_data[j][k].lat == 0) continue;
-                            sb = kstr_asprintf(sb, "%s{\"nmap\":%d,\"lat\":%.6f,\"lon\":%.6f}", any_new? ",":"",
-                                j, gps.MAP_data[j][k].lat, gps.MAP_data[j][k].lon);
+                            // gps_map_t seq = gps.MAP_data_seq[k];
+                            // if (seq <= gps.MAP_seq_r || gps.MAP_data[j][k].lat == 0) continue;
+                            // sb = kstr_asprintf(sb, "%s{\"nmap\":%d,\"lat\":%.6f,\"lon\":%.6f}", any_new? ",":"",
+                            //     j, gps.MAP_data[j][k].lat, gps.MAP_data[j][k].lon);
                             any_new = 1;
                         }
                     }
@@ -942,7 +906,7 @@ void c2s_admin(void *param)
                     gps.MAP_seq_r = gps.MAP_seq_w;
                     NextTask("gps_update3");
                 }
-        
+        #endif
                 gps_chan_t *c;
                 
                 sb = kstr_asprintf(NULL, "{\"FFTch\":%d,\"ch\":[", gps.FFTch);
@@ -951,24 +915,17 @@ void c2s_admin(void *param)
                     c = &gps.ch[i];
                     int prn = -1;
                     char prn_s = 'x';
-                    if (c->sat >= 0) {
-                        prn_s = sat_s[Sats[c->sat].type];
-                        prn = Sats[c->sat].prn;
+                    if (c->sat >= 0 && c->type != '\0') {
+                        prn_s = c->type;
+                        prn = c->sat;
                     }
                     sb = kstr_asprintf(sb, "%s{\"ch\":%d,\"prn_s\":\"%c\",\"prn\":%d,\"snr\":%d,\"rssi\":%d,\"gain\":%d,\"age\":\"%s\",\"old\":%d,\"hold\":%d,\"wdog\":%d"
                         ",\"unlock\":%d,\"parity\":%d,\"alert\":%d,\"sub\":%d,\"sub_renew\":%d,\"soln\":%d,\"ACF\":%d,\"novfl\":%d,\"az\":%d,\"el\":%d}",
                         i? ", ":"", i, prn_s, prn, c->snr, c->rssi, c->gain, c->age, c->too_old? 1:0, c->hold, c->wdog,
                         c->ca_unlocked, c->parity, c->alert, c->sub, c->sub_renew, c->has_soln, c->ACF_mode, c->novfl, c->az, c->el);
-        //jks2
-        //if(i==3)printf("%s\n", kstr_sp(sb));
+
                     c->parity = 0;
                     c->has_soln = 0;
-                    for (j = 0; j < SUBFRAMES; j++) {
-                        if (c->sub_renew & (1<<j)) {
-                            c->sub |= 1<<j;
-                            c->sub_renew &= ~(1<<j);
-                        }
-                    }
                     NextTask("gps_update4");
                 }
         

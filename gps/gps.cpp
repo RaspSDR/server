@@ -9,9 +9,7 @@
 #include <gps.h>
 #include <math.h>
 
-
 gps_t gps;
-SATELLITE Sats[MAX_SATS];
 
 const char *Week[] = {
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -20,8 +18,7 @@ static const char *mode_str[MODE_STR_NUM] = {
     "n/a",
     "None",
     "2D",
-    "3D"
-};
+    "3D"};
 
 static struct gps_data_t gps_handle;
 
@@ -30,9 +27,18 @@ static void gps_task(void *param);
 void gps_main(int argc, char *argv[])
 {
     memset(&gps, sizeof(gps), 0);
+    gps.start = timer_ms();
 
-    if (0 != gps_open("localhost", "2947", &gps_handle)) {
+    if (0 != gps_open("localhost", "2947", &gps_handle))
+    {
         printf("open gpsd failed\n");
+        return;
+    }
+
+    // Set non-blocking mode
+    if (gps_stream(&gps_handle, WATCH_ENABLE | WATCH_JSON, NULL) != 0)
+    {
+        printf("Error: Unable to enable GPS streaming\n");
         return;
     }
 
@@ -79,47 +85,85 @@ gtime_t gpst2time(int week, double sec)
 static void gps_task(void *param)
 {
     fpga_config->reset |= RESET_PPS;
-    for(;;)
+    for (;;)
     {
-        /*
-        if (-1 == gps_read(&gps_handle, NULL, 0)) {
-            printf("Read error.  Bye, bye\n");
-            break;
-        }
-        if (MODE_SET != (MODE_SET & gps_handle.set)) {
-            // did not even get mode, nothing to see here
-            continue;
-        }
-        if (0 > gps_handle.fix.mode ||
-            MODE_STR_NUM <= gps_handle.fix.mode) {
-            gps_handle.fix.mode = 0;
-        }
-        printf("Fix mode: %s (%d) Time: ",
-               mode_str[gps_handle.fix.mode],
-               gps_handle.fix.mode);
-        if (TIME_SET == (TIME_SET & gps_handle.set)) {
-            // not 32 bit safe
-            printf("%ld.%09ld ", gps_handle.fix.time.tv_sec,
-                   gps_handle.fix.time.tv_nsec);
-        } else {
-            puts("n/a ");
-        }
-        if (isfinite(gps_handle.fix.latitude) &&
-            isfinite(gps_handle.fix.longitude)) {
-            // Display data from the GPS receiver if valid.
-            printf("Lat %.6f Lon %.6f\n",
-                   gps_handle.fix.latitude, gps_handle.fix.longitude);
-        } else {
-            printf("Lat n/a Lon n/a\n");
-        }
-        */
+        TaskSleepMsec(200);
 
+        // fetch pps data
         while (fpga_status->pps_fifo > 0)
         {
             u64_t ticks = *fpga_pps_data;
             clock_correction(ticks);
         }
 
-        TaskSleepMsec(100);
+        if (!gps_waiting(&gps_handle, 0))
+            continue;
+
+        gps_read(&gps_handle, NULL, 0);
+
+        // print_gps_data(&gps_handle);
+
+        if (MODE_SET != (MODE_SET & gps_handle.set))
+        {
+            // did not even get mode, nothing to see here
+            gps.acquiring = false;
+            continue;
+        }
+        else
+        {
+            gps.acquiring = true;
+        }
+
+        // Check if the receiver has obtained a position fix
+        if ((gps_handle.fix.mode > MODE_NO_FIX) && (gps.ttff == 0)) {
+            gps.ttff = (timer_ms() - gps.start) / 1000;
+        }
+
+        if (TIME_SET == (TIME_SET & gps_handle.set))
+        {
+            double d = gps_handle.fix.time.tv_sec;
+            if (d != 0)
+            {
+                gps.StatDay = d / (60 * 60 * 24);
+                if (gps.StatDay < 0 || gps.StatDay >= 7)
+                {
+                    gps.StatDay = -1;
+                }
+                gps.StatDaySec = d - (60 * 60 * 24) * gps.StatDay;
+                gps.StatWeekSec = d;
+            }
+        }
+
+        if (LATLON_SET == (LATLON_SET & gps_handle.set))
+        {
+            gps.sgnLat = gps_handle.fix.latitude;
+            gps.StatLat = fabs(gps_handle.fix.latitude);
+            gps.StatNS = gps_handle.fix.latitude < 0 ? 'S' : 'N';
+
+            gps.sgnLon = gps_handle.fix.longitude;
+            gps.StatLon = fabs(gps_handle.fix.longitude);
+            gps.StatEW = gps_handle.fix.longitude < 0 ? 'W' : 'E';
+        }
+
+        if (ALTITUDE_SET == (ALTITUDE_SET & gps_handle.set))
+        {
+            gps.StatAlt = gps_handle.fix.altitude;
+        }
+
+        if (gps_handle.set & SATELLITE_SET)
+        {
+            gps.FFTch = gps_handle.satellites_visible;
+            gps.tracking = gps_handle.satellites_visible;
+            gps.good = gps_handle.satellites_visible;
+            gps.fixes = gps_handle.satellites_used;
+            for (int i = 0; i < gps_handle.satellites_visible && i < GPS_MAX_CHANS; i++)
+            {
+                gps.ch[i].snr = gps_handle.skyview[i].ss;
+                gps.ch[i].sat = gps_handle.skyview[i].PRN;
+                gps.ch[i].el = gps_handle.skyview[i].elevation;
+                gps.ch[i].az = gps_handle.skyview[i].azimuth;
+                gps.ch[i].type = sat_s[gps_handle.skyview[i].gnssid];
+            }
+        }
     }
 }

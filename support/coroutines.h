@@ -59,8 +59,8 @@ extern u4_t task_medium_priority;
 #define	LOWEST_PRIORITY		0
 #define	NUM_PRIORITY		(HIGHEST_PRIORITY+1)
 
-#define	MISC_TASKS			7					// main, stats, spi pump, data pump, web server, registration, SNR meas
-#define GPS_TASKS			(GPS_MAX_CHANS + 3) // chan*n + search + solve + stat
+#define	MISC_TASKS			6					// main, stats, data pump, web server, registration, SNR meas
+#define GPS_TASKS			(1) 				// Single gps task
 #define SND_EXT_TASKS       (MAX_RX_CHANS * (2 + N_CAMP))   // W/F handled below
 #define	EXTRA_TASKS			(MAX_RX_CHANS * 4)  // additional tasks created by extensions etc.
 

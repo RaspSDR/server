@@ -225,7 +225,6 @@ target_compile_definitions(kiwi.bin PUBLIC
     DIR_CFG="/root/config"
     CFG_PREFIX=""
     DIR_DATA=STRINGIFY\(${CMAKE_INSTALL_FULL_DATAROOTDIR}\)
-    REPO_NAME="Beagle_SDR_GPS"
     BUILD_DIR="${PROJECT_BINARY_DIR}"
     COMPILE_HOST="${_host_name}"
     EDATA_EMBED

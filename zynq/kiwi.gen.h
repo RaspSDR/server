@@ -113,7 +113,7 @@
 #define WFO_BITS 16    // DEFp 0x10
 #define WF_1CIC_MAXD 8192    // DEFp 0x2000
 #define WF_2CIC_MAXD 0    // DEFp 0x0
-#define GPS_MAX_CHANS 12    // DEFp 0xc
+#define GPS_MAX_CHANS 16    // DEFp 0xc
 #define GPS_INTEG_BITS 20    // DEFp 0x14
 #define GPS_REPL_BITS 18    // DEFp 0x12
 #define MAX_NAV_BITS 128    // DEFp 0x80

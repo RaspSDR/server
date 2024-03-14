@@ -1736,8 +1736,8 @@ var pin = {
 var _gps = {
    leaflet: true,
    gps_map_loaded: false,
-   pkgs_maps_js: [ 'pkgs_maps/pkgs_maps.js', 'pkgs_maps/pkgs_maps.css' ],
-   gmap_js: ['http://maps.googleapis.com/maps/api/js?key='],
+//   pkgs_maps_js: [ 'pkgs_maps/pkgs_maps.js', 'pkgs_maps/pkgs_maps.css' ],
+//   gmap_js: ['http://maps.googleapis.com/maps/api/js?key='],
 
    RSSI:0, AZEL:1, POS:2, MAP:3, IQ:4,
    IQ_data: null,
@@ -1795,25 +1795,17 @@ function gps_html()
             w3_radio_button('w3-margin-R-4', 'Az/El', 'adm.rssi_azel_iq', adm.rssi_azel_iq == _gps.AZEL, 'gps_graph_cb'),
             w3_radio_button('w3-margin-R-4', 'Pos', 'adm.rssi_azel_iq', adm.rssi_azel_iq == _gps.POS, 'gps_graph_cb'),
             w3_radio_button('w3-margin-R-4', 'Map', 'adm.rssi_azel_iq', adm.rssi_azel_iq == _gps.MAP, 'gps_graph_cb'),
-            w3_radio_button('', 'IQ', 'adm.rssi_azel_iq', adm.rssi_azel_iq == _gps.IQ, 'gps_graph_cb')
          ),
 
          w3_divs('w3-hcenter w3-text-teal/w3-center',
             w3_div('id-gps-pos-scale w3-center w3-hide w3-small',
                '<b>Scale</b> ',
                w3_select('w3-margin-L-5 w3-text-red', '', '', '_gps.pos_scale', 10-1, '1:20', 'gps_pos_scale_cb')
-            ),
-            w3_div('id-gps-iq-ch w3-center w3-hide w3-small',
-               '<b>Chan</b> ',
-               w3_select('w3-margin-L-5 w3-text-red', '', '', '_gps.iq_ch', 0, '1:12', 'gps_iq_ch_cb')
             )
          )
       ) +
 
 	   w3_div('w3-valign',
-         w3_div('id-gps-loading-maps w3-container w3-section w3-card-8 w3-round-xlarge w3-pale-blue|width:100%',
-            'loading map...'
-         ),
          w3_div('id-gps-channels w3-container w3-section w3-card-8 w3-round-xlarge w3-pale-blue|width:100%',
             w3_table('id-gps-ch w3-table-6-8 w3-striped')
          ),
@@ -1848,10 +1840,8 @@ function gps_graph_cb(id, idx, first)
    idx = +idx;
    //console.log('gps_graph_cb idx='+ idx);
    admin_int_cb(id, idx, first);
-   ext_send('SET gps_IQ_data_ch='+ ((idx == _gps.IQ)? _gps.iq_ch:0));
 
    w3_show_hide('id-gps-pos-scale', idx == _gps.POS);
-   w3_show_hide('id-gps-iq-ch', idx == _gps.IQ);
    
    // id-gps-channels and id-gps-map-container are separated like this because the id-gps-ch inside id-gps-channels
    // is being updated all the time (@ 1 Hz) and we don't want the map to be effected by this.
@@ -1891,27 +1881,6 @@ function gps_pos_scale_cb(path, idx, first)
 	//console.log('gps_pos_scale_cb idx='+ idx +' path='+ path+' first='+ first +' pos_scale='+ _gps.pos_scale);
 }
 
-function gps_iq_ch_cb(path, idx, first)
-{
-   idx = +idx;
-	if (idx == -1 || first)
-	   idx = 0;
-	_gps.iq_ch = idx + 1;  // channel # is biased at 1 so zero indicates "off" (no sampling)
-	//console.log('gps_iq_ch_cb idx='+ idx +' path='+ path+' first='+ first +' iq_ch='+ _gps.iq_ch);
-   ext_send('SET gps_IQ_data_ch='+ _gps.iq_ch);
-   _gps.IQ_data = null;    // blank display until new data arrives
-}
-
-function gps_gain_cb(path, idx, first)
-{
-   idx = +idx;
-	if (idx == -1 || first)
-	   idx = 0;
-	_gps.gain = idx + 1;
-	//console.log('gps_gain_cb idx='+ idx +' path='+ path+' first='+ first +' gain='+ _gps.gain);
-   ext_send('SET gps_gain='+ _gps.gain);
-}
-
 var gps_interval, gps_azel_interval;
 var gps_has_lat_lon, gps_az_el_history_running = false;
 
@@ -1927,17 +1896,6 @@ function gps_schedule_azel()
 
 function gps_focus(id)
 {
-   if (!_gps.gps_map_loaded) {
-      kiwi_load_js(_gps.leaflet? _gps.pkgs_maps_js : _gps.gmap_js, 'gps_focus2');
-      _gps.gps_map_loaded = true;
-   } else {
-      gps_focus2(id);
-   }
-}
-
-function gps_focus2(id)
-{
-   w3_hide('id-gps-loading-maps');
    gps_schedule_azel();
    
 	// only get updates while the gps tab is selected
@@ -1951,7 +1909,6 @@ function gps_blur(id)
 	kiwi_clearInterval(gps_interval);
 	kiwi_clearInterval(gps_azel_interval);
    gps_az_el_history_running = false;
-	ext_send("SET gps_IQ_data_ch=0");
 }
 
 var gps_nsamp;
@@ -2021,7 +1978,7 @@ function gps_update_admin_cb()
 	
 	s =
 		w3_table_row('',
-			w3_table_heads('w3-right-align', 'chan', 'acq', '&nbsp;PRN', 'SNR', 'eph age', 'hold', 'wdog'),
+			w3_table_heads('w3-right-align', 'chan', '&nbsp;PRN', 'SNR', 'eph age', 'hold', 'wdog'),
 			w3_table_heads('w3-center', 'status', 'subframe'),
 			w3_table_heads('w3-right-align', 'ov', 'az', 'el'),
 			(adm.rssi_azel_iq == _gps.RSSI)? null : w3_table_heads('w3-right-align', 'RSSI'),
@@ -2062,7 +2019,6 @@ function gps_update_admin_cb()
 	
 		var cells =
 			w3_table_cells('w3-right-align', cn+1) +
-			w3_table_cells('w3-center', (cn == gps.FFTch)? refresh_icon:'') +
 			w3_table_cells('w3-right-align',
 				prn? (prn_pre + prn):'',
 				ch.snr? ch.snr:''
@@ -2169,7 +2125,6 @@ function gps_update_admin_cb()
       if (h) {
          w3_el('id-gps-azel-container').style.height = px(h - 24);
          w3_el('id-gps-map').style.height = px(h - 24);
-         _gps.a = enc(gps.a);
          _gps.map_needs_height = 0;
       }
    }
@@ -2325,46 +2280,6 @@ function gps_update_admin_cb()
       return;
    }
 
-
-   ////////////////////////////////
-   // IQ
-   ////////////////////////////////
-
-   if (adm.rssi_azel_iq == _gps.IQ) {
-      var axis = 400;
-      ctx.fillStyle = 'hsl(0, 0%, 90%)';
-      ctx.fillRect(0,0, axis, axis);
-      
-      // crosshairs
-      ctx.fillStyle = 'yellow';
-      ctx.fillRect(axis/2,0, 1, axis);
-      ctx.fillRect(0,axis/2, axis, 1);
-      
-      if (!_gps.IQ_data) return;
-      ctx.fillStyle = 'black';
-      var magnify = 8;
-      var scale = (axis/2) / 32768.0 * magnify;
-      var len = _gps.IQ_data.IQ.length;
-
-      for (var i=0; i < len; i += 2) {
-         var I = _gps.IQ_data.IQ[i];
-         var Q = _gps.IQ_data.IQ[i+1];
-         if (I == 0 && Q == 0) continue;
-         var x = Math.round(I*scale + axis/2);
-         var y = Math.round(Q*scale + axis/2);
-         if (x < 0 || x >= axis) {
-            x = (x < 0)? 0 : axis-1;
-         }
-         if (y < 0 || y >= axis) {
-            y = (y < 0)? 0 : axis-1;
-         }
-         ctx.fillRect(x,y, 2,2);
-      }
-      
-      return;
-   }
-
-   
    ////////////////////////////////
    // POS
    ////////////////////////////////
@@ -3470,10 +3385,6 @@ function admin_msg(param)
          w3_call('gps_update_admin_cb');
 			break;
 
-		case "gps_IQ_data_cb":
-         _gps.IQ_data = kiwi_JSON_parse('gps_IQ_data_cb', decodeURIComponent(param[1]));
-			break;
-
       case "gps_POS_data_cb":
          _gps.POS_data = kiwi_JSON_parse('gps_POS_data_cb', decodeURIComponent(param[1]));
          break;
@@ -3564,10 +3475,6 @@ function admin_recv(data)
 				//console.log("ADMIN init rx_chans="+rx_chans);
             admin_draw(admin_sdr_mode);
             ext_send('SET extint_load_extension_configs');
-				break;
-
-			case "repo_git":
-			   admin.repo_git = decodeURIComponent(param[1]);
 				break;
 
 			case "gps_info":

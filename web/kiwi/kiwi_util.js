@@ -1622,6 +1622,17 @@ function kiwi_ajax_prim(method, data, url, callback, cb_param, timeout, progress
 {
    ajax_id++;
 	var ajax;
+   var fetch_mtime = false;
+
+   if (url.endsWith(".mtime")) {
+      // Set fetch_mtime to true
+      fetch_mtime = true;
+    
+      // Strip ".mtime" from the URL
+      url = url.slice(0, -6); // Removes the last 6 characters (".mtime")
+
+      method = "GET";
+    }
 	
 	var dbug = function(msg) {
 	   if (debug) {
@@ -1727,6 +1738,9 @@ function kiwi_ajax_prim(method, data, url, callback, cb_param, timeout, progress
          if (ajax.status != 200) {
             console.log('$AJAX BAD STATUS='+ ajax.status +' url='+ url);
             obj = { AJAX_error:'status', status:ajax.status };
+         } else if (fetch_mtime) {
+            var lastModified = ajax.getResponseHeader('Last-Modified');
+            obj = new Date(lastModified).getTime() / 1000;
          } else {
             var response = ajax.responseText.toString();
             if (response == null) response = '';

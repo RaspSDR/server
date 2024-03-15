@@ -87,7 +87,7 @@ static void gps_task(void *param)
     fpga_config->reset |= RESET_PPS;
     for (;;)
     {
-        TaskSleepMsec(200);
+        TaskSleepMsec(500);
 
         // fetch pps data
         while (fpga_status->pps_fifo > 0)

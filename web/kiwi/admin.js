@@ -2133,7 +2133,7 @@ function gps_update_admin_cb()
    ////////////////////////////////
    // MAP
    ////////////////////////////////
-
+/*
    if (adm.rssi_azel_iq == _gps.MAP) {
 
       if (!_gps.map_init && !_gps.map_needs_height) {
@@ -2279,7 +2279,7 @@ function gps_update_admin_cb()
 
       return;
    }
-
+*/
    ////////////////////////////////
    // POS
    ////////////////////////////////
@@ -2298,12 +2298,12 @@ function gps_update_admin_cb()
 
       //ctx.globalAlpha = 0.5;
       ctx.globalAlpha = 1;
-      var x0min, x0max, y0min, y0max, x1min, x1max, y1min, y1max;
-      x0min = y0min = x1min = y1min = Number.MAX_VALUE;
-      x0max = y0max = x1max = y1max = Number.MIN_VALUE;
+      var x0min, x0max, y0min, y0max;
+      x0min = y0min = Number.MAX_VALUE;
+      x0max = y0max = Number.MIN_VALUE;
       for (var i=0; i < len; i += 2) {
          if (!adm.plot_E1B && i >= len/2) break;
-         ctx.fillStyle = (i < len/2)? "DeepSkyBlue":"black";
+         ctx.fillStyle = "DeepSkyBlue";
          var lat = _gps.POS_data.POS[i];
          if (lat == 0) continue;
          var lon = _gps.POS_data.POS[i+1];
@@ -2320,16 +2320,9 @@ function gps_update_admin_cb()
             clamp++;
          }
          var bs = 8;
-         if (i < len/2) {
-            ctx.fillRect(x-2,y-2, 5,5);
-            if (x+bs > x0max) x0max = x+bs; else if (x-bs < x0min) x0min = x-bs;
-            if (y+bs > y0max) y0max = y+bs; else if (y-bs < y0min) y0min = y-bs;
-         } else {
-            ctx.fillRect(x,y-2, 1,5);
-            ctx.fillRect(x-2,y, 5,1);
-            if (x+bs > x1max) x1max = x+bs; else if (x-bs < x1min) x1min = x-bs;
-            if (y+bs > y1max) y1max = y+bs; else if (y-bs < y1min) y1min = y-bs;
-         }
+         ctx.fillRect(x-2,y-2, 5,5);
+         if (x+bs > x0max) x0max = x+bs; else if (x-bs < x0min) x0min = x-bs;
+         if (y+bs > y0max) y0max = y+bs; else if (y-bs < y0min) y0min = y-bs;
       }
       //ctx.globalAlpha = 1.0;
       
@@ -2342,17 +2335,6 @@ function gps_update_admin_cb()
       line_stroke(ctx, 0, 1, 'DeepSkyBlue', x0min,y0max, x0max,y0max);
       line_stroke(ctx, 1, 1, 'DeepSkyBlue', x0min,y0min, x0min,y0max);
       line_stroke(ctx, 1, 1, 'DeepSkyBlue', x0max,y0min, x0max,y0max);
-
-      if (adm.plot_E1B) {
-         if (x1max >= axis) x1max = axis-1;
-         if (x1min < 0) x1min = 0;
-         if (y1max >= axis) y1max = axis-1;
-         if (y1min < 0) y1min = 0;
-         line_stroke(ctx, 0, 1, 'black', x1min,y1min, x1max,y1min);
-         line_stroke(ctx, 0, 1, 'black', x1min,y1max, x1max,y1max);
-         line_stroke(ctx, 1, 1, 'black', x1min,y1min, x1min,y1max);
-         line_stroke(ctx, 1, 1, 'black', x1max,y1min, x1max,y1max);
-      }
       
       // text
       var x = 16;
@@ -2367,18 +2349,8 @@ function gps_update_admin_cb()
       ctx.fillRect(x-2,y-2-yf, 5,5);
       x += xi;
       ctx.fillStyle = 'black';
-      ctx.fillText((adm.plot_E1B? ' w/o Galileo span: ':'All sats span: ')+
-         _gps.POS_data.y0span.toFixed(0).fieldWidth(4) +'m Ylat '+ _gps.POS_data.x0span.toFixed(0).fieldWidth(4) +'m Xlon', x,y);
-
-      if (adm.plot_E1B) {
-         x -= xi;
-         y += yi;
-         ctx.fillStyle = 'black';
-         ctx.fillRect(x,y-2-yf, 1,5);
-         ctx.fillRect(x-2,y-yf, 5,1);
-         x += xi;
-         ctx.fillText('with Galileo span: '+ _gps.POS_data.y1span.toFixed(0).fieldWidth(4) +'m Ylat '+ _gps.POS_data.x1span.toFixed(0).fieldWidth(4) +'m Xlon', x,y);
-      }
+      ctx.fillText('All sats span: ' +
+         _gps.POS_data.yspan.toFixed(0).fieldWidth(4) +'m Ylat '+ _gps.POS_data.xspan.toFixed(0).fieldWidth(4) +'m Xlon', x,y);
 
       //if (clamp) console.log('gps POS clamp='+ clamp);
       return;

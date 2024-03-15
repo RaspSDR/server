@@ -128,13 +128,13 @@ typedef struct {
 	double StatWeekSec, StatDaySec;
 	int StatDay;    // 0 = Sunday
 	double StatLat, StatLon, StatAlt, sgnLat, sgnLon;
-	int StatNS, StatEW;
+	char StatNS, StatEW;
     signed delta_tLS, delta_tLSF;
     bool include_alert_gps;
     bool include_E1B;
     bool set_date, date_set;
     int tod_chan;
-    int soln_type, E1B_plot_separately;
+    int soln_type;
 	gps_chan_t ch[GPS_MAX_CHANS];
 	
 	//#define AZEL_NSAMP (4*60)
@@ -145,33 +145,15 @@ typedef struct {
 	
 	u4_t shadow_map[360];
 	azel_t qzs_3;
-	
-	int IQ_data_ch;
-	s2_t IQ_data[GPS_IQ_SAMPS_W];
-	u4_t IQ_seq_w, IQ_seq_r;
 
-    // reference lat/lon from early GPS fix
-	bool have_ref_lla;
-	float ref_lat, ref_lon, ref_alt;
-
-    // E1B_plot_separately == false
-    #define MAP_ALL 0           // green map pin
-    
-    // E1B_plot_separately == true
-    #define MAP_WITHOUT_E1B 0   // green map pin
-    #define MAP_WITH_E1B 1      // red map pin
-    #define MAP_ONLY_E1B 2      // yellow map pin
-
-    #define GPS_NPOS 2
     #define GPS_POS_SAMPS 64
-	gps_pos_t POS_data[GPS_NPOS][GPS_POS_SAMPS];
-	u4_t POS_seq, POS_next, POS_len, POS_seq_w, POS_seq_r;
+	gps_pos_t POS_data[GPS_POS_SAMPS];
+	u4_t POS_seq, POS_len, POS_seq_w, POS_seq_r;
 
     #define GPS_MAP_SAMPS 16
 	gps_map_t MAP_data_seq[GPS_MAP_SAMPS];
 	u4_t MAP_next, MAP_len, MAP_seq_w, MAP_seq_r;
-	
-	int gps_gain, kick_lo_pll_ch;
+
 } gps_t;
 
 extern gps_t gps;

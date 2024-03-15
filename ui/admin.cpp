@@ -859,32 +859,31 @@ void c2s_admin(void *param)
             
             n = strcmp(cmd, "SET gps_update");
             if (n == 0) {
-#if 0
                 // sends a list of the last gps.POS_len entries per query
                 if (gps.POS_seq_w != gps.POS_seq_r) {
-                    sb = kstr_asprintf(NULL, "{\"ref_lat\":%.6f,\"ref_lon\":%.6f,\"POS\":[", gps.ref_lat, gps.ref_lon);
-                    int xmax[GPS_NPOS], xmin[GPS_NPOS], ymax[GPS_NPOS], ymin[GPS_NPOS];
-                    xmax[0] = xmax[1] = ymax[0] = ymax[1] = INT_MIN;
-                    xmin[0] = xmin[1] = ymin[0] = ymin[1] = INT_MAX;
-                    for (j = 0; j < GPS_NPOS; j++) {
-                        for (k = 0; k < gps.POS_len; k++) {
-                            sb = kstr_asprintf(sb, "%s%.6f,%.6f", (j||k)? ",":"", gps.POS_data[j][k].lat, gps.POS_data[j][k].lon);
-                            if (gps.POS_data[j][k].lat != 0) {
-                                int x = gps.POS_data[j][k].x;
-                                if (x > xmax[j]) xmax[j] = x; else if (x < xmin[j]) xmin[j] = x;
-                                int y = gps.POS_data[j][k].y;
-                                if (y > ymax[j]) ymax[j] = y; else if (y < ymin[j]) ymin[j] = y;
-                            }
+                    sb = kstr_asprintf(NULL, "{\"ref_lat\":%.6f,\"ref_lon\":%.6f,\"POS\":[", gps.sgnLat, gps.sgnLon);
+                    int xmax, xmin, ymax, ymin;
+                    xmax = ymax = INT_MIN;
+                    xmin = ymin = INT_MAX;
+                    for (k = 0; k < gps.POS_len; k++) {
+                        sb = kstr_asprintf(sb, "%s%.6f,%.6f", k ? ",":"", gps.POS_data[k].lat, gps.POS_data[k].lon);
+                        if (gps.POS_data[k].lat != 0) {
+                            int x = gps.POS_data[k].x;
+                            if (x > xmax) xmax = x; else if (x < xmin) xmin = x;
+                            int y = gps.POS_data[k].y;
+                            if (y > ymax) ymax = y; else if (y < ymin) ymin = y;
                         }
                     }
-                    sb = kstr_asprintf(sb, "],\"x0span\":%d,\"y0span\":%d,\"x1span\":%d,\"y1span\":%d}",
-                        xmax[0]-xmin[0], ymax[0]-ymin[0], xmax[1]-xmin[1], ymax[1]-ymin[1]);
+
+                    sb = kstr_asprintf(sb, "],\"xspan\":%d,\"yspan\":%d}",
+                        xmax-xmin, ymax-ymin);
                     send_msg_encoded(conn, "MSG", "gps_POS_data_cb", "%s", kstr_sp(sb));
                     kstr_free(sb);
                     gps.POS_seq_r = gps.POS_seq_w;
                     NextTask("gps_update2");
                 }
         
+#if 0
                 // sends a list of the newest, non-duplicate entries per query
                 if (gps.MAP_seq_w != gps.MAP_seq_r) {
                     sb = kstr_asprintf(NULL, "{\"ref_lat\":%.6f,\"ref_lon\":%.6f,\"MAP\":[", gps.ref_lat, gps.ref_lon);

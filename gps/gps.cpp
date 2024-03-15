@@ -82,6 +82,29 @@ gtime_t gpst2time(int week, double sec)
     return t;
 }
 
+static const double _a = 6378137.0;
+static const double _b = 6356752.31424518;
+static const double a2 = _a*_a;
+static const double b2 = _b*_b;
+static const double e2 =  1.0 - b2/a2;
+static const double a = _a;
+
+static double rc_normal(double phi) {
+    double const sp = std::sin(phi);
+    return a/std::sqrt(1.0 - e2*sp*sp);
+}
+
+// LLH -> XYZ  (LLH = LonLatAlt)
+static void LLH2XYZ(double lat, double lon, double alt, double *x, double *y)
+{
+    double const cp = std::cos(lon), sp = std::sin(lon);
+    double const cl = std::cos(lat), sl = std::sin(lat);
+    double const nu = rc_normal(alt);
+    *x = (nu + alt) * cp * cl;
+    *y = (nu + alt) * cp * sl;
+    // z = ((1-e2())*nu + llh.alt())*sp}});
+}
+
 static void gps_task(void *param)
 {
     fpga_config->reset |= RESET_PPS;
@@ -132,6 +155,8 @@ static void gps_task(void *param)
                 gps.StatDaySec = d - (60 * 60 * 24) * gps.StatDay;
                 gps.StatWeekSec = d;
             }
+
+            gps.delta_tLS = gps_handle.leap_seconds;
         }
 
         if (LATLON_SET == (LATLON_SET & gps_handle.set))
@@ -148,6 +173,22 @@ static void gps_task(void *param)
         if (ALTITUDE_SET == (ALTITUDE_SET & gps_handle.set))
         {
             gps.StatAlt = gps_handle.fix.altitude;
+        }
+
+        if (gps.sgnLon != 0)
+        {
+            double x, y;
+            LLH2XYZ(gps.sgnLat, gps.sgnLon, gps.StatAlt, &x, &y);
+
+            gps_pos_t *pos = &gps.POS_data[gps.POS_seq_w];
+
+            pos->lat = gps.sgnLat;
+            pos->lon = gps.sgnLon;
+            pos->x = x;
+            pos->y = y;
+
+            gps.POS_seq_w = (gps.POS_seq_w + 1) % GPS_POS_SAMPS;
+            if (gps.POS_len < GPS_POS_SAMPS) gps.POS_len++;
         }
 
         if (gps_handle.set & SATELLITE_SET)

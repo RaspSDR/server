@@ -156,6 +156,7 @@ static void gps_task(void *param)
                 gps.StatWeekSec = d;
             }
 
+            gps.tLS_valid = true;
             gps.delta_tLS = gps_handle.leap_seconds;
         }
 
@@ -197,6 +198,7 @@ static void gps_task(void *param)
             gps.tracking = gps_handle.satellites_visible;
             gps.good = gps_handle.satellites_visible;
             gps.fixes = gps_handle.satellites_used;
+            memset(gps.shadow_map, 0, sizeof(gps.shadow_map));
             for (int i = 0; i < gps_handle.satellites_visible && i < GPS_MAX_CHANS; i++)
             {
                 gps.ch[i].snr = gps_handle.skyview[i].ss;
@@ -204,6 +206,16 @@ static void gps_task(void *param)
                 gps.ch[i].el = gps_handle.skyview[i].elevation;
                 gps.ch[i].az = gps_handle.skyview[i].azimuth;
                 gps.ch[i].type = sat_s[gps_handle.skyview[i].gnssid];
+                gps.ch[i].has_soln = gps_handle.skyview[i].used;
+
+                const int el = std::round(gps.ch[i].el);
+                const int az = std::round(gps.ch[i].az);
+
+                // printf("%s NEW EL/AZ=%2d %3d\n", PRN(sat), el, az);
+                if (az < 0 || az >= 360 || el <= 0 || el > 90)
+                    continue;
+
+                gps.shadow_map[az] |= (1 << int(std::round(el / 90.0 * 31.0)));
             }
         }
     }

@@ -130,10 +130,6 @@ typedef struct {
 	double StatLat, StatLon, StatAlt, sgnLat, sgnLon;
 	char StatNS, StatEW;
     signed delta_tLS, delta_tLSF;
-    bool include_alert_gps;
-    bool include_E1B;
-    bool set_date, date_set;
-    int tod_chan;
     int soln_type;
 	gps_chan_t ch[GPS_MAX_CHANS];
 	

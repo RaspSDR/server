@@ -702,7 +702,7 @@ fail:
 			clk.ext_ADC_clk? 1:0, clk.do_corrections,
 			timer_sec(),
 			#ifdef USE_GPS
-			    gps.set_date? 1:0, gps.date_set? 1:0,
+			    1, 1,
 			#else
 			    0, 0,
 			#endif

@@ -592,11 +592,7 @@ void update_vars_from_config(bool called_at_init)
 
     #ifdef USE_GPS
         admcfg_default_bool("GPS_tstamp", true, &update_admcfg);
-        admcfg_default_bool("use_kalman_position_solver", true, &update_admcfg);
         admcfg_default_int("rssi_azel_iq", 0, &update_admcfg);
-
-        admcfg_default_bool("always_acq_gps", false, &update_admcfg);
-        gps.set_date = admcfg_default_bool("gps_set_date", false, &update_admcfg);
     #endif
     
     #ifdef CRYPT_PW

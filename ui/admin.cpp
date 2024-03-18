@@ -882,30 +882,7 @@ void c2s_admin(void *param)
                     gps.POS_seq_r = gps.POS_seq_w;
                     NextTask("gps_update2");
                 }
-        
-#if 0
-                // sends a list of the newest, non-duplicate entries per query
-                if (gps.MAP_seq_w != gps.MAP_seq_r) {
-                    sb = kstr_asprintf(NULL, "{\"ref_lat\":%.6f,\"ref_lon\":%.6f,\"MAP\":[", gps.ref_lat, gps.ref_lon);
-                    int any_new = 0;
-                    #define GPS_NMAP 3
-                    for (j = 0; j < GPS_NMAP; j++) {
-                        for (k = 0; k < gps.MAP_len; k++) {
-                            // gps_map_t seq = gps.MAP_data_seq[k];
-                            // if (seq <= gps.MAP_seq_r || gps.MAP_data[j][k].lat == 0) continue;
-                            // sb = kstr_asprintf(sb, "%s{\"nmap\":%d,\"lat\":%.6f,\"lon\":%.6f}", any_new? ",":"",
-                            //     j, gps.MAP_data[j][k].lat, gps.MAP_data[j][k].lon);
-                            any_new = 1;
-                        }
-                    }
-                    sb = kstr_cat(sb, "]}");
-                    if (any_new)
-                        send_msg_encoded(conn, "MSG", "gps_MAP_data_cb", "%s", kstr_sp(sb));
-                    kstr_free(sb);
-                    gps.MAP_seq_r = gps.MAP_seq_w;
-                    NextTask("gps_update3");
-                }
-        #endif
+
                 gps_chan_t *c;
                 
                 sb = kstr_asprintf(NULL, "{\"FFTch\":%d,\"ch\":[", gps.FFTch);

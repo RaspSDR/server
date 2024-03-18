@@ -19,10 +19,10 @@
 "rx_name":"0-30 MHz SDR",
 "rx_device":"WEB-888",
 "rx_location":"Tauranga, New Zealand",
-"rx_grid":"RF82ci",
+"rx_grid":"ON44",
 "rx_asl":30,
 "rx_antenna":"Mini-Whip",
 "rx_gps":"(-37.631120, 176.172210)",
-"server_url":"kiwisdr.example.com",
+"server_url":"web888.example.com",
 "admin_email":"your_email@example.com"
 }

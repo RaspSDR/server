@@ -122,6 +122,7 @@ file(GLOB_RECURSE KIWI_SRCS
     "${UPSTREAM_DIR}/support/*.cpp"
     "${UPSTREAM_DIR}/ui/admin.cpp"
     "${UPSTREAM_DIR}/init/*.cpp"
+    "${UPSTREAM_DIR}/si5351/*.cpp"
 
     "${UPSTREAM_DIR}/pkgs/TNT_JAMA/*.cpp"
     "${UPSTREAM_DIR}/pkgs/jsmn/*.cpp"

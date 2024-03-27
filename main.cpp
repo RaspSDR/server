@@ -66,7 +66,7 @@ int fw_sel, fpga_id, rx_chans, wf_chans, nrx_bufs, nrx_samps, snd_rate, rx_decim
 int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
 	rx_cordic, rx_cic, rx_cic2, rx_dump, wf_cordic, wf_cic, wf_mult, wf_mult_gen, do_slice=-1,
 	rx_yield=1000, gps_chans=GPS_MAX_CHANS, wf_max, rx_num, wf_num,
-	do_gps, do_sdr=1, navg=1, wf_olap, meas, spi_delay=100, do_fft, debian_ver, monitors_max,
+	do_gps, do_sdr=1, navg=1, wf_olap, meas, do_fft, debian_ver, monitors_max,
 	noisePwr=-160, unwrap=0, rev_iq, ineg, qneg, fft_file, fftsize=1024, fftuse=1024, bg,
 	print_stats, ecpu_cmds, ecpu_tcmds, use_spidev, debian_maj, debian_min, test_flag, dx_print,
 	gps_debug, gps_var, gps_lo_gain, gps_cg_gain, use_foptim, is_locked, drm_nreg_chans;

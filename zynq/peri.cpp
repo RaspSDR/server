@@ -29,7 +29,7 @@ void peri_init()
     i2c = new LinuxInterface(buss_id, chip_addr);
     si5351 = new Si5351(chip_addr, i2c);
   
-    bool i2c_found = si5351->init(SI5351_CRYSTAL_LOAD_0PF, 25000000, 0);
+    bool i2c_found = si5351->init(SI5351_CRYSTAL_LOAD_0PF, 27000000, 0);
     if(!i2c_found)
     {
         printf("i2c si5351 is not found\n");

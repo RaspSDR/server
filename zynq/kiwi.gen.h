@@ -89,7 +89,7 @@
 #define RXO_BITS 31    // DEFp 0x18
 #define RX1_STAGES 3    // DEFp 0x3
 #define RX2_STAGES 5    // DEFp 0x5
-#define MAX_ZOOM 11    // DEFp 0xe
+#define MAX_ZOOM 13    // DEFp 0xe
 #define NWF_FFT 8192    // DEFp 0x2000
 #define NWF_IQW 2    // DEFp 0x2
 #define NWF_NXFER 9    // DEFp 0x9

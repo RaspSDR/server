@@ -3287,7 +3287,7 @@ function export_waterfall() {
 
 function zoom_finally()
 {
-	w3_innerHTML('id-nav-optbar-wf', 'WF'+ (zoom_level-2).toFixed(0));
+	w3_innerHTML('id-nav-optbar-wf', 'WF'+ zoom_level.toFixed(0));
 	wf_gnd_value = wf_gnd_value_base - zoomCorrection();
    extint_environment_changed( { zoom:1, passband_screen_location:1 } );
 	freqset_select();
@@ -3295,7 +3295,7 @@ function zoom_finally()
 
 var ZOOM_NOMINAL = 10, ZOOM_BAND = 6;
 var zoom_nom = 0, zoom_old_nom = 0;
-var zoom_levels_min = 2;
+var zoom_levels_min = 0;
 var zoom_levels_max = 0;
 var zoom_level = 0;
 var zoom_level_f = 0;
@@ -3451,8 +3451,8 @@ function zoom_step(dir, arg2)
 	}
 	
 	if (zoom_level == zoom_levels_min || ozoom == zoom_levels_min) {
-		w3_show_hide('id-maxout', zoom_level != 0, 'w3-show-table-cell');
-		w3_show_hide('id-maxout-max', zoom_level == 0, 'w3-show-table-cell');
+		w3_show_hide('id-maxout', zoom_level != zoom_levels_min, 'w3-show-table-cell');
+		w3_show_hide('id-maxout-max', zoom_level == zoom_levels_min, 'w3-show-table-cell');
 	}
 	
 	x_bin = clamp_xbin(x_bin);

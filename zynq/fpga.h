@@ -43,12 +43,14 @@ typedef struct {
 static_assert(sizeof(FPGA_Config) == 800/8);
 
 typedef struct {
+    uint32_t signature;
     uint32_t rx_fifo;
     uint32_t wf_fifo[4];
     uint32_t pps_fifo;
     uint64_t fpga_dna;
+    uint64_t tsc;
 }__attribute__((packed)) FPGA_Status;
-static_assert(sizeof(FPGA_Status) == 256/8);
+static_assert(sizeof(FPGA_Status) == 352/8);
 
 extern const volatile int32_t *fpga_rx_data;
 extern const volatile uint32_t *fpga_wf_data[4];

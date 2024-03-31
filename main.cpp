@@ -61,7 +61,7 @@ Boston, MA  02110-1301, USA.
 kiwi_t kiwi;
 
 int version_maj, version_min;
-int fw_sel, fpga_id, rx_chans, wf_chans, nrx_bufs, nrx_samps, snd_rate, rx_decim;
+int rx_chans, wf_chans, nrx_bufs, nrx_samps, snd_rate, rx_decim;
 
 int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
 	rx_cordic, rx_cic, rx_cic2, rx_dump, wf_cordic, wf_cic, wf_mult, wf_mult_gen, do_slice=-1,
@@ -78,7 +78,6 @@ bool create_eeprom, need_hardware, kiwi_reg_debug, have_ant_switch_ext, gps_e1b_
 
 int main_argc;
 char **main_argv;
-char *fpga_file;
 static bool _kiwi_restart;
 
 void kiwi_restart()
@@ -108,10 +107,6 @@ int main(int argc, char *argv[])
 	int i;
 	int p_gps = 0, gpio_test_pin = 0;
 	bool err;
-
-	#define FW_CONFIGURED   -2  // -2 because -1 means "other" firmware and 0-N is Kiwi firmware
-	#define FW_OTHER        -1
-	int fw_sel_override = FW_CONFIGURED;   
 	
 	version_maj = VERSION_MAJ;
 	version_min = VERSION_MIN;
@@ -149,14 +144,11 @@ int main(int argc, char *argv[])
     
 	for (int ai = 1; ai < argc; ) {
 	    if (strncmp(argv[ai], "-o_", 3) == 0) {
-	        fw_sel_override = FW_OTHER;
 	        ai++;
 		    while (ai < argc && ((argv[ai][0] != '+') && (argv[ai][0] != '-'))) ai++;
 	        continue;
 	    }
 	
-		if (ARG("-fw")) { ARGL(fw_sel_override); printf("firmware select override: %d\n", fw_sel_override); } else
-
 		if (ARG("-kiwi_reg")) kiwi_reg_debug = TRUE; else
 		if (ARG("-cmd_debug")) cmd_debug = TRUE; else
 		if (ARG("-bg")) { background_mode = TRUE; bg=1; } else
@@ -294,89 +286,43 @@ int main(int argc, char *argv[])
     cfg_reload();
     clock_init();
 
-    if (fw_sel_override != FW_CONFIGURED) {
-        fw_sel = fw_sel_override;
-    } else {
-        fw_sel = admcfg_int("firmware_sel", &err, CFG_OPTIONAL);
-        if (err) fw_sel = FW_SEL_SDR_RX4_WF4;
-    }
-    
+    fpga_init();
+
     bool update_admcfg = false;
     kiwi.anti_aliased = admcfg_default_bool("anti_aliased", false, &update_admcfg);
     if (update_admcfg) admcfg_save_json(cfg_adm.json);      // during init doesn't conflict with admin cfg
-    
-    if (fw_sel == FW_SEL_SDR_RX4_WF4) {
-        fpga_id = FPGA_ID_RX4_WF4;
-        rx_chans = 8;
-        wf_chans = 4;
-        snd_rate = SND_RATE_4CH;
-        rx_decim = RX_DECIM_4CH;
-        nrx_bufs = RXBUF_SIZE_4CH / NRX_SPI;
-        lprintf("firmware: SDR_RX4_WF4\n");
-    } else
-    if (fw_sel == FW_SEL_SDR_RX8_WF2) {
-        fpga_id = FPGA_ID_RX8_WF2;
-        rx_chans = 8;
-        wf_chans = 2;
-        snd_rate = SND_RATE_8CH;
-        rx_decim = RX_DECIM_8CH;
-        nrx_bufs = RXBUF_SIZE_8CH / NRX_SPI;
-        lprintf("firmware: SDR_RX8_WF2\n");
-    } else
-    if (fw_sel == FW_SEL_SDR_RX3_WF3) {
-        fpga_id = FPGA_ID_RX3_WF3;
-        rx_chans = 3;
-        wf_chans = 3;
-        snd_rate = SND_RATE_3CH;
-        rx_decim = RX_DECIM_3CH;
-        nrx_bufs = RXBUF_SIZE_3CH / NRX_SPI;
-        lprintf("firmware: SDR_RX3_WF3\n");
-    } else
-    if (fw_sel == FW_SEL_SDR_RX14_WF0) {
-        fpga_id = FPGA_ID_RX14_WF0;
-        rx_chans = 14;
-        wf_chans = 0;
-        gps_chans = 10;
-        snd_rate = SND_RATE_14CH;
-        rx_decim = RX_DECIM_14CH;
-        nrx_bufs = RXBUF_SIZE_14CH / NRX_SPI;
-        lprintf("firmware: SDR_RX14_WF0\n");
-    } else {
-        fpga_id = FPGA_ID_OTHER;
-        lprintf("firmware: OTHER\n");
-    }
-    
-    if (fpga_id == FPGA_ID_OTHER) {
-        fpga_file = strdup((char *) "other");
-    } else {
-        asprintf(&fpga_file, "rx%d.wf%d", rx_chans, wf_chans);
-    
-        bool no_wf = cfg_bool("no_wf", &err, CFG_OPTIONAL);
-        if (err) no_wf = false;
-        if (no_wf) wf_chans = 0;
 
-        lprintf("firmware: rx_chans=%d wf_chans=%d gps_chans=%d\n", rx_chans, wf_chans, gps_chans);
+    rx_chans = fpga_status->signature & 0x0f;
+    wf_chans = (fpga_status->signature >> 8) & 0x0f;;
+    snd_rate = SND_RATE_4CH;
+    rx_decim = RX_DECIM_4CH;
+    nrx_bufs = RXBUF_SIZE_4CH / NRX_SPI;
 
-        assert(rx_chans <= MAX_RX_CHANS);
-        assert(wf_chans <= MAX_WF_CHANS);
+    bool no_wf = cfg_bool("no_wf", &err, CFG_OPTIONAL);
+    if (err) no_wf = false;
+    if (no_wf) wf_chans = 0;
 
-        nrx_samps = NRX_SAMPS_CHANS(rx_chans);
-        snd_intr_usec = 1e6 / ((float) snd_rate/nrx_samps);
-        lprintf("firmware: RX rx_decim=%d RX1_STD_DECIM=%d RX2_STD_DECIM=%d USE_RX_CICF=%d\n",
-            rx_decim, RX1_STD_DECIM, RX2_STD_DECIM, VAL_USE_RX_CICF);
-        lprintf("firmware: RX srate=%.3f(%d) bufs=%d samps=%d intr_usec=%d\n",
-            ext_update_get_sample_rateHz(ADC_CLK_TYP), snd_rate, nrx_bufs, nrx_samps, snd_intr_usec);
+    lprintf("firmware: rx_chans=%d wf_chans=%d gps_chans=%d\n", rx_chans, wf_chans, gps_chans);
 
-        assert(nrx_bufs <= MAX_NRX_BUFS);
-        assert(nrx_samps <= MAX_NRX_SAMPS);
-        assert(nrx_samps < FASTFIR_OUTBUF_SIZE);    // see data_pump.h
+    assert(rx_chans <= MAX_RX_CHANS);
+    assert(wf_chans <= MAX_WF_CHANS);
 
-        lprintf("firmware: WF xfer=%d samps=%d rpt=%d loop=%d rem=%d\n",
-            NWF_NXFER, NWF_SAMPS, NWF_SAMPS_RPT, NWF_SAMPS_LOOP, NWF_SAMPS_REM);
+    nrx_samps = NRX_SAMPS_CHANS(rx_chans);
+    snd_intr_usec = 1e6 / ((float) snd_rate/nrx_samps);
+    lprintf("firmware: RX rx_decim=%d RX1_STD_DECIM=%d RX2_STD_DECIM=%d USE_RX_CICF=%d\n",
+        rx_decim, RX1_STD_DECIM, RX2_STD_DECIM, VAL_USE_RX_CICF);
+    lprintf("firmware: RX srate=%.3f(%d) bufs=%d samps=%d intr_usec=%d\n",
+        ext_update_get_sample_rateHz(ADC_CLK_TYP), snd_rate, nrx_bufs, nrx_samps, snd_intr_usec);
 
-        rx_num = rx_chans, wf_num = wf_chans;
-        monitors_max = (rx_chans * N_CAMP) + N_QUEUERS;
-    }
+    assert(nrx_bufs <= MAX_NRX_BUFS);
+    assert(nrx_samps <= MAX_NRX_SAMPS);
+    assert(nrx_samps < FASTFIR_OUTBUF_SIZE);    // see data_pump.h
+
+    lprintf("firmware: WF xfer=%d samps=%d rpt=%d loop=%d rem=%d\n",
+        NWF_NXFER, NWF_SAMPS, NWF_SAMPS_RPT, NWF_SAMPS_LOOP, NWF_SAMPS_REM);
+
+    rx_num = rx_chans, wf_num = wf_chans;
+    monitors_max = (rx_chans * N_CAMP) + N_QUEUERS;
     
 	TaskInitCfg();
 
@@ -398,7 +344,6 @@ int main(int argc, char *argv[])
 
 	if (need_hardware) {
 		peri_init();
-		fpga_init();
 		if (gpio_test_pin) gpio_test(gpio_test_pin);
 		//pru_start();
 		eeprom_update();
@@ -450,12 +395,6 @@ int main(int argc, char *argv[])
 	}
     
 	CreateTask(stat_task, NULL, MAIN_PRIORITY);
-
-    #ifdef USE_OTHER
-        if (fw_sel == FW_OTHER) {
-	        CreateTask(other_task, NULL, MAIN_PRIORITY);
-	    }
-    #endif
     
 	// run periodic housekeeping functions
 	while (TRUE) {

@@ -320,6 +320,8 @@ void c2s_sound(void *param)
 	int ref_nrx_samps = NRX_SAMPS_CHANS(8);     // 8-ch mode has the smallest FPGA buffer size
     int norm_nrx_samps;
     double gps_delay2 = 0;
+    // todo: this logic is handling bandwidth
+#if 0
 	switch (fw_sel) {
 	    case FW_SEL_SDR_RX4_WF4: norm_nrx_samps = nrx_samps - ref_nrx_samps; break;
 	    case FW_SEL_SDR_RX8_WF2: norm_nrx_samps = nrx_samps; break;
@@ -331,7 +333,9 @@ void c2s_sound(void *param)
 	}
 	//printf("rx_chans=%d norm_nrx_samps=%d nrx_samps=%d ref_nrx_samps=%d gps_delay2=%e\n",
 	//    rx_chans, norm_nrx_samps, nrx_samps, ref_nrx_samps, gps_delay2);
-	
+#else
+    norm_nrx_samps = nrx_samps - ref_nrx_samps;
+#endif
 	//clprintf(conn, "SND INIT conn: %p mc: %p %s:%d %s\n",
 	//	conn, conn->mc, conn->remote_ip, conn->remote_port, conn->mc->uri);
 	

@@ -40,8 +40,6 @@ Boston, MA  02110-1301, USA.
 #include "debug.h"
 #include "fpga.h"
 
-#include "other.gen.h"
-
 #ifdef EV_MEAS
     #warning NB: EV_MEAS is enabled
 #endif

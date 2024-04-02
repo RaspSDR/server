@@ -59,10 +59,6 @@ typedef enum { // Embedded CPU commands, order must match 'Commands:' table in .
     CmdIQLogReset,
     CmdIQLogGet,
 #endif
-    
-#ifdef USE_OTHER
-    SPI_OTHER_ENUM
-#endif
 
     CmdCheckLast,
     

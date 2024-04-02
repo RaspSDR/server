@@ -66,12 +66,12 @@ int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
 	rx_yield=1000, gps_chans=GPS_MAX_CHANS, wf_max, rx_num, wf_num,
 	do_gps, do_sdr=1, navg=1, wf_olap, meas, do_fft, debian_ver, monitors_max,
 	noisePwr=-160, unwrap=0, rev_iq, ineg, qneg, fft_file, fftsize=1024, fftuse=1024, bg,
-	print_stats, ecpu_cmds, ecpu_tcmds, use_spidev, debian_maj, debian_min, test_flag, dx_print,
-	gps_debug, gps_var, gps_lo_gain, gps_cg_gain, use_foptim, is_locked, drm_nreg_chans;
+	print_stats, debian_maj, debian_min, test_flag, dx_print,
+	use_foptim, is_locked, drm_nreg_chans;
 
 u4_t ov_mask, snd_intr_usec;
 
-bool create_eeprom, need_hardware, kiwi_reg_debug, have_ant_switch_ext, gps_e1b_only,
+bool create_eeprom, need_hardware, kiwi_reg_debug, have_ant_switch_ext,
     disable_led_task, is_multi_core, debug_printfs, cmd_debug;
 
 int main_argc;
@@ -90,15 +90,6 @@ void kiwi_restart()
         kiwi_exit(0);
     #endif
 }
-
-#ifdef USE_OTHER
-void other_task(void *param)
-{
-    void other_main(int argc, char *argv[]);
-    other_main(main_argc, main_argv);
-    kiwi_exit(0);
-}
-#endif
 
 int main(int argc, char *argv[])
 {
@@ -159,7 +150,6 @@ int main(int argc, char *argv[])
 		if (ARG("-sdr")) do_sdr = 0; else
 		if (ARG("+fft")) do_fft = 1; else
 		if (ARG("-debug")) debug_printfs = true; else
-		if (ARG("-gps_debug")) { gps_debug = -1; ARGL(gps_debug); } else
 		if (ARG("-stats") || ARG("+stats")) { print_stats = STATS_TASK; ARGL(print_stats); } else
 		if (ARG("-gpio")) { ARGL(gpio_test_pin); } else
 		if (ARG("-v")) {} else      // dummy arg so Kiwi version can appear in e.g. htop
@@ -167,15 +157,10 @@ int main(int argc, char *argv[])
 		if (ARG("-test")) { ARGL(test_flag); printf("test_flag %d(0x%x)\n", test_flag, test_flag); } else
 		if (ARG("-dx")) { ARGL(dx_print); printf("dx %d(0x%x)\n", dx_print, dx_print); } else
 		if (ARG("-led") || ARG("-leds")) disable_led_task = true; else
-		if (ARG("-gps_e1b")) gps_e1b_only = true; else
-		if (ARG("-gps_var")) { ARGL(gps_var); printf("gps_var %d\n", gps_var); } else
-		if (ARG("-e1b_lo_gain")) { ARGL(gps_lo_gain); printf("e1b_lo_gain %d\n", gps_lo_gain); } else
-		if (ARG("-e1b_cg_gain")) { ARGL(gps_cg_gain); printf("e1b_cg_gain %d\n", gps_cg_gain); } else
 
 		if (ARG("-debian")) {} else     // dummy arg so Kiwi version can appear in e.g. htop
 		if (ARG("-ctrace")) { ARGL(web_caching_debug); } else
 		if (ARG("-ext")) kiwi.ext_clk = true; else
-		if (ARG("-use_spidev")) { ARGL(use_spidev); } else
 		if (ARG("-eeprom")) create_eeprom = true; else
 		if (ARG("-sim")) wf_sim = 1; else
 		if (ARG("-real")) wf_real = 1; else
@@ -225,35 +210,6 @@ int main(int argc, char *argv[])
 	lprintf("KiwiSDR v%d.%d --------------------------------------------------------------------\n",
 		version_maj, version_min);
     lprintf("compiled: %s %s on %s\n", __DATE__, __TIME__, COMPILE_HOST);
-
-    #if (defined(DEVSYS) && 0)
-        printf("%6s %6s %6s %6s\n", toUnits(1234), toUnits(999800, 1), toUnits(999800777, 2), toUnits(1800777666, 3));
-        printf("______ ______ ______ ______\n");
-        _exit(0);
-    #endif
-    
-    #if (defined(DEVSYS) && 0)
-        for (int i = 0; i < 0xfffd; i++) kstr_wrap((char *) malloc(1));
-        printf("kstr_wrap() test WORKED\n");
-        _exit(0);
-    #endif
-    
-    #if (defined(DEVSYS) && 0)
-        void ale_2g_test();
-        ale_2g_test();
-        _exit(0);
-    #endif
-
-    #if (defined(DEVSYS) && 0)
-        printf("kiwi_strnlen(\"sss\"(n),3): 0:%d 1:%d 2:%d 3:%d 4:%d 5:%d\n", kiwi_strnlen(NULL, 3), kiwi_strnlen("a", 3),
-            kiwi_strnlen("ab", 3), kiwi_strnlen("abc", 3), kiwi_strnlen("abcd", 3), kiwi_strnlen("abcde", 3));
-        _exit(0);
-    #endif
-
-    #if (defined(DEVSYS))
-        printf("DEVSYS: nothing to do, exiting..\n");
-        _exit(0);
-    #endif
 
     char *reply = read_file_string_reply("/etc/alpine-release");
     if (reply == NULL) panic("debian_version");
@@ -369,14 +325,6 @@ int main(int argc, char *argv[])
     #endif
 
 	web_server_init(WS_INIT_START);
-
-    // need to do gps clock switch even if gps is not enabled
-    gps_fe_init();
-
-    printf("switching GPS clock..\n");
-    kiwi_msleep(100);
-    ctrl_clr_set(0, CTRL_GPS_CLK_EN);
-    kiwi_msleep(100);
     
     // switch to ext clock only after GPS clock switch occurs
     if (kiwi.ext_clk) {

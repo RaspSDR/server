@@ -629,7 +629,7 @@ void c2s_admin(void *param)
                 int server_port = (dom_sel == DOM_SEL_REV)? PROXY_SERVER_PORT : net.port_ext;
                 int status;
 			    char *reply;
-		        asprintf(&cmd_p, "curl -L -s --ipv4 --connect-timeout 15 \"kiwisdr.com/php/check_port_open.php/?url=%s:%d\"",
+		        asprintf(&cmd_p, "curl -L -s --ipv4 --connect-timeout 15 \"www.rx-888.com/api/check_port_open?url=%s:%d\"",
 		            server_url, server_port);
                 reply = non_blocking_cmd(cmd_p, &status);
                 printf("check_port_open: %s\n", cmd_p);

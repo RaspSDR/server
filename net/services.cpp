@@ -207,9 +207,9 @@ void my_kiwi_register(bool reg, int root_pwd_unset, int debian_pwd_default)
     if (root_pwd_unset || debian_pwd_default)
         cmd_p2 = kstr_asprintf(cmd_p2, "&r=%d&d=%d", root_pwd_unset, debian_pwd_default);
 
-    char *kiwisdr_com = DNS_lookup_result("my_kiwi", "rx-888.com", &net.ips_kiwisdr_com);
+    char *kiwisdr_com = DNS_lookup_result("my_kiwi", "www.rx-888.com", &net.ips_kiwisdr_com);
     asprintf(&cmd_p, "curl -L --silent --show-error --ipv4 --connect-timeout 5 "
-        "\"%s/php/my_kiwi.php?auth=308bb2580afb041e0514cd0d4f21919c&reg=%d&pub=%s&pvt=%s&port=%d&serno=%d&jq=%d&deb=%d.%d&ver=%d.%d%s\"",
+        "\"%s/api/register?reg=%d&pub=%s&pvt=%s&port=%d&serno=%d&jq=%d&deb=%d.%d&ver=%d.%d%s\"",
         kiwisdr_com, reg? 1:0, net.ip_pub, net.ip_pvt, net.use_ssl? net.port_http_local : net.port, net.serno,
         kiwi_file_exists("/usr/bin/jq"), debian_maj, debian_min, version_maj, version_min, kstr_sp(cmd_p2));
 
@@ -771,7 +771,7 @@ static void reg_public(void *param)
 	int retrytime_mins;
 	
     NET_WAIT_COND("mac", "reg_kiwisdr_com", net.mac_valid);
-    char *kiwisdr_com = DNS_lookup_result("reg_kiwisdr_com", "rx-888.com", &net.ips_kiwisdr_com);
+    char *kiwisdr_com = DNS_lookup_result("reg_kiwisdr_com", "www.rx-888.com", &net.ips_kiwisdr_com);
 
 	while (1) {
         const char *server_url = cfg_string("server_url", NULL, CFG_OPTIONAL);
@@ -792,7 +792,7 @@ static void reg_public(void *param)
 
 	    // done here because updating timer_sec() is sent
         asprintf(&cmd_p, "wget --timeout=30 --tries=2 --inet4-only -qO- "
-            "\"%s/php/update.php?url=http://%s:%d&mac=%s&email=%s&add_nat=%d&ver=%d.%d&deb=%d.%d"
+            "\"%s/api/update?url=http://%s:%d&mac=%s&email=%s&add_nat=%d&ver=%d.%d&deb=%d.%d"
             "&dom=%d&dom_stat=%d&serno=%d&dna=%08x%08x&reg=%d&pvt=%s&pub=%s&up=%d\" 2>&1",
             kiwisdr_com, server_url, server_port, net.mac,
             email, add_nat, version_maj, version_min, debian_maj, debian_min,

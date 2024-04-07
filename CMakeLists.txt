@@ -20,6 +20,7 @@ if(ZYNQ)
     )
 else()
     # Not supported
+    MESSAGE(FATAL "Not supported")
 endif()
 
 find_package(PkgConfig)
@@ -187,42 +188,16 @@ target_link_libraries(kiwi.bin PUBLIC
     util
 )
 
-install(TARGETS kiwi.bin
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-    RENAME kiwid
-)
-
-install(DIRECTORY ${PROJECT_BINARY_DIR}/htdoc
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/RaspSDR"
-)
-
-install(DIRECTORY ${UPSTREAM_DIR}/unix_env/kiwi.config/
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/RaspSDR/config"
-    PATTERN "Makefile" EXCLUDE
-)
-
-file(GLOB FIRMWARES ${UPSTREAM_DIR}/*SDR.rx*.bit)
-install(FILES ${FIRMWARES}
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/RaspSDR/firmware"
-)
-
-install(FILES ${UPSTREAM_DIR}/unix_env/kiwid
-    DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/init.d"
-)
-
-install(FILES ${UPSTREAM_DIR}/unix_env/kiwid.service
-    DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/systemd/system"
-)
-
 cmake_host_system_information(RESULT _host_name QUERY HOSTNAME)
+string(TIMESTAMP CURRENT_YEAR "%Y")
+string(TIMESTAMP CURRENT_MONTH_DAY "%m%d")
 
 set(DIR_DATA /tmp/kiwi.data)
 
 target_compile_definitions(kiwi.bin PUBLIC
-    VERSION_MAJ=1 VERSION_MIN=248
+    VERSION_MAJ=${CURRENT_YEAR} VERSION_MIN=${CURRENT_MONTH_DAY}
     KIWI KIWISDR
     MULTI_CORE
-    ARCH_${ARCH} CPU_${CPU} ARCH_CPU=${CPU} ARCH_CPU_S=STRINGIFY\(${CPU}\)
     DIR_CFG="/root/config"
     CFG_PREFIX=""
     DIR_DATA=STRINGIFY\(${CMAKE_INSTALL_FULL_DATAROOTDIR}\)
@@ -431,13 +406,3 @@ add_custom_target(copy_libfdk_target DEPENDS ${PROJECT_BINARY_DIR}/libfdk-aac.so
 
 add_dependencies(kiwi.bin copy_config_target)
 add_dependencies(kiwi.bin copy_libfdk_target)
-
-SET(CPACK_PACKAGE_NAME "ZynqSDR")
-SET(CPACK_PACKAGE_VERSION_MAJOR 1)
-SET(CPACK_PACKAGE_VERSION_MINOR 428)
-SET(CPACK_PACKAGE_VERSION_PATCH 0)
-SET(CPACK_GENERATOR "DEB")
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Howard Su")
-SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Zynq7000 based single board WebSDR solution, which is derived from KiwiSDR")
-SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libfftw3-single3 curl wget avahi-daemon avahi-utils libnss-mdns avahi-autoipd miniupnpc dnsutils pnmtopng ethtool psmisc jq zlib1g libsndfile1 libfdk-aac")
-INCLUDE(CPack)

@@ -70,29 +70,11 @@
 	so that those few Kiwis still running Debian 7 will continue to work.
 
 */
-
-#ifdef DEVSYS
-	//#define SETUP_TRAMP_USING_JMP_BUF
-#else
-    #ifdef CPU_AM3359
-        // 10/6/2019 this seems broken all of a sudden?!?
-	    //#define SETUP_TRAMP_USING_JMP_BUF
-    #endif
-    
-    #ifdef CPU_AM5729
-    #endif
-#endif
-
 #if defined(HOST) && defined(USE_VALGRIND)
 	#include <valgrind/valgrind.h>
 #endif
 
 #include "sanitizer.h"
-#if defined(HOST) && defined(USE_ASAN)
-	#ifdef SETUP_TRAMP_USING_JMP_BUF
-		#undef SETUP_TRAMP_USING_JMP_BUF
-	#endif
-#endif
 
 #define LOCK_CHECK_HANG
 #define LOCK_HUNG_TIME 3
@@ -663,32 +645,6 @@ static void task_stack(int id)
 	}
 }
 
-#ifdef SETUP_TRAMP_USING_JMP_BUF
-
-// Debian 8 includes the glibc version that does pointer mangling of internal data structures
-// like jmp_buf as a security measure. It's just a simple xor, so we can figure out the key easily.
-static u4_t key;
-
-static void find_key()
-{
-	#define	STACK_CORRECTION 0x04
-	u4_t sp;
-	setjmp(ctx[0].jb);
-	sp = (u4_t) ((u64_t) &sp & 0xffffffff) - STACK_CORRECTION;
-	key = ctx[0].sp ^ sp;
-	// CAUTION: key computation will fail if a printf is used here
-}
-
-static void trampoline()
-{
-    TASK *t = cur_task;
-	(t->funcP)(t->create_param);
-	printf("task %s exited by returning\n", task_ls(t));
-	TaskRemove(t->id);
-}
-
-#else
-
 static ctx_t *new_ctx;		// only way trampoline() can know what associated task/ctx is
 static volatile int new_task_req, new_task_svc;
 
@@ -718,8 +674,6 @@ static void trampoline(int signo)
 	TaskRemove(t->id);
 }
 
-#endif
-
 // this can only be done while running on the main stack,
 // i.e. not on task stacks created via sigaltstack()
 static bool collect_needed;
@@ -736,11 +690,6 @@ void TaskCollect()
 		if (c->init) continue;
 		task_stack(i);
 
-#ifdef SETUP_TRAMP_USING_JMP_BUF
-		setjmp(c->jb);
-		c->pc = (u64_t) trampoline ^ key;
-		c->sp = (u64_t) c->stack_last ^ key;		// careful, has to be top of stack
-#else
 		if (new_task_req != new_task_svc) {
 			printf("create_task: req %d svc %d\n", new_task_req, new_task_svc);
 			panic("previous create_task hadn't finished");
@@ -762,7 +711,6 @@ void TaskCollect()
 		
 		new_ctx = c;
 		raise(SIG_SETUP_TRAMP);
-#endif
 
 		c->init = TRUE;
 	}
@@ -801,13 +749,6 @@ void TaskInit()
 	last_dump = t->tstart_us = timer_us64();
 	//if (ev_dump) evNT(EC_DUMP, EV_NEXTTASK, ev_dump, "TaskInit", evprintf("DUMP IN %.3f SEC", ev_dump/1000.0));
 	for (int p = LOWEST_PRIORITY; p <= HIGHEST_PRIORITY; p++) TaskQ[p].p = p;	// debugging aid
-	
-#ifdef SETUP_TRAMP_USING_JMP_BUF
-	find_key();
-	printf("TASK jmp_buf demangle key 0x%08x\n", key);
-	//setjmp(ctx[0].jb);
-	//printf("JMP_BUF: key 0x%x sp 0x%x:0x%x pc 0x%x:0x%x\n", key, ctx[0].sp, ctx[0].sp^key, ctx[0].pc, ctx[0].pc^key);
-#endif
 
     int s = 0;
 	for (int i = 0; i < MAX_TASKS; i++, t++) {

@@ -207,7 +207,7 @@ void my_kiwi_register(bool reg, int root_pwd_unset, int debian_pwd_default)
     if (root_pwd_unset || debian_pwd_default)
         cmd_p2 = kstr_asprintf(cmd_p2, "&r=%d&d=%d", root_pwd_unset, debian_pwd_default);
 
-    char *kiwisdr_com = DNS_lookup_result("my_kiwi", "www.rx-888.com", &net.ips_kiwisdr_com);
+    char *kiwisdr_com = DNS_lookup_result("register", "www.rx-888.com", &net.ips_kiwisdr_com);
     asprintf(&cmd_p, "curl -L --silent --show-error --ipv4 --connect-timeout 5 "
         "\"%s/api/register?reg=%d&pub=%s&pvt=%s&port=%d&serno=%d&jq=%d&deb=%d.%d&ver=%d.%d%s\"",
         kiwisdr_com, reg? 1:0, net.ip_pub, net.ip_pvt, net.use_ssl? net.port_http_local : net.port, net.serno,
@@ -584,7 +584,7 @@ static void pvt_NET(void *param)
         system("echo nameserver 1.1.1.1 >>/etc/resolv.conf");
     }
 
-    DNS_lookup("rx-888.com", &net.ips_kiwisdr_com, N_IPS, NULL);
+    DNS_lookup("www.rx-888.com", &net.ips_kiwisdr_com, N_IPS, NULL);
 
 	for (retry = 0; true; retry++) {
 

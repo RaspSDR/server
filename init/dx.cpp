@@ -692,7 +692,7 @@ void dx_last_community_download(bool capture_time)
 bool dx_community_get(bool download_diff_restart)
 {
     bool restart = false;
-    char *rx888_com = DNS_lookup_result("dx_community_get", "rx-888.com", &net.ips_kiwisdr_com);
+    char *rx888_com = DNS_lookup_result("dx_community_get", "www.rx-888.com", &net.ips_kiwisdr_com);
 
     bool download_oneshot = kiwi_file_exists(DX_DOWNLOAD_ONESHOT_FN);
     if (download_oneshot) {

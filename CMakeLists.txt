@@ -192,6 +192,11 @@ cmake_host_system_information(RESULT _host_name QUERY HOSTNAME)
 string(TIMESTAMP CURRENT_YEAR "%Y")
 string(TIMESTAMP CURRENT_MONTH_DAY "%m%d")
 
+# Check if the month starts with zero
+if (${CURRENT_MONTH_DAY} MATCHES "^0[0-9].*")
+    string(SUBSTRING ${CURRENT_MONTH_DAY} 1 3 CURRENT_MONTH_DAY)
+endif()
+
 set(DIR_DATA /tmp/kiwi.data)
 
 target_compile_definitions(kiwi.bin PUBLIC

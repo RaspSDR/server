@@ -570,6 +570,11 @@ void update_vars_from_config(bool called_at_init)
     // decouple rx.kiwisdr.com and sdr.hu registration
     bool sdr_hu_register = admcfg_bool("sdr_hu_register", NULL, CFG_REQUIRED);
 	admcfg_bool("kiwisdr_com_register", &err, CFG_OPTIONAL);
+    // never set
+    if (err) {
+        admcfg_set_bool("kiwisdr_com_register", sdr_hu_register);
+        update_admcfg = true;
+    }
 
     // disable public registration if all the channels are full of WSPR/FT8 autorun
 	bool isPublic = admcfg_bool("kiwisdr_com_register", NULL, CFG_REQUIRED);

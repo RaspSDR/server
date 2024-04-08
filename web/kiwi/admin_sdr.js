@@ -290,7 +290,7 @@ function config_html()
       ) +
       '<hr>';
    
-   var mode_20kHz = (adm.firmware_sel == kiwi.RX3_WF3)? 1 : 0;
+   var mode_20kHz = 0;
    console.log('mode_20kHz='+ mode_20kHz);
    var DC_offset_I = 'DC_offset'+ (mode_20kHz? '_20kHz':'') +'_I';
    var DC_offset_Q = 'DC_offset'+ (mode_20kHz? '_20kHz':'') +'_Q';

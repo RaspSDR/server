@@ -180,11 +180,8 @@ void update_vars_from_config(bool called_at_init)
 
     // force DC offsets to the default value if not configured
     // also if set to the previous default value
-    int firmware_sel = admcfg_default_int("firmware_sel", 0, &update_admcfg);   // needed below
-    int mode_20kHz = (firmware_sel == RX3_WF3)? 1:0;
     admcfg_default_bool("anti_aliased", false, &update_admcfg);
-    TYPEREAL Ioff, Ioff_20kHz, Qoff, Qoff_20kHz;
-    //printf("mode_20kHz=%d\n", mode_20kHz);
+    TYPEREAL Ioff, Qoff;
 
     Ioff = cfg_float("DC_offset_I", &err, CFG_OPTIONAL);
     if (err || Ioff == DC_OFFSET_DEFAULT_PREV) {
@@ -202,24 +199,8 @@ void update_vars_from_config(bool called_at_init)
         update_cfg = true;
     }
 
-    Ioff_20kHz = cfg_float("DC_offset_20kHz_I", &err, CFG_OPTIONAL);
-    if (err) {
-        Ioff_20kHz = DC_OFFSET_DEFAULT_20kHz;
-        cfg_set_float("DC_offset_20kHz_I", Ioff_20kHz);
-        lprintf("DC_offset_20kHz_I: no cfg or prev default, setting to default value\n");
-        update_cfg = true;
-    }
-
-    Qoff_20kHz = cfg_float("DC_offset_20kHz_Q", &err, CFG_OPTIONAL);
-    if (err) {
-        Qoff_20kHz = DC_OFFSET_DEFAULT_20kHz;
-        cfg_set_float("DC_offset_20kHz_Q", Qoff_20kHz);
-        lprintf("DC_offset_20kHz_Q: no cfg or prev default, setting to default value\n");
-        update_cfg = true;
-    }
-
-    DC_offset_I = mode_20kHz? Ioff_20kHz : Ioff;
-    DC_offset_Q = mode_20kHz? Qoff_20kHz : Qoff;
+    DC_offset_I = Ioff;
+    DC_offset_Q = Qoff;
     static bool dc_off_msg;
     if (!dc_off_msg) {
         lprintf("using DC_offsets: I %.6f Q %.6f\n", DC_offset_I, DC_offset_Q);

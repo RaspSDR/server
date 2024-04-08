@@ -144,7 +144,7 @@ public:
             if (!test_init) {
                 char *file;
                 int fd;
-                #define TIMECODE_FNAME DIR_CFG "/samples/timecode.test.au"
+                #define TIMECODE_FNAME DIR_SAMPLES "/timecode.test.au"
                 printf("timecode: mmap " TIMECODE_FNAME "\n");
                 scall("timecode open", (fd = open(TIMECODE_FNAME, O_RDONLY)));
                 off_t fsize = kiwi_file_size(TIMECODE_FNAME);

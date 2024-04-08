@@ -384,9 +384,9 @@ void ALE_2G_main()
     #endif
 
     if (ale_2g.test_fn_sel == FILE_8k)
-        fn = DIR_CFG "/samples/ALE.test.8k.au";
+        fn = DIR_SAMPLES "/ALE.test.8k.au";
     else
-        fn = DIR_CFG "/samples/ALE.test.12k.au";
+        fn = DIR_SAMPLES "/ALE.test.12k.au";
     printf("ALE_2G: mmap %s\n", fn);
     scall("ale_2g open", (fd = open(fn, O_RDONLY)));
     off_t fsize = kiwi_file_size(fn);

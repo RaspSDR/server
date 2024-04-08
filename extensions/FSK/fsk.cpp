@@ -117,7 +117,7 @@ void FSK_main()
     const char *fn = cfg_string("fsk.test_file", NULL, CFG_OPTIONAL);
     if (!fn || *fn == '\0') return;
     char *fn2;
-    asprintf(&fn2, "%s/samples/%s", DIR_CFG, fn);
+    asprintf(&fn2, "%s/%s", DIR_SAMPLES, fn);
     cfg_string_free(fn);
     printf("FSK: mmap %s\n", fn2);
     int fd = open(fn2, O_RDONLY);

@@ -388,7 +388,7 @@ void DRM_main()
     
         fn = cfg_string("DRM.test_file1", NULL, CFG_OPTIONAL);
         if (!fn || *fn == '\0') return;
-        asprintf(&fn2, "%s/samples/%s", DIR_CFG, fn);
+        asprintf(&fn2, "%s/%s", DIR_SAMPLES, fn);
         cfg_string_free(fn);
         drm_info.s2p_start1 = drm_mmap(fn2, &words);
         kiwi_asfree(fn2);
@@ -398,7 +398,7 @@ void DRM_main()
 
         fn = cfg_string("DRM.test_file2", NULL, CFG_OPTIONAL);
         if (!fn || *fn == '\0') return;
-        asprintf(&fn2, "%s/samples/%s", DIR_CFG, fn);
+        asprintf(&fn2, "%s/%s", DIR_SAMPLES, fn);
         cfg_string_free(fn);
         drm_info.s2p_start2 = drm_mmap(fn2, &words);
         kiwi_asfree(fn2);

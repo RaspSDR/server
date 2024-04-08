@@ -166,7 +166,7 @@ bool hfdl_receive_cmds(u2_t key, char *cmd, int rx_chan)
 }
 
 static const char *hfdl_argv[] = {
-    "dumphfdl", "--system-table", DIR_CFG "/samples/HFDL_systable.conf",
+    "dumphfdl", "--system-table", DIR_SAMPLES "/HFDL_systable.conf",
     "--in-buf",
 
     #ifdef SAMPLES_CF32
@@ -319,7 +319,7 @@ void HFDL_main()
     int fd;
     const char *fn;
     
-    fn = DIR_CFG "/samples/HFDL_test_12k_cf13270_df13270.wav";
+    fn = DIR_SAMPLES "/HFDL_test_12k_cf13270_df13270.wav";
     printf("HFDL: mmap %s\n", fn);
     scall("hfdl open", (fd = open(fn, O_RDONLY)));
     off_t fsize = kiwi_file_size(fn);

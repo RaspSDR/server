@@ -211,7 +211,7 @@ void digi_modes_main()
     const char *fn = "digi.test.au";
     if (!fn || *fn == '\0') return;
     char *fn2;
-    asprintf(&fn2, "%s/samples/%s", DIR_CFG, fn);
+    asprintf(&fn2, "%s/%s", DIR_SAMPLES, fn);
     //cfg_string_free(fn);
     printf("digi: mmap %s\n", fn2);
     int fd = open(fn2, O_RDONLY);

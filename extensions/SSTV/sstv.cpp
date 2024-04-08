@@ -290,7 +290,7 @@ void SSTV_main() {
     int n;
     char *file;
     int fd;
-    #define SSTV_FNAME      DIR_CFG "/samples/SSTV.test.au"
+    #define SSTV_FNAME      DIR_SAMPLES "/SSTV.test.au"
     printf("SSTV: mmap " SSTV_FNAME "\n");
     scall("sstv open", (fd = open(SSTV_FNAME, O_RDONLY)));
     off_t fsize = kiwi_file_size(SSTV_FNAME);

@@ -199,6 +199,7 @@ target_compile_definitions(kiwi.bin PUBLIC
     KIWI KIWISDR
     MULTI_CORE
     DIR_CFG="/root/config"
+    DIR_SAMPLES="/media/mmcblk0p1/config/samples"
     CFG_PREFIX=""
     DIR_DATA=STRINGIFY\(${CMAKE_INSTALL_FULL_DATAROOTDIR}\)
     BUILD_DIR="${PROJECT_BINARY_DIR}"

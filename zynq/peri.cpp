@@ -36,8 +36,8 @@ void peri_init()
     }
     else
     {
-        si5351->set_freq(ADC_CLOCK_NOM, SI5351_CLK0);
-        printf("i2c si5351 initialized\n");
+        int ret = si5351->set_freq((uint64_t)(ADC_CLOCK_NOM * 100), SI5351_CLK0);
+        printf("i2c si5351 initialized, error=%d\n", ret);
     }
 
     if (init)

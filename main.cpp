@@ -93,7 +93,7 @@ void kiwi_restart()
 int main(int argc, char *argv[])
 {
 	int i;
-	int p_gps = 0, gpio_test_pin = 0;
+	int p_gps = 0;
 	bool err;
 	
 	version_maj = VERSION_MAJ;
@@ -149,7 +149,6 @@ int main(int argc, char *argv[])
 		if (ARG("-sdr")) do_sdr = 0; else
 		if (ARG("-debug")) debug_printfs = true; else
 		if (ARG("-stats") || ARG("+stats")) { print_stats = STATS_TASK; ARGL(print_stats); } else
-		if (ARG("-gpio")) { ARGL(gpio_test_pin); } else
 		if (ARG("-v")) {} else      // dummy arg so Kiwi version can appear in e.g. htop
 		
 		if (ARG("-test")) { ARGL(test_flag); printf("test_flag %d(0x%x)\n", test_flag, test_flag); } else
@@ -284,7 +283,6 @@ int main(int argc, char *argv[])
 
 	if (need_hardware) {
 		peri_init();
-		if (gpio_test_pin) gpio_test(gpio_test_pin);
 		//pru_start();
 		eeprom_update();
 		

@@ -101,7 +101,7 @@ static void LLH2XYZ(double lat, double lon, double alt, double *x, double *y)
     double const cl = std::cos(lat), sl = std::sin(lat);
     double const nu = rc_normal(alt);
     *x = (nu + alt) * cp * cl;
-    *y = (nu + alt) * cp * sl;
+    *y = (nu + alt) * sp * sl;
     // z = ((1-e2())*nu + llh.alt())*sp}});
 }
 

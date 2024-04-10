@@ -64,8 +64,7 @@ int rx_chans, wf_chans, nrx_bufs, nrx_samps, snd_rate, rx_decim;
 int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
 	rx_cordic, rx_cic, rx_cic2, rx_dump, wf_cordic, wf_cic, wf_mult, wf_mult_gen, do_slice=-1,
 	rx_yield=1000, gps_chans=GPS_MAX_CHANS, wf_max, rx_num, wf_num,
-	do_gps, do_sdr=1, navg=1, wf_olap, meas, do_fft, debian_ver, monitors_max,
-	noisePwr=-160, unwrap=0, rev_iq, ineg, qneg, fft_file, fftsize=1024, fftuse=1024, bg,
+	do_gps, do_sdr=1, navg=1, wf_olap, meas, debian_ver, monitors_max, bg,
 	print_stats, debian_maj, debian_min, test_flag, dx_print,
 	use_foptim, is_locked, drm_nreg_chans;
 
@@ -148,7 +147,6 @@ int main(int argc, char *argv[])
 		if (ARG("-gps")) p_gps = -1; else
 		if (ARG("+sdr")) do_sdr = 1; else
 		if (ARG("-sdr")) do_sdr = 0; else
-		if (ARG("+fft")) do_fft = 1; else
 		if (ARG("-debug")) debug_printfs = true; else
 		if (ARG("-stats") || ARG("+stats")) { print_stats = STATS_TASK; ARGL(print_stats); } else
 		if (ARG("-gpio")) { ARGL(gpio_test_pin); } else
@@ -173,18 +171,6 @@ int main(int argc, char *argv[])
 		if (ARG("-wmax")) wf_max = 1; else
 		if (ARG("-olap")) wf_olap = 1; else
 		if (ARG("-meas")) meas = 1; else
-		
-		// do_fft
-		if (ARG("-none")) unwrap = 0; else
-		if (ARG("-norm")) unwrap = 1; else
-		if (ARG("-rev")) unwrap = 2; else
-		if (ARG("-qi")) rev_iq = 1; else
-		if (ARG("-ineg")) ineg = 1; else
-		if (ARG("-qneg")) qneg = 1; else
-		if (ARG("-file")) fft_file = 1; else
-		if (ARG("-fftsize")) { ARGL(fftsize); } else
-		if (ARG("-fftuse")) { ARGL(fftuse); } else
-		if (ARG("-np")) { ARGL(noisePwr); } else
 
 		if (ARG("-rcordic")) rx_cordic = 1; else
 		if (ARG("-rcic")) rx_cic = 1; else
@@ -309,13 +295,6 @@ int main(int argc, char *argv[])
 
 		net.dna = fpga_dna();
 		printf("device DNA %08x|%08x\n", PRINTF_U64_ARG(net.dna));
-	}
-	
-	if (do_fft) {
-		printf("==== IQ %s\n", rev_iq? "reverse":"normal");
-		if (ineg) printf("==== I neg\n");
-		if (qneg) printf("==== Q neg\n");
-		printf("==== unwrap %s\n", (unwrap==0)? "none" : ((unwrap==1)? "normal":"reverse"));
 	}
 	
 	rx_server_init();

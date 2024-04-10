@@ -10,8 +10,6 @@ option(ZYNQ "Build for Zynq7000 serial based WebSDR" ON)
 option(RPI "Build for RPI serial based WebSDR" OFF)
 
 if(ZYNQ)
-    set(ARCH zynq)
-    set(CPU ARMA9)
     set(PLATFORM zynq)
     set(PLATFORM_INC ${PLATFORM})
     set(PLATOFRM_FLAGS -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard)
@@ -218,7 +216,7 @@ target_compile_definitions(kiwi.bin PUBLIC
     HAVE_LIBFDK_AAC HAVE_USAC
 )
 
-target_compile_options(kiwi.bin PUBLIC -O3 ${PLATOFRM_FLAGS} -Wno-fortify-source)
+target_compile_options(kiwi.bin PUBLIC -O3 ${PLATOFRM_FLAGS} -Wno-fortify-source -Werror)
 
 # ----------------------- Build FILES embeded
 file(GLOB_RECURSE FILES_EMBED_JS RELATIVE ${UPSTREAM_DIR}/web

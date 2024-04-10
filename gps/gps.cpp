@@ -13,12 +13,6 @@ gps_t gps;
 
 const char *Week[] = {
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-#define MODE_STR_NUM 4
-static const char *mode_str[MODE_STR_NUM] = {
-    "n/a",
-    "None",
-    "2D",
-    "3D"};
 
 static struct gps_data_t gps_handle;
 

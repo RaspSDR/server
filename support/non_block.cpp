@@ -45,7 +45,7 @@ Boston, MA  02110-1301, USA.
 #include <time.h>
 #include <sys/mman.h>
 
-#include <wait.h>
+#include <sys/wait.h>
 #include <sys/prctl.h>
 
 typedef struct {

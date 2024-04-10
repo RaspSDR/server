@@ -148,7 +148,7 @@ public:
                 printf("timecode: mmap " TIMECODE_FNAME "\n");
                 scall("timecode open", (fd = open(TIMECODE_FNAME, O_RDONLY)));
                 off_t fsize = kiwi_file_size(TIMECODE_FNAME);
-                printf("timecode: size=%ld\n", fsize);
+                printf("timecode: size=%" __UINT64_FMTx__ "\n", fsize);
                 file = (char *) mmap(NULL, fsize, PROT_READ, MAP_PRIVATE, fd, 0);
                 if (file == MAP_FAILED) sys_panic("timecode mmap");
                 close(fd);

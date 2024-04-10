@@ -231,7 +231,7 @@ void digi_modes_main()
     digi_conf.s2p_start = (s2_t *) file;
     u4_t off = *(digi_conf.s2p_start + 3);
     off = FLIP16(off);
-    printf("digi: off=%d size=%ld\n", off, fsize);
+    printf("digi: off=%d size=%" __UINT64_FMTx__ "\n", off, fsize);
     off /= 2;
     digi_conf.s2p_start += off;
     words -= off;

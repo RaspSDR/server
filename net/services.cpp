@@ -208,10 +208,10 @@ void my_kiwi_register(bool reg, int root_pwd_unset, int debian_pwd_default)
         cmd_p2 = kstr_asprintf(cmd_p2, "&r=%d&d=%d", root_pwd_unset, debian_pwd_default);
 
     char *kiwisdr_com = DNS_lookup_result("register", "www.rx-888.com", &net.ips_kiwisdr_com);
-    asprintf(&cmd_p, "curl -L --silent --show-error --ipv4 --connect-timeout 5 "
-        "\"%s/api/register?reg=%d&pub=%s&pvt=%s&port=%d&serno=%d&jq=%d&deb=%d.%d&ver=%d.%d%s\"",
+    asprintf(&cmd_p, "wget --timeout=30 --tries=2 -qO- "
+        "\"http://%s/api/update?reg=%d&pub=%s&pvt=%s&port=%d&serno=%d&dna=%08x%08x&deb=%d.%d&ver=%d.%d%s\"",
         kiwisdr_com, reg? 1:0, net.ip_pub, net.ip_pvt, net.use_ssl? net.port_http_local : net.port, net.serno,
-        kiwi_file_exists("/usr/bin/jq"), debian_maj, debian_min, version_maj, version_min, kstr_sp(cmd_p2));
+        PRINTF_U64_ARG(net.dna), debian_maj, debian_min, version_maj, version_min, kstr_sp(cmd_p2));
 
     kstr_free(non_blocking_cmd(cmd_p, &status));
     kiwi_asfree(cmd_p); kstr_free(cmd_p2);
@@ -725,18 +725,18 @@ static int _reg_public(void *param)
 	    printf("_reg_public: sp == NULL?\n");
 	    return 0;   // we've seen this happen
 	}
-    //printf("_reg_public <%s>\n", sp);
+    printf("_reg_public <%s>\n", sp);
 
     int n, status = 0, kod = 0, serno = 0;
     n = sscanf(sp, "status %d %d %d", &status, &kod, &serno);
     if (n == 3 && status == 22 && serno == net.serno) {
-        //printf("_reg_public status=%d kod=%d serno=%d/%d\n", status, kod, serno, net.serno);
+        printf("_reg_public status=%d kod=%d serno=%d/%d\n", status, kod, serno, net.serno);
         status = kod;
     } else
     if (status >= 42 && status < 50) {
         status = 0;
     }
-    //printf("_reg_public status=%d\n", status);
+    printf("_reg_public status=%d\n", status);
 
 	return status;
 }
@@ -769,9 +769,12 @@ static void reg_public(void *param)
 {
 	char *cmd_p;
 	int retrytime_mins;
-	
+    bool last_reg;
+
     NET_WAIT_COND("mac", "reg_kiwisdr_com", net.mac_valid);
     char *kiwisdr_com = DNS_lookup_result("reg_kiwisdr_com", "www.rx-888.com", &net.ips_kiwisdr_com);
+    // always different than kiwisdr_com_reg below to force register
+    last_reg = (admcfg_bool("kiwisdr_com_register", NULL, CFG_OPTIONAL) == false);
 
 	while (1) {
         const char *server_url = cfg_string("server_url", NULL, CFG_OPTIONAL);
@@ -791,8 +794,8 @@ static void reg_public(void *param)
         int dom_stat = (dom_sel == DOM_SEL_REV)? net.proxy_status : (DUC_enable_start? net.DUC_status : -1);
 
 	    // done here because updating timer_sec() is sent
-        asprintf(&cmd_p, "wget --timeout=30 --tries=2 --inet4-only -qO- "
-            "\"%s/api/update?url=http://%s:%d&mac=%s&email=%s&add_nat=%d&ver=%d.%d&deb=%d.%d"
+        asprintf(&cmd_p, "wget --timeout=30 --tries=2 -qO- "
+            "\"https://%s/api/update?url=http://%s:%d&mac=%s&email=%s&add_nat=%d&ver=%d.%d&deb=%d.%d"
             "&dom=%d&dom_stat=%d&serno=%d&dna=%08x%08x&reg=%d&pvt=%s&pub=%s&up=%d\" 2>&1",
             kiwisdr_com, server_url, server_port, net.mac,
             email, add_nat, version_maj, version_min, debian_maj, debian_min,
@@ -801,7 +804,6 @@ static void reg_public(void *param)
     
 		bool server_enabled = (!down && admcfg_bool("server_enabled", NULL, CFG_REQUIRED) == true);
         bool send_deregister = false;
-        static bool last_reg;
         if (last_reg && !kiwisdr_com_reg) {     // reg=1 => reg=0 transition
             printf("REG: deregister\n");
             send_deregister = true;

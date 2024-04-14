@@ -193,6 +193,7 @@ static void gps_task(void *param)
             gps.good = gps_handle.satellites_visible;
             gps.fixes = gps_handle.satellites_used;
             memset(gps.shadow_map, 0, sizeof(gps.shadow_map));
+            memset(gps.ch, 0, sizeof(gps.ch));
             for (int i = 0; i < gps_handle.satellites_visible && i < GPS_MAX_CHANS; i++)
             {
                 gps.ch[i].snr = gps_handle.skyview[i].ss;

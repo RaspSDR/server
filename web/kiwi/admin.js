@@ -2054,7 +2054,7 @@ function gps_update_admin_cb()
    // POS
    ////////////////////////////////
 
-   {
+   if (adm.rssi_azel_iq == _gps.POS) {
       var axis = 400;
       ctx.fillStyle = 'hsl(0, 0%, 90%)';
       ctx.fillRect(0,0, axis, axis);

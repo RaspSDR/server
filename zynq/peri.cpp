@@ -28,17 +28,9 @@ static const uint8_t chip_addr = 0x60;
 static I2CInterface *i2c;
 static Si5351 *si5351;
 
-#define AD8370_STEPS 127
-#define GAIN_SWEET_POINT 18
-#define HIGH_GAIN_RATIO (0.409f)
-#define LOW_GAIN_RATIO (0.059f)
-#define HIGH_MODE 0x80
-#define LOW_MODE 0x00
-
 #define AD8370_SET _IOW('Z', 0, uint32_t)
 #define MODE_SET _IOW('Z', 1, uint32_t)
 int ad8370_fd;
-static float hf_if_steps[AD8370_STEPS];
 
 void peri_init()
 {
@@ -70,15 +62,6 @@ void peri_init()
             printf("AD8370 set mode failed\n");
         }
 
-        // build RF index table
-        for (int i = 0; i < AD8370_STEPS; i++)
-        {
-           if (i > GAIN_SWEET_POINT)
-                hf_if_steps[i] = 20.0f * log10f(HIGH_GAIN_RATIO * (i - GAIN_SWEET_POINT + 3));
-            else
-                hf_if_steps[i] = 20.0f * log10f(LOW_GAIN_RATIO * (i + 1));
-        }
-
         // set default attn to 0
         rf_attn_set(0);
     }
@@ -87,23 +70,12 @@ void peri_init()
 }
 
 void rf_attn_set(float f) {
-    int index = 0;
-    for (; index < AD8370_STEPS - 1; index++)
-    {
-        if (hf_if_steps[index] <= f && hf_if_steps[index + 1] > f)
-            break;
-    }
-    printf("set att = %f\n", f);
-    printf("Find index=%d\n", index);
-    uint32_t gain;
-    if (index > GAIN_SWEET_POINT)
-        gain = HIGH_MODE | (index - GAIN_SWEET_POINT + 3);
-    else
-        gain = LOW_MODE | (index + 1);
+
+    int gain = (int)(f * 2);
 
     if (ad8370_fd > 0)
     {
-        printf("Set AD8370 with %d/0x%x\n", gain, gain);
+        printf("Set PE4312 with %d/0x%x\n", gain, gain);
         if(ioctl(ad8370_fd, AD8370_SET, &gain) < 0)
         {
             printf("AD8370 set RF failed: %s\n", strerror(errno));

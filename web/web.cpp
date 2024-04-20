@@ -518,8 +518,6 @@ void reload_index_params()
 		    "openwebrx.js",
 		    "ima_adpcm.js",
 		    "audio.js",
-		    //"pkgs/xdLocalStorage/xd-utils.js",
-		    //"pkgs/xdLocalStorage/xdLocalStorage.js",
 		    "extensions/ext.js",
 		    NULL
 		}, {

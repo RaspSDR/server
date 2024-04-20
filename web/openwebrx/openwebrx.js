@@ -367,7 +367,6 @@ function kiwi_main_ready()
 	   }
 	}
 
-	//kiwi_xdLocalStorage_init();
 	kiwi_get_init_settings();
 	if (!no_geoloc) kiwi_geolocate();
 

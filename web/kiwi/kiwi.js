@@ -103,8 +103,7 @@ var kiwi = {
    
    esc_lt: '\x11',   // ascii dc1
    esc_gt: '\x12',   // ascii dc2
-   
-   xdLocalStorage_ready: false,
+
    prefs_import_ch: -1,
    
    ADC_CLK_CORR_DISABLED: 0,
@@ -455,23 +454,6 @@ function kiwi_valpwd2_cb(badp, p)
 		console.log("kiwi_valpwd2_cb: body_loaded previously!");
 		return;
 	}
-}
-
-function kiwi_xdLocalStorage_init()
-{
-	var iframeUrls = [];
-	var N_PUB = 2;
-	for (var i = 0; i < N_PUB; i++) {
-		iframeUrls[i] = 'http://www.rx-888.com/webconfig/xdstorage.html';
-	}
-	
-	xdLocalStorageHA.init({
-		iframeUrls: iframeUrls,
-		initCallback: function() {
-		   kiwi.xdLocalStorage_ready = true;
-			console.log('xdLocalStorageHA READY');
-		}
-	});
 }
 
 var override_freq, override_mode, override_zoom, override_max_dB, override_min_dB, override_9_10;

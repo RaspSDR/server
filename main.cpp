@@ -283,8 +283,6 @@ int main(int argc, char *argv[])
 
 	if (need_hardware) {
 		peri_init();
-		//pru_start();
-		eeprom_update();
 		
 		kiwi.ext_clk = cfg_bool("ext_ADC_clk", &err, CFG_OPTIONAL);
 		if (err) kiwi.ext_clk = false;

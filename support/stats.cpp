@@ -454,7 +454,6 @@ void stat_task(void *param)
 		}
 
 		NextTask("stat task");
-		eeprom_test();
 
 		// update on a regular interval
 		u64_t now_us = timer_us64();

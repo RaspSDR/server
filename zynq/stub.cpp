@@ -6,8 +6,19 @@ bool background_mode = false;
 bool backup_in_progress = false;
 bool sd_copy_in_progress = false;
 
-int eeprom_next_serno(next_serno_e type, int set_serno) {return 0x1007;}
-int eeprom_check(model_e *model) {return -1;}
-void eeprom_write(next_serno_e type, int serno, int model){}
-void eeprom_update() {}
-void eeprom_test() {}
+int eeprom_check(model_e *model)
+{
+    int status;
+    int serialno = -1;
+
+    // read from enviroment block
+    kstr_t *reply = non_blocking_cmd("fw_printenv serial --noheader", &status);
+    if (status == 0)
+    {
+        serialno = atoi(kstr_sp(reply));
+    }
+
+    kstr_free(reply);
+
+    return serialno;
+}

@@ -289,7 +289,7 @@ function airband_switch_cb(path, idx, first)
 	admin_bool_cb(path, enabled, first);
 
    if (enabled)
-   admin_float_cb("freq_offset", "125000.0", first, [0,3]);
+      admin_float_cb("freq_offset", "125000.0", first, [0,3]);
    else
       admin_float_cb("freq_offset", "0", first, [0,3]);
 	//console.log('### config_freq_offset '+ path +'='+ val +' cfg.freq_offset='+ cfg.freq_offset);
@@ -957,7 +957,7 @@ var network = {
    auto_nat_color:   null,
    show_updating: true,
    
-   ip_blacklist_file_base: 'www.rx-888.com/webconfig/ip_blacklist3.cjson',
+   ip_blacklist_file_base: 'downloads.rx-888.com/webconfig/ip_blacklist3.cjson',
    ip_blacklist_check_mtime: true,
    
    // this ordering gives a remapping of the old 0/1 values: 100M(0) => auto, 10M(1) => same
@@ -2405,7 +2405,7 @@ function console_html()
                'console_input_cb|ping -c3 1.1.1.1; ping -c3 8.8.8.8'),
 
             w3_button('w3-blue|margin-left:16px', 'ping rx-888', 'console_cmd_cb',
-               'console_input_cb|ping -c3 rx-888.com')
+               'console_input_cb|ping -c3 www.rx-888.com')
          ),
          
 			w3_div('id-console-msg w3-margin-T-8 w3-text-output w3-scroll-always-y w3-scroll-down w3-small w3-text-black|background-color:#a8a8a8',

@@ -646,7 +646,7 @@ function fsk_controls_setup()
 	
 	w3_do_when_rendered('id-fsk-menus',
 	   function() {
-         fsk.ext_url = kiwi_SSL() +'www.rx-888.com/webconfig/FSK_freq_menus.cjson';
+         fsk.ext_url = kiwi_SSL() +'downloads.rx-888.com/webconfig/FSK_freq_menus.cjson';
          fsk.int_url = kiwi_url_origin() +'/extensions/FSK/FSK_freq_menus.cjson';
          fsk.using_default = false;
          fsk.double_fault = false;

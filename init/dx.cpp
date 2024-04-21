@@ -692,7 +692,7 @@ void dx_last_community_download(bool capture_time)
 bool dx_community_get(bool download_diff_restart)
 {
     bool restart = false;
-    char *rx888_com = DNS_lookup_result("dx_community_get", "www.rx-888.com", &net.ips_kiwisdr_com);
+    char *rx888_downloads = DNS_lookup_result("dx_community_get", "downloads.rx-888.com", &net.ips_downloads);
 
     bool download_oneshot = kiwi_file_exists(DX_DOWNLOAD_ONESHOT_FN);
     if (download_oneshot) {
@@ -702,8 +702,8 @@ bool dx_community_get(bool download_diff_restart)
 
     // attempt to update dx community label database
     if (admcfg_bool("dx_comm_auto_download", NULL, CFG_OPTIONAL) || download_oneshot) {
-        restart |= dx_download_file(rx888_com, "webconfig/dx_community_config.json", DIR_CFG "/dx_community_config.json");
-        restart |= dx_download_file(rx888_com, "webconfig/dx_community.json", DIR_CFG "/dx_community.json");
+        restart |= dx_download_file(rx888_downloads, "webconfig/dx_community_config.json", DIR_CFG "/dx_community_config.json");
+        restart |= dx_download_file(rx888_downloads, "webconfig/dx_community.json", DIR_CFG "/dx_community.json");
     }
     dx_last_community_download(true);
 

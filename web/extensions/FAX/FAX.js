@@ -331,7 +331,7 @@ function fax_controls_setup()
    
 	w3_do_when_rendered('id-fax-menus',
 	   function() {
-         fax.ext_url = kiwi_SSL() +'www.rx-888.com/webconfig/FAX_freq_menus.cjson';
+         fax.ext_url = kiwi_SSL() +'downloads.rx-888.com/webconfig/FAX_freq_menus.cjson';
          fax.int_url = kiwi_url_origin() +'/extensions/FAX/FAX_freq_menus.cjson';
          fax.using_default = false;
          fax.double_fault = false;

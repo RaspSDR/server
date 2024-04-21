@@ -60,6 +60,7 @@ Boston, MA  02110-1301, USA.
 #include "rx_filter.h"
 #include "wdsp.h"
 #include "fpga.h"
+#include "peri.h"
 
 #ifdef DRM
  #include "DRM.h"

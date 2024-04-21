@@ -137,6 +137,7 @@ typedef struct {
 	int nm_bits6LL;
 
     ip_lookup_t ips_kiwisdr_com;
+	ip_lookup_t ips_downloads;
     
     bool ip_blacklist_inuse;
     int ip_blacklist_len;

@@ -18,7 +18,7 @@ var ale = {
    pb: { lo: 600, hi: 2650 },
    
    nets: null,
-   url: kiwi_SSL() +'www.rx-888.com/webconfig/ALE_nets.cjson',
+   url: kiwi_SSL() +'downloads.rx-888.com/webconfig/ALE_nets.cjson',
    using_default: false,
    double_fault: false,
    
@@ -1229,7 +1229,7 @@ function ALE_2G_help(show)
          w3_div('w3-margin-T-8 w3-scroll-y|height:90%',
             w3_div('w3-margin-R-8',
                'The menu content is fetched from ' +
-               '<a href="http://www.rx-888.com/webconfig/ALE_nets.cjson" target="_blank">www.rx-888.com</a> each time the extension is opened.' +
+               '<a href="http://downloads.rx-888.com/webconfig/ALE_nets.cjson" target="_blank">www.rx-888.com</a> each time the extension is opened.' +
                '<br><br>' +
                'Because the menus can be long (many frequency entries) the <i>format</i> setting can be used to collapse them ' +
                'to show just their net names followed by the <i>scan</i> entry (or single frequency). ' +

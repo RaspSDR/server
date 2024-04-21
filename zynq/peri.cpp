@@ -18,7 +18,6 @@
 
 #include "../si5351/LinuxInterface.h"
 #include "../si5351/si5351.h"
-#include "../dev/rf_attn.h"
 
 static bool init;
 
@@ -56,11 +55,8 @@ void peri_init()
     {
         int data = 0;
 
-        printf("AD8370 found\n");
-        if(ioctl(ad8370_fd, MODE_SET, &data) < 0)
-        {
-            printf("AD8370 set mode failed\n");
-        }
+        // set airband mode
+        rf_enable_airband(kiwi.airband);
 
         // set default attn to 0
         rf_attn_set(0);
@@ -79,6 +75,20 @@ void rf_attn_set(float f) {
         if(ioctl(ad8370_fd, AD8370_SET, &gain) < 0)
         {
             printf("AD8370 set RF failed: %s\n", strerror(errno));
+        }
+    }
+
+    return;
+}
+
+void rf_enable_airband(bool enabled)
+{
+    int data = (int)enabled;
+    if (ad8370_fd > 0)
+    {
+        if(ioctl(ad8370_fd, MODE_SET, &data) < 0)
+        {
+            printf("AD8370 set mode failed\n");
         }
     }
 

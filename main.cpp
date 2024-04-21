@@ -229,6 +229,8 @@ int main(int argc, char *argv[])
 
     bool update_admcfg = false;
     kiwi.anti_aliased = admcfg_default_bool("anti_aliased", false, &update_admcfg);
+	kiwi.airband = admcfg_default_bool("airband", false, &update_admcfg);
+
     if (update_admcfg) admcfg_save_json(cfg_adm.json);      // during init doesn't conflict with admin cfg
 
     rx_chans = fpga_status->signature & 0x0f;

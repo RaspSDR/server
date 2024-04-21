@@ -394,6 +394,20 @@ void c2s_admin(void *param)
 				continue;
 			}
 
+            int airband_enabled;
+            i = sscanf(cmd, "SET airband=%d", &airband_enabled);
+			if (i == 1) {
+				clprintf(conn, "ADMIN: airband=%d\n", airband_enabled);
+				
+                if (kiwi.airband != airband_enabled)
+                {
+                    kiwi.airband = airband_enabled;
+                    rf_enable_airband(kiwi.airband);
+                }
+
+                continue;
+			}
+
             int chan;
 			i = sscanf(cmd, "SET user_kick=%d", &chan);
 			if (i == 1) {

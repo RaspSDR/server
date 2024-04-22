@@ -27,7 +27,7 @@ Boston, MA  02110-1301, USA.
 // ADC clk generated from FPGA via Si5351
 #define ADC_CLOCK_NOM	    (125.0*MHz)		// 66.6666 MHz 15.0 ns
 #define ADC_CLOCK_TYP	    (125.0*MHz)		// typical 20 degC value
-#define ADC_CLOCK_PPM_TYP   50                  // XO spec
+#define ADC_CLOCK_PPM_TYP   100                 // max auto adjustment we allow
 #define ADC_CLOCK_PPM_LIMIT 100                 // max manual adjustment we allow
 
 // works with float or int args

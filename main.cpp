@@ -30,7 +30,6 @@ Boston, MA  02110-1301, USA.
 #include "eeprom.h"
 #include "spi.h"
 #include "gps_.h"
-#include "gps_fe.h"
 #include "coroutines.h"
 #include "cfg.h"
 #include "net.h"

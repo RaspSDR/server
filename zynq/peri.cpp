@@ -66,8 +66,10 @@ void peri_init()
 }
 
 void rf_attn_set(float f) {
+    if (f > 0)
+        return;
 
-    int gain = (int)(f * 2);
+    int gain = (int)(-f * 2);
 
     if (ad8370_fd > 0)
     {

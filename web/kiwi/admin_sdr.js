@@ -90,7 +90,7 @@ function config_html()
                w3_select('w3-width-auto', 'MW chan', '', 'init.AM_BCB_chan', init_AM_BCB_chan, AM_BCB_chan_i, 'admin_select_cb')
             )
          ),
-         w3_slider('id-rf-attn', 'RF Attn', 'init.rf_attn', init_rf_attn, 0, 31.5, 0.5, 'config_rf_attn_cb')
+         w3_slider('id-rf-attn', 'RF Attn', 'init.rf_attn', init_rf_attn, -31.5, 0, 0.5, 'config_rf_attn_cb')
 		) +
 
 		w3_third('w3-text-teal', 'w3-container',

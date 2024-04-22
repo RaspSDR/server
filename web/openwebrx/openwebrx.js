@@ -10069,7 +10069,7 @@ function panels_setup()
 	w3_el("id-optbar-rf").innerHTML =
       w3_col_percent('w3-valign/class-slider',
          w3_text('w3-text-css-orange', 'RF attn'), 19,
-         w3_slider('id-rf-attn w3-wheel', '', '', kiwi.rf_attn, 0, 31.5, 0.5, 'rf_attn_cb'), 60,
+         w3_slider('id-rf-attn w3-wheel', '', '', kiwi.rf_attn, -31.5, 0, 0.5, 'rf_attn_cb'), 60,
          w3_div('id-field-rf-attn class-slider'), 19
       ) +
       w3_hr('|border-color:grey; margin:4px 6px 4px 0') +

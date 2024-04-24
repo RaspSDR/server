@@ -169,21 +169,29 @@ static void webserver_collect_print_stats(int print)
         }
 		
 		kstr_free(reply);
-	    int cpufreq_kHz = 1000000, temp_deg_mC = 0;
+	    int cpufreq_kHz = 1000000;
+        float temp_deg_mC = 0;
 
-        #if defined(CPU_AM5729) || defined(CPU_TDA4VM) || defined(CPU_BCM2837)
-	        #ifdef CPU_TDA4VM
-	            cpufreq_kHz = 2000000;  // FIXME: /sys/devices/system/cpu/cpufreq/ is empty currently
-	        #else
-                reply = read_file_string_reply("/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq");
-                sscanf(kstr_sp(reply), "%d", &cpufreq_kHz);
-                kstr_free(reply);
-            #endif
-
-            reply = read_file_string_reply("/sys/class/thermal/thermal_zone0/temp");
-            sscanf(kstr_sp(reply), "%d", &temp_deg_mC);
+        // find out tempture
+        const char* raw_path = "/sys/bus/iio/devices/iio:device0/in_temp0_raw";
+        const char* offset_path = "/sys/bus/iio/devices/iio:device0/in_temp0_offset";
+        const char* scale_path = "/sys/bus/iio/devices/iio:device0/in_temp0_scale";
+        static float t_scale = 0.0f, t_offset=0.0f;
+        if (t_scale == 0.0f) {
+            kstr_t* reply = read_file_string_reply(scale_path);
+            sscanf(kstr_sp(reply), "%f", &t_scale);
             kstr_free(reply);
-        #endif
+            reply = read_file_string_reply(offset_path);
+            sscanf(kstr_sp(reply), "%f", &t_offset);
+            kstr_free(reply);
+            //printf("Tempture scale: %f offset: %f\n", t_scale, t_offset);
+        }
+        float raw_value;
+        kstr_t* reply = read_file_string_reply(raw_path);
+        sscanf(kstr_sp(reply), "%f", &raw_value);
+        kstr_free(reply);
+        temp_deg_mC = (raw_value - t_offset) / t_scale;
+        // printf("Tempture scale: %f offset: %f raw: %f => Temp=%d\n", t_scale, t_offset, raw_value, temp_deg_mC);
 
 		// ecpu_use() below can thread block, so cpu_stats_buf must be properly set NULL for reading thread
 		kstr_t *ks;
@@ -193,7 +201,7 @@ static void webserver_collect_print_stats(int print)
 			kstr_free(ks);
 		}
 		ks = kstr_asprintf(NULL, "\"ct\":%d,\"cf\":%d,\"cc\":%.0f,",
-			timer_sec(), cpufreq_kHz / 1000, (float) temp_deg_mC / 1000);
+			timer_sec(), cpufreq_kHz / 1000, temp_deg_mC);
 
 		ks = kstr_cat(ks, kstr_list_int("\"cu\":[", "%d", "],", &del_usi[0][0], ncpu));
 		ks = kstr_cat(ks, kstr_list_int("\"cs\":[", "%d", "],", &del_usi[1][0], ncpu));

@@ -168,11 +168,13 @@ static void snd_service()
 
         last_run_us = timer_us();
 
+#if 0
         if (!itask_run)
         {
             spi_set(CmdSetRXNsamps, 0);
             ctrl_clr_set(CTRL_SND_INTR, 0);
         }
+#endif
     } while (diff > 1);
     evLatency(EC_EVENT, EV_DPUMP, 0, "DATAPUMP", evprintf("MOVED %d", moved));
 }
@@ -240,7 +242,8 @@ void data_pump_start_stop()
 			break;
 		}
 	}
-	
+
+#if 0	
 	// stop the data pump when the last user leaves
 	if (itask_run && no_users) {
 		itask_run = false;
@@ -258,6 +261,7 @@ void data_pump_start_stop()
 		//real_printf("#### START dpump\n");
 		last_run_us = 0;
 	}
+#endif
 	
 	have_snd_users = !no_users;
 #endif

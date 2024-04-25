@@ -88,5 +88,5 @@ void fpga_init()
   }
 #endif
 
-    fpga_config->reset = 0;
+    fpga_config->reset = RESET_RX;
 }

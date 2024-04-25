@@ -1478,6 +1478,11 @@ static void _cfg_write_file(void *param)
 	fprintf(fp, "%s\n", cfg->json_write);
 	fclose(fp);
     //real_printf("_cfg_write_file DONE\n");
+
+	// copy config file to sd card
+	system("mount -o rw,remount /media/mmcblk0p1");
+	system("cp -u /root/config/* /media/mmcblk0p1/config/");
+	system("mount -o ro,remount /media/mmcblk0p1;");
 }
 
 void _cfg_save_json(cfg_t *cfg, char *json)

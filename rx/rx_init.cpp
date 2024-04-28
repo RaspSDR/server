@@ -146,8 +146,8 @@ static int snr_interval[] = { 0, 1, 4, 6, 24 };
 
 void update_freqs(bool *update_cfg)
 {
-	ui_srate = 125*MHz/2;
-	ui_srate_kHz = round(ui_srate/kHz);
+    ui_srate = ADC_CLOCK_TYP/2.0;
+    ui_srate_kHz = round(ui_srate/kHz);
     freq_offset_kHz = cfg_default_float("freq_offset", 0, update_cfg);
     freq_offmax_kHz = freq_offset_kHz + ui_srate_kHz;
 	//printf("ui_srate=%.3f ui_srate_kHz=%.3f freq_offset_kHz=%.3f freq_offmax_kHz=%.3f\n",

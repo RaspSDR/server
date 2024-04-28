@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
     rx_chans = fpga_status->signature & 0x0f;
     wf_chans = (fpga_status->signature >> 8) & 0x0f;;
     snd_rate = SND_RATE_4CH;
-    rx_decim = RX_DECIM_4CH;
+    rx_decim = (int)(ADC_CLOCK_TYP/12000); // 12k
     nrx_bufs = RXBUF_SIZE_4CH / NRX_SPI;
 
     bool no_wf = cfg_bool("no_wf", &err, CFG_OPTIONAL);

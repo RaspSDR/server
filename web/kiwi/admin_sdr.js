@@ -1267,7 +1267,7 @@ function dx_html()
 	
 	// one-time conversion of kiwi.config/config.js bands[] to dx_config.json configuration file
 	if (isUndefined(dxcfg.bands) || isUndefined(dxcfg.band_svc) || isUndefined(dxcfg.dx_type)) {
-      bandwidth = 125e3 / 2;
+      bandwidth = ext_adc_clock_Hz() / 1000 / 2;
       zoom_nom = ZOOM_NOMINAL;
       bands_init();
 	   console.log('BANDS: saving new dxcfg.bands ---------------------------------------------------');

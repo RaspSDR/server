@@ -200,7 +200,6 @@ set(DIR_DATA /tmp/kiwi.data)
 target_compile_definitions(kiwi.bin PUBLIC
     VERSION_MAJ=${CURRENT_YEAR} VERSION_MIN=${CURRENT_MONTH_DAY}
     KIWI KIWISDR
-    MULTI_CORE
     DIR_CFG="/root/config"
     DIR_SAMPLES="/media/mmcblk0p1/config/samples"
     CFG_PREFIX=""
@@ -216,7 +215,7 @@ target_compile_definitions(kiwi.bin PUBLIC
     HAVE_LIBFDK_AAC HAVE_USAC
 )
 
-target_compile_options(kiwi.bin PUBLIC -O3 ${PLATOFRM_FLAGS} -Wno-fortify-source -Werror)
+target_compile_options(kiwi.bin PUBLIC -g -O3 ${PLATOFRM_FLAGS} -Wno-fortify-source -Werror -pthread)
 
 # ----------------------- Build FILES embeded
 file(GLOB_RECURSE FILES_EMBED_JS RELATIVE ${UPSTREAM_DIR}/web

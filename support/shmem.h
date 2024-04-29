@@ -77,7 +77,6 @@ extern log_save_t *log_save_p;
 #endif
 
 #define SIG_DEBUG       SIGUSR1
-#define SIG_SETUP_TRAMP SIGUSR2
 
 #define SIG_IPC_MIN     SIGRTMIN
 #define SIG_IPC_SPI     SIG_IPC_MIN

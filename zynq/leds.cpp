@@ -161,7 +161,7 @@ static void led_num(int n, int ndigits, int flags)
 // 0:'brighest', 1:'medium', 2:'dimmer', 3:'dimmest', 4:'off'
 static int pwm_off_time_ms[] = { 0, 5, 10, 20, -1 };   // 0 = full brightness (no PWM), -1 = no LEDs at all
 
-static void led_reporter(void *param)
+void led_task(void *param)
 {
     set_cpu_affinity(1);
 
@@ -214,9 +214,4 @@ static void led_reporter(void *param)
         led_set(1,1,1,1, 5000);
         led_set(0,0,0,0, 3000);
     }
-}
-
-void led_task(void *param)
-{
-    child_task("kiwi.leds", led_reporter);
 }

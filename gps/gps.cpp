@@ -113,7 +113,7 @@ static void gps_task(void *param)
             clock_correction(ticks);
         }
 
-        if (!gps_waiting(&gps_handle, 0))
+        if (!gps_waiting(&gps_handle, 1000000))
             continue;
 
         gps_read(&gps_handle, NULL, 0);

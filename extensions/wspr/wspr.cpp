@@ -124,7 +124,8 @@ static void sync_and_demodulate(wspr_t *w,
                         c3[j]=c3[j-1]*cdphi3 - s3[j-1]*sdphi3;
                         s3[j]=c3[j-1]*sdphi3 + s3[j-1]*cdphi3;
 						
-						if ((j%YIELD_EVERY_N_TIMES)==(YIELD_EVERY_N_TIMES-1)) WSPR_SHMEM_YIELD;
+						if ((j%YIELD_EVERY_N_TIMES)==(YIELD_EVERY_N_TIMES-1))
+                            WSPR_SHMEM_YIELD;
                     }
                     fplast = fp;
                 }
@@ -149,7 +150,8 @@ static void sync_and_demodulate(wspr_t *w,
                         i3[i]=i3[i] + id[k]*c3[j] + qd[k]*s3[j];
                         q3[i]=q3[i] - id[k]*s3[j] + qd[k]*c3[j];
 						
-						if ((j%YIELD_EVERY_N_TIMES)==(YIELD_EVERY_N_TIMES-1)) WSPR_SHMEM_YIELD;
+						if ((j%YIELD_EVERY_N_TIMES)==(YIELD_EVERY_N_TIMES-1))
+                            WSPR_SHMEM_YIELD;
                     }
                 }
                 p0=i0[i]*i0[i] + q0[i]*q0[i];

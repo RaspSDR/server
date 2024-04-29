@@ -42,6 +42,8 @@ rx_dpump_t rx_dpump[MAX_RX_CHANS];
 dpump_t dpump;
 
 bool have_snd_users;
+static rx_shmem_t rx_shmem;
+rx_shmem_t *rx_shmem_p = &rx_shmem;
 
 #ifdef USE_SDR
 
@@ -210,7 +212,10 @@ static void data_pump(void *param)
                 cps++;
             }
         #else
-            TaskSleepReason("wait for interrupt");
+            //TaskSleepReason("wait for interrupt");
+            int avail_data = fpga_status->rx_fifo;
+            while (avail_data < nrx_samps * 2)
+                TaskSleepMsec(10);
         #endif
 
 		evDP(EC_EVENT, EV_DPUMP, -1, "data_pump", evprintf("WAKEUP: SPI CTRL_SND_INTR %d",
@@ -271,7 +276,7 @@ void data_pump_init()
 {
 	//printf("data pump: rescale=%.6g\n", rescale);
 
-	CreateTaskF(data_pump, 0, DATAPUMP_PRIORITY, CTF_POLL_INTR);
+	CreateTaskF(data_pump, 0, DATAPUMP_PRIORITY, 0);
 }
 
 #endif

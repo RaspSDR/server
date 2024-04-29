@@ -65,6 +65,7 @@ static kstring_t kstrings[KSTRINGS];
 u2_t kstr_next_free;
 int kstr_nused, kstr_hiwat;
 
+lock_t kstr_lock;
 char ASCII[256][4];
 
 void kstr_init()
@@ -89,6 +90,8 @@ void kstr_init()
 	for (i = 32; i < 127; i++) kiwi_snprintf_buf(ASCII[i], "%c", i);
 	for (i = 127; i < 256; i++) kiwi_snprintf_buf(ASCII[i], "%2x", i);
 	
+    lock_initS(&kstr_lock, "kstr");
+    lock_register(&kstr_lock);
 	#if 0
         for (i = 0; i < 256; i++) {
             real_printf("%s ", ASCII[i]);
@@ -126,7 +129,7 @@ static char *kstr_malloc(kstr_malloc_e type, char *s_kstr_cstr, int size)
         ks->size = size;
         return (char *) ks;
 	}
-	
+	lock_enter(&kstr_lock);
 	ks = &kstrings[kstr_next_free];
 	kstr_next_free = ks->next_free;
 	if (kstr_next_free == KS_LAST) {
@@ -138,6 +141,8 @@ static char *kstr_malloc(kstr_malloc_e type, char *s_kstr_cstr, int size)
 	    kstr_hiwat = kstr_nused;
 	    //real_printf("kstr: hiwat=%d\n", kstr_hiwat);
 	}
+    lock_leave(&kstr_lock);
+
     ks->flags = KS_VALID;
 	
     if (type == KSTR_EXT_MALLOC) {
@@ -237,9 +242,12 @@ static char *_kstr_free(char *s_kstr_cstr, kstr_free_e mode)
 		ks->sp = NULL;
 		ks->size = 0;
 		ks->flags = 0;
+        
+        lock_enter(&kstr_lock);
 		ks->next_free = kstr_next_free;
 		kstr_next_free = ks - kstrings;
 		kstr_nused--;
+        lock_leave(&kstr_lock);
 	}
 	
 	return rv;

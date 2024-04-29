@@ -78,15 +78,11 @@ static bool _kiwi_restart;
 
 void kiwi_restart()
 {
-    #ifdef USE_ASAN
-        // leak detector needs exit while running on main() stack
-        _kiwi_restart = true;
-        TaskWakeupF(TID_MAIN, TWF_CANCEL_DEADLINE);
-        while (1)
-            TaskSleepSec(1);
-    #else
-        kiwi_exit(0);
-    #endif
+	// leak detector needs exit while running on main() stack
+	_kiwi_restart = true;
+	TaskWakeupF(TID_MAIN, TWF_CANCEL_DEADLINE);
+	while (1)
+		TaskSleepSec(1);
 }
 
 int main(int argc, char *argv[])

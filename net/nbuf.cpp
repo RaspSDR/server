@@ -54,7 +54,7 @@ Boston, MA  02110-1301, USA.
 }
 
 // FIXME: remove this at some point and see if still as stable
-#define NBUF_STATIC_ALLOC
+//#define NBUF_STATIC_ALLOC
 
 #ifdef NBUF_STATIC_ALLOC
 	static lock_t nbuf_lock;
@@ -118,10 +118,10 @@ static nbuf_t *nbuf_malloc()
 		}
 		if (i == NNBUF) panic("out of nbufs");
 	lock_leave(&nbuf_lock);
+	memset(nb, 0, sizeof(nbuf_t));
 #else
 	nb = (nbuf_t*) kiwi_malloc("nbuf", sizeof(nbuf_t));
 #endif
-	memset(nb, 0, sizeof(nbuf_t));
 	nb->magic = NB_MAGIC;
 	nb->magic_b = NBUF_MAGIC_B;
 	nb->magic_e = NBUF_MAGIC_E;

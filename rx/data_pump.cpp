@@ -213,9 +213,9 @@ static void data_pump(void *param)
             }
         #else
             //TaskSleepReason("wait for interrupt");
-            int avail_data = fpga_status->rx_fifo;
-            while (avail_data < nrx_samps * 2)
+            while (fpga_status->rx_fifo < nrx_samps * 2) {
                 TaskSleepMsec(10);
+            }
         #endif
 
 		evDP(EC_EVENT, EV_DPUMP, -1, "data_pump", evprintf("WAKEUP: SPI CTRL_SND_INTR %d",

@@ -53,6 +53,7 @@ struct Task
 
 	bool killed;
 	bool sleeping;
+	struct timespec deadline;
 #define N_REASON 64
 	char reason[N_REASON];
 
@@ -161,17 +162,16 @@ void TaskRemove(int id)
 void *_TaskSleep(const char *reason, u64_t usec, u4_t *wakeup_test)
 {
 	int ret;
-	struct timespec max_wait = {0, 0};
 	if (usec > 0)
 	{
-		ret = clock_gettime(CLOCK_REALTIME, &max_wait);
+		ret = clock_gettime(CLOCK_REALTIME, &current->deadline);
 		u64_t sec = usec / 1000 / 1000;
-		max_wait.tv_sec += sec;
-		max_wait.tv_nsec += (usec - SEC_TO_USEC(sec)) * 1000;
+		current->deadline.tv_sec += sec;
+		current->deadline.tv_nsec += (usec - SEC_TO_USEC(sec)) * 1000;
 
-		if (max_wait.tv_nsec >= 1000000000) {
-    	    max_wait.tv_sec += max_wait.tv_nsec / 1000000000;
-        	max_wait.tv_nsec %= 1000000000;
+		if (current->deadline.tv_nsec >= 1000000000) {
+    	    current->deadline.tv_sec += current->deadline.tv_nsec / 1000000000;
+        	current->deadline.tv_nsec %= 1000000000;
     	}
 	}
 
@@ -181,19 +181,25 @@ void *_TaskSleep(const char *reason, u64_t usec, u4_t *wakeup_test)
 	if (usec > 0)
 	{
 		ret = pthread_cond_timedwait(&current->cond, &current->mutex,
-									&max_wait);
+									&current->deadline);
+		current->deadline.tv_sec = current->deadline.tv_nsec = 0;
 	}
 	else
 	{
+		current->deadline.tv_sec = current->deadline.tv_nsec = 0;
 		ret = pthread_cond_wait(&current->cond, &current->mutex);
 	}
 
-	if (ret != 0 && ret != ETIMEDOUT)
+	if (ret == 0)
 	{
-		printf("cond_wait failed with ret = %d\n", ret);
+		strcpy(current->reason, "wakeup by others");
+	} else if (ret == ETIMEDOUT) {
+		strcpy(current->reason, "timeout of sleep");
+	} else {
+		printf("Unhandled wait error=%d\n", ret);
+		panic("sleep failed!");
 	}
 
-	current->reason[0] = '\0';
 	current->sleeping = false;
 	ret = pthread_mutex_unlock(&current->mutex);
 
@@ -209,8 +215,18 @@ void *_TaskSleep(const char *reason, u64_t usec, u4_t *wakeup_test)
 void _TaskWakeup(int id, u4_t flags, void *wake_param)
 {
 	pthread_mutex_lock(&Tasks[id].mutex);
-	Tasks[id].wake_param = wake_param;
-	pthread_cond_signal(&Tasks[id].cond);
+	if (Tasks[id].sleeping)
+	{
+		if (((flags & TWF_CANCEL_DEADLINE) == 0) && (Tasks[id].deadline.tv_sec != 0 || Tasks[id].deadline.tv_nsec != 0))
+		{
+			// don't do anything
+		}
+		else
+		{
+			Tasks[id].wake_param = wake_param;
+			pthread_cond_signal(&Tasks[id].cond);
+		}
+	}
 	pthread_mutex_unlock(&Tasks[id].mutex);
 }
 

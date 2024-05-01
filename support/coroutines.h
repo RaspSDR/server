@@ -102,8 +102,6 @@ C_LINKAGE(void *_TaskSleep(const char *reason, u64_t usec, u4_t *wakeup_test));
 #define TaskSleepReasonSec(r, s) _TaskSleep(r, SEC_TO_USEC(s), NULL)
 #define TaskSleepWakeupTest(r, wu) _TaskSleep(r, 0, wu)
 
-void TaskSleepID(int id, u64_t usec);
-
 #define TWF_NONE 0x0000
 #define TWF_CHECK_WAKING 0x0001
 #define TWF_CANCEL_DEADLINE 0x0002

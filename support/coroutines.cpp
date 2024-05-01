@@ -32,6 +32,7 @@
 
 #include <pthread.h>
 #include <sched.h>
+#include <errno.h>
 
 bool itask_run;
 
@@ -72,6 +73,22 @@ struct Task Tasks[MAX_TASKS];
 
 static __thread struct Task *current;
 pthread_mutex_t task_lock;
+
+// terminate current thread
+static void _TaskTerminate(struct Task *current_task)
+{
+	pthread_cond_destroy(&current->cond);
+	pthread_mutex_destroy(&current->mutex);
+
+	// clear out task
+	pthread_mutex_lock(&task_lock);
+	current->entry = nullptr;
+	pthread_mutex_unlock(&task_lock);
+
+	pthread_exit(0);
+
+	panic("We should not reach here");
+}
 
 void TaskInit()
 {
@@ -115,28 +132,28 @@ void TaskCheckStacks(bool report)
 
 const char *Task_s(int id)
 {
+	if (id == -1)
+	{
+		id = current->id;
+	}
 	return Tasks[id].name;
-}
-
-// TODO: This is ugly, we should not do this
-void TaskSleepID(int id, int usec)
-{
-	if (current->id == id)
-	{
-		_TaskSleep("TaskSleepId", usec, NULL);
-	}
-	else
-	{
-		panic("Stop sleep other task.");
-	}
 }
 
 void TaskRemove(int id)
 {
+	struct Task *current_task = (struct Task *)&Tasks[id];
+
 	Tasks[id].killed = true;
 	if (id == current->id)
 	{
-		pthread_exit(0);
+		_TaskTerminate(current_task);
+	}
+	else
+	{
+		if (current_task->sleeping)
+		{
+			_TaskWakeup(id, 0, nullptr);
+		}
 	}
 }
 
@@ -148,9 +165,14 @@ void *_TaskSleep(const char *reason, u64_t usec, u4_t *wakeup_test)
 	if (usec > 0)
 	{
 		ret = clock_gettime(CLOCK_REALTIME, &max_wait);
-		int sec = usec / 1000 / 1000;
+		u64_t sec = usec / 1000 / 1000;
 		max_wait.tv_sec += sec;
-		max_wait.tv_nsec += (usec - sec * 1000 * 1000) * 1000;
+		max_wait.tv_nsec += (usec - SEC_TO_USEC(sec)) * 1000;
+
+		if (max_wait.tv_nsec >= 1000000000) {
+    	    max_wait.tv_sec += max_wait.tv_nsec / 1000000000;
+        	max_wait.tv_nsec %= 1000000000;
+    	}
 	}
 
 	ret = pthread_mutex_lock(&current->mutex);
@@ -159,15 +181,26 @@ void *_TaskSleep(const char *reason, u64_t usec, u4_t *wakeup_test)
 	if (usec > 0)
 	{
 		ret = pthread_cond_timedwait(&current->cond, &current->mutex,
-									 &max_wait);
+									&max_wait);
 	}
 	else
 	{
 		ret = pthread_cond_wait(&current->cond, &current->mutex);
 	}
+
+	if (ret != 0 && ret != ETIMEDOUT)
+	{
+		printf("cond_wait failed with ret = %d\n", ret);
+	}
+
 	current->reason[0] = '\0';
 	current->sleeping = false;
 	ret = pthread_mutex_unlock(&current->mutex);
+
+	if (current->killed)
+	{
+		_TaskTerminate(current);
+	}
 
 	return current->wake_param;
 }
@@ -196,9 +229,9 @@ static void *ThreadEntry(void *parameter)
 	// call user function
 	current_task->entry(current_task->user_parameter);
 
-	pthread_cond_destroy(&current->cond);
-	pthread_mutex_destroy(&current->mutex);
-	pthread_exit(0);
+	_TaskTerminate(current_task);
+
+	return nullptr;
 }
 
 // create the task and invoke the entry function
@@ -213,6 +246,7 @@ int _CreateTask(funcP_t entry, const char *name, void *param, int priority, u4_t
 		{
 			current_task = &Tasks[i];
 			memset(current_task, 0, sizeof(Task));
+			current_task->entry = entry;
 			current_task->id = i;
 			break;
 		}
@@ -227,7 +261,6 @@ int _CreateTask(funcP_t entry, const char *name, void *param, int priority, u4_t
 	}
 
 	// Initialize the structure
-	current_task->entry = entry;
 	current_task->name = name;
 	current_task->user_parameter = param;
 	current_task->priority.sched_priority = priority;

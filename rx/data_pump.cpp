@@ -213,8 +213,8 @@ static void data_pump(void *param)
             }
         #else
             //TaskSleepReason("wait for interrupt");
-            while (fpga_status->rx_fifo < nrx_samps * 2) {
-                TaskSleepMsec(10);
+            while (fpga_status->rx_fifo < 512) {
+                TaskSleepMsec(1);
             }
         #endif
 

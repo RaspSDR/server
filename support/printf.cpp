@@ -24,6 +24,10 @@
 #include <stdarg.h>
 #include <time.h>
 
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+#include <cxxabi.h>
+
 bool log_foreground_mode = false;
 static bool log_ordinary_printfs = false;
 
@@ -42,26 +46,45 @@ void kiwi_exit(int err)
     #define exit ALT_EXIT
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winline-asm"
 void kiwi_backtrace(const char *id, u4_t printf_type)
 {
-#if 0
-    #define N_BTRACE 20
-	void *fptr[N_BTRACE];
-	int nr = backtrace(fptr, N_BTRACE);
-	char **sptr = backtrace_symbols(fptr, nr);
+	unw_cursor_t cursor;
+	unw_context_t context;
+	char symbol[256];
 
-	for (int i = 0; i < nr; i++) {
-	    char *buf;
-	    asprintf(&buf, "%s: backtrace %d %p %s\n", id, i, fptr[i], sptr[i]);
-        if (background_mode || log_foreground_mode) {
-            syslog(LOG_ERR, "%s", buf);
-        }
-        lfprintf(printf_type, "%s", buf);
-        kiwi_asfree(buf);
+	unw_getcontext(&context);
+	unw_init_local(&cursor, &context);
+
+	int n = 0;
+	printf("%s:\n", id);
+	while (unw_step(&cursor))
+	{
+		unw_word_t ip, sp, off;
+
+		unw_get_reg(&cursor, UNW_REG_IP, &ip);
+		unw_get_reg(&cursor, UNW_REG_SP, &sp);
+
+		const char *name;
+
+		if (!unw_get_proc_name(&cursor, symbol, sizeof(symbol), &off))
+		{
+			int status;
+			size_t length = sizeof(symbol);
+			if ((name = abi::__cxa_demangle(symbol, symbol, &length, &status)) == 0)
+				name = "<unknown>";
+		}
+
+		printf("#%-2d 0x%016" PRIxPTR " sp=0x%016" PRIxPTR " %s + 0x%" PRIxPTR "\n",
+			   ++n,
+			   static_cast<uintptr_t>(ip),
+			   static_cast<uintptr_t>(sp),
+			   name,
+			   static_cast<uintptr_t>(off));
 	}
-	kiwi_asfree(sptr);    // free just the array, not the individual strings (says the manpage)
-#endif
 }
+#pragma clang diagnostic pop
 
 void _panic(const char *str, bool coreFile, const char *file, int line)
 {

@@ -29,6 +29,7 @@ pkg_check_modules(SNDFILE REQUIRED sndfile)
 pkg_check_modules(ZLIB REQUIRED zlib)
 pkg_check_modules(FDKAAC REQUIRED fdk-aac)
 pkg_check_modules(GPS REQUIRED libgps)
+pkg_check_modules(UNWIND REQUIRED libunwind)
 
 find_program(CCACHE_FOUND ccache)
 
@@ -183,6 +184,7 @@ target_link_libraries(kiwi.bin PUBLIC
     ${ZLIB_LIBRARIES}
     ${GPS_LIBRARIES}
     ${FDKAAC_LIBRARIES}
+    ${UNWIND_LIBRARIES}
     util
 )
 

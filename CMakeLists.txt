@@ -42,6 +42,7 @@ SET(EXT_SRCS ${PROJECT_BINARY_DIR}/extint.cpp ${UPSTREAM_DIR}/extensions/ext.cpp
 
 SET(EXTENSIONS
     ALE_2G
+    ant_switch
     colormap
     CW_decoder
     devl

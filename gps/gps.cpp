@@ -20,7 +20,7 @@ static void gps_task(void *param);
 
 void gps_main(int argc, char *argv[])
 {
-    memset(&gps, sizeof(gps), 0);
+    memset(&gps, 0, sizeof(gps));
     gps.start = timer_ms();
 
     if (0 != gps_open("localhost", "2947", &gps_handle))

@@ -207,4 +207,14 @@ C_LINKAGE(bool lock_check());
 C_LINKAGE(void lock_enter(lock_t *lock));
 C_LINKAGE(void lock_leave(lock_t *lock));
 
+#ifdef __cplusplus
+class lock_holder {
+private:
+	lock_t &_owner;
+public:
+	lock_holder(lock_t &lock) : _owner(lock) { lock_enter(&lock);}
+	~lock_holder() {lock_leave(&_owner);}
+};
+#endif
+
 #endif

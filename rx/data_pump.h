@@ -24,38 +24,28 @@ Boston, MA  02110-1301, USA.
 #include "spi.h"
 #include "cuteSDR.h"
 
-typedef struct {
-	u2_t i, q;
-	u1_t q3, i3;	// NB: endian swap
-} __attribute__((packed)) rx_iq_t;
 			
-typedef struct {
-	u2_t i, q;
-} __attribute__((packed)) wf_iq_t;
-
 #define N_DPBUF	32
 
 typedef struct {
-	struct {
-		u4_t wr_pos, rd_pos;
-		// array size really nrx_samps but made pow2 FASTFIR_OUTBUF_SIZE for indexing efficiency
-		TYPECPX in_samps[N_DPBUF][FASTFIR_OUTBUF_SIZE];
-		u64_t ticks[N_DPBUF];
-		#ifdef SND_SEQ_CHECK
-		    u4_t in_seq[N_DPBUF];
-		#endif
-		
-		TYPECPX agc_samples_c[FASTFIR_OUTBUF_SIZE];
+    u4_t wr_pos, rd_pos;
+    // array size really nrx_samps but made pow2 FASTFIR_OUTBUF_SIZE for indexing efficiency
+    TYPECPX in_samps[N_DPBUF][FASTFIR_OUTBUF_SIZE];
+    u64_t ticks[N_DPBUF];
+    #ifdef SND_SEQ_CHECK
+        u4_t in_seq[N_DPBUF];
+    #endif
+    
+    TYPECPX agc_samples_c[FASTFIR_OUTBUF_SIZE];
 
-		TYPEREAL demod_samples_r[FASTFIR_OUTBUF_SIZE];
+    TYPEREAL demod_samples_r[FASTFIR_OUTBUF_SIZE];
 
-        // real mode input buf for cw, sstv, fax decoders etc.
-		u4_t real_wr_pos, real_rd_pos;
-		u4_t real_seq, real_seqnum[N_DPBUF];
-		TYPEMONO16 real_samples_s2[N_DPBUF][FASTFIR_OUTBUF_SIZE];
-		
-		int freqHz[N_DPBUF];    // approx freq in effect when buffer captured
-	};
+    // real mode input buf for cw, sstv, fax decoders etc.
+    u4_t real_wr_pos, real_rd_pos;
+    u4_t real_seq, real_seqnum[N_DPBUF];
+    TYPEMONO16 real_samples_s2[N_DPBUF][FASTFIR_OUTBUF_SIZE];
+    
+    int freqHz[N_DPBUF];    // approx freq in effect when buffer captured
 } rx_dpump_t;
 
 extern rx_dpump_t rx_dpump[MAX_RX_CHANS];

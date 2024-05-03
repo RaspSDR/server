@@ -387,60 +387,54 @@ static void ll_printf(u4_t type, conn_t *conn, const char *fmt, va_list ap)
 void alt_printf(const char *fmt, ...)
 {
 	va_list ap;
+	lock_holder holder(print_lock);
 	va_start(ap, fmt);
-	lock_enter(&print_lock);
 	ll_printf(PRINTF_REG, NULL, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
 void lfprintf(u4_t printf_type, const char *fmt, ...)
 {
 	va_list ap;
+	lock_holder holder(print_lock);
 	va_start(ap, fmt);
-	lock_enter(&print_lock);
 	ll_printf(printf_type, NULL, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
 void cprintf(conn_t *c, const char *fmt, ...)
 {
 	va_list ap;
+	lock_holder holder(print_lock);
 	va_start(ap, fmt);
-	lock_enter(&print_lock);
 	ll_printf(PRINTF_REG, c, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
 void clprintf(conn_t *c, const char *fmt, ...)
 {
 	va_list ap;
+	lock_holder holder(print_lock);
 	va_start(ap, fmt);
-	lock_enter(&print_lock);
 	ll_printf(PRINTF_LOG, c, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
 void clfprintf(conn_t *c, u4_t printf_type, const char *fmt, ...)
 {
 	va_list ap;
+	lock_holder holder(print_lock);
 	va_start(ap, fmt);
-	lock_enter(&print_lock);
 	ll_printf(printf_type, c, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
 void lprintf(const char *fmt, ...)
 {
 	va_list ap;
+	lock_holder holder(print_lock);
 	va_start(ap, fmt);
-	lock_enter(&print_lock);
 	ll_printf(PRINTF_LOG, NULL, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
@@ -448,10 +442,9 @@ void rcprintf(int rx_chan, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
+	lock_holder holder(print_lock);
 	conn_t *c = rx_channels[rx_chan].conn;
-	lock_enter(&print_lock);
 	ll_printf(PRINTF_REG, c, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
@@ -459,10 +452,9 @@ void rclprintf(int rx_chan, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
+	lock_holder holder(print_lock);
 	conn_t *c = rx_channels[rx_chan].conn;
-	lock_enter(&print_lock);
 	ll_printf(PRINTF_LOG, c, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
@@ -470,50 +462,45 @@ void rcfprintf(int rx_chan, u4_t printf_type, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
+	lock_holder holder(print_lock);
 	conn_t *c = rx_channels[rx_chan].conn;
-	lock_enter(&print_lock);
 	ll_printf(printf_type, c, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
 void mprintf(const char *fmt, ...)
 {
 	va_list ap;
+	lock_holder holder(print_lock);
 	va_start(ap, fmt);
-	lock_enter(&print_lock);
 	ll_printf(PRINTF_MSG, NULL, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
 void mprintf_ff(const char *fmt, ...)
 {
 	va_list ap;
+	lock_holder holder(print_lock);
 	va_start(ap, fmt);
-	lock_enter(&print_lock);
 	ll_printf(PRINTF_MSG|PRINTF_FF, NULL, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
 void mlprintf(const char *fmt, ...)
 {
 	va_list ap;
+	lock_holder holder(print_lock);
 	va_start(ap, fmt);
-	lock_enter(&print_lock);
 	ll_printf(PRINTF_MSG|PRINTF_LOG, NULL, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 
 void mlprintf_ff(const char *fmt, ...)
 {
 	va_list ap;
+	lock_holder holder(print_lock);
 	va_start(ap, fmt);
-	lock_enter(&print_lock);
 	ll_printf(PRINTF_MSG|PRINTF_LOG|PRINTF_FF, NULL, fmt, ap);
-	lock_leave(&print_lock);
 	va_end(ap);
 }
 

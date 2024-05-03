@@ -861,7 +861,7 @@ kstr_t *kstr_list_int(const char *head, const char *fmt, const char *tail, int *
     kstr_t *ks = NULL;
     bool first = true;
     
-    if (head) ks = (kstr_t *) head;
+    if (head) ks = kstr_cat(ks, head);
     
     for (int i = 0; i < nlist; i++) {
         if (qual != NULL && !qual[i]) continue;

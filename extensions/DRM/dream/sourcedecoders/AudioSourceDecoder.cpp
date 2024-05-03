@@ -322,8 +322,6 @@ CAudioSourceDecoder::InitInternal(CParameter & Parameters)
     /* Set audiodecoder to empty string - means "unknown" and "can't decode" to GUI */
     audiodecoder = "";
 
-    try
-    {
         Parameters.Lock();
 
         /* Init counter for correctly decoded audio blocks */
@@ -351,7 +349,16 @@ CAudioSourceDecoder::InitInternal(CParameter & Parameters)
            service is an audio service. Check it here */
         if ((Parameters.Service[iCurSelServ].eAudDataFlag != CService::SF_AUDIO) || (iCurAudioStreamID == STREAM_ID_NOT_USED))
         {
-            throw CInitErr(ET_ALL);
+
+            Parameters.Unlock();
+
+            /* An init error occurred, do not process data in this module */
+            DoNotProcessData = true;
+
+            /* In all cases set output size to zero */
+            iOutputBlockSize = 0;
+
+            return;
         }
 
         int iTotalFrameSize = Parameters.Stream[iCurAudioStreamID].iLenPartA + Parameters.Stream[iCurAudioStreamID].iLenPartB;
@@ -474,31 +481,8 @@ CAudioSourceDecoder::InitInternal(CParameter & Parameters)
            now we do not correct and we could stay with a single buffer
            Maybe TODO: sample rate correction to avoid audio dropouts */
         iMaxOutputBlockSize = iMaxLenResamplerOutput;
-    }
 
-    catch(CInitErr CurErr)
-    {
-        Parameters.Unlock();
-
-        switch (CurErr.eErrType)
-        {
-        case ET_ALL:
-            /* An init error occurred, do not process data in this module */
-            DoNotProcessData = true;
-            break;
-
-        case ET_AUDDECODER:
-            /* Audio part should not be decoded, set flag */
-            DoNotProcessAudDecoder = true;
-            break;
-
-        default:
-            DoNotProcessData = true;
-        }
-
-        /* In all cases set output size to zero */
-        iOutputBlockSize = 0;
-    }
+        return;
 }
 
 int

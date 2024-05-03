@@ -36,15 +36,6 @@
 
 #define AC_NULL ((CAudioParam::EAudCod)-1)
 
-enum EInitErr {ET_ALL, ET_AUDDECODER}; /* ET: Error type */
-
-class CInitErr
-{
-public:
-    CInitErr(EInitErr eNewErrType) : eErrType(eNewErrType) {}
-    EInitErr eErrType;
-};
-
 class CAudioCodec
 {
 public:

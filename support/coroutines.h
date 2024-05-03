@@ -196,10 +196,11 @@ typedef struct
 	u4_t magic_e;
 } lock_t;
 
-#define lock_init(lock) _lock_init(lock, #lock)
-#define lock_initS(lock, name) _lock_init(lock, name)
+#define lock_init(lock) _lock_init(lock, #lock, false)
+#define lock_init_recursive(lock) _lock_init(lock, #lock, true)
+#define lock_initS(lock, name) _lock_init(lock, name, false)
 
-C_LINKAGE(void _lock_init(lock_t *lock, const char *name));
+C_LINKAGE(void _lock_init(lock_t *lock, const char *name, bool recurisve));
 C_LINKAGE(void lock_register(lock_t *lock));
 C_LINKAGE(void lock_unregister(lock_t *lock));
 C_LINKAGE(void lock_dump());

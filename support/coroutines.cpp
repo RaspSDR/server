@@ -473,11 +473,22 @@ void TaskSetUserParam(void *param)
 static int n_lock_list = 0;
 static lock_t *locks[MAX_LOCK_N];
 
-void _lock_init(lock_t *lock, const char *name)
+void _lock_init(lock_t *lock, const char *name, bool recursive)
 {
 	memset(lock, 0, sizeof(*lock));
 	lock->name = name;
-	pthread_mutex_init(&lock->mutex, NULL);
+	if (recursive)
+	{
+		pthread_mutexattr_t Attr;
+
+		pthread_mutexattr_init(&Attr);
+		pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);
+		pthread_mutex_init(&lock->mutex, &Attr);
+	}
+	else
+	{
+		pthread_mutex_init(&lock->mutex, NULL);
+	}
 }
 
 void lock_register(lock_t *lock)

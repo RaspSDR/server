@@ -3296,7 +3296,7 @@ var ZOOM_NOMINAL = 10, ZOOM_BAND = 6;
 var zoom_nom = 0, zoom_old_nom = 0;
 var zoom_levels_min = 0;
 var zoom_levels_max = 0;
-var zoom_level = 0;
+var zoom_level = -1;
 var zoom_level_f = 0;
 var zoom_freq = 0;
 var zoom_maxin_s = ['id-maxin', 'id-maxin-nom', 'id-maxin-max'];

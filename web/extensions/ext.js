@@ -28,7 +28,7 @@ var extint = {
    // extensions not subject to DRM lockout
    // FIXME: allow C-side API to specify
    no_lockout: [ 'noise_blank', 'noise_filter', 'ant_switch', 'iframe', 'colormap', 'devl', 'prefs' ],
-   use_rf_tab: [ /* 'ant_switch' */ ],
+   use_rf_tab: [ 'ant_switch' ],
    excl_devl: [ 'devl', 'digi_modes', 's4285', 'prefs' ],
    
    OPT_NOLOCAL: 1,
@@ -1076,16 +1076,6 @@ function extint_focus(is_locked)
    // dynamically load extension (if necessary) before calling <ext>_main()
    var ext_name = extint.current_ext_name;
 	console.log('extint_focus: loading '+ ext_name +'.js');
-	
-	if (is_locked && !extint.no_lockout.includes(ext_name)) {
-	   var s =
-         w3_text('w3-medium w3-text-css-yellow',
-            'Cannot use extensions while <br> another channel is in DRM mode.'
-         );
-      extint_panel_show(s, null, null, null, 'off');
-      ext_set_controls_width_height(300, 75);
-      return;
-	}
 
    kiwi_load_js_dir('extensions/'+ ext_name +'/'+ ext_name, ['.js', '.css'],
 

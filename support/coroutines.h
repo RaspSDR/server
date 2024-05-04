@@ -32,24 +32,19 @@
 
 #define HIGHEST_PRIORITY 99
 
-#define SPIPUMP_PRIORITY 90
 #define DATAPUMP_PRIORITY 80
 
 #define SND_PRIORITY 70
+#define WF_PRIORITY 60
 
-extern u4_t task_medium_priority;
-#define TASK_MED_PRI_NEW 50
-#define TASK_MED_PRI_OLD 50
+#define TASK_MED_PRIORITY 50
 
-// an experiment to favor SSTV (an EXT) over WF
-#define TASK_MED_PRIORITY -1
-#define EXT_PRIORITY task_medium_priority
-#define WEBSERVER_PRIORITY task_medium_priority
-#define ADMIN_PRIORITY task_medium_priority
-#define GPS_PRIORITY task_medium_priority
+#define EXT_PRIORITY 50
+#define WEBSERVER_PRIORITY 50
+#define ADMIN_PRIORITY 50
+#define GPS_PRIORITY 50
 
 #define EXT_PRIORITY_LOW 30
-#define WF_PRIORITY 30
 #define GPS_ACQ_PRIORITY 30
 #define SERVICES_PRIORITY 30
 #define MAIN_PRIORITY 30

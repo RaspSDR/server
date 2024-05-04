@@ -665,7 +665,7 @@ retry:
     	if (isWF_conn) flags |= CTF_STACK_MED;
     	flags |= CTF_SOFT_FAIL;
     	if (ws_flags & WS_FL_NO_LOG) flags |= CTF_NO_LOG;
-		int id = CreateTaskSF(rx_stream_tramp, c->tname, c, (st->priority == TASK_MED_PRIORITY)? task_medium_priority : st->priority, flags, 0);
+		int id = CreateTaskSF(rx_stream_tramp, c->tname, c, st->priority, flags, 0);
 		
 		if (id < 0) {
 	        conn_printf("CONN-%02d %p NO TASKS AVAILABLE\n", cn, c);

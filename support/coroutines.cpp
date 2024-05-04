@@ -37,7 +37,6 @@
 bool itask_run;
 
 // global variables
-u4_t task_medium_priority = TASK_MED_PRI_NEW;
 struct Task
 {
 	int id;
@@ -94,8 +93,6 @@ static void _TaskTerminate(struct Task *current_task)
 void TaskInit()
 {
 	Task *current_task = &Tasks[0];
-
-	task_medium_priority = TASK_MED_PRI_NEW;
 
 	current_task->id = 0;
 	current_task->entry = (funcP_t)1;

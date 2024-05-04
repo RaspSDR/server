@@ -163,8 +163,6 @@ static int pwm_off_time_ms[] = { 0, 5, 10, 20, -1 };   // 0 = full brightness (n
 
 void led_task(void *param)
 {
-    set_cpu_affinity(1);
-
     bool error;
     int ip_error;
     u1_t a, b, c, d;

@@ -703,14 +703,6 @@ int grid_to_distance_km(latLon_t *r_loc, char *grid)
 	return (int) ceil(km);
 }
 
-void set_cpu_affinity(int cpu)
-{
-    cpu_set_t cpu_set;
-    CPU_ZERO(&cpu_set);
-    CPU_SET(cpu, &cpu_set);
-    scall("set_affinity", sched_setaffinity(getpid(), sizeof(cpu_set_t), &cpu_set));
-}
-
 u4_t pos_wrap_diff(u4_t next, u4_t prev, u4_t size)
 {
 	u4_t diff;

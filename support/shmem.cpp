@@ -109,7 +109,6 @@ static void shmem_child_task(void *param)
 {
     shmem_ipc_t *ipc = (shmem_ipc_t *) FROM_VOID_PARAM(param);
     //real_printf("CHILD shmem_child_task RUNNING parent_pid=%d\n", ipc->parent_pid);
-    set_cpu_affinity(1);
     sig_arm(ipc->child_sig, shmem_child_sig_handler);
     
     // see: www.gnu.org/software/libc/manual/html_node/Sigsuspend.html

@@ -387,7 +387,6 @@ static void CAT_write_tty(void *param)
     bool loop = false;
     
     #ifdef CAT_TASK_CHILD
-        set_cpu_affinity(1);
         loop = true;
     #endif
     

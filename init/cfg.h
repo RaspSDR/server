@@ -161,7 +161,7 @@ extern cfg_t cfg_cfg, cfg_adm, cfg_dx, cfg_dxcfg, cfg_dxcomm, cfg_dxcomm_cfg;
 #define cfg_bool_tok(cfg, jt, val)          _cfg_bool_json(cfg, jt, val)
 #define cfg_string_tok(cfg, jt, val)        _cfg_type_json(cfg, JSMN_STRING, jt, val)
 #define cfg_string_tok_free(cfg, val)       _cfg_free(cfg, val)
-#define cfg_lookup_tok(cfg, id)             _cfg_lookup_json(cfg, id, CFG_OPT_NONE)
+//#define cfg_lookup_tok(cfg, id)             _cfg_lookup_json(cfg, id, CFG_OPT_NONE)
 
 // process JSON from a buffer
 #define json_init(cfg, json, id)            _cfg_init(cfg, CFG_IS_JSON, json, id)
@@ -231,4 +231,4 @@ bool _cfg_type_json(cfg_t *cfg, jsmntype_t jt_type, jsmntok_t *jt, const char **
 void _cfg_free(cfg_t *cfg, const char *str);
 
 typedef enum { CFG_OPT_NONE, CFG_OPT_ID1, CFG_OPT_ID2, CFG_OPT_NO_DOT } cfg_lookup_e;
-jsmntok_t *_cfg_lookup_json(cfg_t *cfg, const char *id, cfg_lookup_e option);
+

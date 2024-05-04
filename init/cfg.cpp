@@ -61,6 +61,7 @@ Boston, MA  02110-1301, USA.
 
 #define FL_PANIC    1
 static bool _cfg_parse_json(cfg_t *cfg, u4_t flags = 0);
+static jsmntok_t *_cfg_lookup_json(cfg_t *cfg, const char *id, cfg_lookup_e option);
 
 //#define CFG_TEST
 #ifdef CFG_TEST
@@ -213,13 +214,15 @@ cfg_t cfg_cfg, cfg_adm, cfg_dx, cfg_dxcfg, cfg_dxcomm, cfg_dxcomm_cfg;
 	
 char *_cfg_get_json(cfg_t *cfg, int *size)
 {
+	lock_holder holder(cfg->lock);
+
 	if (!cfg->init) return NULL;
 	
 	if (size) *size = cfg->json_buf_size;
 	return cfg->json;
 }
 
-char *_cfg_realloc_json(cfg_t *cfg, int new_size, u4_t flags);
+static char *_cfg_realloc_json(cfg_t *cfg, int new_size, u4_t flags);
 static bool _cfg_load_json(cfg_t *cfg);
 
 bool _cfg_init(cfg_t *cfg, int flags, char *buf, const char *id)
@@ -238,42 +241,44 @@ bool _cfg_init(cfg_t *cfg, int flags, char *buf, const char *id)
 		}
 		cfg->init = true;
 		do_rtn = true;
-	} else
-	
-	if (cfg != NULL && buf == NULL && cfg->filename != NULL && (flags & CFG_IS_JSON)) {
-        cfg->init = false;
-	} else
-	
-	if (cfg == &cfg_cfg) {
-		cfg->filename = CFG_FN;
-	} else
-
-	if (cfg == &cfg_adm) {
-		cfg->filename = ADM_FN;
-	} else
-
-	if (cfg == &cfg_dx) {
-		cfg->filename = DX_FN;
-		flags |= CFG_NO_PARSE | CFG_INT_BASE10 | CFG_YIELD | CFG_NO_INTEG;
-    } else
-
-	if (cfg == &cfg_dxcfg) {
-		cfg->filename = DX_CFG_FN;
-		flags |= CFG_NO_PARSE | CFG_INT_BASE10;
-    } else
-
-	if (cfg == &cfg_dxcomm) {
-        cfg->filename = DX_COMM_FN;
-		flags |= CFG_NO_PARSE | CFG_INT_BASE10;
-    } else
-
-	if (cfg == &cfg_dxcomm_cfg) {
-        cfg->filename = DX_COMM_CFG_FN;
-		flags |= CFG_NO_PARSE | CFG_INT_BASE10;
 	} else {
-		panic("cfg_init cfg");
-	}
 	
+		if (cfg != NULL && buf == NULL && cfg->filename != NULL && (flags & CFG_IS_JSON)) {
+			cfg->init = false;
+		} else
+		
+		if (cfg == &cfg_cfg) {
+			cfg->filename = CFG_FN;
+		} else
+
+		if (cfg == &cfg_adm) {
+			cfg->filename = ADM_FN;
+		} else
+
+		if (cfg == &cfg_dx) {
+			cfg->filename = DX_FN;
+			flags |= CFG_NO_PARSE | CFG_INT_BASE10 | CFG_YIELD | CFG_NO_INTEG;
+		} else
+
+		if (cfg == &cfg_dxcfg) {
+			cfg->filename = DX_CFG_FN;
+			flags |= CFG_NO_PARSE | CFG_INT_BASE10;
+		} else
+
+		if (cfg == &cfg_dxcomm) {
+			cfg->filename = DX_COMM_FN;
+			flags |= CFG_NO_PARSE | CFG_INT_BASE10;
+		} else
+
+		if (cfg == &cfg_dxcomm_cfg) {
+			cfg->filename = DX_COMM_CFG_FN;
+			flags |= CFG_NO_PARSE | CFG_INT_BASE10;
+		} else {
+			panic("cfg_init cfg");
+		}
+	}
+
+	lock_init_recursive(&cfg->lock);
     cfg->basename = strrchr(cfg->filename, '/');
     if (!cfg->basename) cfg->basename = cfg->filename; else cfg->basename++;
 	
@@ -374,7 +379,7 @@ static bool _cfg_lookup_json_cb(cfg_t *cfg, void *param1, void *param2, jsmntok_
 	return rv;
 }
 
-jsmntok_t *_cfg_lookup_json(cfg_t *cfg, const char *id, cfg_lookup_e option)
+static jsmntok_t *_cfg_lookup_json(cfg_t *cfg, const char *id, cfg_lookup_e option)
 {
 	if (!cfg->init) return NULL;
     assert(cfg->flags & CFG_PARSE_VALID);
@@ -432,7 +437,7 @@ jsmntok_t *_cfg_lookup_json(cfg_t *cfg, const char *id, cfg_lookup_e option)
 
 bool _cfg_type_json(cfg_t *cfg, jsmntype_t jt_type, jsmntok_t *jt, const char **str)
 {
-	if (!cfg->init) return false;
+	assert(cfg->init);
 	
 	assert(jt != NULL);
 	char *s = &cfg->json[jt->start];
@@ -448,7 +453,7 @@ bool _cfg_type_json(cfg_t *cfg, jsmntype_t jt_type, jsmntok_t *jt, const char **
 
 void _cfg_free(cfg_t *cfg, const char *str)
 {
-	if (!cfg->init) return;
+	assert(cfg->init);
 	if (str != NULL) kiwi_ifree((char *) str, "_cfg_free");
 }
 
@@ -546,6 +551,7 @@ static void _cfg_ins(cfg_t *cfg, int pos, char *val)
 
 bool _cfg_int_json(cfg_t *cfg, jsmntok_t *jt, int *num)
 {
+	lock_holder holder(cfg->lock);	
 	assert(jt != NULL);
 	char *s = &cfg->json[jt->start];
 	if (JSMN_IS_PRIMITIVE(jt) && (*s == '-' || isdigit(*s))) {
@@ -561,6 +567,8 @@ bool _cfg_int_json(cfg_t *cfg, jsmntok_t *jt, int *num)
 
 int _cfg_int(cfg_t *cfg, const char *name, bool *error, u4_t flags)
 {
+	lock_holder holder(cfg->lock);
+
 	int num = 0;
 	bool err = false;
 
@@ -582,6 +590,7 @@ int _cfg_int(cfg_t *cfg, const char *name, bool *error, u4_t flags)
 
 int _cfg_set_int(cfg_t *cfg, const char *name, int val, u4_t flags, int pos)
 {
+	lock_holder holder(cfg->lock);
 	int slen;
 	char *s;
 	char *id2 = strchr((char *) name, '.') + 1;
@@ -684,6 +693,7 @@ int _cfg_update_int(cfg_t *cfg, const char *name, int val, bool *changed)
 
 bool _cfg_float_json(cfg_t *cfg, jsmntok_t *jt, double *num)
 {
+	lock_holder holder(cfg->lock);
 	assert(jt != NULL);
 	char *s = &cfg->json[jt->start];
 	if (JSMN_IS_PRIMITIVE(jt) && (*s == '-' || isdigit(*s) || *s == '.')) {
@@ -696,6 +706,7 @@ bool _cfg_float_json(cfg_t *cfg, jsmntok_t *jt, double *num)
 
 double _cfg_float(cfg_t *cfg, const char *name, bool *error, u4_t flags)
 {
+	lock_holder holder(cfg->lock);
 	double num = 0;
 	bool err = false;
 
@@ -716,6 +727,7 @@ double _cfg_float(cfg_t *cfg, const char *name, bool *error, u4_t flags)
 
 int _cfg_set_float(cfg_t *cfg, const char *name, double val, u4_t flags, int pos)
 {
+	lock_holder holder(cfg->lock);
 	int slen;
 	char *s;
 	char *id2 = strchr((char *) name, '.') + 1;
@@ -804,6 +816,8 @@ double _cfg_default_float(cfg_t *cfg, const char *name, double val, bool *error_
 
 bool _cfg_bool_json(cfg_t *cfg, jsmntok_t *jt, int *num)
 {
+	lock_holder holder(cfg->lock);
+
 	assert(jt != NULL);
 	char *s = &cfg->json[jt->start];
 	if (JSMN_IS_PRIMITIVE(jt) && (*s == 't' || *s == 'f')) {
@@ -818,6 +832,7 @@ int _cfg_bool(cfg_t *cfg, const char *name, bool *error, u4_t flags)
 {
 	int num = 0;
 	bool err = false;
+	lock_holder holder(cfg->lock);
 
 	jsmntok_t *jt = _cfg_lookup_json(cfg, name, CFG_OPT_NONE);
 	if (!jt || jt == CFG_LOOKUP_LVL1 || _cfg_bool_json(cfg, jt, &num) == false) {
@@ -840,6 +855,8 @@ int _cfg_set_bool(cfg_t *cfg, const char *name, u4_t val, u4_t flags, int pos)
 	int slen;
 	char *s;
 	char *id2 = strchr((char *) name, '.') + 1;
+	lock_holder holder(cfg->lock);
+
 	//jsmntok_t *jt = _cfg_lookup_json(cfg, name, CFG_OPT_NONE);
 	jsmntok_t *jt = _cfg_lookup_json(cfg, name, (flags & CFG_NO_DOT)? CFG_OPT_NO_DOT : CFG_OPT_NONE);
 	
@@ -909,6 +926,7 @@ int _cfg_set_bool(cfg_t *cfg, const char *name, u4_t val, u4_t flags, int pos)
 
 bool _cfg_default_bool(cfg_t *cfg, const char *name, u4_t val, bool *error_p)
 {
+	lock_holder holder(cfg->lock);
     bool error;
 	bool existing = _cfg_bool(cfg, name, &error, CFG_OPTIONAL);
 	if (error) {
@@ -930,6 +948,8 @@ const char *_cfg_string(cfg_t *cfg, const char *name, bool *error, u4_t flags)
 	const char *str = NULL;
 	bool err = false;
 
+	lock_holder holder(cfg->lock);
+
 	jsmntok_t *jt = _cfg_lookup_json(cfg, name, CFG_OPT_NONE);
 	if (!jt || jt == CFG_LOOKUP_LVL1 || _cfg_type_json(cfg, JSMN_STRING, jt, &str) == false) {
 		err = true;
@@ -950,6 +970,8 @@ int _cfg_set_string(cfg_t *cfg, const char *name, const char *val, u4_t flags, i
 	int slen;
 	char *s;
 	char *id2 = strchr((char *) name, '.') + 1;
+	lock_holder holder(cfg->lock);
+
 	jsmntok_t *jt = _cfg_lookup_json(cfg, name, CFG_OPT_NONE);
 	
 	if (flags & CFG_REMOVE) {
@@ -1023,6 +1045,8 @@ int _cfg_set_string(cfg_t *cfg, const char *name, const char *val, u4_t flags, i
 void _cfg_default_string(cfg_t *cfg, const char *name, const char *val, bool *error_p)
 {
     bool error;
+	lock_holder holder(cfg->lock);
+
 	const char *s = _cfg_string(cfg, name, &error, CFG_OPTIONAL);
 	if (error) {
 		_cfg_set_string(cfg, name, val, CFG_SET, 0);
@@ -1060,6 +1084,7 @@ const char *_cfg_array(cfg_t *cfg, const char *name, bool *error, u4_t flags)
 {
 	const char *array = NULL;
 	bool err = false;
+	lock_holder holder(cfg->lock);
 
 	jsmntok_t *jt = _cfg_lookup_json(cfg, name, CFG_OPT_NONE);
 	if (!jt || jt == CFG_LOOKUP_LVL1 || _cfg_type_json(cfg, JSMN_ARRAY, jt, &array) == false) {
@@ -1086,6 +1111,7 @@ const char *_cfg_object(cfg_t *cfg, const char *name, bool *error, u4_t flags)
 {
 	const char *obj = NULL;
 	bool err = false;
+	lock_holder holder(cfg->lock);
 
 	jsmntok_t *jt = _cfg_lookup_json(cfg, name, CFG_OPT_NONE);
 	if (!jt || jt == CFG_LOOKUP_LVL1 || _cfg_type_json(cfg, JSMN_OBJECT, jt, &obj) == false) {
@@ -1107,6 +1133,8 @@ int _cfg_set_object(cfg_t *cfg, const char *name, const char *val, u4_t flags, i
 	int slen;
 	char *s;
 	char *id2 = strchr((char *) name, '.') + 1;
+	lock_holder holder(cfg->lock);
+
 	jsmntok_t *jt = _cfg_lookup_json(cfg, name, CFG_OPT_NONE);
 	
 	if (flags & CFG_REMOVE) {
@@ -1177,6 +1205,8 @@ int _cfg_set_object(cfg_t *cfg, const char *name, const char *val, u4_t flags, i
 void _cfg_default_object(cfg_t *cfg, const char *name, const char *val, bool *error_p)
 {
     bool error;
+	lock_holder holder(cfg->lock);
+
 	const char *s = _cfg_object(cfg, name, &error, CFG_OPTIONAL);
 	if (error) {
 		_cfg_set_object(cfg, name, val, CFG_SET, 0);
@@ -1201,6 +1231,7 @@ static const char *jsmntype_s[] = {
 
 bool cfg_print_tok(cfg_t *cfg, void *param1, void *param2, jsmntok_t *jt, int seq, int hit, int lvl, int rem, void **rval)
 {
+	lock_holder holder(cfg->lock);
 	int n;
 	char *s = &cfg->json[jt->start];
 	if (lvl >= 1 && seq == TOK_VIRTUAL) lvl--;
@@ -1240,6 +1271,8 @@ bool cfg_print_tok(cfg_t *cfg, void *param1, void *param2, jsmntok_t *jt, int se
 // lvl_id constrains callbacks to elements of a matching level 1 sub-object.
 void *_cfg_walk(cfg_t *cfg, const char *lvl_id, cfg_walk_cb_t cb, void *param1, void *param2)
 {
+	lock_holder holder(cfg->lock);
+
 	int i, n, idlen = lvl_id? strlen(lvl_id) : 0;
 	jsmntok_t *jt = cfg->tokens;
 	int hit = -1;
@@ -1376,7 +1409,7 @@ static bool _cfg_parse_json(cfg_t *cfg, u4_t flags)
 	return true;
 }
 
-char *_cfg_realloc_json(cfg_t *cfg, int new_size, u4_t flags)
+static char *_cfg_realloc_json(cfg_t *cfg, int new_size, u4_t flags)
 {
 	assert(new_size > 0);
 	if (cfg->json_buf_size >= new_size) {
@@ -1487,6 +1520,8 @@ static void _cfg_write_file(void *param)
 
 void _cfg_save_json(cfg_t *cfg, char *json)
 {
+	lock_holder holder(cfg->lock);
+
 	TMEAS(u4_t start = timer_ms(); printf("cfg_save_json START %s json_len=%d\n", cfg->basename, strlen(cfg->json));)
 
 	// if new buffer is different update our copy

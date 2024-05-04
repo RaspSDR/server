@@ -657,7 +657,7 @@ int DNS_lookup(const char *domain_name, ip_lookup_t *r_ips, int n_ips, const cha
             ip_list[i] = strndup(ips[i].str, NET_ADDRSTRLEN);
             int slen = strlen(ip_list[i]);
             if (ip_list[i][slen-1] == '\n') ip_list[i][slen-1] = '\0';    // remove trailing \n
-	        printf("LOOKUP: \"%s\" %s\n", domain_name, ip_list[i]);
+	        //printf("LOOKUP: \"%s\" %s\n", domain_name, ip_list[i]);
 	        r_ips->ip[i] = inet4_d2h(ip_list[i], NULL);
         }
         

@@ -33,7 +33,7 @@ Boston, MA  02110-1301, USA.
 #define PORT_BASE_INTERNAL_SNR      1338
 #define PORT_BASE_INTERNAL_S_METER  1438
 
-#define NET_DEBUG
+//#define NET_DEBUG
 #ifdef NET_DEBUG
 	#define net_printf(fmt, ...) \
 	    if (debug_printfs) lprintf("NET(%d) DEBUG " fmt, retry, ## __VA_ARGS__)

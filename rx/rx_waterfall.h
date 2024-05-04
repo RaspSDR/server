@@ -172,17 +172,7 @@ struct wf_shmem_t {
 
 #include "shmem_config.h"
 
-#ifdef MULTI_CORE
-    //#define WF_SHMEM_DISABLE_TEST
-    #ifdef WF_SHMEM_DISABLE_TEST
-        #warning dont forget to remove WF_SHMEM_DISABLE_TEST
-        #define WF_SHMEM_DISABLE
-    #else
-        // shared memory enabled
-    #endif
-#else
-    #define WF_SHMEM_DISABLE
-#endif
+#define WF_SHMEM_DISABLE
 
 #include "shmem.h"
 

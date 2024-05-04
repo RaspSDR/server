@@ -108,3 +108,4 @@ int grid_to_distance_km(latLon_t *r_loc, char *grid);
 u4_t pos_wrap_diff(u4_t next, u4_t prev, u4_t size);
 
 char *toUnits(int num, int instance = 0);
+float log10f_fast(float x);

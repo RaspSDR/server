@@ -73,7 +73,7 @@ static void snd_service()
 
         int avail_data = fpga_status->rx_fifo;
         if (avail_data < nrx_samps * 2)
-            printf("RX Underflow\n");
+            printf("RX Underflow %d\n", avail_data);
         for (int i = 0; i < nrx_samps;i++)
         {
             s4_t data[MAX_RX_CHANS * 2];
@@ -213,7 +213,7 @@ static void data_pump(void *param)
             }
         #else
             //TaskSleepReason("wait for interrupt");
-            while (fpga_status->rx_fifo < 512) {
+            while (fpga_status->rx_fifo < nrx_samps * 2 + 10) {
                 TaskSleepMsec(1);
             }
         #endif

@@ -93,10 +93,6 @@ static const char *interp_s[] = { "max", "min", "last", "drop", "cma" };
     #define WFNextTask(r)
 #endif
 
-struct iq_t {
-	u2_t i, q;
-} __attribute__((packed));
-
 #define	WF_OUT_HDR	((int) (sizeof(wf_pkt_t) - sizeof(out->un)))
 #define	WF_OUT_NOM	((int) (WF_OUT_HDR + sizeof(out->un.buf)))
 		
@@ -131,7 +127,7 @@ void c2s_waterfall_init()
 	// and cause the data pump to overrun
 	for (i=0; i < MAX_WF_CHANS; i++) {
 	    fft_t *fft = &WF_SHMEM->fft_inst[i];
-		fft->hw_dft_plan = fftwf_plan_dft_1d(WF_C_NSAMPS, fft->hw_c_samps, fft->hw_fft, FFTW_FORWARD, FFTW_ESTIMATE);
+		fft->hw_dft_plan = fftwf_plan_dft_1d(WF_C_NSAMPS, fft->hw_c_samps, fft->hw_fft, FFTW_FORWARD, FFTW_MEASURE);
 	}
 	
 	const float adc_scale_decim = powf(2, -16);		// gives +/- 0.5 float samples
@@ -959,29 +955,63 @@ void sample_wf(int rx_chan)
     assert(wf_fps[wf->speed] != 0);
     int desired = 1000 / wf_fps[wf->speed];
 
+    // desired frame rate greater than what full sampling can deliver, so start overlapped sampling
+    if (wf->check_overlapped_sampling) {
+        wf->check_overlapped_sampling = false;
+
+        if (wf->samp_wait_us/1000 >= desired/2) {
+            wf->overlapped_sampling = true;
+
+            #ifdef WF_INFO
+            if (!bg) printf("---- WF%d OLAP z%d samp_wait %d >= %d(2x) desired %d\n",
+                rx_chan, wf->zoom, wf->samp_wait_us, 2*desired, desired);
+            #endif
+
+            spi_set(CmdWFReset, rx_chan, WF_SAMP_RD_RST | WF_SAMP_WR_RST | WF_SAMP_CONTIN);
+            // memmset(&fft->sample_data[0], 0, sizeof(iq_t) * WF_C_NSAMPS);
+        } else {
+            wf->overlapped_sampling = false;
+
+            #ifdef WF_INFO
+            if (!bg) printf("---- WF%d NON-OLAP z%d samp_wait %d < %d(2x) desired %d\n",
+                rx_chan, wf->zoom, wf->samp_wait_us, 2*desired, desired);
+            #endif
+        }
+    }
+
     s4_t ii, qq;
     iq_t *iqp;
 
+    int start;
     float *window = WF_SHMEM->window_function[wf->window_func];
-    spi_set(CmdWFReset, rx_chan, WF_SAMP_RD_RST | WF_SAMP_WR_RST | WF_SAMP_CONTIN);
+    if (!wf->overlapped_sampling)
+    {
+        spi_set(CmdWFReset, rx_chan, WF_SAMP_RD_RST | WF_SAMP_WR_RST | WF_SAMP_CONTIN);
+        start = 0;
+    }
+    else
+    {
+        int n = WF_C_NSAMPS * ((desired / 2.0) / (wf->samp_wait_us/1000.0)) ; // how many samples we should receive
+        for (int i = 0; i + n < WF_C_NSAMPS; i++)
+            fft->sample_data[0 + i] = fft->sample_data[n + i];
+        start = WF_C_NSAMPS - n;
+    }
 
 #define FIFO_SIZE 4096
 #define FIFO_RATIO (int)(WF_C_NSAMPS/(FIFO_SIZE*0.5f))
-    iq_t data;
-
-    uint32_t left = WF_C_NSAMPS;
-    for (int i = 0; i < WF_C_NSAMPS; i++)
+    for (int i = start; i < WF_C_NSAMPS; i++)
     {
-        iq_t data;
-
         if (fpga_status->wf_fifo[rx_chan] == 0)
         {
             WFSleepReasonUsec("fill pipe", wf->samp_wait_us/((WF_C_NSAMPS - i)/(FIFO_SIZE*0.5f))+1);
         }
+        *(uint32_t*)(&fft->sample_data[i]) = *fpga_wf_data[rx_chan];
+    }
 
-        *(uint32_t*)&data = *fpga_wf_data[rx_chan];
-        ii = (s4_t) (s2_t) data.i;
-        qq = (s4_t) (s2_t) data.q;
+    for (int i = 0; i < WF_C_NSAMPS; i++) 
+    {
+        ii = (s4_t) (s2_t) fft->sample_data[i].i;
+        qq = (s4_t) (s2_t) fft->sample_data[i].q;
 
         float fi = ((float) ii) * window[i];
         float fq = ((float) qq) * window[i];

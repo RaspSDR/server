@@ -63,10 +63,15 @@ Boston, MA  02110-1301, USA.
 
 #define	WF_WIDTH		1024	// width of waterfall display
 
+struct iq_t {
+	s2_t i, q;
+} __attribute__((packed));
+
 struct fft_t {
 	fftwf_plan hw_dft_plan;
-	fftwf_complex hw_c_samps[sizeof(fftwf_complex) * (WF_C_NSAMPS)];
-	fftwf_complex hw_fft[sizeof(fftwf_complex) * (WF_C_NFFT)];
+	fftwf_complex hw_c_samps[WF_C_NSAMPS];
+	fftwf_complex hw_fft[WF_C_NFFT];
+	iq_t sample_data[WF_C_NSAMPS];
 };
 
 struct wf_pkt_t {

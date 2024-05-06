@@ -19,7 +19,7 @@
     #define DRM_CHECK_ALT(x,y) y
 #endif
 
-enum { DRM_DAT_IQ=0 } drm_dat_e;
+#define DRM_DAT_IQ 0
 
 typedef struct {
     #define N_DRM_OBUF 32

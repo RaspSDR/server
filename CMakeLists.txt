@@ -222,7 +222,7 @@ target_compile_definitions(kiwi.bin PUBLIC
     DIR_CFG="/root/config"
     DIR_SAMPLES="/media/mmcblk0p1/config/samples"
     CFG_PREFIX=""
-    DIR_DATA=STRINGIFY\(${CMAKE_INSTALL_FULL_DATAROOTDIR}\)
+    DIR_DATA=STRINGIFY\(${DIR_DATA}\)
     BUILD_DIR="${PROJECT_BINARY_DIR}"
     COMPILE_HOST="${_host_name}"
     EDATA_EMBED

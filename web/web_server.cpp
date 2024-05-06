@@ -333,15 +333,7 @@ void web_server_init(ws_init_t type)
 
         if (update_admcfg) admcfg_save_json(cfg_adm.json);      // during init doesn't conflict with admin cfg
 
-        if (0) {
-            struct stat st;
-            scall("stat edata_always", stat(BUILD_DIR "/obj_keep/edata_always.o", &st));
-            mtime_obj_keep_edata_always_o = st.st_mtime;
-            scall("stat edata_always2", stat(BUILD_DIR "/obj_keep/edata_always2.o", &st));
-            mtime_obj_keep_edata_always2_o = st.st_mtime;
-        }
-
-        asprintf(&web_server_hdr, "KiwiSDR_Mongoose/%d.%d", version_maj, version_min);
+        asprintf(&web_server_hdr, "ZynqSDR_Mongoose/%d.%d", version_maj, version_min);
 		init = TRUE;
 	}
 	

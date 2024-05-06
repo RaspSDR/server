@@ -86,9 +86,6 @@ static const char *edata_lookup(embedded_files_t files[], const char *name, size
     return NULL;
 }
 
-time_t mtime_obj_keep_edata_always_o;
-time_t mtime_obj_keep_edata_always2_o;
-
 int web_caching_debug;
 
 static const char* edata(const char *uri, bool cache_check, size_t *size, time_t *mtime, bool *is_file)
@@ -119,19 +116,11 @@ static const char* edata(const char *uri, bool cache_check, size_t *size, time_t
 		data = edata_lookup(edata_always, uri, size);
 		if (data) {
 		    subtype = "edata_always file";
-#ifdef EDATA_EMBED
 			// In production mode the only thing we have is the server binary build time.
 			// But this is okay since because that's the origin of the data and the binary is
 			// only updated when a software update occurs.
 			*mtime = timer_server_build_unix_time();
 			reason = "using server build";
-#else
-			// In development mode this is better than the constantly-changing server binary
-			// (i.e. the obj_keep/edata_always.o file is rarely updated).
-			// NB: mtime_obj_keep_edata_always_o is only updated once per server restart.
-			*mtime = mtime_obj_keep_edata_always_o;
-			reason = "using edata_always.o";
-#endif
 		}
 	}
 
@@ -139,19 +128,11 @@ static const char* edata(const char *uri, bool cache_check, size_t *size, time_t
 		data = edata_lookup(edata_always2, uri, size);
 		if (data) {
 		    subtype = "edata_always2 file";
-#ifdef EDATA_EMBED
 			// In production mode the only thing we have is the server binary build time.
 			// But this is okay since because that's the origin of the data and the binary is
 			// only updated when a software update occurs.
 			*mtime = timer_server_build_unix_time();
 			reason = "using server build";
-#else
-			// In development mode this is better than the constantly-changing server binary
-			// (i.e. the obj_keep/edata_always2.o file is rarely updated).
-			// NB: mtime_obj_keep_edata_always2_o is only updated once per server restart.
-			*mtime = mtime_obj_keep_edata_always2_o;
-			reason = "using edata_always2.o";
-#endif
 		}
 	}
 
@@ -546,6 +527,7 @@ void reload_index_params()
 
 static char cached_ip[NET_ADDRSTRLEN];
 static int cached_served;
+static lock_t cache_lock;
 
 static void web_has_served(int from, char *ip_unforwarded, char *ip_forwarded, const char *fn_s)
 {
@@ -579,6 +561,7 @@ static void web_has_served(int from, char *ip_unforwarded, char *ip_forwarded, c
 	}
 	
 	if (!found) {
+        lock_holder holder(cache_lock);
 	    if (strcmp(cached_ip, ip_s) == 0) {
 	        //if (from == MG_REQUEST)
 	            cached_served++;
@@ -596,6 +579,7 @@ static void web_has_served(int from, char *ip_unforwarded, char *ip_forwarded, c
 int web_served(conn_t *c)
 {
     int served;
+    lock_holder holder(cache_lock);
 
     if (strcmp(c->remote_ip, cached_ip) == 0) {
         served = c->served + cached_served;
@@ -610,6 +594,7 @@ int web_served(conn_t *c)
 
 void web_served_clear_cache(conn_t *c)
 {
+    lock_holder holder(cache_lock);
     if (strcmp(c->remote_ip, cached_ip) == 0) {
         web_printf_served("SERVED: RESULT CLEAR_CACHE %s %s\n", c->remote_ip, cached_ip);
         cached_ip[0] = '\0';

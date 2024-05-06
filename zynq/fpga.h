@@ -39,8 +39,9 @@ typedef struct {
         uint32_t wf_freq;
         uint32_t wf_decim;
     }wf_config[4];
+    uint8_t antenna;
 }__attribute__((packed)) FPGA_Config;
-static_assert(sizeof(FPGA_Config) == 800/8);
+static_assert(sizeof(FPGA_Config) == 808/8);
 
 typedef struct {
     uint32_t signature;

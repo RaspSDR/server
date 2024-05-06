@@ -253,7 +253,7 @@ var ant_sw = {
  
  function ant_switch_select_groundall(path,val) {
     setTimeout('w3_radio_unhighlight('+ q(path) +')', w3_highlight_time);
-    ant_switch_select_antenna('g');
+    ant_switch_select_antenna(0);
  }
  
  function ant_switch_select_antenna_cb(path, val) { ant_switch_select_antenna(val); }
@@ -287,7 +287,7 @@ var ant_sw = {
        ant_sw.exantennas = ant_selected_antenna;
     }
     
-    if (ant_selected_antenna == 'g') {
+    if (ant_selected_antenna == '0') {
        if (need_to_inform) console.log('ant_switch: all antennas grounded');
        ant_switch_display_update('All antennas are grounded.');
     } else {
@@ -340,7 +340,7 @@ var ant_sw = {
        // This code works because this routine is being routinely polled.
        console.log('ant_switch: url_deselected='+ ant_sw.url_deselected);
        if (ant_sw.url_deselected == false) {
-          ant_switch_select_antenna('g');
+          ant_switch_select_antenna(0);
           ant_sw.url_deselected = true;
        } else {
           // only allow first antenna if mixing denied

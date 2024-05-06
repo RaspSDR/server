@@ -15,30 +15,23 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include "fpga.h"
+
 // #define ANT_SWITCH_DEBUG_MSG	true
 #define ANT_SWITCH_DEBUG_MSG false
 
 static int ver_maj, ver_min, n_ch;
+static uint8_t antenna_current;
 
 static void ant_backend_info()
 {
-#if 0
-    char *cmd, *reply;
-    int n;
-    asprintf(&cmd, "/root/extensions/ant_switch/frontend/ant-switch-frontend bi");
-    reply = non_blocking_cmd(cmd, NULL);
-    free(cmd);
-    char *sp = kstr_sp(reply);
-    n = sscanf(sp, "%*s version %d.%d %d", &ver_maj, &ver_min, &n_ch);
-    char *space = index(sp, ' ');
-    if (space)
-        *space = '\0';
-    printf("ant_switch backend info: version %d.%d channels=%d %s\n", ver_maj, ver_min, n_ch, sp);
-    kstr_free(reply);
+    ver_maj = 2;
+    ver_min = 1;
+    n_ch = 6;
+    antenna_current = 0;
+    printf("ant_switch backend info: version %d.%d channels=%d\n", ver_maj, ver_min, n_ch);
+
     kiwi.ant_switch_nch = n_ch;
-#else
-    kiwi.ant_switch_nch = 5;
-#endif
 }
 
 static void ant_switch_init(int rx_chan)
@@ -47,57 +40,46 @@ static void ant_switch_init(int rx_chan)
     ext_send_msg(rx_chan, ANT_SWITCH_DEBUG_MSG, "EXT channels=%d", n_ch);
 }
 
-char *ant_switch_queryantennas()
+int ant_switch_queryantennas()
 {
-    static char selected_antennas[64 + SPACE_FOR_NULL] = "gpio";
-#if 0
-    char *cmd, *reply;
-    int n;
-    asprintf(&cmd, "/root/extensions/ant_switch/frontend/ant-switch-frontend s");
-    reply = non_blocking_cmd(cmd, NULL);
-    n = sscanf(kstr_sp(reply), "Selected antennas: %64s", selected_antennas);
-    free(cmd);
-    // printf("ant_switch frontend: s n=%d reply=<%s>\n", n, kstr_sp(reply));
-    if (!n)
-        printf("ant_switch_queryantenna BAD STATUS? <%s>\n", kstr_sp(reply));
-    kstr_free(reply);
-#endif
-    return (selected_antennas);
+    if (antenna_current)
+    {
+        // find the first 1
+        for(int i = 0; i < kiwi.ant_switch_nch; i++)
+        {
+            if (antenna_current & (1 << i))
+                return i;
+        }
+    }
+
+    return 0;
 }
 
-int ant_switch_setantenna(char *antenna)
+void ant_switch_setantenna(int antenna)
 {
-#if 0
-    char *cmd, *reply;
-    int status;
-    int n;
-    asprintf(&cmd, "/root/extensions/ant_switch/frontend/ant-switch-frontend %s", antenna);
-    // printf("ant_switch frontend: %s\n", antenna);
-    reply = non_blocking_cmd(cmd, NULL);
-    free(cmd);
-    kstr_free(reply);
-#endif
-    return (0);
+    if (antenna == 0)
+        antenna_current = 0;
+    else
+        antenna_current |= 1 << antenna;
+    fpga_config->antenna = antenna_current;
+    return;
 }
 
-int ant_switch_toggleantenna(char *antenna)
+void ant_switch_toggleantenna(int antenna)
 {
-#if 0
-    char *cmd, *reply;
-    int status;
-    int n;
-    asprintf(&cmd, "/root/extensions/ant_switch/frontend/ant-switch-frontend t%s", antenna);
-    // printf("ant_switch frontend: t%s\n", antenna);
-    reply = non_blocking_cmd(cmd, NULL);
-    free(cmd);
-    kstr_free(reply);
-#endif
-    return (0);
+    if (antenna_current & (1 << antenna))
+        antenna_current &= ~(1 << antenna);
+    else
+        antenna_current |= 1 << antenna;
+
+    fpga_config->antenna = antenna_current;
+
+    return;
 }
 
-int ant_switch_validate_cmd(char *cmd)
+bool ant_switch_validate_cmd(int cmd)
 {
-    return (cmd[0] >= '1' && cmd[0] <= '9');
+    return (cmd >= 0 && cmd <= kiwi.ant_switch_nch);
 }
 
 bool ant_switch_read_denyswitching(int rx_chan)
@@ -140,10 +122,8 @@ bool ant_switch_read_denymultiuser(int rx_chan)
     if (error)
         deny = 0;
 
-#if (VERSION_MAJ > 1) || (VERSION_MAJ == 1 && VERSION_MIN >= 448)
     if (ext_auth(rx_chan) == AUTH_LOCAL)
         deny = false; // don't apply to local connections
-#endif
 
     return (deny && current_nusers > 1) ? true : false;
 }
@@ -161,7 +141,7 @@ bool ant_switch_read_thunderstorm()
 bool ant_switch_msgs(char *msg, int rx_chan)
 {
     int n = 0;
-    char antenna[256];
+    int antenna;
 
     // rcprintf(rx_chan, "### ant_switch_msgs <%s>\n", msg);
 
@@ -172,7 +152,7 @@ bool ant_switch_msgs(char *msg, int rx_chan)
         return true;
     }
 
-    n = sscanf(msg, "SET Antenna=%s", antenna);
+    n = sscanf(msg, "SET Antenna=%d", &antenna);
     if (n == 1)
     {
         // rcprintf(rx_chan, "ant_switch: %s\n", msg);
@@ -198,7 +178,7 @@ bool ant_switch_msgs(char *msg, int rx_chan)
         }
         else
         {
-            rcprintf(rx_chan, "ant_switch: Command not valid SET Antenna=%s", antenna);
+            rcprintf(rx_chan, "ant_switch: Command not valid SET Antenna=%d", antenna);
         }
 
         return true;
@@ -206,24 +186,21 @@ bool ant_switch_msgs(char *msg, int rx_chan)
 
     if (strcmp(msg, "GET Antenna") == 0)
     {
-        char *selected_antennas = ant_switch_queryantennas();
-        ext_send_msg(rx_chan, ANT_SWITCH_DEBUG_MSG, "EXT Antenna=%s", selected_antennas);
+        int selected_antennas = ant_switch_queryantennas();
+        ext_send_msg(rx_chan, ANT_SWITCH_DEBUG_MSG, "EXT Antenna=%d", selected_antennas);
 
-// setup user notification of antenna change
-#if (VERSION_MAJ > 1) || (VERSION_MAJ == 1 && VERSION_MIN >= 449)
-        static char last_selected_antennas[64];
-        if (strncmp(selected_antennas, last_selected_antennas, 64))
+        static int last_selected_antennas;
+        if (selected_antennas != last_selected_antennas)
         {
             char *s;
-            if (strcmp(selected_antennas, "g") == 0)
+            if (selected_antennas == 0)
                 s = (char *)"All antennas now grounded.";
             else
-                s = stprintf("Selected antennas are now: %s", selected_antennas);
+                s = stprintf("Selected antennas are now: %d", selected_antennas);
             static u4_t seq;
             ext_notify_connected(rx_chan, seq++, s);
-            kiwi_strncpy(last_selected_antennas, selected_antennas, 64);
+            last_selected_antennas = selected_antennas;
         }
-#endif
 
         int deny_reason = 0;
         if (ant_switch_read_denyswitching(rx_chan) == true)
@@ -245,10 +222,9 @@ bool ant_switch_msgs(char *msg, int rx_chan)
         {
             ext_send_msg(rx_chan, ANT_SWITCH_DEBUG_MSG, "EXT Thunderstorm=1");
             // also ground antenna if not grounded
-            if (strcmp(selected_antennas, "g") != 0)
+            if (selected_antennas == 0)
             {
-                char *groundall = (char *)"g\0";
-                ant_switch_setantenna(groundall);
+                ant_switch_setantenna(0);
                 ext_send_msg(rx_chan, ANT_SWITCH_DEBUG_MSG, "EXT Antenna=g");
             }
             return true;
@@ -276,7 +252,7 @@ bool ant_switch_msgs(char *msg, int rx_chan)
     if (n == 1)
     {
         // rcprintf(rx_chan, "ant_switch: high_side %d\n", high_side_ant);
-        //  if antenna switch extension is active override current inversion setting
+        //  if antenna switch extension is active override antenna_current inversion setting
         //  and lockout the admin config page setting until a restart
         kiwi.spectral_inversion_lockout = true;
         kiwi.spectral_inversion = high_side_ant ? true : false;
@@ -288,6 +264,7 @@ bool ant_switch_msgs(char *msg, int rx_chan)
 
 void ant_switch_close(int rx_chan)
 {
+    (void)rx_chan;
     // do nothing
 }
 

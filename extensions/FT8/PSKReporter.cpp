@@ -476,7 +476,8 @@ static void PSKreport(void *param)      // task
 int PSKReporter_setup(int rx_chan)
 {
     pr_conf_t *pr = &pr_conf;
-    
+    lock_holder holder(pr_lock);
+
     // only launch once
     #ifdef PR_USE_CALLSIGN_HASHTABLE
         if (!pr->task_created) {

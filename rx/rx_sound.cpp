@@ -145,6 +145,10 @@ void c2s_sound_init()
 		spi_set(CmdSetGenFreq, 0, 0);
 		spi_set(CmdSetGenAttn, 0, 0);
 	}
+
+	if (do_sdr) {
+		data_pump_init();
+	}
 }
 
 CAgc m_Agc[MAX_RX_CHANS];
@@ -270,13 +274,6 @@ void c2s_sound(void *param)
     
 	m_Squelch[rx_chan].SetupParameters(rx_chan, frate);
 	m_Squelch[rx_chan].SetSquelch(0, 0);
-	
-	// don't start data pump until first connection so GPS search can run at full speed on startup
-	static bool data_pump_started;
-	if (do_sdr && !data_pump_started) {
-		data_pump_init();
-		data_pump_started = true;
-	}
 	
 	if (do_sdr) {
 		//printf("SOUND ENABLE channel %d\n", rx_chan);

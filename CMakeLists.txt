@@ -2,12 +2,27 @@ cmake_minimum_required(VERSION 3.13)
 project(RaspSDR)
 
 set(UPSTREAM_DIR ${CMAKE_SOURCE_DIR})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 find_program(MINIFY_COMMAND NAMES minify)
 
 option(ZYNQ "Build for Zynq7000 serial based WebSDR" ON)
 option(RPI "Build for RPI serial based WebSDR" OFF)
+
+if(NOT CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE Release)
+   message(STATUS "Build type not specified: defaulting to Release")
+endif(NOT CMAKE_BUILD_TYPE)
+
+# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-fortify-source -pthread")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "-g -O2")
+
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_C_FLAGS_DEBUG "-g -O0")
+set(CMAKE_C_FLAGS_RELEASE "-g -O2")
+
 
 if(ZYNQ)
     set(PLATFORM zynq)
@@ -219,7 +234,7 @@ target_compile_definitions(kiwi.bin PUBLIC
     HAVE_LIBFDK_AAC HAVE_USAC
 )
 
-target_compile_options(kiwi.bin PUBLIC -g -O3 ${PLATOFRM_FLAGS} -Wno-fortify-source -Werror -pthread)
+target_compile_options(kiwi.bin PUBLIC ${PLATOFRM_FLAGS})
 
 # ----------------------- Build FILES embeded
 file(GLOB_RECURSE FILES_EMBED_JS RELATIVE ${UPSTREAM_DIR}/web

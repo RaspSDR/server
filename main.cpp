@@ -87,7 +87,6 @@ void kiwi_restart()
 
 int main(int argc, char *argv[])
 {
-	int i;
 	int p_gps = 0;
 	bool err;
 	
@@ -220,6 +219,7 @@ int main(int argc, char *argv[])
     cfg_reload();
     clock_init();
 
+	peri_init();
     fpga_init();
 
     bool update_admcfg = false;
@@ -279,8 +279,6 @@ int main(int argc, char *argv[])
 	web_server_init(WS_INIT_CREATE);
 
 	if (need_hardware) {
-		peri_init();
-		
 		kiwi.ext_clk = cfg_bool("ext_ADC_clk", &err, CFG_OPTIONAL);
 		if (err) kiwi.ext_clk = false;
 		

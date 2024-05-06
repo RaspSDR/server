@@ -26,13 +26,13 @@
 #define PR_ENTERPRISE   hnl(30351)
 #define PR_TIME_SECS    hns(150)
 
-struct msg_hdr_t {
+static const struct msg_hdr_t {
     u2_t ver = hns(10);
     u2_t total_len;
     u4_t upload_time;
     u4_t seq;
     u4_t uniq;
-} __attribute__((packed)) msg_hdr;
+} __attribute__((packed)) msg_hdr = {};
 
 
 // rx info desc
@@ -46,9 +46,9 @@ struct msg_hdr_t {
 #define PR_RX_NFIELDS       hns(3)
 #define PR_RX_ANT_NFIELDS   hns(4)
 
-struct {
+static const struct _rx_info_desc_{
     u2_t id = PR_RX_ID;
-    u2_t len;
+    u2_t len = hns(sizeof(_rx_info_desc_));
     u2_t link = PR_RX_LINK;
     u2_t nfields = PR_RX_NFIELDS;
     u2_t scope_field_count = 0;
@@ -66,11 +66,11 @@ struct {
     u4_t op3_ent = PR_ENTERPRISE;
     
     u2_t pad[1];
-} __attribute__((packed)) rx_info_desc;
+} __attribute__((packed)) rx_info_desc = {};
 
-struct {
+static const struct _rx_ant_info_desc_ {
     u2_t id = PR_RX_ID;
-    u2_t len;
+    u2_t len = hns(sizeof(_rx_ant_info_desc_));
     u2_t link = PR_RX_ANT_LINK;
     u2_t nfields = PR_RX_ANT_NFIELDS;
     u2_t scope_field_count = 0;
@@ -92,7 +92,7 @@ struct {
     u4_t op4_ent = PR_ENTERPRISE;
     
     u2_t pad[1];
-} __attribute__((packed)) rx_ant_info_desc;
+} __attribute__((packed)) rx_ant_info_desc = {};
 
 
 // tx info desc
@@ -107,9 +107,9 @@ struct {
 #define PR_TX_ISRC_AUTO 1
 #define PR_TX_NFIELDS   hns(7)
 
-struct {
+static const struct _tx_info_desc_t {
     u2_t id = PR_TX_ID;
-    u2_t len;
+    u2_t len = hns(sizeof(_tx_info_desc_t));
     u2_t link = PR_TX_LINK;
     u2_t nfields = PR_TX_NFIELDS;
     
@@ -171,6 +171,7 @@ typedef struct {
 } pr_conf_t;
 
 static pr_conf_t pr_conf;
+static lock_t pr_lock;
 
 static void pr_dump(const char *which, int ping_pong, u1_t *bbp, u1_t *bp, int so)
 {
@@ -236,7 +237,6 @@ static u1_t * pr_info_desc(u1_t *bp)
     
     // tx info desc
     so = sizeof(tx_info_desc);
-    tx_info_desc.len = hns(so);
     memcpy(bp, (char *) &tx_info_desc, so);
     //pr_dump("tx_info_desc", pr->ping_pong, pr->bbp, bp, so);
     bp += so;
@@ -244,12 +244,10 @@ static u1_t * pr_info_desc(u1_t *bp)
     // rx info desc
     if (pr->have_ant) {
         so = sizeof(rx_ant_info_desc);
-        rx_ant_info_desc.len = hns(so);
         memcpy(bp, (char *) &rx_ant_info_desc, so);
         //pr_dump("rx_ant_info_desc", pr->ping_pong, pr->bbp, bp, so);
     } else {
         so = sizeof(rx_info_desc);
-        rx_info_desc.len = hns(so);
         memcpy(bp, (char *) &rx_info_desc, so);
         //pr_dump("rx_info_desc", pr->ping_pong, pr->bbp, bp, so);
     }
@@ -275,7 +273,7 @@ static u1_t *pr_rx_info(u1_t *bp)
     bp = pr_emit_string(bp, pr->rgrid);
     if (pr->have_ant) bp = pr_emit_string(bp, pr->ant);
     
-    const char *client = "ZynqSDR";
+    const char *client = "web-888";
     bp = pr_emit_string(bp, client);
     
     while (((bp - bbp) % 4) != 0) *bp++ = 0;
@@ -306,6 +304,7 @@ static u1_t *pr_check_need_hdr(u1_t *bp)
 
 int PSKReporter_distance(const char *grid)
 {
+    lock_holder holder(pr_lock);
     pr_conf_t *pr = &pr_conf;
     return pr->grid_ok? grid_to_distance_km(&pr->r_loc, (char *) grid) : 0;
 }
@@ -316,6 +315,7 @@ int PSKReporter_spot(int rx_chan, const char *call, u4_t passband_freq, s1_t snr
     int km = PSKReporter_distance(grid);
     
     if (pr->task_created) {
+        lock_holder holder(pr_lock);
         conn_t *conn = rx_channels[rx_chan].conn;
         u4_t freq = conn->freqHz + ft8_conf.freq_offset_Hz + passband_freq;
         const char *mode = (protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4";
@@ -375,6 +375,7 @@ int PSKReporter_spot(int rx_chan, const char *call, u4_t passband_freq, s1_t snr
 
 u4_t PSKReporter_num_uploads(int rx_chan)
 {
+    lock_holder holder(pr_lock);
     return pr_conf.num_uploads[rx_chan];
 }
 
@@ -382,6 +383,7 @@ u4_t PSKReporter_num_uploads(int rx_chan)
 // spot count for the current settings
 void PSKReporter_reset(int rx_chan)
 {
+    lock_holder holder(pr_lock);
     pr_conf_t *pr = &pr_conf;
     pr->pending_uploads[rx_chan] = pr->num_uploads[rx_chan] = 0;
     //printf("PSKReporter RESET\n");
@@ -390,6 +392,7 @@ void PSKReporter_reset(int rx_chan)
 static void PSKreport(void *param)      // task
 {
     pr_conf_t *pr = &pr_conf;
+    lock_enter(&pr_lock);
     pr->ping_pong = 0; pr->bp = pr->bbp = pr->buf[pr->ping_pong]; pr->hdr = NULL;
     pr->seq = 1;
     pr->uniq = timer_us();
@@ -406,8 +409,10 @@ static void PSKreport(void *param)      // task
             pr->send_info_desc_interval = 60;
 	    }
 	    
+        lock_leave(&pr_lock);
 		u64_t sleep_msec = SEC_TO_MSEC(MINUTES_TO_SEC(PR_UPLOAD_MINUTES)) + delta_msec;
 		TaskSleepMsec(sleep_msec);
+        lock_enter(&pr_lock);
 		
 		// Randomize next upload time +/- 8192 msec
 		delta_msec = timer_us() & 0x1fff;
@@ -529,4 +534,6 @@ void PSKReporter_init()
     u1_t a,b,c,d;
     inet4_h2d(ips_pskreporter.ip[0], &a,&b,&c,&d);
     asprintf(&pr_conf.upload_url, "udp://%d.%d.%d.%d:%d", a,b,c,d, PR_UPLOAD_PORT);
+
+    lock_init(&pr_lock);
 }

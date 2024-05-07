@@ -30,6 +30,7 @@ u64_t fpga_dna();
 #define RESET_WF1 (1 << 2)
 #define RESET_WF2 (1 << 3)
 #define RESET_WF3 (1 << 4)
+#define RESET_LEDON (1 << 7)
 #define RESET_PPS (1 << 8)
 
 typedef struct {

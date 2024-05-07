@@ -190,7 +190,7 @@ static void webserver_collect_print_stats(int print)
         kstr_t* reply = read_file_string_reply(raw_path);
         sscanf(kstr_sp(reply), "%f", &raw_value);
         kstr_free(reply);
-        temp_deg_mC = (raw_value - t_offset) / t_scale;
+        temp_deg_mC = (raw_value + t_offset) * t_scale / 1000;
         // printf("Tempture scale: %f offset: %f raw: %f => Temp=%d\n", t_scale, t_offset, raw_value, temp_deg_mC);
 
 		// ecpu_use() below can thread block, so cpu_stats_buf must be properly set NULL for reading thread

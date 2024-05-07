@@ -2407,7 +2407,7 @@ function cpu_stats_cb(o, uptime_secs, waterfall_fps)
    idle %= 100;   // handle multi-core cpus
    var cputempC = o.cc? o.cc : 0;
    var cputempF = cputempC * 9/5 + 32;
-   var temp_color = o.cc? ((o.cc >= 60)? 'w3-text-css-red w3-bold' : ((o.cc >= 50)? 'w3-text-css-yellow' : 'w3-text-css-lime')) : '';
+   var temp_color = o.cc? ((o.cc >= 70)? 'w3-text-css-red w3-bold' : ((o.cc >= 61)? 'w3-text-css-yellow' : 'w3-text-css-lime')) : '';
    var cputemp = cputempC? (cputempC.toFixed(0) +'&deg;C '+ cputempF.toFixed(0) +'&deg;F ') : '';
    var cpufreq = (o.cf >= 1000)? ((o.cf/1000).toFixed(1) +' GHz') : (o.cf.toFixed(0) +' MHz');
    var platform = kiwi.platform_s[kiwi.platform];

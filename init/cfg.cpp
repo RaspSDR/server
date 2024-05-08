@@ -30,6 +30,7 @@ Boston, MA  02110-1301, USA.
 #include "jsmn.h"
 #include "cfg.h"
 #include "utf8.h"
+#include "peri.h"
 
 #ifdef USE_SDR
  #include "dx.h"
@@ -1513,9 +1514,9 @@ static void _cfg_write_file(void *param)
     //real_printf("_cfg_write_file DONE\n");
 
 	// copy config file to sd card
-	system("mount -o rw,remount /media/mmcblk0p1");
+	sd_enable(true);
 	system("cp -u /root/config/* /media/mmcblk0p1/config/");
-	system("mount -o ro,remount /media/mmcblk0p1;");
+	sd_enable(false);
 }
 
 void _cfg_save_json(cfg_t *cfg, char *json)

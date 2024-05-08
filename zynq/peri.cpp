@@ -16,6 +16,8 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 
+#include <atomic>
+
 #include "../si5351/LinuxInterface.h"
 #include "../si5351/si5351.h"
 
@@ -102,4 +104,24 @@ void peri_free()
     assert(init);
     close(ad8370_fd);
     si5351->set_freq((uint64_t)(0 * 100), SI5351_CLK0);
+}
+
+static std::atomic<int> write_enabled(0);
+void sd_enable(bool write)
+{
+    if (write)
+    {
+        int v = std::atomic_fetch_add(&write_enabled, 1);
+
+        if (v == 0) {
+            system("mount -o rw,remount /media/mmcblk0p1");
+        }
+    }
+    else
+    {
+        int v = std::atomic_fetch_add(&write_enabled, -1);
+        if (v == 1) {
+            system("mount -o ro,remount /media/mmcblk0p1");
+        }
+    }
 }

@@ -8,3 +8,5 @@ void peri_free();
 
 void rf_enable_airband(bool enabled);
 void rf_attn_set(float attn_dB);
+
+void sd_enable(bool write);

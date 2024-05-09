@@ -122,7 +122,7 @@ exit:
 static void fetch_makefile_ctask(void *param)
 {
 	// fetch the version info from server
-	int status = system("curl -o /root/web-888.latest http://downloads.rx-888.com/web-888/version.txt");
+	int status = system("curl -s -o /root/web-888.latest http://downloads.rx-888.com/web-888/version.txt");
 	if (status != 0)
         printf("UPDATE: fetch origin status=0x%08x\n", status);
 	child_status_exit(status);
@@ -208,7 +208,7 @@ static void _update_task(void *param)
 			lprintf("UPDATE: version changed (current %d.%d, new %d.%d), but check only\n",
 				version_maj, version_min, pending_maj, pending_min);
 		else
-			lprintf("UPDATE: running most current version\n");
+			lprintf("UPDATE: running the most current version\n");
 		
 		report_result(conn);
 		goto common_return;

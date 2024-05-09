@@ -2546,7 +2546,7 @@ function update_cb(fail_reason, pending, in_progress, rx_chans, gps_chans, vmaj,
 			s += '<br>Error determining the latest version -- check log';
 		} else {
 			if (vmaj == pmaj && vmin == pmin)
-				s += '<br>Running most current version';
+				s += '<br>Running the most current version';
 			else
 				s += '<br>Available version: v'+ pmaj +'.'+ pmin;
 		}

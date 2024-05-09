@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-#include <sys/auxv.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 
@@ -15,20 +14,10 @@ static bool epoch_init = false;
 static u4_t epoch_sec;
 static time_t server_build_unix_time, server_start_unix_time;
 
-typedef int (*_vdso_clock_gettime64) (clockid_t __clock_id, struct timespec *__tp);
-_vdso_clock_gettime64 _v_clock_gettime64;
-
 static void set_epoch()
 {
-	 unsigned long base_ptr = getauxval(AT_SYSINFO_EHDR);
-
-	if (base_ptr != 0)
-    	_v_clock_gettime64 = (_vdso_clock_gettime64)(base_ptr + 0x3e0);
-	else
-		_v_clock_gettime64 = (_vdso_clock_gettime64)&clock_gettime;
-
 	struct timespec ts;
-	_v_clock_gettime64(CLOCK_MONOTONIC, &ts);
+	clock_gettime(CLOCK_MONOTONIC, &ts);
 	epoch_sec = ts.tv_sec;
 	
 	server_start_unix_time = utc_time();
@@ -75,7 +64,7 @@ u4_t timer_sec()
 	struct timespec ts;
 
 	if (!epoch_init) set_epoch();
-	_v_clock_gettime64(CLOCK_MONOTONIC, &ts);
+	clock_gettime(CLOCK_MONOTONIC, &ts);
     return ts.tv_sec - epoch_sec;
 }
 
@@ -85,7 +74,7 @@ u4_t timer_ms()
 	struct timespec ts;
 
 	if (!epoch_init) set_epoch();
-	_v_clock_gettime64(CLOCK_MONOTONIC, &ts);
+	clock_gettime(CLOCK_MONOTONIC, &ts);
 	int msec = ts.tv_nsec/1000000;
 	assert(msec >= 0 && msec < 1000);
     return (ts.tv_sec - epoch_sec)*1000 + msec;
@@ -97,7 +86,7 @@ u64_t timer_ms64_1970()
 	struct timespec ts;
 	u64_t t;
 
-	_v_clock_gettime64(CLOCK_REALTIME, &ts);
+	clock_gettime(CLOCK_REALTIME, &ts);
 	int msec = ts.tv_nsec / 1000000;
 	assert(msec >= 0 && msec < 1000);
 	t = ts.tv_sec;
@@ -112,7 +101,7 @@ u4_t timer_us()
 	struct timespec ts;
 
 	if (!epoch_init) set_epoch();
-	_v_clock_gettime64(CLOCK_MONOTONIC, &ts);
+	clock_gettime(CLOCK_MONOTONIC, &ts);
 	int usec = ts.tv_nsec / 1000;
 	assert(usec >= 0 && usec < 1000000);
     return (ts.tv_sec - epoch_sec)*1000000 + usec;	// ignore overflow
@@ -125,7 +114,7 @@ u64_t timer_us64()
 	u64_t t;
 
 	if (!epoch_init) set_epoch();
-	_v_clock_gettime64(CLOCK_MONOTONIC, &ts);
+	clock_gettime(CLOCK_MONOTONIC, &ts);
 	int usec = ts.tv_nsec / 1000;
 	assert(usec >= 0 && usec < 1000000);
 	t = ts.tv_sec - epoch_sec;

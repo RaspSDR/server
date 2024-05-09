@@ -70,13 +70,14 @@ typedef struct {
  #define MFFTW_DESTROY_PLAN fftw_destroy_plan
  #define MFFTW_EXECUTE fftw_execute
 #else
+extern float log10f_fast(float x);
  #define MSIN(x) sinf(x)
  #define MCOS(x) cosf(x)
  #define MPOW(x,y) powf(x,y)
  #define MEXP(x) expf(x)
  #define MFABS(x) fabsf(x)
  #define MLOG(x) logf(x)
- #define MLOG10(x) log10f(x)
+ #define MLOG10(x) log10f_fast(x)
  #define MSQRT(x) sqrtf(x)
  #define MATAN(x) atanf(x)
  #define MFMOD(x,y) fmodf(x,y)

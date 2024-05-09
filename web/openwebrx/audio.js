@@ -720,7 +720,7 @@ function audio_periodic()
       return;
    }
 
-   if (audio_started && audio_prepared_buffers.length && audio_firefox_watchdog == 0 && kiwi_isFirefox() && !cfg.disable_recent_changes) {
+   if (audio_started && audio_prepared_buffers.length && audio_firefox_watchdog == 0 && kiwi_isFirefox()) {
       add_problem("FF watchdog");
       console.log('AUDIO FF WATCHDOG Q'+ audio_prepared_buffers.length +' WD='+ audio_firefox_watchdog +' ============================================');
       audio_init(null, false, null);

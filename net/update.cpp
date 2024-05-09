@@ -31,6 +31,7 @@ Boston, MA  02110-1301, USA.
 #include "rx.h"
 #include "rx_util.h"
 #include "services.h"
+#include "peri.h"
 
 #include <types.h>
 #include <unistd.h>
@@ -65,88 +66,67 @@ static void report_result(conn_t *conn)
 	kiwi_ifree(time_m, "time_m");
 }
 
-#if 0
 static void update_build_ctask(void *param)
 {
-    int status;
-	bool build_normal = true;
-	
-    //#define BUILD_SHORT_MF
-    //#define BUILD_SHORT
-    #if defined(BUILD_SHORT_MF) || defined(BUILD_SHORT)
-        bool force_build = (bool) FROM_VOID_PARAM(param);
-        if (force_build) {
-            #if defined(BUILD_SHORT_MF)
-                status = system("cd /root/" REPO_NAME "; mv Makefile.1 Makefile; rm -f /root/build/obj/r*.o; make >>/root/build.log 2>&1");
-                build_normal = false;
-            #elif defined(BUILD_SHORT)
-                status = system("cd /root/" REPO_NAME "; rm -f /root/build/obj_O3/u*.o; make >>/root/build.log 2>&1");
-                build_normal = false;
-            #endif
-            child_status_exit(status);
-	        child_exit(EXIT_SUCCESS);
-        }
-    #endif
+	sd_enable(true);
 
-	if (build_normal) {
-	
-	    // run git directly rather than depending on the Makefile to be intact
-	    // (for the failure case when the Makefile has become zero length)
-	    char *cmd_p;
-	    asprintf(&cmd_p, "cd /root/" REPO_NAME "; echo ======== building.. >>/root/build.log; date >>/root/build.log; " \
-		    "git clean -fd >>/root/build.log 2>&1; " \
-		    "git checkout . >>/root/build.log 2>&1; " \
-		);
-		status = system(cmd_p);
-		kiwi_asfree(cmd_p);
-        child_status_exit(status);
-
-        struct stat st;
-        bool use_git_proto = kiwi_file_exists(DIR_CFG "/opt.git_no_https");
-	    asprintf(&cmd_p, "cd /root/" REPO_NAME "; " \
-	        "git pull -v %s://github.com/" REPO_GIT " >>/root/build.log 2>&1; ", \
-		    use_git_proto? "git" : "https" \
-		);
-		status = system(cmd_p);
-		kiwi_asfree(cmd_p);
-        status = child_status_exit(status, NO_ERROR_EXIT);
-        
-        // try again using github.com well-known public ip address (failure mode when ISP messes with github.com DNS)
-        // must use git: protocol otherwise https: cert mismatch error will occur
-        if (status != 0) {
-            asprintf(&cmd_p, "cd /root/" REPO_NAME "; " \
-                "git pull -v git://" GITHUB_COM_PUBLIC_IP "/" REPO_GIT " >>/root/build.log 2>&1; "
-            );
-            status = system(cmd_p);
-            kiwi_asfree(cmd_p);
-            child_status_exit(status);
-        }
-
-        // starting with v1.365 the "make clean" below replaced the former "make clean_dist"
-        // so that $(BUILD_DIR)/obj_keep stays intact across updates
-        status = system("cd /root/" REPO_NAME "; make clean >>/root/build.log 2>&1; make >>/root/build.log 2>&1; make install >>/root/build.log 2>&1;");
-        child_status_exit(status);
-        system("cd /root/" REPO_NAME "; date >>/root/build.log; echo ======== build complete >>/root/build.log");
+	// Fetch the binary
+	int status = system("mkdir -p /media/mmcblk0p1/update; rm -Rf /media/mmcblk0p1/update/*");
+	if (status != 0)
+    {
+	    printf("UPDATE: create folder status=0x%08x\n", status);
+		goto exit;
 	}
-	
+
+	status = system("curl -s -o /media/mmcblk0p1/update/sdr_receiver_kiwi.bit http://downloads.rx-888.com/web-888/sdr_receiver_kiwi.bit");
+	if (status != 0)
+    {
+	    printf("UPDATE: fetch bistream status=0x%08x\n", status);
+		goto exit;
+	}
+
+	status = system("curl -s -o /media/mmcblk0p1/update/kiwi.bin http://downloads.rx-888.com/web-888/kiwi.bin");
+	if (status != 0)
+    {
+	    printf("UPDATE: fetch binary status=0x%08x\n", status);
+		goto exit;
+	}
+
+	status = system("curl -s -o /media/mmcblk0p1/update/checksum http://downloads.rx-888.com/web-888/checksum");
+	if (status != 0)
+    {
+	    printf("UPDATE: fetch checksum status=0x%08x\n", status);
+		goto exit;
+	}
+
+	status = system("cd /media/mmcblk0p1/update; sha256sum -c /media/mmcblk0p1/update/checksum");
+	if (status != 0)
+    {
+	    printf("UPDATE: checksum failed status=0x%08x\n", status);
+		goto exit;
+	}
+
+	system("rm /media/mmcblk0p1/kiwi.bin.old");
+	system("rm /media/mmcblk0p1/sdr_receiver_kiwi.bit.old");
+	system("mv /media/mmcblk0p1/kiwi.bin /media/mmcblk0p1/kiwi.bin.old; mv /media/mmcblk0p1/update/kiwi.bin /media/mmcblk0p1/kiwi.bin");
+	system("mv /media/mmcblk0p1/sdr_receiver_kiwi.bit /media/mmcblk0p1/sdr_receiver_kiwi.bit.old; mv /media/mmcblk0p1/update/sdr_receiver_kiwi.bit /media/mmcblk0p1/sdr_receiver_kiwi.bit");
+
+	sd_enable(false);
+
 	child_exit(EXIT_SUCCESS);
+
+exit:
+	child_status_exit(status);
 }
 
 static void fetch_makefile_ctask(void *param)
 {
-    system("echo ======== checking for update >/root/build.log; date >>/root/build.log");
-
-	int status = system("cd /root/" REPO_NAME " ; git fetch origin >>/root/build.log 2>&1");
+	// fetch the version info from server
+	int status = system("curl -o /root/web-888.latest http://downloads.rx-888.com/web-888/version.txt");
 	if (status != 0)
         printf("UPDATE: fetch origin status=0x%08x\n", status);
 	child_status_exit(status);
 
-	status = system("cd /root/" REPO_NAME " ; git show origin:Makefile >Makefile.1 2>>/root/build.log");
-	if (status != 0)
-        printf("UPDATE: show origin:Makefile status=0x%08x\n", status);
-	child_status_exit(status);
-
-    system("cd /root/" REPO_NAME " ; diff Makefile Makefile.1 >>/root/build.log; echo ======== version check complete >>/root/build.log");
 	child_exit(EXIT_SUCCESS);
 }
 
@@ -188,28 +168,11 @@ static void _update_task(void *param)
 	
 	lprintf("UPDATE: checking for updates\n");
 	if (force_check) update_pending = false;    // don't let pending status override version reporting when a forced check
-	
-	// NB debug mode: use of "cd /root/" REPO_NAME "; " very important here as a potential git re-clone causes
-	// the current directory of the kiwid process to be deleted! So a subsequent forced build via the
-	// update tab "build now" button would otherwise fail.
-	
-    #define FS_USE "cd /root/" REPO_NAME "; df . | tail -1 | /usr/bin/tr -s ' ' | cut -d' ' -f 5 | grep '100%'"
-    //#define FS_USE "cd /root/" REPO_NAME "; df . | tail -1 | /usr/bin/tr -s ' ' | cut -d' ' -f 5 | grep '100%' | true"
-    status = non_blocking_cmd_system_child("kiwi.ck_fs", FS_USE, POLL_MSEC(250));
-    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-        lprintf("UPDATE: Filesystem is FULL!\n");
-        fail_reason = FAIL_FS_FULL;
-		if (report) report_result(conn);
-		goto common_return;
-    }
-
-    #define PING_INET "cd /root/" REPO_NAME "; ping -qc2 1.1.1.1 >/dev/null 2>&1"
-    //#define PING_INET "cd /root/" REPO_NAME "; ping -qc2 192.0.2.1"     // will never answer (RFC 5737)
+    #define PING_INET "ping -qc2 1.1.1.1 >/dev/null 2>&1"
     status = non_blocking_cmd_system_child("kiwi.ck_inet", PING_INET, POLL_MSEC(250));
     if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
 
-        #define PING_INET2 "cd /root/" REPO_NAME "; ping -qc2 8.8.8.8 >/dev/null 2>&1"
-        //#define PING_INET2 "cd /root/" REPO_NAME "; ping -qc2 192.0.2.1"     // will never answer (RFC 5737)
+        #define PING_INET2 "ping -qc2 8.8.8.8 >/dev/null 2>&1"
         status = non_blocking_cmd_system_child("kiwi.ck_inet", PING_INET2, POLL_MSEC(250));
         if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
             lprintf("UPDATE: No Internet connection? (can't ping 1.1.1.1 or 8.8.8.8)\n");
@@ -219,46 +182,26 @@ static void _update_task(void *param)
         }
     }
 
-    #define PING_GITHUB "cd /root/" REPO_NAME "; git show origin:Makefile >/dev/null 2>&1"
-    //#define PING_GITHUB "cd /root/" REPO_NAME "; git show origin:MakefileXXX"
-    status = non_blocking_cmd_system_child("kiwi.ck_ghub", PING_GITHUB, POLL_MSEC(250));
-    if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-        lprintf("UPDATE: No connection to github.com?\n");
-        fail_reason = FAIL_NO_GITHUB;
-		if (report) report_result(conn);
-		goto common_return;
-    }
-
-    #define CHECK_GIT "cd /root/" REPO_NAME "; git fetch origin >/dev/null 2>&1"
-    //#define CHECK_GIT "false"
-    status = non_blocking_cmd_system_child("kiwi.ck_git", CHECK_GIT, POLL_MSEC(250));
-    if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-        lprintf("UPDATE: Git clone damaged!\n");
-        fail_reason = FAIL_GIT;
-		if (report) report_result(conn);
-		goto common_return;
-    }
-
+	// get pending_maj, pending_min
+	// wget the latest version infor from www.rx-888.com
 	// Run fetch in a Linux child process otherwise this thread will block and cause trouble
 	// if the check is invoked from the admin page while there are active user connections.
 	status = child_task("kiwi.update", fetch_makefile_ctask, POLL_MSEC(1000));
 
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-		lprintf("UPDATE: Makefile update failed -- check /root/build.log file\n");
+		lprintf("UPDATE: failed to get latest version information from server\n");
         fail_reason = FAIL_MAKEFILE;
 		if (report) report_result(conn);
 		goto common_return;
 	}
-	
-	FILE *fp;
-	scallz("fopen Makefile.1", (fp = fopen("/root/" REPO_NAME "/Makefile.1", "r")));
-		int n1, n2;
-		n1 = fscanf(fp, "VERSION_MAJ = %d\n", &pending_maj);
-		n2 = fscanf(fp, "VERSION_MIN = %d\n", &pending_min);
-	fclose(fp);
-	
-	ver_changed = (n1 == 1 && n2 == 1 && (pending_maj > version_maj  || (pending_maj == version_maj && pending_min > version_min)));
-	update_install = (admcfg_bool("update_install", NULL, CFG_REQUIRED) == true);
+
+	{
+		kstr_t *ver = read_file_string_reply("/root/web-888.latest");
+		int n = sscanf(kstr_sp(ver), "%d.%d", &pending_maj, &pending_min);
+
+		ver_changed = (n == 2 && (pending_maj > version_maj  || (pending_maj == version_maj && pending_min > version_min)));
+		update_install = (admcfg_bool("update_install", NULL, CFG_REQUIRED) == true);
+	}
 	
 	if (force_check) {
 		if (ver_changed)
@@ -271,21 +214,16 @@ static void _update_task(void *param)
 		goto common_return;
 	} else
 
-	if (ver_changed && !update_install && !force_build) {
+	if (ver_changed && !update_install) {
 		lprintf("UPDATE: version changed (current %d.%d, new %d.%d), but update install not enabled\n",
 			version_maj, version_min, pending_maj, pending_min);
 	} else
 	
 	if (ver_changed || force_build) {
-		lprintf("UPDATE: version changed%s, current %d.%d, new %d.%d\n",
-			force_build? " (forced)":"",
+		lprintf("UPDATE: version changed, current %d.%d, new %d.%d\n",
 			version_maj, version_min, pending_maj, pending_min);
-		lprintf("UPDATE: building new version..\n");
+		lprintf("UPDATE: installing new version..\n");
 
-
-		// Run build in a Linux child process so the server can continue to respond to connection requests
-		// and display a "software update in progress" message.
-		// This is because the calls to system() in update_build_ctask() block for the duration of the build.
 		u4_t build_time = timer_sec();
 		status = child_task("kiwi.build", update_build_ctask, POLL_MSEC(1000), TO_VOID_PARAM(force_build));
 		
@@ -330,25 +268,6 @@ common_return:
 	if (conn) conn->update_check = WAIT_UNTIL_NO_USERS;     // restore default
 	update_pending = update_task_running = update_in_progress = false;
 }
-#else
-static void _update_task(void *param)
-{
-	conn_t *conn = (conn_t *) FROM_VOID_PARAM(param);
-	bool force_check = (conn && conn->update_check == FORCE_CHECK);
-	bool force_build = (conn && conn->update_check == FORCE_BUILD);
-	bool report = (force_check || force_build);
-	bool ver_changed, update_install;
-	int status;
-	fail_reason = FAIL_NONE;
-	
-	lprintf("UPDATE: checking for updates\n");
-	if (force_check) update_pending = false;    // don't let pending status override version reporting when a forced check
-
-	TaskSleepSec(10);
-
-	update_pending = update_task_running = update_in_progress = false;
-}
-#endif
 
 // called at update check TOD, on each user logout in case update is pending or on demand by admin UI
 void check_for_update(update_check_e type, conn_t *conn)

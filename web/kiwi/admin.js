@@ -905,24 +905,10 @@ function update_html()
 				w3_button('w3-aqua w3-margin', 'Check now', 'update_check_now_cb')
 			),
 			w3_div('w3-valign',
-				'<b>Force software build </b> ' +
-				w3_button('w3-aqua w3-margin', 'Build now', 'update_build_now_cb')
+				'<b>Force software reinstall </b> ' +
+				w3_button('w3-aqua w3-margin', 'Install now', 'update_build_now_cb')
 			)
-		) +
-
-		'<hr>' +
-		w3_inline('w3-halign-space-between w3-margin-bottom w3-text-teal w3-restart/w3-container',
-         w3_divs('w3-tspace-8',
-            w3_switch_label('w3-label-left', 'Disable recent changes?',
-               'Yes', 'No', 'disable_recent_changes', cfg.disable_recent_changes, 'admin_radio_YN_cb'),
-            w3_text('w3-text-black', 'Currently:<br><ul><li>The Firefox audio hang workaround.</li></ul>')
-         ),
-         ''
-      ) +
-
-		'<hr>' +
-		w3_div('w3-container', 'TODO: alt github name') +
-		'<hr>'
+		)
 	);
 	return s;
 }

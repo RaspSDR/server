@@ -24,11 +24,12 @@ Boston, MA  02110-1301, USA.
 #include "spi.h"
 #include "cuteSDR.h"
 
+#include <atomic>
 			
 #define N_DPBUF	32
 
 typedef struct {
-    u4_t wr_pos, rd_pos;
+    std::atomic<u4_t> wr_pos, rd_pos;
     // array size really nrx_samps but made pow2 FASTFIR_OUTBUF_SIZE for indexing efficiency
     TYPECPX in_samps[N_DPBUF][FASTFIR_OUTBUF_SIZE];
     u64_t ticks[N_DPBUF];
@@ -41,8 +42,9 @@ typedef struct {
     TYPEREAL demod_samples_r[FASTFIR_OUTBUF_SIZE];
 
     // real mode input buf for cw, sstv, fax decoders etc.
-    u4_t real_wr_pos, real_rd_pos;
-    u4_t real_seq, real_seqnum[N_DPBUF];
+    std::atomic<u4_t> real_wr_pos, real_rd_pos;
+    std::atomic<u4_t> real_seq;
+    u4_t real_seqnum[N_DPBUF];
     TYPEMONO16 real_samples_s2[N_DPBUF][FASTFIR_OUTBUF_SIZE];
     
     int freqHz[N_DPBUF];    // approx freq in effect when buffer captured

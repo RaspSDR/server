@@ -82,6 +82,11 @@ static double wspr_cfs[] = {
     50294.5, 70092.5, 144490.5, 432301.5, 1296501.5, 6781.5, 13555.4, WSPR_BAND_IWBP
 };
 
+static const char* wspr_name[] = {
+    "137.5", "475.7", "1838.1", "3570.1", "3594.1", "5288.7", "5366.2", "7040.1", "10140.2", "14097.1", "18106.1", "21096.1", "24926.1", "28126.1",
+    "50294.5", "70092.5", "144490.5", "432301.5", "1296501.5", "6781.5", "13555.4"
+};
+
 // freqs on github.com/HB9VQQ/WSPRBeacon are cf - 1.5 kHz BFO (dial frequencies)
 // so we add 1.5 to those to get our cf values (same as regular WSPR wspr_center_freqs above)
 #define WSPR_HOP_PERIOD 20
@@ -1005,7 +1010,7 @@ void wspr_autorun(int instance, bool initial)
 
     bool preempt = (wspr_arun_preempt[instance] != ARUN_PREEMPT_NO);
     char *ident_user;
-    asprintf(&ident_user, "%s-autorun", iwbp? "IWBP" : "WSPR");
+    asprintf(&ident_user, "%s-%s", iwbp? "IWBP" : "WSPR", wspr_name[band]);
     char *geoloc;
     asprintf(&geoloc, "0%%20decoded%s", preempt? ",%20preemptible" : "");
 

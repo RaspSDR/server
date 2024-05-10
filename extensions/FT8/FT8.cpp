@@ -336,6 +336,11 @@ static double ft8_cfs[] = {     // usb carrier/dial freq
     /* FT4 */       3575.5,     7047.5, 10140, 14080, 18104, 21140, 24919, 28180
 };
 
+static const char* ft8_name[] = {
+    "180m", "80m", "60m", "40m", "30m", "20m", "17m", "15m", "12m", "10m",
+            "80m",        "40m", "30m", "20m", "17m", "15m", "12m", "10m"
+};
+
 void ft8_update_spot_count(int rx_chan, u4_t spot_count)
 {
     ft8_t *e = &ft8[rx_chan];
@@ -353,7 +358,7 @@ static void ft8_autorun(int instance, bool initial)
     bool ft4 = (band >= FT4_BAND_IDX);
     bool preempt = (ft8_arun_preempt[instance] != ARUN_PREEMPT_NO);
     char *ident_user;
-    asprintf(&ident_user, "FT%d-autorun", ft4? 4:8);
+    asprintf(&ident_user, "FT%d-%s", ft4? 4:8, ft8_name[band]);
     char *geoloc;
     asprintf(&geoloc, "0%%20decoded%s", preempt? ",%20preemptible" : "");
 

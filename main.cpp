@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
     if (update_admcfg) admcfg_save_json(cfg_adm.json);      // during init doesn't conflict with admin cfg
 
     rx_chans = fpga_status->signature & 0x0f;
-    wf_chans = (fpga_status->signature >> 8) & 0x0f;;
+    wf_chans = rx_chans; // always give most wf channels
     snd_rate = SND_RATE_4CH;
     rx_decim = (int)(ADC_CLOCK_TYP/12000); // 12k
     nrx_bufs = RXBUF_SIZE_4CH / NRX_SPI;

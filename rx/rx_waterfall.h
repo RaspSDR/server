@@ -158,6 +158,8 @@ struct wf_inst_t {
     float avg_pwr[APER_PWR_LEN];
     u4_t report_sec;
     int last_noise, last_signal;
+	u64_t i_offset;
+	u4_t decim;
 };
 
 #define WINF_WF_HANNING          0

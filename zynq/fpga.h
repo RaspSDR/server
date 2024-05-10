@@ -59,3 +59,6 @@ extern const volatile uint32_t *fpga_wf_data[4];
 extern const volatile uint32_t *fpga_pps_data;
 extern volatile FPGA_Config *fpga_config;
 extern const volatile FPGA_Status *fpga_status;
+
+extern int fpga_get_wf(int rx_chan, int decimate, uint32_t freq);
+extern void fpga_free_wf(int wf_chan, int rx_chan);

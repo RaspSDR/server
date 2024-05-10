@@ -19,11 +19,16 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include <atomic>
+
 volatile FPGA_Config *fpga_config;
 const volatile FPGA_Status *fpga_status;
 const volatile uint32_t *fpga_pps_data;
 const volatile int32_t *fpga_rx_data;
 const volatile uint32_t *fpga_wf_data[4];
+
+static int wf_channels;
+static std::atomic<int> wf_using[4];
 
 ////////////////////////////////
 // FPGA DNA
@@ -89,4 +94,36 @@ void fpga_init()
 #endif
 
     fpga_config->reset = RESET_RX;
+
+    wf_channels = (fpga_status->signature >> 8) & 0x0f;;
+}
+
+int fpga_get_wf(int rx_chan, int decimate, uint32_t freq)
+{
+  while (true)
+  {
+    for (int i = 0; i < wf_channels; i++)
+    {
+      int empty = 0;
+      bool exchanged = wf_using[i].compare_exchange_strong(empty, rx_chan);
+
+      if (exchanged)
+      {
+        // allocate wf channel i for rx_channel
+        fpga_config->wf_config[i].wf_decim = decimate;
+        fpga_config->wf_config[i].wf_freq = (-freq) >> 2;
+        fpga_config->reset |= RESET_WF0 << i;
+
+        return i;
+      }
+    }
+  }
+}
+
+void fpga_free_wf(int wf_chan, int rx_chan)
+{
+    fpga_config->reset &= ~(RESET_WF0 << wf_chan);
+
+    bool exchanged = wf_using[wf_chan].compare_exchange_strong(rx_chan, 0);
+    assert(exchanged);
 }

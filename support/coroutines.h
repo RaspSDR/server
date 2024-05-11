@@ -161,8 +161,6 @@ C_LINKAGE(const char *Task_ls(int id));
 #define TSTAT_ZERO 0x0100
 #define TSTAT_CMDS 0x0200
 
-#define TSTAT_SPI_RETRY 0x1000
-
 int TaskStat(u4_t s1_func, int s1_val, const char *s1_units, u4_t s2_func DEF_0, int s2_val DEF_0, const char *s2_units DEF_NULL);
 #define TaskStat2(f, v, u) TaskStat(0, 0, NULL, f, v, u);
 

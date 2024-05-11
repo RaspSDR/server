@@ -383,16 +383,6 @@ int TaskStat(u4_t s1_func, int s1_val, const char *s1_units, u4_t s2_func, int s
 	if ((t->s1_func | t->s2_func) & TSTAT_CMDS)
 		t->cmds++;
 
-	if ((t->s1_func | t->s2_func) & TSTAT_SPI_RETRY)
-	{
-		t->spi_retry++;
-		r = t->spi_retry;
-		if ((r > 100) && ev_dump)
-		{
-			evNT(EC_DUMP, EV_NEXTTASK, ev_dump, "spi_retry", evprintf("DUMP IN %.3f SEC", ev_dump / 1000.0));
-		}
-	}
-
 	return r;
 }
 

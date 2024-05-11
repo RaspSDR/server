@@ -152,9 +152,6 @@ void rx_common_init(conn_t *conn)
 {
     str_hash_init("rx_common_cmd", &rx_common_cmd_hash, rx_common_cmd_hashes);
 	conn->keepalive_time = timer_sec();
-
-    if (is_multi_core)
-	    send_msg(conn, false, "MSG is_multi_core");
 }
 
 bool rx_common_cmd(int stream_type, conn_t *conn, char *cmd)

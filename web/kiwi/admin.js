@@ -9,7 +9,6 @@ var admin = {
    console_open: false,
    
    long_running: false,
-   is_multi_core: false,
    
    update_interval: null,
    reg_status: {},
@@ -3211,11 +3210,7 @@ function admin_recv(data)
 			   console.log('PROXY '+ admin.proxy_host +':'+ admin.proxy_port);
 			   break;
 
-			case "is_multi_core":
-				admin.is_multi_core = true;
-				break;
-
-			case "init":
+            case "init":
 		      // rx_chan == rx_chans for admin connections (e.g. 4 when ch = 0..3 for user connections)
 				rx_chans = rx_chan = +param[1];
 				//console.log("ADMIN init rx_chans="+rx_chans);

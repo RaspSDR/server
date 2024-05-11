@@ -90,9 +90,6 @@ void c2s_admin_setup(void *param)
 	const char *proxy_server = admcfg_string("proxy_server", NULL, CFG_REQUIRED);
 	send_msg_encoded(conn, "ADM", "proxy_url", "%s:%d", proxy_server, PROXY_SERVER_PORT);
 	admcfg_string_free(proxy_server);
-	#ifdef MULTI_CORE
-	    send_msg(conn, SM_NO_DEBUG, "ADM is_multi_core");
-	#endif
 	send_msg(conn, SM_NO_DEBUG, "ADM init=%d", rx_chans);
 }
 

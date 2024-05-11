@@ -70,7 +70,7 @@ int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
 u4_t ov_mask, snd_intr_usec;
 
 bool create_eeprom, need_hardware, kiwi_reg_debug, have_ant_switch_ext,
-    disable_led_task, is_multi_core, debug_printfs, cmd_debug;
+    disable_led_task, debug_printfs, cmd_debug;
 
 int main_argc;
 char **main_argv;
@@ -92,8 +92,6 @@ int main(int argc, char *argv[])
 	
 	version_maj = VERSION_MAJ;
 	version_min = VERSION_MIN;
-	
-	is_multi_core = true;
 	
 	main_argc = argc;
 	main_argv = argv;

@@ -43,7 +43,6 @@ var kiwi = {
    WSPR_rgrid: '',
    GPS_fixes: 0,
    wf_fps: 0,
-   is_multi_core: 0,
    log2_seq: 0,
    
    w3_text: 'w3-text-bottom w3-text-css-orange',
@@ -3163,18 +3162,6 @@ function kiwi_msg(param, ws)
 			kiwi.no_reopen_retry = true;
 			break;
 
-      /*
-      // enable DRM mode button
-      var el = w3_el('id-button-drm');
-      if (el && kiwi.is_multi_core) {
-         w3_remove(el, 'class-button-disabled');
-         w3_create_attribute(el, 'onclick', 'mode_button(event, this)');
-      }
-      */
-		case "is_multi_core":
-		   kiwi.is_multi_core = 1;
-		   break;
-		
 		case "authkey_cb":
 			extint_authkey_cb(param[1]);
 			break;

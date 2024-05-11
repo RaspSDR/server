@@ -53,7 +53,7 @@ Boston, MA  02110-1301, USA.
 #define	WF_BETTER_LOOKING	1	// increase in FFT size for better looking display
 #else
 #define	WF_USING_HALF_FFT	2	// the result is contained in the first half of the complex FFT
-#define	WF_USING_HALF_CIC	1	// only use half of the remaining FFT after a CIC
+#define	WF_USING_HALF_CIC	2	// only use half of the remaining FFT after a CIC
 #define	WF_BETTER_LOOKING	2	// increase in FFT size for better looking display
 #endif
 

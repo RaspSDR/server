@@ -159,10 +159,10 @@ int rx_chan_free_count(rx_free_count_e flags, int *idx, int *heavy, int *preempt
         } \
     }
 
-    if (flags != RX_COUNT_ALL && wf_chans != 0 && wf_chans < rx_chans) {
+    if (flags != RX_COUNT_ALL && wf_chans != 0 && wf_chans <= rx_chans) {
         for (i = wf_chans; i < rx_chans; i++) RX_CHAN_FREE_COUNT();
         if (flags != RX_COUNT_NO_WF_AT_ALL) {
-            for (i = 0; i < wf_chans; i++) RX_CHAN_FREE_COUNT();
+            for (i = wf_chans - 1; i >= 0; i--) RX_CHAN_FREE_COUNT();
         }
     } else {
         for (i = 0; i < rx_chans; i++) RX_CHAN_FREE_COUNT();

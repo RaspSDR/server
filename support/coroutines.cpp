@@ -308,7 +308,7 @@ void TaskDump(u4_t flags)
 
 	lfprintf(printf_type, "\n");
 	lfprintf(printf_type, "TASKS: used %d/%d\n", tused, MAX_TASKS);
-	lfprintf(printf_type, "stat1, units1, stat2, units2, ch, name, reason");
+	lfprintf(printf_type, "stat1, units1, stat2, units2, ch, name, reason\n");
 
 	for (unsigned i = 0; i < MAX_TASKS; i++)
 	{

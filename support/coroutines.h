@@ -63,7 +63,6 @@ void TaskCollect();
 #define CTF_CHANNEL (MAX_RX_CHANS - 1)
 #define CTF_RX_CHANNEL 0x0010
 #define CTF_BUSY_HELPER 0x0020
-//#define CTF_POLL_INTR 0x0040
 #define CTF_FORK_CHILD 0x0080
 #define CTF_PRIO_INVERSION 0x0100
 #define CTF_NO_CHARGE 0x0200
@@ -111,24 +110,15 @@ typedef enum
 	CALLED_FROM_INIT,
 	CALLED_WITHIN_NEXTTASK,
 	CALLED_FROM_LOCK,
-	CALLED_FROM_SPI,
-	CALLED_FROM_FASTINTR,
 } ipoll_from_e;
-
-extern bool itask_run;
-void TaskPollForInterrupt(ipoll_from_e from);
-#define TaskFastIntr(s)                        if (GPIO_READ_BIT(SND_INTR)) TaskPollForInterrupt(CALLED_FROM_FASTINTR);
 
 void TaskRemove(int id);
 void TaskMinRun(u4_t minrun_us);
 u4_t TaskFlags();
 void TaskSetFlags(u4_t flags);
-void TaskLastRun();
 u4_t TaskPriority(int priority);
 void TaskCheckStacks(bool report);
 u64_t TaskStartTime();
-void TaskForkChild();
-bool TaskIsChild();
 
 C_LINKAGE(u4_t TaskID());
 C_LINKAGE(void *TaskGetUserParam());
@@ -159,7 +149,6 @@ C_LINKAGE(const char *Task_ls(int id));
 
 #define TSTAT_LATCH 0x0f00
 #define TSTAT_ZERO 0x0100
-#define TSTAT_CMDS 0x0200
 
 int TaskStat(u4_t s1_func, int s1_val, const char *s1_units, u4_t s2_func DEF_0, int s2_val DEF_0, const char *s2_units DEF_NULL);
 #define TaskStat2(f, v, u) TaskStat(0, 0, NULL, f, v, u);

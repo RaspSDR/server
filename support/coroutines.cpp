@@ -34,8 +34,6 @@
 #include <sched.h>
 #include <errno.h>
 
-bool itask_run;
-
 // global variables
 struct Task
 {
@@ -59,7 +57,7 @@ struct Task
 	u4_t s1_func, s2_func;
 	int stat1, stat2;
 	const char *units1, *units2;
-	u4_t spi_retry, cmds;
+	u4_t cmds;
 
 	// the object to support sleep/wakeup
 	pthread_t pthread;
@@ -109,15 +107,6 @@ void TaskInitCfg()
 
 void TaskCollect()
 {
-}
-
-void TaskForkChild()
-{
-}
-
-bool TaskIsChild()
-{
-	return false;
 }
 
 void TaskCheckStacks(bool report)
@@ -369,9 +358,6 @@ int TaskStat(u4_t s1_func, int s1_val, const char *s1_units, u4_t s2_func, int s
 	default:
 		break;
 	}
-
-	if ((t->s1_func | t->s2_func) & TSTAT_CMDS)
-		t->cmds++;
 
 	return r;
 }

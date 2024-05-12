@@ -123,8 +123,6 @@ int child_task(const char *pname, funcP_t func, int poll_msec, void *param)
 	
 	// CAUTION: Only use real_printf() in the child
 	if (child_pid == 0) {   // child
-		TaskForkChild();
-
 		// terminate all children when parent exits
 		scall("PR_SET_PDEATHSIG", prctl(PR_SET_PDEATHSIG, SIGTERM));
 

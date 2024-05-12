@@ -169,10 +169,7 @@ void shmem_ipc_invoke(int signal, int which, int wait)
 
     //assert(ipc->request[which] == 0);       // guard against reentrancy
     int request = ipc->request[which];
-    //assert(!TaskIsChild());
-    if (TaskIsChild()) {
-        lock_dump();
-    }
+
     if (request != 0) {
         real_printf("R %s S%d %s %p[%d]=%d\n", Task_s(tid), signal, ipc->pname, &ipc->request[which], which, request);
         lock_dump();
@@ -222,7 +219,6 @@ int shmem_ipc_poll(int signal, int poll_msec, int which)
 
 void shmem_ipc_setup(const char *pname, int signal, funcPI_t func)
 {
-    assert(!TaskIsChild());
     shmem_ipc_t *ipc = &shmem->ipc[SIG2IPC(signal)];
     memset(ipc, 0, sizeof(shmem_ipc_t));
     kiwi_strncpy(ipc->pname, pname, N_SHMEM_PNAME);

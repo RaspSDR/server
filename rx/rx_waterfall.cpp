@@ -1000,17 +1000,27 @@ void sample_wf(int rx_chan)
     start = 0;
     {
 #define FIFO_SIZE 4096
+#define BLOCK_SIZE 256
 #define FIFO_RATIO (int)(WF_C_NSAMPS/(FIFO_SIZE*0.5f))
 
         int wf_chan = fpga_get_wf(rx_chan, wf->decim, (wf->i_offset >> 16) & 0xffffffff);
         for (int i = start; i < WF_C_NSAMPS; i++)
         {
-            if (fpga_status->wf_fifo[wf_chan] == 0)
+            int avail = fpga_status->wf_fifo[wf_chan];
+            if ( avail == 0)
             {
                 WFSleepReasonUsec("fill pipe", wf->samp_wait_us/((WF_C_NSAMPS - i)/(FIFO_SIZE*0.5f))+1);
                 continue;
             }
-            *(uint32_t*)(&fft->sample_data[i]) = *fpga_wf_data[wf_chan];
+
+            if (avail > BLOCK_SIZE) avail = BLOCK_SIZE;
+
+            if (i + avail > WF_C_NSAMPS)
+                avail = WF_C_NSAMPS - i;
+
+            memcpy(&fft->sample_data[i], (void*)fpga_wf_data[wf_chan], avail * sizeof(int32_t));
+            i+=avail;
+            //*(uint32_t*)() = *;
         }
         fpga_free_wf(wf_chan, rx_chan);
     }

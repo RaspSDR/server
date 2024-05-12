@@ -946,7 +946,7 @@ void c2s_admin(void *param)
                         gps.sgnLat, gps.sgnLon);
                 } else {
                     //sb = kstr_asprintf(sb, ",\"lat\":null");
-                    sb = kstr_asprintf(sb, ",\"lat\":0");
+                    sb = kstr_cat(sb, ",\"lat\":0");
                 }
                     
                 sb = kstr_asprintf(sb, ",\"acq\":%d,\"track\":%d,\"good\":%d,\"fixes\":%d,\"fixes_min\":%d,\"adc_clk\":%.6f,\"adc_corr\":%d,\"is_corr\":%d}",

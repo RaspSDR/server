@@ -665,7 +665,7 @@ static void dump_info_handler(int arg)
         sb = kstr_asprintf(sb, ", \"fixes\": %d, \"fixes_min\": %d }", gps.fixes, gps.fixes_min);
     #endif
 
-    sb = kstr_asprintf(sb, " }' > /root/config/info.json");
+    sb = kstr_cat(sb, " }' > /root/config/info.json");
     non_blocking_cmd_system_child("kiwi.info", kstr_sp(sb), NO_WAIT);
     kstr_free(sb);
 	sig_arm(SIGHUP, dump_info_handler);

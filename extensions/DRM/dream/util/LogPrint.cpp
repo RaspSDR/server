@@ -39,6 +39,8 @@ void logStatus(char *format, ...) {
     va_start(args, format);
 
 	vsnprintf(s, sizeof(s), format, args);
+	va_end(args);
+
 	CLogPrinter::GetInstance()->LogStatus(s);
 } 
 
@@ -48,6 +50,8 @@ void logWarning(char *format, ...) {
     va_start(args, format);
 
 	vsnprintf(s, sizeof(s), format, args);
+	va_end(args);
+
 	CLogPrinter::GetInstance()->LogWarning(s);
 } 
 
@@ -57,6 +61,7 @@ void logError(char *format, ...) {
     va_start(args, format);
 
 	vsnprintf(s, sizeof(s), format, args);
+	va_end(args);
 	CLogPrinter::GetInstance()->LogWarning(s);
 } 
 

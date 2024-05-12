@@ -346,12 +346,14 @@ int non_blocking_cmd_system_child(const char *pname, const char *cmd, int poll_m
 
 int blocking_system(const char *fmt, ...)
 {
+	char *sb = NULL;
+
 	va_list ap;
 	va_start(ap, fmt);
-	char *sb;
 	vasprintf(&sb, fmt, ap);
+	va_end(ap);
 	int rv = system(sb);
-	kiwi_asfree(sb);
+	free(sb);
 	return rv;
 }
 
@@ -401,12 +403,14 @@ kstr_t *non_blocking_cmd(const char *cmd, int *status)
 
 kstr_t *non_blocking_cmd_fmt(int *status, const char *fmt, ...)
 {
+	char *cmd = NULL;
+
 	va_list ap;
 	va_start(ap, fmt);
-	char *cmd;
 	vasprintf(&cmd, fmt, ap);
+	va_end(ap);
     kstr_t *rv = non_blocking_cmd(cmd, status);
-	kiwi_asfree(cmd);
+	free(cmd);
     return rv;
 }
 

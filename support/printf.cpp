@@ -151,6 +151,8 @@ void real_printf(const char *fmt, ...)
 	va_start(ap, fmt);
 	char *buf;
 	vasprintf(&buf, fmt, ap);
+	va_end(ap);
+	
 	need_newline = buf[strlen(buf)-1] != '\n';
 
     // remove our override and call the actual underlying printf
@@ -158,7 +160,6 @@ void real_printf(const char *fmt, ...)
         printf("%s", buf);
     #define printf ALT_PRINTF
     kiwi_asfree(buf);
-	va_end(ap);
 }
 
 lock_t print_lock;
@@ -440,38 +441,42 @@ void lprintf(const char *fmt, ...)
 
 void rcprintf(int rx_chan, const char *fmt, ...)
 {
-	va_list ap;
-	va_start(ap, fmt);
 	lock_holder holder(print_lock);
 	conn_t *c = rx_channels[rx_chan].conn;
+
+	va_list ap;
+	va_start(ap, fmt);
 	ll_printf(PRINTF_REG, c, fmt, ap);
 	va_end(ap);
 }
 
 void rclprintf(int rx_chan, const char *fmt, ...)
 {
-	va_list ap;
-	va_start(ap, fmt);
 	lock_holder holder(print_lock);
 	conn_t *c = rx_channels[rx_chan].conn;
+
+	va_list ap;
+	va_start(ap, fmt);
 	ll_printf(PRINTF_LOG, c, fmt, ap);
 	va_end(ap);
 }
 
 void rcfprintf(int rx_chan, u4_t printf_type, const char *fmt, ...)
 {
-	va_list ap;
-	va_start(ap, fmt);
 	lock_holder holder(print_lock);
 	conn_t *c = rx_channels[rx_chan].conn;
+
+	va_list ap;
+	va_start(ap, fmt);
 	ll_printf(printf_type, c, fmt, ap);
 	va_end(ap);
 }
 
 void mprintf(const char *fmt, ...)
 {
-	va_list ap;
 	lock_holder holder(print_lock);
+
+	va_list ap;
 	va_start(ap, fmt);
 	ll_printf(PRINTF_MSG, NULL, fmt, ap);
 	va_end(ap);
@@ -479,8 +484,9 @@ void mprintf(const char *fmt, ...)
 
 void mprintf_ff(const char *fmt, ...)
 {
-	va_list ap;
 	lock_holder holder(print_lock);
+
+	va_list ap;
 	va_start(ap, fmt);
 	ll_printf(PRINTF_MSG|PRINTF_FF, NULL, fmt, ap);
 	va_end(ap);
@@ -488,8 +494,9 @@ void mprintf_ff(const char *fmt, ...)
 
 void mlprintf(const char *fmt, ...)
 {
-	va_list ap;
 	lock_holder holder(print_lock);
+
+	va_list ap;
 	va_start(ap, fmt);
 	ll_printf(PRINTF_MSG|PRINTF_LOG, NULL, fmt, ap);
 	va_end(ap);
@@ -497,8 +504,9 @@ void mlprintf(const char *fmt, ...)
 
 void mlprintf_ff(const char *fmt, ...)
 {
-	va_list ap;
 	lock_holder holder(print_lock);
+
+	va_list ap;
 	va_start(ap, fmt);
 	ll_printf(PRINTF_MSG|PRINTF_LOG|PRINTF_FF, NULL, fmt, ap);
 	va_end(ap);

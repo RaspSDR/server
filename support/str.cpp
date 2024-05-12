@@ -848,10 +848,15 @@ bool kiwi_sha256_strcmp(char *str, const char *key)
 
 kstr_t *kstr_asprintf(kstr_t *ks, const char *fmt, ...)
 {
+	char *sb = NULL;
+
 	va_list ap;
 	va_start(ap, fmt);
-	char *sb;
 	vasprintf(&sb, fmt, ap);
+    va_end(ap);
+
+    if (sb == NULL) panic("asprintf failed");
+
 	ks = kstr_cat(ks, kstr_wrap(sb));
     return ks;
 }

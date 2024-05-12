@@ -855,7 +855,7 @@ kstr_t *kstr_asprintf(kstr_t *ks, const char *fmt, ...)
 	vasprintf(&sb, fmt, ap);
     va_end(ap);
 
-    if (sb == NULL) panic("asprintf failed");
+    if (sb == NULL) return ks;
 
 	ks = kstr_cat(ks, kstr_wrap(sb));
     return ks;

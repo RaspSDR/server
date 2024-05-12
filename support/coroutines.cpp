@@ -50,7 +50,6 @@ struct Task
 	int f_arg;
 	sched_param priority;
 
-	bool killed;
 	bool sleeping;
 	struct timespec deadline;
 #define N_REASON 64
@@ -75,8 +74,9 @@ static __thread struct Task *current;
 pthread_mutex_t task_lock;
 
 // terminate current thread
-static void _TaskTerminate(struct Task *current_task)
+static void TaskCleanup(void *param)
 {
+	struct Task *current_task = (struct Task*)param;
 	pthread_cond_destroy(&current->cond);
 	pthread_mutex_destroy(&current->mutex);
 
@@ -84,10 +84,6 @@ static void _TaskTerminate(struct Task *current_task)
 	pthread_mutex_lock(&task_lock);
 	current->entry = nullptr;
 	pthread_mutex_unlock(&task_lock);
-
-	pthread_exit(0);
-
-	panic("We should not reach here");
 }
 
 void TaskInit()
@@ -141,17 +137,15 @@ void TaskRemove(int id)
 {
 	struct Task *current_task = (struct Task *)&Tasks[id];
 
-	Tasks[id].killed = true;
 	if (id == current->id)
 	{
-		_TaskTerminate(current_task);
+		TaskCleanup(current_task);
+		pthread_exit(0);
 	}
 	else
 	{
-		if (current_task->sleeping)
-		{
-			_TaskWakeup(id, 0, nullptr);
-		}
+		pthread_cancel(current_task->pthread);
+		pthread_join(current_task->pthread, NULL);
 	}
 }
 
@@ -200,11 +194,6 @@ void *_TaskSleep(const char *reason, u64_t usec, u4_t *wakeup_test)
 	current->sleeping = false;
 	ret = pthread_mutex_unlock(&current->mutex);
 
-	if (current->killed)
-	{
-		_TaskTerminate(current);
-	}
-
 	return current->wake_param;
 }
 
@@ -236,13 +225,14 @@ static void *ThreadEntry(void *parameter)
 	// create the mutex and cond
 	pthread_cond_init(&current_task->cond, NULL);
 	pthread_mutex_init(&current_task->mutex, NULL);
-
 	current = current_task;
 
+	pthread_cleanup_push(TaskCleanup, current_task);
 	// call user function
 	current_task->entry(current_task->user_parameter);
+	pthread_cleanup_pop(1);
 
-	_TaskTerminate(current_task);
+	pthread_exit(0);
 
 	return nullptr;
 }

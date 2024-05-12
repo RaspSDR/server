@@ -104,7 +104,12 @@ void fpga_init()
 
 int fpga_get_wf(int rx_chan, int decimate, uint32_t freq)
 {
-  sem_wait(&wf_sem);
+  int ret = -1;
+
+  while (ret)
+  {
+    ret = sem_wait(&wf_sem);
+  }
 
   for (int i = 0; i < wf_channels; i++)
   {
@@ -137,5 +142,6 @@ void fpga_free_wf(int wf_chan, int rx_chan)
     bool exchanged = wf_using[wf_chan].compare_exchange_strong(rx_chan, 0);
     assert(exchanged);
 
-    sem_post(&wf_sem);
+    int ret = sem_post(&wf_sem);
+    if (ret) panic("sem_post failed");
 }

@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include <atomic>
+#include <semaphore.h>
 
 volatile FPGA_Config *fpga_config;
 const volatile FPGA_Status *fpga_status;
@@ -28,6 +29,7 @@ const volatile int32_t *fpga_rx_data;
 const volatile uint32_t *fpga_wf_data[4];
 
 static int wf_channels;
+static sem_t wf_sem;
 static std::atomic<int> wf_using[4];
 
 ////////////////////////////////
@@ -95,35 +97,45 @@ void fpga_init()
 
     fpga_config->reset = RESET_RX;
 
-    wf_channels = (fpga_status->signature >> 8) & 0x0f;;
+    wf_channels = (fpga_status->signature >> 8) & 0x0f;
+
+    sem_init(&wf_sem, 0, wf_channels);
 }
 
 int fpga_get_wf(int rx_chan, int decimate, uint32_t freq)
 {
-  while (true)
+  sem_wait(&wf_sem);
+
+  for (int i = 0; i < wf_channels; i++)
   {
-    for (int i = 0; i < wf_channels; i++)
+    int empty = 0;
+    bool exchanged = wf_using[i].compare_exchange_strong(empty, rx_chan+10);
+
+    if (exchanged)
     {
-      int empty = 0;
-      bool exchanged = wf_using[i].compare_exchange_strong(empty, rx_chan);
+      // allocate wf channel i for rx_channel
+      fpga_config->wf_config[i].wf_decim = decimate;
+      fpga_config->wf_config[i].wf_freq = (-freq) >> 2;
 
-      if (exchanged)
-      {
-        // allocate wf channel i for rx_channel
-        fpga_config->wf_config[i].wf_decim = decimate;
-        fpga_config->wf_config[i].wf_freq = (-freq) >> 2;
-        fpga_config->reset |= RESET_WF0 << i;
+      TaskSleepUsec(5);
+      fpga_config->reset |= RESET_WF0 << i;
 
-        return i;
-      }
+      return i;
     }
   }
+
+  panic("WF is runout");
+
+  return -1;
 }
 
 void fpga_free_wf(int wf_chan, int rx_chan)
 {
     fpga_config->reset &= ~(RESET_WF0 << wf_chan);
+    rx_chan += 10;
 
     bool exchanged = wf_using[wf_chan].compare_exchange_strong(rx_chan, 0);
     assert(exchanged);
+
+    sem_post(&wf_sem);
 }

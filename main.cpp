@@ -39,6 +39,8 @@ Boston, MA  02110-1301, USA.
 #include "debug.h"
 #include "fpga.h"
 
+#include "sha256.h"
+
 #ifdef EV_MEAS
     #warning NB: EV_MEAS is enabled
 #endif
@@ -76,6 +78,8 @@ int main_argc;
 char **main_argv;
 static bool _kiwi_restart;
 
+const EVP_MD *md;
+
 void kiwi_restart()
 {
 	// leak detector needs exit while running on main() stack
@@ -111,6 +115,9 @@ int main(int argc, char *argv[])
 	#endif
 	
 	kiwi.platform = PLATFORM_ZYNQ;
+
+	OpenSSL_add_all_digests();
+	md = EVP_sha256();
 
 	kstr_init();
 	shmem_init();

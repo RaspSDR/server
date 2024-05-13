@@ -1,5 +1,6 @@
 #pragma once
 
+#define JSMN_HEADER
 #include "jsmn.h"
 
 #define JSMN_IS_ID(jt)		    ((jt) != NULL && (jt)->type == JSMN_STRING && (jt)->size == 1)

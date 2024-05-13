@@ -10,8 +10,7 @@
 #define SHA256_H
 
 /*************************** HEADER FILES ***************************/
-#include <stddef.h>
-
+#include <openssl/evp.h>
 /****************************** MACROS ******************************/
 #define SHA256_BLOCK_SIZE 32            // SHA256 outputs a 32 byte digest
 
@@ -19,16 +18,15 @@
 typedef unsigned char BYTE;             // 8-bit byte
 typedef unsigned int  WORD;             // 32-bit word, change to "long" for 16-bit machines
 
-typedef struct {
-	BYTE data[64];
-	WORD datalen;
-	unsigned long long bitlen;
-	WORD state[8];
-} SHA256_CTX;
+typedef EVP_MD_CTX SHA256_CTX;
+
+extern const EVP_MD *md;
 
 /*********************** FUNCTION DECLARATIONS **********************/
-void sha256_init(SHA256_CTX *ctx);
-void sha256_update(SHA256_CTX *ctx, const BYTE data[], size_t len);
-void sha256_final(SHA256_CTX *ctx, BYTE hash[]);
+#define sha256_new() EVP_MD_CTX_new()
+#define sha256_init(ctx) EVP_DigestInit_ex(ctx, md, NULL)
+#define sha256_update(ctx, data, len) EVP_DigestUpdate(ctx, data, len)
+#define sha256_final(ctx, hash) EVP_DigestFinal_ex(ctx, hash, NULL)
+#define sha256_cleanup(ctx) EVP_MD_CTX_free(ctx)
 
 #endif   // SHA256_H

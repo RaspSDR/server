@@ -21,7 +21,7 @@ Boston, MA  02110-1301, USA.
 
 #include "types.h"
 #include "kiwi.h"
-#include "jsmn.h"
+#include "jsmn_ext.h"
 #include "coroutines.h"
 
 // configuration

@@ -28,7 +28,7 @@ Boston, MA  02110-1301, USA.
 #include "str.h"
 #include "timer.h"
 #include "web.h"
-#include "jsmn.h"
+#include "jsmn_ext.h"
 #include "cfg.h"
 #include "dx.h"
 #include "rx.h"
@@ -579,7 +579,7 @@ static void _dx_reload_file(cfg_t *cfg, int db)
                 if (slen >= 2 && strncmp(s, "//", 2) == 0) { i--; continue; }   // ignore comments
                 cfg->json_buf_size = slen + SPACE_FOR_NULL;
                 jsmn_init(&parser);
-                int ntok_or_err = jsmn_parse(&parser, s, slen, cfg->tokens, cfg->tok_size, /* yield */ false);
+                int ntok_or_err = jsmn_parse(&parser, s, slen, cfg->tokens, cfg->tok_size);
                 //printf("DX: #%d ntok_or_err=%d tok_size=%d %d<%s><%s>\n", i, ntok_or_err, cfg->tok_size, slen, s, cfg->json);
                 if (ntok_or_err == 0) { i--; continue; }
                 if (ntok_or_err < 0) {

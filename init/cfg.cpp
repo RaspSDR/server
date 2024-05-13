@@ -27,7 +27,7 @@ Boston, MA  02110-1301, USA.
 #include "web.h"
 #include "eeprom.h"
 #include "coroutines.h"
-#include "jsmn.h"
+#include "jsmn_ext.h"
 #include "cfg.h"
 #include "utf8.h"
 #include "peri.h"
@@ -1372,7 +1372,7 @@ static bool _cfg_parse_json(cfg_t *cfg, u4_t flags)
 		cfg->tokens = (jsmntok_t *) kiwi_malloc(cfg->id_tokens, sizeof(jsmntok_t) * cfg->tok_size);
 
 		jsmn_init(&parser);
-		if ((rc = jsmn_parse(&parser, cfg->json, slen, cfg->tokens, cfg->tok_size, yield)) >= 0)
+		if ((rc = jsmn_parse(&parser, cfg->json, slen, cfg->tokens, cfg->tok_size)) >= 0)
 			break;
 		
 		if (rc == JSMN_ERROR_NOMEM) {
@@ -1382,8 +1382,8 @@ static bool _cfg_parse_json(cfg_t *cfg, u4_t flags)
 		    const char *err = "(unknown error)";
 		    if (rc == JSMN_ERROR_INVAL) err = "invalid character inside JSON string"; else
 		    if (rc == JSMN_ERROR_PART) err = "the string is not a full JSON packet, more bytes expected";
-			lprintf("cfg_parse_json: file %s line=%d position=%d token=%d %s\n",
-				cfg->filename, parser.line, parser.pos, parser.toknext, err);
+			lprintf("cfg_parse_json: file %s position=%d token=%d %s\n",
+				cfg->filename, parser.pos, parser.toknext, err);
 
 			// show INDENT chars before error, but handle case where there aren't that many available
 			#define INDENT 4

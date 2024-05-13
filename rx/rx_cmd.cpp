@@ -599,7 +599,7 @@ bool rx_common_cmd(int stream_type, conn_t *conn, char *cmd)
             pdb_printf("PWD %s %s RESULT: allow=%d pwd_s=<%s> pwd_m=<%s> cant_determine=%d is_local=%d is_local_e=%d %s\n",
                 type_m, uri, allow, pwd_s, pwd_m, cant_determine, is_local, is_local_e, conn->remote_ip);
 
-            if (type_admin && !kiwi.allow_admin_conns) {
+            if (type_admin && (!is_local && !kiwi.allow_admin_conns)) {
                 badp = BADP_DATABASE_UPDATE_IN_PROGRESS;
             } else
             

@@ -214,7 +214,6 @@ set(DIR_DATA /tmp/kiwi.data)
 target_compile_definitions(kiwi.bin PUBLIC
     VERSION_MAJ=${CURRENT_YEAR} VERSION_MIN=${CURRENT_MONTH_DAY}
     KIWI KIWISDR
-    MULTI_CORE
     DIR_CFG="/root/config"
     DIR_SAMPLES="/media/mmcblk0p1/config/samples"
     CFG_PREFIX=""

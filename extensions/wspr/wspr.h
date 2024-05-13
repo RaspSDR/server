@@ -333,17 +333,7 @@ typedef struct {
 
 #include "shmem_config.h"
 
-#ifdef MULTI_CORE
-    //#define WSPR_SHMEM_DISABLE_TEST
-    #ifdef WSPR_SHMEM_DISABLE_TEST
-        #warning dont forget to remove WSPR_SHMEM_DISABLE_TEST
-        #define WSPR_SHMEM_DISABLE
-    #else
-        // shared memory enabled
-    #endif
-#else
-    #define WSPR_SHMEM_DISABLE
-#endif
+#define WSPR_SHMEM_DISABLE
 
 #include "shmem.h"
 

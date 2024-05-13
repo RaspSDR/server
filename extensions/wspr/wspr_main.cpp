@@ -1108,19 +1108,15 @@ void wspr_autorun_restart()
             if (r->arun_which[rx_chan] == ARUN_WSPR) {
                 wspr_t *w = &WSPR_SHMEM->wspr[rx_chan];
                 wspr_p[rx_chan] = w;
-                w->abort_decode = true;     // for MULTI_CORE it's important to stop the decode process
+                w->abort_decode = true;     // stop the decode process
                 internal_conn_shutdown(&iconn[w->instance]);
                 r->arun_which[rx_chan] = ARUN_NONE;
             }
         }
         rx_autorun_clear();
     
-        // MULTI_CORE: has to be long enough that wspr_p[rx_chan]->abort_decode above is seen by decode process
-        #ifdef MULTI_CORE
-            #define WSPR_PROCESS_ABORT_WAIT 8
-        #else
-            #define WSPR_PROCESS_ABORT_WAIT 3
-        #endif
+        // has to be long enough that wspr_p[rx_chan]->abort_decode above is seen by decode process
+        #define WSPR_PROCESS_ABORT_WAIT 8
         TaskSleepReasonSec("wspr_autorun_stop", WSPR_PROCESS_ABORT_WAIT);
 
         // reset only autorun instances identified above (there may be non-autorun WSPR extensions running)

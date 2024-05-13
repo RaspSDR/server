@@ -40,7 +40,6 @@ find_package(PkgConfig REQUIRED)
 INCLUDE(GNUInstallDirs)
 
 pkg_check_modules(FFTW3 REQUIRED fftw3f)
-pkg_check_modules(SNDFILE REQUIRED sndfile)
 pkg_check_modules(ZLIB REQUIRED zlib)
 pkg_check_modules(FDKAAC REQUIRED fdk-aac)
 pkg_check_modules(GPS REQUIRED libgps)
@@ -193,7 +192,6 @@ target_link_directories(kiwi.bin PUBLIC
 
 target_link_libraries(kiwi.bin PRIVATE
     ${FFTW3_STATIC_LIBRARIES}
-    ${SNDFILE_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${GPS_LIBRARIES}
     ${FDKAAC_LIBRARIES}
@@ -225,7 +223,7 @@ target_compile_definitions(kiwi.bin PUBLIC
     # for extensions
     DRM HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H HAVE_STRINGS_H
     HAVE_STRING_H STDC_HEADERS HAVE_INTTYPES_H HAVE_SYS_STAT_H
-    HAVE_SYS_TYPES_H HAVE_UNISTD_H HAVE_LIBZ HAVE_LIBSNDFILE
+    HAVE_SYS_TYPES_H HAVE_UNISTD_H HAVE_LIBZ
     HAVE_LIBFDK_AAC HAVE_USAC
 )
 

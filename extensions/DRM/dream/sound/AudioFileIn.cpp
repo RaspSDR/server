@@ -177,7 +177,7 @@ CAudioFileIn::SetFileName(const string& strFileName, FileTyper::type type)
         }
     }
 #else
-    #error TODO
+//    #error TODO
 #endif
 
 // The error is reported when reading (red light in system eval on interface IO led)
@@ -458,7 +458,7 @@ CAudioFileIn::Read(CVector<short>& psData)
     }
     #endif
 #else
-    #error TODO
+    //#error TODO
     while (iRemainingFrame > 0)
     {
         if (pFileReceiver == nullptr) // file was closed in a different thread. TODO make this not possible

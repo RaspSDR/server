@@ -1,9 +1,9 @@
 ## Instruction to build/run on alpine
 
 ### Necessary Packages
-apk add zlib libsndfile fftw-single-libs fdk-aac libopusenc curl
+apk add zlib fftw-single-libs fdk-aac libopusenc curl
 ### Necessary Dev Packages
-apk add minify zlib-dev libsndfile-dev libopusenc-dev fftw-dev fdk-aac-dev pkgconf cmake make 
+apk add minify zlib-dev libopusenc-dev fftw-dev fdk-aac-dev pkgconf cmake make 
 
 
 ## Cannot use alpine native fdk-aac lib 2.0.2

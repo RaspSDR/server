@@ -827,15 +827,16 @@ int _kiwi_snprintf_int(const char *buf, size_t buflen, const char *fmt, ...) {
 // SECURITY: zeros stack vars
 bool kiwi_sha256_strcmp(char *str, const char *key)
 {
-    SHA256_CTX *ctx = sha256_new();
+    SHA256_CTX ctx;
+    sha256_init(&ctx);
+
+    int str_len = strlen(str);
+    sha256_update(&ctx, (BYTE *) str, str_len);
     BYTE str_bin[SHA256_BLOCK_SIZE];
+    sha256_final(&ctx, str_bin);
+    bzero(&ctx, sizeof(ctx));
+
     char str_s[SHA256_BLOCK_SIZE*2 + SPACE_FOR_NULL];
-    size_t str_len = strlen(str);
-
-    sha256_update(ctx, (BYTE *) str, str_len);
-    sha256_final(ctx, str_bin);
-    sha256_cleanup(ctx);
-
     mg_bin2str(str_s, str_bin, SHA256_BLOCK_SIZE);
     bzero(str_bin, sizeof(str_bin));
     

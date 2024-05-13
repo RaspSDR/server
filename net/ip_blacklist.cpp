@@ -183,7 +183,6 @@ bool ip_blacklist_get(bool download_diff_restart)
 	kstr_t *sb;
 	bool failed = true, first, ip_err;
     u4_t mtime;
-    SHA256_CTX *ctx = sha256_new();
 	
     char *rx888_downloads = DNS_lookup_result("ip_blacklist_get", "downloads.rx-888.com", &net.ips_downloads);
     #define BLACKLIST_FILE "webconfig/ip_blacklist3.cjson"
@@ -203,12 +202,11 @@ bool ip_blacklist_get(bool download_diff_restart)
     dl_sp = kstr_sp(reply);
     //real_printf("ip_blacklist_get: returned <%s>\n", dl_sp);
 
-    sha256_init(ctx);
-    sha256_update(ctx, (BYTE *) dl_sp, strlen(dl_sp));
+    SHA256_CTX ctx;
+    sha256_init(&ctx);
+    sha256_update(&ctx, (BYTE *) dl_sp, strlen(dl_sp));
     BYTE hash[SHA256_BLOCK_SIZE];
-    sha256_final(ctx, hash);
-    sha256_cleanup(ctx);
-
+    sha256_final(&ctx, hash);
     mg_bin2str(net.ip_blacklist_hash, hash, N_IP_BLACKLIST_HASH_BYTES);
     lprintf("ip_blacklist_get: ip_blacklist_hash = %s\n", net.ip_blacklist_hash);
 

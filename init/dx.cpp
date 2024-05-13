@@ -557,8 +557,8 @@ static void _dx_reload_file(cfg_t *cfg, int db)
 	dx_t *dxp;
 	bool done = false;
 
-    SHA256_CTX *ctx = sha256_new();
-    sha256_init(ctx);
+    SHA256_CTX ctx;
+    sha256_init(&ctx);
 
     do {
         for (i = 0; !done; i++) {
@@ -608,7 +608,7 @@ static void _dx_reload_file(cfg_t *cfg, int db)
                     }
                 }
                 
-                sha256_update(ctx, (BYTE *) s, slen);
+                sha256_update(&ctx, (BYTE *) s, slen);
             } else {
                 i--;    // detection of EOF is another trip through loop
                 done = true;
@@ -616,8 +616,6 @@ static void _dx_reload_file(cfg_t *cfg, int db)
         }
     } while (!done);
     
-    sha256_cleanup(ctx);
-
     // Don't have to do anything to make room for DX_HIDDEN_SLOT because the
     // extra trip through the loop to detect EOF guarantees _dx_list has at least one more slot.
     
@@ -631,7 +629,7 @@ static void _dx_reload_file(cfg_t *cfg, int db)
     kiwi_free("dx tokens", cfg->tokens); cfg->tokens = NULL;
     
     BYTE hash[SHA256_BLOCK_SIZE];
-    sha256_final(ctx, hash);
+    sha256_final(&ctx, hash);
     mg_bin2str(dx_db->file_hash, hash, N_DX_FILE_HASH_BYTES);
     dx_db->file_size = (int) kiwi_file_size(cfg->filename);
     lprintf("DX: file = %d,%s,%d\n", i, dx_db->file_hash, dx_db->file_size);

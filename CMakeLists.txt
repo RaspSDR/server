@@ -36,7 +36,6 @@ else()
     MESSAGE(FATAL "Not supported")
 endif()
 
-Find_package(OpenSSL REQUIRED)
 find_package(PkgConfig REQUIRED)
 INCLUDE(GNUInstallDirs)
 
@@ -142,6 +141,7 @@ file(GLOB_RECURSE KIWI_SRCS
     "${UPSTREAM_DIR}/si5351/*.cpp"
 
     "${UPSTREAM_DIR}/pkgs/mongoose/*.cpp"
+    "${UPSTREAM_DIR}/pkgs/sha256/*.cpp"
 )
 
 add_executable(kiwi.bin ${KIWI_SRCS} ${EXT_SRCS}
@@ -181,13 +181,11 @@ target_include_directories(kiwi.bin PUBLIC
 
     "${UPSTREAM_DIR}/pkgs/jsmn"
     "${UPSTREAM_DIR}/pkgs/mongoose"
+    "${UPSTREAM_DIR}/pkgs/sha256"
     "${UPSTREAM_DIR}/pkgs/utf8/"
 )
 
-target_include_directories(kiwi.bin PUBLIC
-    ${FFTW3_INCLUDE_DIRS}
-    ${OPENSSL_INCLUDE_DIRS}
-)
+target_include_directories(kiwi.bin PUBLIC ${FFTW3_INCLUDE_DIRS})
 
 target_link_directories(kiwi.bin PUBLIC
     ${GLFW3_LIBRARY_DIRS}
@@ -200,7 +198,6 @@ target_link_libraries(kiwi.bin PRIVATE
     ${GPS_LIBRARIES}
     ${FDKAAC_LIBRARIES}
     ${UNWIND_LIBRARIES}
-    ${OPENSSL_LIBRARIES}
 )
 
 cmake_host_system_information(RESULT _host_name QUERY HOSTNAME)
@@ -218,7 +215,6 @@ target_compile_definitions(kiwi.bin PUBLIC
     VERSION_MAJ=${CURRENT_YEAR} VERSION_MIN=${CURRENT_MONTH_DAY}
     KIWI KIWISDR
     MULTI_CORE
-    USE_SSL
     DIR_CFG="/root/config"
     DIR_SAMPLES="/media/mmcblk0p1/config/samples"
     CFG_PREFIX=""

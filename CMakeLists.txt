@@ -140,8 +140,6 @@ file(GLOB_RECURSE KIWI_SRCS
     "${UPSTREAM_DIR}/init/*.cpp"
     "${UPSTREAM_DIR}/si5351/*.cpp"
 
-    "${UPSTREAM_DIR}/pkgs/TNT_JAMA/*.cpp"
-    "${UPSTREAM_DIR}/pkgs/jsmn/*.cpp"
     "${UPSTREAM_DIR}/pkgs/mongoose/*.cpp"
     "${UPSTREAM_DIR}/pkgs/sha256/*.cpp"
 )
@@ -181,7 +179,6 @@ target_include_directories(kiwi.bin PUBLIC
     "${UPSTREAM_DIR}/extensions/DRM/dream"
     "${UPSTREAM_DIR}/extensions/DRM/dream/resample"
 
-    "${UPSTREAM_DIR}/pkgs/TNT_JAMA"
     "${UPSTREAM_DIR}/pkgs/jsmn"
     "${UPSTREAM_DIR}/pkgs/mongoose"
     "${UPSTREAM_DIR}/pkgs/sha256"

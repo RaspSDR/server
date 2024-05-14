@@ -1019,7 +1019,7 @@ void sample_wf(int rx_chan)
                 avail = WF_C_NSAMPS - i;
 
             memcpy(&fft->sample_data[i], (void*)fpga_wf_data[wf_chan], avail * sizeof(int32_t));
-            i+=avail;
+            i += avail - 1;
             //*(uint32_t*)() = *;
         }
         fpga_free_wf(wf_chan, rx_chan);

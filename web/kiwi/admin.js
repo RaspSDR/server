@@ -944,11 +944,6 @@ var network = {
    
    ip_blacklist_file_base: 'downloads.rx-888.com/webconfig/ip_blacklist3.cjson',
    ip_blacklist_check_mtime: true,
-   
-   // this ordering gives a remapping of the old 0/1 values: 100M(0) => auto, 10M(1) => same
-   ethernet_speed_s: [ ['auto', 1], ['10 Mbps', 1], ['100 Mbps', 1] ],
-   ESPEED_10M: 1,
-   ESPEED_ENA: 1,
 };
 
 function network_html()
@@ -993,14 +988,6 @@ function network_html()
       network.ip_blacklist_check_mtime = false;
    }
 
-   var spd_s;
-   if (kiwi.platform == kiwi.PLATFORM_BB_AI64) {
-      network.ethernet_speed_s[network.ESPEED_10M][network.ESPEED_ENA] = 0;
-      spd_s = '10 Mbps setting not available <br> on BBAI-64.';
-   } else {
-      spd_s = 'Select 10 Mbps to reduce <br> Ethernet spurs. Try changing <br> while looking at waterfall.';
-   }
-
 	var s1 =
 		w3_div('id-net-auto-nat-msg w3-valign w3-hide') +
 
@@ -1021,11 +1008,7 @@ function network_html()
 				),
 				w3_switch_label('w3-center', 'Auto add NAT rule<br>on firewall / router?', 'Yes', 'No', 'adm.auto_add_nat', adm.auto_add_nat, 'network_auto_nat_cb'),
             w3_switch_label_get_param('w3-center', 'IP address<br>(only static IPv4 for now)',
-               'DHCP', 'Static', 'adm.ip_address.use_static', 0, false, 'network_use_static_cb'),
-            w3_divs('w3-center/',
-               w3_select_conditional('w3-width-auto', 'Ethernet interface speed', '', 'ethernet_speed', cfg.ethernet_speed, network.ethernet_speed_s, 'network_ethernet_speed'),
-               w3_div('w3-text-black', spd_s)
-            )
+               'DHCP', 'Static', 'adm.ip_address.use_static', 0, false, 'network_use_static_cb')
 			),
 			
 			w3_div('id-net-ssl-container w3-restart w3-hide',
@@ -1445,14 +1428,6 @@ function network_ip_blacklist_status(status, ip)
 	if (status == 0) return;
 	network.ip_address_error = true;
    w3_innerHTML('id-ip-blacklist-status', 'ip address error: '+ dq(ip));
-}
-
-function network_ethernet_speed(path, idx, first)
-{
-   idx = +idx;
-	//console.log('network_ethernet_speed path='+ path +' idx='+ idx +' first='+ first);
-   if (first) return;
-   admin_select_cb(path, idx, first)
 }
 
 function network_port_open_init()

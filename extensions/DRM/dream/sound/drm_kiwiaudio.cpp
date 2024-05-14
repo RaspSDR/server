@@ -28,8 +28,6 @@
 
 // Copyright (c) 2017-2023 John Seamons, ZL4VO/KF6VO
 
-// NB v1.470: Because of the C_LINKAGE() change
-
 #include "drm_kiwiaudio.h"
 #include "DRM_main.h"
 

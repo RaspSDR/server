@@ -26,8 +26,6 @@
  *
 \******************************************************************************/
 
-// NB v1.470: Because of the C_LINKAGE() change
-
 #include "DRM.h"
 #include "types.h"
 #include "misc.h"

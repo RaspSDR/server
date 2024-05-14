@@ -522,7 +522,7 @@ void WSPR_Deco(void *param)
         
         #define WSPR_SPOT "curl -sL 'http://wsprnet.org/post?function=wspr&" \
             "rcall=%s&rgrid=%s&rqrg=%.6f&date=%02d%02d%02d&time=%02d%02d&sig=%.0f&" \
-            "dt=%.1f&drift=%d&tqrg=%.6f&tcall=%s&tgrid=%s&dbm=%s&version=1.4A+Kiwi'%s"
+            "dt=%.1f&drift=%d&tqrg=%.6f&tcall=%s&tgrid=%s&dbm=%s&version=web-888'%s"
         int year, month, day; utc_year_month_day(&year, &month, &day);
         char *cmd;
 
@@ -606,7 +606,7 @@ void WSPR_Deco(void *param)
 		        
 		        // in case wspr_c.rgrid has changed 
 		        kiwi_asfree(w->arun_stat_cmd);
-		        #define WSPR_STAT "curl -L 'http://wsprnet.org/post?function=wsprstat&rcall=%s&rgrid=%s&rqrg=%.6f&tpct=0&tqrg=%.6f&dbm=0&version=1.4A+Kiwi' >/dev/null 2>&1"
+		        #define WSPR_STAT "curl -L 'http://wsprnet.org/post?function=wsprstat&rcall=%s&rgrid=%s&rqrg=%.6f&tpct=0&tqrg=%.6f&dbm=0&version=web-888' >/dev/null 2>&1"
                 asprintf(&w->arun_stat_cmd, WSPR_STAT, wspr_c.rcall, wspr_c.rgrid, w->arun_cf_MHz, w->arun_cf_MHz);
                 //printf("AUTORUN %s\n", w->arun_stat_cmd);
                 non_blocking_cmd_system_child("kiwi.wsprnet.org", w->arun_stat_cmd, NO_WAIT);

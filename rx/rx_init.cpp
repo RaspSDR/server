@@ -375,16 +375,6 @@ void update_vars_from_config(bool called_at_init)
         current_espeed = espeed;
     }
     
-    int mtu = cfg_default_int("ethernet_mtu", 0, &update_cfg);
-    if (mtu < 0 || mtu >= N_MTU) mtu = 0;
-    static int current_mtu;
-    if (mtu != current_mtu) {
-        int mtu_val = mtu_v[mtu];
-        printf("ETH0 ifconfig eth0 mtu %d\n", mtu_val);
-        non_blocking_cmd_system_child("kiwi.ifconfig", stprintf("ifconfig eth0 mtu %d", mtu_val), NO_WAIT);
-        current_mtu = mtu;
-    }
-    
     #ifdef USE_SDR
         if (wspr_update_vars_from_config(called_at_init)) update_cfg = true;
 

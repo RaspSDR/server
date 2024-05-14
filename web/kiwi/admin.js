@@ -949,7 +949,6 @@ var network = {
    ethernet_speed_s: [ ['auto', 1], ['10 Mbps', 1], ['100 Mbps', 1] ],
    ESPEED_10M: 1,
    ESPEED_ENA: 1,
-   ethernet_mtu_s: [ '1500 (default)', '1440', '1400' ]
 };
 
 function network_html()
@@ -1026,11 +1025,6 @@ function network_html()
             w3_divs('w3-center/',
                w3_select_conditional('w3-width-auto', 'Ethernet interface speed', '', 'ethernet_speed', cfg.ethernet_speed, network.ethernet_speed_s, 'network_ethernet_speed'),
                w3_div('w3-text-black', spd_s)
-            ),
-            w3_divs('w3-center/',
-               w3_select('w3-width-auto', 'Ethernet interface MTU', '', 'ethernet_mtu', cfg.ethernet_mtu, network.ethernet_mtu_s, 'network_ethernet_mtu'),
-               w3_div('w3-text-black',
-                  'Select 1440 when having <br> connection problems <br> using 4G networks.')
             )
 			),
 			
@@ -1457,14 +1451,6 @@ function network_ethernet_speed(path, idx, first)
 {
    idx = +idx;
 	//console.log('network_ethernet_speed path='+ path +' idx='+ idx +' first='+ first);
-   if (first) return;
-   admin_select_cb(path, idx, first)
-}
-
-function network_ethernet_mtu(path, idx, first)
-{
-   idx = +idx;
-	//console.log('network_ethernet_mtu path='+ path +' idx='+ idx +' first='+ first);
    if (first) return;
    admin_select_cb(path, idx, first)
 }

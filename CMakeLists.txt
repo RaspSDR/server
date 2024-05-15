@@ -356,7 +356,6 @@ file(GLOB FILES_ALWAYS RELATIVE ${UPSTREAM_DIR}/web
     ${UPSTREAM_DIR}/web/pkgs/text-security/text-security-disc.svg
     ${UPSTREAM_DIR}/web/pkgs/text-security/text-security-disc.ttf
     ${UPSTREAM_DIR}/web/pkgs/text-security/text-security-disc.woff
-    ${UPSTREAM_DIR}/web/pkgs/font-awesome-4.6.3/css/font-awesome.min.css
 )
 
 list(SORT FILES_ALWAYS)

@@ -467,7 +467,7 @@ void reload_index_params()
 
 	const char *gen_list_css[2][7] = {
 	    {
-		    "pkgs/font-awesome-4.6.3/css/font-awesome.min.css",
+		    "pkgs/font-awesome/css/font-awesome.css",
 		    "pkgs/text-security/text-security-disc.css",
 		    "pkgs/w3.css",
 		    "kiwi/w3_ext.css",

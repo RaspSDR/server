@@ -48,8 +48,6 @@ typedef enum { KiwiSDR_1 = 1, KiwiSDR_2 = 2, ZynqSDR_1 = 3 } model_e;
 typedef enum { PLATFORM_BBG_BBB = 0, PLATFORM_BB_AI = 1, PLATFORM_BB_AI64 = 2, PLATFORM_RPI = 3, PLATFORM_ZYNQ = 4 } platform_e;
 const char * const platform_s[] = { "beaglebone-black", "bbai", "bbai64", "rpi", "zynq" };
 
-typedef enum { DAILY_RESTART_NO = 0, DAILY_RESTART = 1, DAILY_REBOOT = 2} daily_restart_e;
-
 typedef struct {
     model_e model;
     platform_e platform;
@@ -71,8 +69,6 @@ typedef struct {
 	
 	// low-res lat/lon from timezone process
 	int lowres_lat, lowres_lon;
-	
-	daily_restart_e daily_restart;
 	
 	int ant_switch_nch;
 } kiwi_t;

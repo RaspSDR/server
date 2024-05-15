@@ -496,17 +496,6 @@ void update_vars_from_config(bool called_at_init)
     log_local_ip = admcfg_default_bool("log_local_ip", true, &update_admcfg);
     admcfg_default_bool("dx_comm_auto_download", true, &update_admcfg);
     
-    // convert daily_restart switch bool => menu int
-    bool daily_restart_bool = admcfg_bool("daily_restart", &err, CFG_OPTIONAL);
-    daily_restart_e daily_restart;
-    if (!err) {
-        daily_restart = daily_restart_bool? DAILY_RESTART : DAILY_RESTART_NO;
-        admcfg_rem_bool("daily_restart");
-    } else {
-        daily_restart = DAILY_RESTART_NO;   // default if it doesn't already exist
-    }
-    kiwi.daily_restart = (daily_restart_e) admcfg_default_int("daily_restart", daily_restart, &update_admcfg);
-
     // decouple rx.kiwisdr.com and sdr.hu registration
     bool sdr_hu_register = admcfg_bool("sdr_hu_register", NULL, CFG_REQUIRED);
 	admcfg_bool("kiwisdr_com_register", &err, CFG_OPTIONAL);

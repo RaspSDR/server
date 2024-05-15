@@ -37,7 +37,6 @@ function status_html()
                'To prevent <i>any</i> restarts disable all of the restart sources listed below until all of the icons are grey in color.'
             ),
             w3_div('w3-container',
-               w3_inline('', w3_icon('id-rst-daily', 'fa-square', 16, 'grey'), w3_text('w3-margin-left w3-text-black', 'Control tab: Daily restart')),
                w3_inline('', w3_icon('id-rst-comm',  'fa-square', 16, 'grey'), w3_text('w3-margin-left w3-text-black', 'DX tab: Automatically download community database')),
                w3_inline('', w3_icon('id-rst-swupd', 'fa-square', 16, 'grey'), w3_text('w3-margin-left w3-text-black', 'Update tab: Automatically install software updates')),
                w3_inline('', w3_icon('id-rst-ipbl',  'fa-square', 16, 'grey'), w3_text('w3-margin-left w3-text-black', 'Network tab: Automatically download IP blacklist'))
@@ -86,7 +85,6 @@ function status_html()
 function status_focus()
 {
    if (admin_sdr_mode) {
-      w3_colors('id-rst-daily', 'grey', 'lime', adm.daily_restart);
       w3_colors('id-rst-comm',  'grey', 'lime', adm.dx_comm_auto_download);
       w3_colors('id-rst-swupd', 'grey', 'lime', adm.update_install);
       w3_colors('id-rst-ipbl',  'grey', 'lime', adm.ip_blacklist_auto_download);
@@ -114,9 +112,6 @@ function status_user_kick_cb(id, idx)
 ////////////////////////////////
 // control
 ////////////////////////////////
-
-var daily_restart_u = { 0: 'no', 1: 'restart server', 2: 'reboot Beagle' };
-
 function control_html()
 {
 	var s1 =
@@ -128,15 +123,7 @@ function control_html()
                w3_button('w3-blue w3-margin', 'Beagle reboot', 'control_reboot_cb'),
                w3_button('w3-red w3-margin', 'Beagle power off', 'control_power_off_cb')
             )
-         ),
-			w3_div('w3-container w3-center',
-            //w3_switch_label('w3-center', 'Daily restart?', 'Yes', 'No', 'adm.daily_restart', adm.daily_restart, 'admin_radio_YN_cb'),
-            w3_select('w3-center//w3-width-auto', 'Daily restart?', '', 'adm.daily_restart', adm.daily_restart, daily_restart_u, 'admin_select_cb'),
-				w3_div('w3-text-black w3-tspace-8',
-					"Set if you're having problems with the server<br>after it has run for a period of time.<br>" +
-					"Restart occurs at the same time as updates (0100-0600 Local)<br> and will wait until there are no active user connections."
-				)
-			)
+         )
       );
 
    // Let cfg.ext_api_nchans retain values > rx_chans if it was set when another configuration

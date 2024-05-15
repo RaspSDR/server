@@ -238,7 +238,7 @@ file(GLOB_RECURSE FILES_EMBED_JS RELATIVE ${UPSTREAM_DIR}/web
 
     ${UPSTREAM_DIR}/web/extensions/*.js
     ${UPSTREAM_DIR}/web/pkgs/js/*/*.js
-    ${UPSTREAM_DIR}/web/pkgs/w3color.js
+    ${UPSTREAM_DIR}/web/pkgs/w3/w3color.js
 
     ${UPSTREAM_DIR}/web/kiwi/kiwi.js
     ${UPSTREAM_DIR}/web/kiwi/kiwi_ui.js
@@ -259,7 +259,7 @@ file(GLOB_RECURSE FILES_EMBED_JS RELATIVE ${UPSTREAM_DIR}/web
 file(GLOB_RECURSE FILES_EMBED_CSS RELATIVE ${UPSTREAM_DIR}/web
     ${UPSTREAM_DIR}/web/openwebrx/openwebrx.css
     ${UPSTREAM_DIR}/web/kiwi/kiwi.css
-    ${UPSTREAM_DIR}/web/pkgs/w3.css
+    ${UPSTREAM_DIR}/web/pkgs/w3/w3.css
     ${UPSTREAM_DIR}/web/kiwi/w3_ext.css
     
     ${UPSTREAM_DIR}/web/extensions/*.css

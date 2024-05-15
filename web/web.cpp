@@ -469,7 +469,7 @@ void reload_index_params()
 	    {
 		    "pkgs/font-awesome/css/font-awesome.css",
 		    "pkgs/text-security/text-security-disc.css",
-		    "pkgs/w3.css",
+		    "pkgs/w3/w3.css",
 		    "kiwi/w3_ext.css",
 		    "openwebrx/openwebrx.css",
 		    "kiwi/kiwi.css",
@@ -494,7 +494,7 @@ void reload_index_params()
 		    "kiwi/kiwi_ui.js",
 		    "kiwi/kiwi_map.js",
 		    "kiwi/w3_util.js",
-		    "pkgs/w3color.js",
+		    "pkgs/w3/w3color.js",
 		    "kiwi/monitor.js",
 		    "openwebrx.js",
 		    "ima_adpcm.js",

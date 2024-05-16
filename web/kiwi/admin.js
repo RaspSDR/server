@@ -123,6 +123,9 @@ function control_html()
                w3_button('w3-blue w3-margin', 'Beagle reboot', 'control_reboot_cb'),
                w3_button('w3-red w3-margin', 'Beagle power off', 'control_power_off_cb')
             )
+         ),
+         w3_div('w3-center',
+            w3_switch_label('w3-center w3-restart', 'Share WF channels with all users', 'Share', 'Exclusive', 'adm.wf_share', adm.wf_share, 'wf_share_enabled_cb')
          )
       );
 
@@ -257,6 +260,19 @@ function server_enabled_cb(path, idx, first)
 
 	if (!first) {
 		ext_send('SET server_enabled='+ (enabled? 1:0));
+	}
+	
+	admin_bool_cb(path, enabled, first);
+}
+
+function wf_share_enabled_cb(path, idx, first)
+{
+	idx = +idx;
+	var enabled = (idx == 0);
+	//console.log('server_enabled_cb: first='+ first +' enabled='+ enabled);
+
+	if (!first) {
+		ext_send('SET wf_share='+ (enabled? 1:0));
 	}
 	
 	admin_bool_cb(path, enabled, first);

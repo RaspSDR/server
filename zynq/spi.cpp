@@ -14,6 +14,21 @@ void spi_set3(SPI_CMD cmd, uint16_t wparam, uint32_t lparam, uint16_t w2param)
         fpga_config->rx_freq[wparam] = lparam >> 2;
         break;
 
+     case CmdSetWFFreq:
+         //printf("CmdSetWFFreq[%d]=%d + %d\n", wparam, -lparam, w2param);
+         fpga_config->wf_config[wparam].wf_freq = (-lparam) >> 2;
+         break;
+
+     case CmdSetWFDecim:
+         printf("CmdSetWFDecim[%d]=%d\n", wparam, lparam);
+         fpga_config->wf_config[wparam].wf_decim = lparam;
+         break;
+
+    case CmdWFReset:
+         fpga_config->reset &= ~(RESET_WF0 << wparam);
+         fpga_config->reset |= RESET_WF0 << wparam;
+         break;
+
     case CmdSetGenFreq:
         //printf("CmdSetGenFreq %d=%d\n", wparam, lparam);
         // fpga_config->gen_freq = wparam >> 2;

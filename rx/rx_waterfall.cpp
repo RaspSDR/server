@@ -79,6 +79,7 @@ static const char *interp_s[] = { "max", "min", "last", "drop", "cma" };
     wf_shmem_t *wf_shmem_p = &wf_shmem;
 #endif
 
+static int max_zoom;
 // FIXME: doesn't work yet because currently no way to use SPI from LINUX_CHILD_PROCESS()
 //#define WF_IPC_SAMPLE_WF
 
@@ -224,6 +225,8 @@ void c2s_waterfall_setup(void *param)
 	conn_t *conn = (conn_t *) param;
 	int rx_chan = conn->rx_channel;
 
+    max_zoom = kiwi.wf_share? 7 : MAX_ZOOM;
+
 	send_msg(conn, SM_WF_DEBUG, "MSG freq_offset=%.3f", freq_offset_kHz);
 	send_msg(conn, SM_WF_DEBUG, "MSG center_freq=%d bandwidth=%d adc_clk_nom=%.0f", (int) ui_srate/2, (int) ui_srate, ADC_CLOCK_NOM);
 	send_msg(conn, SM_WF_DEBUG, "MSG kiwi_up=1 rx_chan=%d", rx_chan);       // rx_chan needed by extint_send_extlist() on js side
@@ -232,7 +235,7 @@ void c2s_waterfall_setup(void *param)
     // If not wanting a wf (!conn->isWF_conn) send wf_chans=0 to force audio FFT to be used.
     // But need to send actual value via wf_chans_real for use elsewhere.
 	send_msg(conn, SM_WF_DEBUG, "MSG wf_fft_size=1024 wf_fps=%d wf_fps_max=%d zoom_max=%d rx_chans=%d wf_chans=%d wf_chans_real=%d wf_cal=%d wf_setup",
-		WF_SPEED_FAST, WF_SPEED_MAX, MAX_ZOOM, rx_chans, conn->isWF_conn? wf_chans:0, wf_chans, waterfall_cal);
+		WF_SPEED_FAST, WF_SPEED_MAX, max_zoom, rx_chans, conn->isWF_conn? wf_chans:0, wf_chans, waterfall_cal);
 	if (do_gps && !do_sdr) send_msg(conn, SM_WF_DEBUG, "MSG gps");
 
     dx_last_community_download();
@@ -254,7 +257,7 @@ void c2s_waterfall(void *param)
 	float start=-1, _start, cf, aper_param;
 	float samp_wait_us;
 	float off_freq, off_freq_inv;
-	float HZperStart = ui_srate / (WF_WIDTH << MAX_ZOOM);
+	float HZperStart = ui_srate / (WF_WIDTH << max_zoom);
 	u64_t i_offset;
 	int tr_cmds = 0;
 	u4_t cmd_recv = 0;
@@ -314,6 +317,9 @@ void c2s_waterfall(void *param)
 			i_offset = -i_offset;
 			if (wf->isWF)
 			    wf->i_offset = i_offset;
+            
+            if (!kiwi.wf_share)
+                spi_set3(CmdSetWFFreq, rx_chan, (i_offset >> 16) & 0xffffffff, i_offset & 0xffff);
 			//printf("WF%d freq updated due to ADC clock correction\n", rx_chan);
 		}
 
@@ -362,7 +368,7 @@ void c2s_waterfall(void *param)
                     did_cmd = true;
                     if (sscanf(cmd, "SET zoom=%d start=%f", &_zoom, &_start) == 2) {
                         //cprintf(conn, "WF: zoom=%d/%d start=%.3f(%.1f)\n", _zoom, zoom, _start, _start * HZperStart / kHz);
-                        _zoom = CLAMP(_zoom, WF_ZOOM_MIN, MAX_ZOOM);
+                        _zoom = CLAMP(_zoom, WF_ZOOM_MIN, max_zoom);
                         float halfSpan_Hz = (ui_srate / (1 << _zoom)) / 2;
                         cf = (_start * HZperStart) + halfSpan_Hz;
                         #ifdef OPTION_HONEY_POT
@@ -371,7 +377,7 @@ void c2s_waterfall(void *param)
                         zoom_start_chg = true;
                     } else
                     if (sscanf(cmd, "SET zoom=%d cf=%f", &_zoom, &cf) == 2) {
-                        _zoom = CLAMP(_zoom, WF_ZOOM_MIN, MAX_ZOOM);
+                        _zoom = CLAMP(_zoom, WF_ZOOM_MIN, max_zoom);
                         float halfSpan_Hz = (ui_srate / (1 << _zoom)) / 2;
                         cf *= kHz;
                         _start = (cf - halfSpan_Hz) / HZperStart;
@@ -457,6 +463,9 @@ void c2s_waterfall(void *param)
                     
                         if (wf->isWF)
                             wf->decim = decim;
+
+                        if (!kiwi.wf_share)
+                            spi_set(CmdSetWFDecim, rx_chan, decim);
                     
                         // We've seen cases where the wf connects, but the sound never does.
                         // So have to check for conn->other being valid.
@@ -498,6 +507,9 @@ void c2s_waterfall(void *param)
                 
                     if (wf->isWF)
                         wf->i_offset = i_offset;
+
+                    if (!kiwi.wf_share)
+                        spi_set3(CmdSetWFFreq, rx_chan, (i_offset >> 16) & 0xffffffff, i_offset & 0xffff);
                     //jksd
                     //printf("START s=%d ->s=%d\n", start, wf->start);
                     //wf->prev_start = (wf->start == -1)? start : wf->start;
@@ -899,7 +911,7 @@ void c2s_waterfall(void *param)
 			if (dx.masked_len != 0 && !(conn->other != NULL && conn->other->tlimit_exempt_by_pwd)) {
                 for (i=0; i < wf->plot_width_clamped; i++) {
                     float scale = fft_scale;
-                    int f = roundf((wf->start + (i << (MAX_ZOOM - zoom))) * HZperStart);
+                    int f = roundf((wf->start + (i << (max_zoom - zoom))) * HZperStart);
                     for (j=0; j < dx.masked_len; j++) {
                         dx_mask_t *dmp = &dx.masked_list[j];
                         if (f >= dmp->masked_lo && f <= dmp->masked_hi) {
@@ -938,7 +950,6 @@ void sample_wf(int rx_chan)
 	wf_inst_t *wf = &WF_SHMEM->wf_inst[rx_chan];
     int k;
     fft_t *fft = &WF_SHMEM->fft_inst[rx_chan];
-    u64_t now, deadline;
     
     #ifdef SHOW_MAX_MIN_IQ
         static void *IQi_state;
@@ -956,54 +967,56 @@ void sample_wf(int rx_chan)
     int desired = 1000 / wf_fps[wf->speed];
 
     // desired frame rate greater than what full sampling can deliver, so start overlapped sampling
-    // if (wf->check_overlapped_sampling) {
-    //     wf->check_overlapped_sampling = false;
+    if (wf->check_overlapped_sampling && !kiwi.wf_share) {
+        wf->check_overlapped_sampling = false;
 
-    //     if (wf->samp_wait_us/1000 >= desired/2) {
-    //         wf->overlapped_sampling = true;
+        if (wf->samp_wait_us/1000 >= desired/2) {
+            wf->overlapped_sampling = true;
 
-    //         #ifdef WF_INFO
-    //         if (!bg) printf("---- WF%d OLAP z%d samp_wait %d >= %d(2x) desired %d\n",
-    //             rx_chan, wf->zoom, wf->samp_wait_us, 2*desired, desired);
-    //         #endif
+            #ifdef WF_INFO
+            if (!bg) printf("---- WF%d OLAP z%d samp_wait %d >= %d(2x) desired %d\n",
+                rx_chan, wf->zoom, wf->samp_wait_us, 2*desired, desired);
+            #endif
 
-    //         spi_set(CmdWFReset, rx_chan, WF_SAMP_RD_RST | WF_SAMP_WR_RST | WF_SAMP_CONTIN);
-    //         // memmset(&fft->sample_data[0], 0, sizeof(iq_t) * WF_C_NSAMPS);
-    //     } else {
-    //         wf->overlapped_sampling = false;
+            spi_set(CmdWFReset, rx_chan, WF_SAMP_RD_RST | WF_SAMP_WR_RST | WF_SAMP_CONTIN);
+            // memmset(&fft->sample_data[0], 0, sizeof(iq_t) * WF_C_NSAMPS);
+        } else {
+            wf->overlapped_sampling = false;
 
-    //         #ifdef WF_INFO
-    //         if (!bg) printf("---- WF%d NON-OLAP z%d samp_wait %d < %d(2x) desired %d\n",
-    //             rx_chan, wf->zoom, wf->samp_wait_us, 2*desired, desired);
-    //         #endif
-    //     }
-    // }
-
-    s4_t ii, qq;
-    iq_t *iqp;
+            #ifdef WF_INFO
+            if (!bg) printf("---- WF%d NON-OLAP z%d samp_wait %d < %d(2x) desired %d\n",
+                rx_chan, wf->zoom, wf->samp_wait_us, 2*desired, desired);
+            #endif
+        }
+    }
 
     int start;
     float *window = WF_SHMEM->window_function[wf->window_func];
-    // if (!wf->overlapped_sampling)
-    // {
-    //     spi_set(CmdWFReset, rx_chan, WF_SAMP_RD_RST | WF_SAMP_WR_RST | WF_SAMP_CONTIN);
-    //     start = 0;
-    // }
-    // else
-    // {
-    //     int n = WF_C_NSAMPS * ((desired / 2.0) / (wf->samp_wait_us/1000.0)) ; // how many samples we should receive
-    //     for (int i = 0; i + n < WF_C_NSAMPS; i++)
-    //         fft->sample_data[0 + i] = fft->sample_data[n + i];
-    //     start = WF_C_NSAMPS - n;
-    // }
+    if (!wf->overlapped_sampling || kiwi.wf_share)
+    {
+        if (!kiwi.wf_share)
+            spi_set(CmdWFReset, rx_chan, WF_SAMP_RD_RST | WF_SAMP_WR_RST | WF_SAMP_CONTIN);
+        start = 0;
+    }
+    else
+    {
+        int n = WF_C_NSAMPS * ((desired / 2.0) / (wf->samp_wait_us/1000.0)) ; // how many samples we should receive
+        for (int i = 0; i + n < WF_C_NSAMPS; i++)
+            fft->sample_data[0 + i] = fft->sample_data[n + i];
+        start = WF_C_NSAMPS - n;
+    }
 
-    start = 0;
     {
 #define FIFO_SIZE 4096
 #define BLOCK_SIZE 256
 #define FIFO_RATIO (int)(WF_C_NSAMPS/(FIFO_SIZE*0.5f))
+        int wf_chan;
 
-        int wf_chan = fpga_get_wf(rx_chan, wf->decim, (wf->i_offset >> 16) & 0xffffffff);
+        if (kiwi.wf_share)
+            wf_chan = fpga_get_wf(rx_chan, wf->decim, (wf->i_offset >> 16) & 0xffffffff);
+        else
+            wf_chan = rx_chan;
+
         for (int i = start; i < WF_C_NSAMPS; i++)
         {
             int avail = fpga_status->wf_fifo[wf_chan];
@@ -1022,11 +1035,14 @@ void sample_wf(int rx_chan)
             i += avail - 1;
             //*(uint32_t*)() = *;
         }
-        fpga_free_wf(wf_chan, rx_chan);
+        if (kiwi.wf_share)
+            fpga_free_wf(wf_chan, rx_chan);
     }
 
     for (int i = 0; i < WF_C_NSAMPS; i++) 
     {
+        s4_t ii, qq;
+
         ii = (s4_t) (s2_t) fft->sample_data[i].i;
         qq = (s4_t) (s2_t) fft->sample_data[i].q;
 
@@ -1042,7 +1058,7 @@ void sample_wf(int rx_chan)
         fft->hw_c_samps[i][Q] = fq;
     }
 
-    #ifndef EV_MEAS_WF
+    #ifdef EV_MEAS_WF
         static int wf_cnt;
         evWFC(EC_EVENT, EV_WF, -1, "WF", evprintf("WF %d: loop done", wf_cnt));
         wf_cnt++;
@@ -1595,7 +1611,7 @@ void compute_frame(int rx_chan)
     if (wf->aper == AUTO)
         aperture_auto(wf, buf_p);
 
-	ima_adpcm_state_t adpcm_wf;
+    ima_adpcm_state_t adpcm_wf;
 	
 	if (use_compression) {
 		memset(out->un.adpcm_pad, out->un.buf2[0], sizeof(out->un.adpcm_pad));

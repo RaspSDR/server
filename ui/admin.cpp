@@ -405,6 +405,19 @@ void c2s_admin(void *param)
                 continue;
 			}
 
+            int wf_share;
+            i = sscanf(cmd, "SET wf_share=%d", &wf_share);
+			if (i == 1) {
+				//clprintf(conn, "ADMIN: wf_share=%d\n", wf_share);
+				
+                if (kiwi.wf_share != wf_share)
+                {
+                    kiwi.wf_share = wf_share;
+                }
+
+                continue;
+			}
+
             int chan;
 			i = sscanf(cmd, "SET user_kick=%d", &chan);
 			if (i == 1) {

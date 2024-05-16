@@ -94,6 +94,7 @@ void fpga_init()
     //usleep(100);
   }
 #endif
+    lprintf("FPGA Bitstream signature: 0x%x\n", fpga_status->signature);
 
     fpga_config->reset = RESET_RX;
 

@@ -62,8 +62,8 @@ int rx_chans, wf_chans, nrx_bufs, nrx_samps, snd_rate, rx_decim;
 
 int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
 	rx_cordic, rx_cic, rx_cic2, rx_dump, wf_cordic, wf_cic, wf_mult, wf_mult_gen, do_slice=-1,
-	rx_yield=1000, gps_chans=GPS_MAX_CHANS, wf_max, rx_num, wf_num,
-	do_gps, do_sdr=1, navg=1, wf_olap, meas, debian_ver, monitors_max, bg,
+	rx_yield=1000, gps_chans=GPS_MAX_CHANS, rx_num, wf_num,
+	do_gps, do_sdr=1, navg=1, meas, debian_ver, monitors_max, bg,
 	print_stats, debian_maj, debian_min, test_flag, dx_print,
 	use_foptim, is_locked, drm_nreg_chans;
 
@@ -159,8 +159,6 @@ int main(int argc, char *argv[])
 		if (ARG("-start")) wf_start = 1; else
 		if (ARG("-mult")) wf_mult = 1; else
 		if (ARG("-multgen")) wf_mult_gen = 1; else
-		if (ARG("-wmax")) wf_max = 1; else
-		if (ARG("-olap")) wf_olap = 1; else
 		if (ARG("-meas")) meas = 1; else
 
 		if (ARG("-rcordic")) rx_cordic = 1; else
@@ -223,11 +221,16 @@ int main(int argc, char *argv[])
     bool update_admcfg = false;
     kiwi.anti_aliased = admcfg_default_bool("anti_aliased", false, &update_admcfg);
 	kiwi.airband = admcfg_default_bool("airband", false, &update_admcfg);
+	kiwi.wf_share = admcfg_default_bool("wf_share", false, &update_admcfg);
 
     if (update_admcfg) admcfg_save_json(cfg_adm.json);      // during init doesn't conflict with admin cfg
 
     rx_chans = fpga_status->signature & 0x0f;
-    wf_chans = rx_chans; // always give most wf channels
+	if (kiwi.wf_share)
+		wf_chans = rx_chans; // always give most wf channels
+	else
+		wf_chans = (fpga_status->signature >> 8) & 0x0f;
+
     snd_rate = SND_RATE_4CH;
     rx_decim = (int)(ADC_CLOCK_TYP/12000); // 12k
     nrx_bufs = RXBUF_SIZE_4CH / NRX_SPI;

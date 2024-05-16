@@ -388,10 +388,10 @@ var duc_update_v = { 0:5, 1:10, 2:15, 3:30, 4:60 };
 
 function connect_html()
 {
-   // remove old references to kiwisdr.example.com so empty field message shows
-   if (ext_get_cfg_param('server_url') == 'kiwisdr.example.com')
+   // remove old references to yourname.example.com so empty field message shows
+   if (ext_get_cfg_param('server_url') == 'yourname.example.com')
       ext_set_cfg_param('cfg.server_url', '', EXT_SAVE);
-   if (ext_get_cfg_param('sdr_hu_dom_name') == 'kiwisdr.example.com')
+   if (ext_get_cfg_param('sdr_hu_dom_name') == 'yourname.example.com')
       ext_set_cfg_param('cfg.sdr_hu_dom_name', '', EXT_SAVE);
 
    var ci = 0;
@@ -423,12 +423,12 @@ function connect_html()
 		   
 		   w3_divs('w3-padding-L-16/w3-padding-T-1',
             w3_div('w3-show-inline-block|width:70%;', w3_input_get('', '', 'sdr_hu_dom_name', 'connect_dom_name_cb', '',
-               'Enter domain name that you will point to Kiwi public IP address, e.g. kiwisdr.my_domain.com (don\'t include port number)')),
+               'Enter domain name that you will point to public IP address, e.g. sdr.my_domain.com (don\'t include port number)')),
             w3_div('id-connect-duc-dom w3-padding-TB-8'),
             w3_div('id-connect-rev-dom w3-padding-TB-8'),
             w3_div('id-connect-pub-ip w3-padding-TB-8'),
             w3_div('w3-show-inline-block|width:70%;', w3_input_get('', '', 'sdr_hu_dom_ip', 'connect_dom_ip_cb', '',
-               'Enter known public IP address of the Kiwi (don\'t include port number or use a local ip address)'))
+               'Enter known public IP address (don\'t include port number or use a local ip address)'))
          ),
          
 		   w3_div('w3-margin-T-16', 
@@ -462,7 +462,7 @@ function connect_html()
          w3_div('w3-container w3-valign',
             '<header class="w3-container w3-yellow"><h6>' +
             'Please read these instructions before use: ' +
-            '<a href="http://kiwisdr.com/quickstart/index.html#id-net-duc" target="_blank">dynamic DNS update client (DUC)</a>' +
+            '<a href="http://rx-888.com/web-888/quickstart" target="_blank">dynamic DNS update client (DUC)</a>' +
             '</h6></header>'
          ),
 
@@ -834,7 +834,7 @@ function connect_rev_status_cb(status)
 		case   1: s = 'New account, registration successful'; break;
 		case   2: s = 'Updating host name, registration successful'; break;
 		case 100: s = 'User key or host name field blank'; break;
-		case 101: s = 'User key invalid. Did you email your user/API key to support@kiwisdr.com as per the instructions?'; break;
+		case 101: s = 'User key invalid. Did you email your user/API key to support@rx-888.com as per the instructions?'; break;
 		case 102: s = 'Host name already in use; please choose another and retry'; break;
 		case 103: s = 'Invalid characters in user key or host name field (use a-z, 0-9, -, _)'; break;
 		case 200: s = 'Reverse proxy enabled and running'; break;
@@ -856,7 +856,7 @@ function connect_proxy_server_cb(path, val)
 {
    val = val.trim();
    if (val == '') {
-      val = 'proxy.kiwisdr.com';
+      val = 'proxy.rx-888.com';
       w3_set_value('id-proxy-server', val);
    }
 	w3_string_set_cfg_cb(path, val);
@@ -1056,7 +1056,7 @@ function network_html()
                w3_label('w3-show-inline w3-bold w3-text-teal', 'Check if your external router port is open:') +
                w3_button('w3-show-inline w3-aqua|margin-left:10px', 'Check port open', 'net_port_open_cb')
             ),
-            'Does kiwisdr.com successfully connect to your Kiwi using these URLs?<br>' +
+            'Does external site successfully connect to your SDR using these URLs?<br>' +
             'If both respond "NO" then check the NAT port mapping on your router.<br>' +
             'If first responds "NO" and second "YES" then domain name of the first<br>' +
             'isn\'t resolving to the ip address of the second. Check DNS.',

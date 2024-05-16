@@ -119,9 +119,9 @@ function control_html()
 		w3_half('w3-valign', '',
          w3_div('',
             w3_div('',
-               w3_button('w3-aqua w3-margin', 'KiwiSDR server restart', 'control_restart_cb'),
-               w3_button('w3-blue w3-margin', 'Beagle reboot', 'control_reboot_cb'),
-               w3_button('w3-red w3-margin', 'Beagle power off', 'control_power_off_cb')
+               w3_button('w3-aqua w3-margin', 'Web-888 server restart', 'control_restart_cb'),
+               w3_button('w3-blue w3-margin', 'Web-888 reboot', 'control_reboot_cb'),
+               w3_button('w3-red w3-margin', 'Web-888 power off', 'control_power_off_cb')
             )
          ),
          w3_div('w3-center',
@@ -355,7 +355,7 @@ function control_confirm_cb()
 	} else
 	if (pending_power_off) {
 		ext_send('SET power_off');
-		wait_then_reload_page(0, 'Powering off Beagle');
+		wait_then_reload_page(0, 'Powering off Web-888');
 	} else {
 	   w3_call(control_confirm_cb_func);
 	}
@@ -916,7 +916,7 @@ function update_html()
 }
 
 var restart_update_u = { 0: 'install updates', 1: 'delay updates until overnight' };
-var update_restart_u = { 0: 'restart server', 1: 'reboot Beagle' };
+var update_restart_u = { 0: 'restart server', 1: 'reboot Web-888' };
 
 function update_check_now_cb(id, idx)
 {
@@ -2241,7 +2241,7 @@ function log_html()
 		w3_div('w3-container',
 		   w3_inline('w3-valign w3-halign-space-between/',
 		      w3_div('',
-               w3_label('w3-show-inline', 'KiwiSDR server log (scrollable list, first and last set of messages)'),
+               w3_label('w3-show-inline', 'Web-888 server log (scrollable list, first and last set of messages)'),
                w3_button('w3-aqua|margin-left:10px', 'Log state', 'log_state_cb'),
                w3_button('w3-aqua|margin-left:10px', 'Log IP blacklist', 'log_blacklist_cb'),
                w3_button('w3-blue|margin-left:10px', 'Clear Histogram', 'log_clear_hist_cb')
@@ -2726,7 +2726,7 @@ function security_html()
 			'you want to allow user connections without needing a password. <br>' +
 			'If below "Admin auto-login from local net even if password set" is set to "No", ' +
 			'<i>and you forget the admin password</i>, then you\'ll have no way to bring up the admin page. <br>' +
-			'In that case the only way to recover is to ssh/PuTTY into Debian on the Beagle and remove the password encryption files manually.' +
+			'In that case the only way to recover is to ssh/PuTTY into Debian on the Web-888 and remove the password encryption files manually.' +
 			'</h5></header>'
 		) +
 	*/
@@ -2938,13 +2938,13 @@ function admin_draw(sdr_mode)
 			
 			w3_divs('id-restart w3-hide/w3-valign',
 				'<header class="w3-show-inline-block w3-container w3-red"><h5>Restart required for changes to take effect</h5></header>' +
-				w3_div('w3-show-inline-block', w3_button('w3-green w3-margin-L-16', 'KiwiSDR server restart', 'admin_restart_now_cb')) +
+				w3_div('w3-show-inline-block', w3_button('w3-green w3-margin-L-16', 'Web-888 server restart', 'admin_restart_now_cb')) +
 				w3_div('w3-show-inline-block', w3_button('w3-yellow w3-margin-L-16', 'Cancel', 'admin_restart_cancel_cb'))
 			) +
 			
 			w3_divs('id-reboot w3-hide/w3-valign',
 				'<header class="w3-show-inline-block w3-container w3-red"><h5>Reboot required for changes to take effect</h5></header>' +
-				w3_div('w3-show-inline-block', w3_button('w3-green w3-margin-L-16', 'Beagle reboot', 'admin_reboot_now_cb')) +
+				w3_div('w3-show-inline-block', w3_button('w3-green w3-margin-L-16', 'Web-888 reboot', 'admin_reboot_now_cb')) +
 				w3_div('w3-show-inline-block', w3_button('w3-yellow w3-margin-L-16', 'Cancel', 'admin_reboot_cancel_cb'))
 			) +
 			
@@ -2953,7 +2953,7 @@ function admin_draw(sdr_mode)
 			) +
 
 			w3_div('id-build-reboot w3-valign w3-hide',
-				'<header class="w3-container w3-red"><h5>Beagle will reboot after build</h5></header>'
+				'<header class="w3-container w3-red"><h5>Web-888 will reboot after build</h5></header>'
 			) +
 
 			w3_div('id-admin-closed w3-valign w3-hide',
@@ -3067,7 +3067,7 @@ function admin_update(p)
 	
 	// rx.kiwisdr.com registration status
 	if (adm.kiwisdr_com_register && admin.reg_status.kiwisdr_com != undefined && admin.reg_status.kiwisdr_com != '') {
-	   w3_innerHTML('id-kiwisdr_com-reg-status', 'rx.kiwisdr.com registration: successful');
+	   w3_innerHTML('id-kiwisdr_com-reg-status', 'Web-888 public list registration: successful');
 	}
 	
 	// GPS has had a solution, show buttons
@@ -3322,7 +3322,7 @@ function w3_reboot_cb()
 function admin_restart_now_cb()
 {
 	ext_send('SET restart');
-	wait_then_reload_page(60, 'Restarting KiwiSDR server');
+	wait_then_reload_page(60, 'Restarting Web-888 server');
 }
 
 function admin_restart_cancel_cb()
@@ -3334,7 +3334,7 @@ function admin_restart_cancel_cb()
 function admin_reboot_now_cb()
 {
 	ext_send('SET reboot');
-	wait_then_reload_page(90, 'Rebooting Beagle');
+	wait_then_reload_page(90, 'Rebooting Web-888');
 }
 
 function admin_reboot_cancel_cb()

@@ -67,7 +67,7 @@ Boston, MA  02110-1301, USA.
 
 #define MAX_FFT_USED	MAX(WF_C_NFFT / WF_USING_HALF_FFT, WF_WIDTH)
 
-#define	MAX_START(z)	((WF_WIDTH << max_zoom) - (WF_WIDTH << (max_zoom - z)))
+#define	MAX_START(z)	((WF_WIDTH << MAX_ZOOM) - (WF_WIDTH << (MAX_ZOOM - z)))
 
 #define WF_NSPEEDS 5
 static const int wf_fps[] = { WF_SPEED_OFF, WF_SPEED_1FPS, WF_SPEED_SLOW, WF_SPEED_MED, WF_SPEED_FAST };
@@ -79,7 +79,6 @@ static const char *interp_s[] = { "max", "min", "last", "drop", "cma" };
     wf_shmem_t *wf_shmem_p = &wf_shmem;
 #endif
 
-static int max_zoom;
 // FIXME: doesn't work yet because currently no way to use SPI from LINUX_CHILD_PROCESS()
 //#define WF_IPC_SAMPLE_WF
 
@@ -225,7 +224,6 @@ void c2s_waterfall_setup(void *param)
 	conn_t *conn = (conn_t *) param;
 	int rx_chan = conn->rx_channel;
 
-    max_zoom = kiwi.wf_share? 7 : MAX_ZOOM;
 
 	send_msg(conn, SM_WF_DEBUG, "MSG freq_offset=%.3f", freq_offset_kHz);
 	send_msg(conn, SM_WF_DEBUG, "MSG center_freq=%d bandwidth=%d adc_clk_nom=%.0f", (int) ui_srate/2, (int) ui_srate, ADC_CLOCK_NOM);
@@ -235,7 +233,7 @@ void c2s_waterfall_setup(void *param)
     // If not wanting a wf (!conn->isWF_conn) send wf_chans=0 to force audio FFT to be used.
     // But need to send actual value via wf_chans_real for use elsewhere.
 	send_msg(conn, SM_WF_DEBUG, "MSG wf_fft_size=1024 wf_fps=%d wf_fps_max=%d zoom_max=%d rx_chans=%d wf_chans=%d wf_chans_real=%d wf_cal=%d wf_setup",
-		WF_SPEED_FAST, WF_SPEED_MAX, max_zoom, rx_chans, conn->isWF_conn? wf_chans:0, wf_chans, waterfall_cal);
+		WF_SPEED_FAST, WF_SPEED_MAX, MAX_ZOOM, rx_chans, conn->isWF_conn? wf_chans:0, wf_chans, waterfall_cal);
 	if (do_gps && !do_sdr) send_msg(conn, SM_WF_DEBUG, "MSG gps");
 
     dx_last_community_download();
@@ -257,7 +255,7 @@ void c2s_waterfall(void *param)
 	float start=-1, _start, cf, aper_param;
 	float samp_wait_us;
 	float off_freq, off_freq_inv;
-	float HZperStart = ui_srate / (WF_WIDTH << max_zoom);
+	float HZperStart = ui_srate / (WF_WIDTH << MAX_ZOOM);
 	u64_t i_offset;
 	int tr_cmds = 0;
 	u4_t cmd_recv = 0;
@@ -368,7 +366,7 @@ void c2s_waterfall(void *param)
                     did_cmd = true;
                     if (sscanf(cmd, "SET zoom=%d start=%f", &_zoom, &_start) == 2) {
                         //cprintf(conn, "WF: zoom=%d/%d start=%.3f(%.1f)\n", _zoom, zoom, _start, _start * HZperStart / kHz);
-                        _zoom = CLAMP(_zoom, WF_ZOOM_MIN, max_zoom);
+                        _zoom = CLAMP(_zoom, WF_ZOOM_MIN, MAX_ZOOM);
                         float halfSpan_Hz = (ui_srate / (1 << _zoom)) / 2;
                         cf = (_start * HZperStart) + halfSpan_Hz;
                         #ifdef OPTION_HONEY_POT
@@ -377,7 +375,7 @@ void c2s_waterfall(void *param)
                         zoom_start_chg = true;
                     } else
                     if (sscanf(cmd, "SET zoom=%d cf=%f", &_zoom, &cf) == 2) {
-                        _zoom = CLAMP(_zoom, WF_ZOOM_MIN, max_zoom);
+                        _zoom = CLAMP(_zoom, WF_ZOOM_MIN, MAX_ZOOM);
                         float halfSpan_Hz = (ui_srate / (1 << _zoom)) / 2;
                         cf *= kHz;
                         _start = (cf - halfSpan_Hz) / HZperStart;
@@ -911,7 +909,7 @@ void c2s_waterfall(void *param)
 			if (dx.masked_len != 0 && !(conn->other != NULL && conn->other->tlimit_exempt_by_pwd)) {
                 for (i=0; i < wf->plot_width_clamped; i++) {
                     float scale = fft_scale;
-                    int f = roundf((wf->start + (i << (max_zoom - zoom))) * HZperStart);
+                    int f = roundf((wf->start + (i << (MAX_ZOOM - zoom))) * HZperStart);
                     for (j=0; j < dx.masked_len; j++) {
                         dx_mask_t *dmp = &dx.masked_list[j];
                         if (f >= dmp->masked_lo && f <= dmp->masked_hi) {

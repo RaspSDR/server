@@ -1007,8 +1007,6 @@ void sample_wf(int rx_chan)
     }
 
     {
-#define FIFO_SIZE 4096
-#define FIFO_RATIO (int)(WF_C_NSAMPS/(FIFO_SIZE*0.5f))
         int wf_chan;
 
         if (kiwi.wf_share)
@@ -1016,16 +1014,23 @@ void sample_wf(int rx_chan)
         else
             wf_chan = rx_chan;
 
-        for (int i = start; i < WF_C_NSAMPS; i++)
+        while(start < WF_C_NSAMPS)
         {
-            int avail = fpga_status->wf_fifo[wf_chan];
-            if ( avail == 0)
+            int avail;
+            while ((avail = fpga_status->wf_fifo[wf_chan]) == 0)
             {
-                WFSleepReasonUsec("fill pipe", wf->samp_wait_us/((WF_C_NSAMPS - i)/(FIFO_SIZE*0.5f))+1);
-                continue;
+                if (start > WF_C_NSAMPS/2)
+                    WFSleepReasonUsec("fill pipe", wf->samp_wait_us/WF_C_NSAMPS*(WF_C_NSAMPS - start) + 1);
+                else
+                    WFSleepReasonUsec("fill pipe", wf->samp_wait_us/WF_C_NSAMPS*(WF_C_NSAMPS - start)/2 + 1);
             }
 
-            *(uint32_t*)(&fft->sample_data[i]) = *fpga_wf_data[wf_chan];
+            while(avail > 0 && start < WF_C_NSAMPS)
+            {
+                *(uint32_t*)(&fft->sample_data[start]) = *fpga_wf_data[wf_chan];
+                start++;
+                avail--;
+            }
         }
         if (kiwi.wf_share)
             fpga_free_wf(wf_chan, rx_chan);

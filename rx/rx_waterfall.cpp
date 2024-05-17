@@ -67,7 +67,7 @@ Boston, MA  02110-1301, USA.
 
 #define MAX_FFT_USED	MAX(WF_C_NFFT / WF_USING_HALF_FFT, WF_WIDTH)
 
-#define	MAX_START(z)	((WF_WIDTH << MAX_ZOOM) - (WF_WIDTH << (MAX_ZOOM - z)))
+#define	MAX_START(z)	((WF_WIDTH << max_zoom) - (WF_WIDTH << (max_zoom - z)))
 
 #define WF_NSPEEDS 5
 static const int wf_fps[] = { WF_SPEED_OFF, WF_SPEED_1FPS, WF_SPEED_SLOW, WF_SPEED_MED, WF_SPEED_FAST };
@@ -1008,7 +1008,6 @@ void sample_wf(int rx_chan)
 
     {
 #define FIFO_SIZE 4096
-#define BLOCK_SIZE 256
 #define FIFO_RATIO (int)(WF_C_NSAMPS/(FIFO_SIZE*0.5f))
         int wf_chan;
 
@@ -1026,14 +1025,7 @@ void sample_wf(int rx_chan)
                 continue;
             }
 
-            if (avail > BLOCK_SIZE) avail = BLOCK_SIZE;
-
-            if (i + avail > WF_C_NSAMPS)
-                avail = WF_C_NSAMPS - i;
-
-            memcpy(&fft->sample_data[i], (void*)fpga_wf_data[wf_chan], avail * sizeof(int32_t));
-            i += avail - 1;
-            //*(uint32_t*)() = *;
+            *(uint32_t*)(&fft->sample_data[i]) = *fpga_wf_data[wf_chan];
         }
         if (kiwi.wf_share)
             fpga_free_wf(wf_chan, rx_chan);

@@ -359,12 +359,15 @@ int ns_resolve(const char *domain_name, char *ip_addr_buf, size_t buf_len);
 #define NS_UDP_RECEIVE_BUFFER_SIZE  2000
 #define NS_VPRINTF_BUFFER_SIZE      500
 
+static lock_t mongoose_lock;
+
 struct ctl_msg {
   ns_callback_t callback;
   char message[NS_CTL_MSG_MESSAGE_SIZE];
 };
 
 void iobuf_resize(struct iobuf *io, size_t new_size) {
+  lock_holder holder(mongoose_lock);
   char *p;
   if ((new_size > io->size || (new_size < io->size && new_size >= io->len)) &&
       (p = (char *) NS_REALLOC(io->buf, new_size)) != NULL) {
@@ -380,6 +383,7 @@ void iobuf_init(struct iobuf *iobuf, size_t initial_size) {
 }
 
 void iobuf_free(struct iobuf *iobuf) {
+  lock_holder holder(mongoose_lock);
   if (iobuf != NULL) {
     if (iobuf->buf != NULL) NS_FREE(iobuf->buf);
     iobuf_init(iobuf, 0);
@@ -388,6 +392,7 @@ void iobuf_free(struct iobuf *iobuf) {
 
 size_t iobuf_append(struct iobuf *io, const void *buf, size_t len) {
   char *p = NULL;
+  lock_holder holder(mongoose_lock);
 
   assert(io != NULL);
   assert(io->len <= io->size);
@@ -414,6 +419,7 @@ size_t iobuf_append(struct iobuf *io, const void *buf, size_t len) {
 }
 
 void iobuf_remove(struct iobuf *io, size_t n) {
+  lock_holder holder(mongoose_lock);
   if (n > 0 && n <= io->len) {
     memmove(io->buf, io->buf + n, io->len - n);
     io->len -= n;
@@ -421,6 +427,7 @@ void iobuf_remove(struct iobuf *io, size_t n) {
 }
 
 static size_t ns_out(struct ns_connection *nc, const void *buf, size_t len) {
+  lock_holder holder(mongoose_lock);
   if (nc->flags & NSF_UDP) {
     long n = sendto(nc->sock, (const char *) buf, len, 0, &nc->sa.sa,
                     sizeof(nc->sa.sin));
@@ -1061,6 +1068,7 @@ xreal_printf("ns_read_from_socket: ns_is_error n=%d errno=%d\n", n, errno);
 }
 
 static void ns_write_to_socket(struct ns_connection *conn) {
+  lock_holder holder(mongoose_lock);
   struct iobuf *io = &conn->send_iobuf;
   int n = 0;
 
@@ -3129,6 +3137,7 @@ static size_t deliver_websocket_frame(struct connection *conn) {
 
 size_t mg_websocket_write(struct mg_connection *conn, int opcode,
                           const char *data, size_t data_len) {
+    lock_holder holder(mongoose_lock);
     unsigned char mem[4192], *copy = mem;
     size_t copy_len = 0;
 
@@ -5634,5 +5643,7 @@ struct mg_server *mg_create_server(void *server_data, mg_handler_t handler) {
   ns_mgr_init(&server->ns_mgr, server_data);
   set_default_option_values(server->config_options);
   server->event_handler = handler;
+
+  lock_init_recursive(&mongoose_lock);
   return server;
 }

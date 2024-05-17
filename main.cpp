@@ -215,15 +215,15 @@ int main(int argc, char *argv[])
     cfg_reload();
     clock_init();
 
-	peri_init();
-    fpga_init();
-
     bool update_admcfg = false;
     kiwi.anti_aliased = admcfg_default_bool("anti_aliased", false, &update_admcfg);
 	kiwi.airband = admcfg_default_bool("airband", false, &update_admcfg);
 	kiwi.wf_share = admcfg_default_bool("wf_share", false, &update_admcfg);
 
     if (update_admcfg) admcfg_save_json(cfg_adm.json);      // during init doesn't conflict with admin cfg
+
+	peri_init();
+    fpga_init();
 
     rx_chans = fpga_status->signature & 0x0f;
 	if (kiwi.wf_share)

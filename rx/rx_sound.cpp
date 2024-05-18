@@ -78,10 +78,6 @@ Boston, MA  02110-1301, USA.
 #include <algorithm>
 
 
-// current tests & workarounds
-
-#define SND_FREQ_SET_IQ_ROTATION_BUG_WORKAROUND
-
 snd_t snd_inst[MAX_RX_CHANS];
 
 #ifdef USE_SDR
@@ -283,11 +279,7 @@ void c2s_sound(void *param)
 	double adc_clock_corrected = 0;
 	s->spectral_inversion = kiwi.spectral_inversion;
 
-    #ifdef SND_FREQ_SET_IQ_ROTATION_BUG_WORKAROUND
-        bool first_freq_trig = true, first_freq_set = false;
-        u4_t first_freq_time;
-    #endif
-	
+
 	u4_t dx_update_seq = 0;
 	bool masked = false, masked_area = false, check_masked = false;
 	bool allow_gps_tstamp = admcfg_bool("GPS_tstamp", NULL, CFG_REQUIRED);	
@@ -364,23 +356,6 @@ void c2s_sound(void *param)
 
 		    //cprintf(conn, "SND freq updated due to ADC clock correction\n");
 		}
-
-        #ifdef SND_FREQ_SET_IQ_ROTATION_BUG_WORKAROUND
-            if (first_freq_set) {
-                //#define DOUBLE_SET_DELAY 500        // only 90% reliable!
-                #define DOUBLE_SET_DELAY 1500
-                if (timer_ms() > first_freq_time + DOUBLE_SET_DELAY) {
-                    double freq_kHz = s->freq * kHz;
-                    double freq_inv_kHz = ui_srate - freq_kHz;
-                    f_phase = (s->spectral_inversion? freq_inv_kHz : freq_kHz) / conn->adc_clock_corrected;
-                    i_phase = (u64_t) round(f_phase * pow(2,48));
-                    //cprintf(conn, "SND DOUBLE-SET freq %.3f kHz i_phase 0x%08x|%08x clk %.6f rx_chan=%d\n",
-                    //    s->freq, PRINTF_U64_ARG(i_phase), conn->adc_clock_corrected, rx_chan);
-                    spi_set3(CmdSetRXFreq, rx_chan, (u4_t) ((i_phase >> 16) & 0xffffffff), (u2_t) (i_phase & 0xffff));
-                    first_freq_set = false;
-                }
-            }
-        #endif
 
 		if (nb) web_to_app_done(conn, nb);
 		n = web_to_app(conn, &nb);

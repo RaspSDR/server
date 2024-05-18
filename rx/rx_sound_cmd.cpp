@@ -344,37 +344,6 @@ void rx_sound_cmd(conn_t *conn, double frate, int n, char *cmd)
         }
         break;
 
-    case CMD_GEN_FREQ:
-        n = sscanf(cmd, "SET gen=%lf", &s->gen);
-        if (n == 1) {
-            did_cmd = true;
-            u4_t self_test = (s->gen < 0 && !kiwi.ext_clk)? CTRL_STEN : 0;
-            s->gen = fabs(s->gen);
-            f_phase = s->gen * kHz / conn->adc_clock_corrected;
-            i_phase = (u64_t) round(f_phase * pow(2,48));
-            //cprintf(conn, "%s %.3f kHz phase %.3f 0x%012llx self_test=%d\n", s->gen? "GEN_ON":"GEN_OFF", s->gen, f_phase, i_phase, self_test? 1:0);
-            if (do_sdr) {
-                spi_set3(CmdSetGenFreq, rx_chan, (u4_t) ((i_phase >> 16) & 0xffffffff), (u2_t) (i_phase & 0xffff));
-                ctrl_clr_set(CTRL_USE_GEN | CTRL_STEN, s->gen? (CTRL_USE_GEN | self_test):0);
-            }
-            if (rx_chan == 0) g_genfreq = s->gen * kHz / ui_srate;
-        }
-        break;
-
-    case CMD_GEN_ATTN:
-        int _genattn;
-        n = sscanf(cmd, "SET genattn=%d", &_genattn);
-        if (n == 1) {
-            did_cmd = true;
-            if (1 || s->genattn != _genattn) {
-                s->genattn = _genattn;
-                if (do_sdr) spi_set(CmdSetGenAttn, 0, (u4_t) s->genattn);
-                //cprintf(conn, "GEN_ATTN %d 0x%x\n", s->genattn, genattn);
-                if (rx_chan == 0) g_genampl = s->genattn / (float)((1<<17)-1);
-            }
-        }
-        break;
-
     case CMD_SET_AGC:
         n = sscanf(cmd, "SET agc=%d hang=%d thresh=%d slope=%d decay=%d manGain=%d",
             &s->_agc, &s->_hang, &s->_thresh, &s->_slope, &s->_decay, &s->_manGain);

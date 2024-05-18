@@ -21,8 +21,6 @@ Boston, MA  02110-1301, USA.
 
 #include "types.h"
 
-inline void ctrl_clr_set(u2_t clr, u2_t set){}
-
 u64_t fpga_dna();
 
 #define RESET_RX (1 << 0)

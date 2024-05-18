@@ -283,8 +283,6 @@ int main(int argc, char *argv[])
 		kiwi.ext_clk = cfg_bool("ext_ADC_clk", &err, CFG_OPTIONAL);
 		if (err) kiwi.ext_clk = false;
 		
-		ctrl_clr_set(0xffff, CTRL_EEPROM_WP);
-
 		net.dna = fpga_dna();
 		printf("device DNA %08x|%08x\n", PRINTF_U64_ARG(net.dna));
 	}
@@ -300,7 +298,6 @@ int main(int argc, char *argv[])
     // switch to ext clock only after GPS clock switch occurs
     if (kiwi.ext_clk) {
         printf("switching to external ADC clock..\n");
-		ctrl_clr_set(0, CTRL_OSC_DIS);
         kiwi_msleep(100);
     }
 	

@@ -63,7 +63,7 @@ int rx_chans, wf_chans, nrx_bufs, nrx_samps, snd_rate, rx_decim;
 int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
 	rx_cordic, rx_cic, rx_cic2, rx_dump, wf_cordic, wf_cic, wf_mult, wf_mult_gen, do_slice=-1,
 	rx_yield=1000, gps_chans=GPS_MAX_CHANS, rx_num, wf_num,
-	do_gps, do_sdr=1, navg=1, meas, debian_ver, monitors_max, bg,
+	navg=1, meas, debian_ver, monitors_max, bg,
 	print_stats, debian_maj, debian_min, test_flag, dx_print,
 	use_foptim, is_locked, drm_nreg_chans;
 
@@ -97,7 +97,6 @@ int main(int argc, char *argv[])
 	main_argv = argv;
 	
 	#ifdef DEVSYS
-		do_sdr = 0;
 		p_gps = -1;
 	#else
 		// enable generation of core file in /tmp
@@ -135,10 +134,6 @@ int main(int argc, char *argv[])
 		if (ARG("-log")) { log_foreground_mode = TRUE; } else
 		if (ARG("-fopt")) use_foptim = 1; else   // in EDATA_DEVEL mode use foptim version of files
 		if (ARG("-down")) down = 1; else
-		if (ARG("+gps")) p_gps = 1; else
-		if (ARG("-gps")) p_gps = -1; else
-		if (ARG("+sdr")) do_sdr = 1; else
-		if (ARG("-sdr")) do_sdr = 0; else
 		if (ARG("-debug")) debug_printfs = true; else
 		if (ARG("-stats") || ARG("+stats")) { print_stats = STATS_TASK; ARGL(print_stats); } else
 		if (ARG("-v")) {} else      // dummy arg so Kiwi version can appear in e.g. htop
@@ -262,19 +257,8 @@ int main(int argc, char *argv[])
     monitors_max = (rx_chans * N_CAMP) + N_QUEUERS;
     
 	TaskInitCfg();
-
-    // force enable_gps true because there is no longer an option switch in the admin interface (now uses acquisition checkboxes)
-    do_gps = admcfg_default_bool("enable_gps", true, NULL);
-    if (!do_gps) {
-	    admcfg_set_bool("enable_gps", true);
-		admcfg_save_json(cfg_adm.json);     // during init doesn't conflict with admin cfg
-		do_gps = 1;
-    }
-    
-    if (p_gps != 0) do_gps = (p_gps == 1)? 1:0;
-    
-	if (down) do_sdr = do_gps = 0;
-	need_hardware = (do_gps || do_sdr);
+   
+	need_hardware = true;
 
 	// called early, in case another server already running so we can detect the busy socket and bail
 	web_server_init(WS_INIT_CREATE);
@@ -301,12 +285,10 @@ int main(int argc, char *argv[])
         kiwi_msleep(100);
     }
 	
-	if (do_gps) {
-		if (!GPS_CHANS) panic("no GPS_CHANS configured");
-        #ifdef USE_GPS
-		    gps_main(argc, argv);
-		#endif
-	}
+	if (!GPS_CHANS) panic("no GPS_CHANS configured");
+	#ifdef USE_GPS
+		gps_main(argc, argv);
+	#endif
     
 	CreateTask(stat_task, NULL, MAIN_PRIORITY);
     

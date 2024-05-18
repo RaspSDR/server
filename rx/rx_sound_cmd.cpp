@@ -135,7 +135,7 @@ void rx_sound_cmd(conn_t *conn, double frate, int n, char *cmd)
         int _mode;
         char *mode_m = NULL;
         n = sscanf(cmd, "SET mod=%16ms low_cut=%lf high_cut=%lf freq=%lf param=%d", &mode_m, &_locut, &_hicut, &_freq, &s->mparam);
-        if ((n == 4 || n == 5) && do_sdr) {
+        if (n == 4 || n == 5) {
             did_cmd = true;
             //cprintf(conn, "SND f=%.3f lo=%.3f hi=%.3f mode=%s\n", _freq, _locut, _hicut, mode_m);
 
@@ -148,17 +148,8 @@ void rx_sound_cmd(conn_t *conn, double frate, int n, char *cmd)
                 i_phase = (u64_t) round(f_phase * pow(2,48));
                 //cprintf(conn, "SND SET freq %.3f kHz i_phase 0x%08x|%08x clk %.6f rx_chan=%d\n",
                 //    s->freq, PRINTF_U64_ARG(i_phase), conn->adc_clock_corrected, rx_chan);
-                if (do_sdr) {
-                    spi_set3(CmdSetRXFreq, rx_chan, (u4_t) ((i_phase >> 16) & 0xffffffff), (u2_t) (i_phase & 0xffff));
-                    
-                    #ifdef SND_FREQ_SET_IQ_ROTATION_BUG_WORKAROUND
-                        if (first_freq_trig) {
-                            first_freq_set = true;
-                            first_freq_time = timer_ms();
-                            first_freq_trig = false;
-                        }
-                    #endif
-                }
+                spi_set3(CmdSetRXFreq, rx_chan, (u4_t) ((i_phase >> 16) & 0xffffffff), (u2_t) (i_phase & 0xffff));
+                
                 s->cmd_recv |= CMD_FREQ;
                 new_freq = true;
                 s->change_freq_mode = true;

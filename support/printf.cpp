@@ -195,7 +195,7 @@ static void ll_printf(u4_t type, conn_t *conn, const char *fmt, va_list ap)
 	char *s, *cp;
 	#define VBUF 1024
 
-	if ((type & PRINTF_REAL) || !do_sdr) {
+	if (type & PRINTF_REAL) {
 		vasprintf(&buf, fmt, ap);
 
 		// remove our override and call the actual underlying printf

@@ -452,10 +452,8 @@ void stat_task(void *param)
 	    called_every_second();
 
 		if ((secs % STATS_INTERVAL_SECS) == 0) {
-			if (do_sdr) {
-				webserver_collect_print_stats(print_stats & STATS_TASK);
-				if (!do_gps) nbuf_stat();
-			}
+            webserver_collect_print_stats(print_stats & STATS_TASK);
+            nbuf_stat();
 
             cull_zombies();
 		}

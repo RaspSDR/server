@@ -234,7 +234,6 @@ void c2s_waterfall_setup(void *param)
     // But need to send actual value via wf_chans_real for use elsewhere.
 	send_msg(conn, SM_WF_DEBUG, "MSG wf_fft_size=1024 wf_fps=%d wf_fps_max=%d zoom_max=%d rx_chans=%d wf_chans=%d wf_chans_real=%d wf_cal=%d wf_setup",
 		WF_SPEED_FAST, WF_SPEED_MAX, MAX_ZOOM, rx_chans, conn->isWF_conn? wf_chans:0, wf_chans, waterfall_cal);
-	if (do_gps && !do_sdr) send_msg(conn, SM_WF_DEBUG, "MSG gps");
 
     dx_last_community_download();
 }
@@ -669,28 +668,6 @@ void c2s_waterfall(void *param)
 
 		check(nb == NULL);
 		
-		if (do_gps && !do_sdr) {
-			wf_pkt_t *out = &wf->out;
-			int *ns_bin = ClockBins();
-			int max=0;
-			
-			for (n=0; n<1024; n++) if (ns_bin[n] > max) max = ns_bin[n];
-			if (max == 0) max=1;
-			u1_t *bp = out->un.buf;
-			for (n=0; n<1024; n++) {
-				*bp++ = (u1_t) (int) (-256 + (ns_bin[n] * 255 / max));	// simulate negative dBm
-			}
-			int delay = 10000 - (timer_ms() - wf->mark);
-			if (delay > 0) TaskSleepReasonMsec("wait frame", delay);
-			wf->mark = timer_ms();
-			app_to_web(conn, (char*) &out, WF_OUT_NOM);
-		}
-		
-		if (!do_sdr) {
-			NextTask("WF skip");
-			continue;
-		}
-
 		if (conn->stop_data) {
 			//clprintf(conn, "WF stop_data rx_server_remove()\n");
 			rx_enable(rx_chan, RX_CHAN_FREE);

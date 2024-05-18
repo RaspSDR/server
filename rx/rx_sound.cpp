@@ -136,15 +136,7 @@ void c2s_sound_init()
     str_hash_init("snd", &snd_cmd_hash, snd_cmd_hashes);
 
 	//evSnd(EC_DUMP, EV_SND, 10000, "rx task", "overrun");
-	
-	if (do_sdr) {
-		spi_set(CmdSetGenFreq, 0, 0);
-		spi_set(CmdSetGenAttn, 0, 0);
-	}
-
-	if (do_sdr) {
-		data_pump_init();
-	}
+    data_pump_init();
 }
 
 CAgc m_Agc[MAX_RX_CHANS];
@@ -271,10 +263,8 @@ void c2s_sound(void *param)
 	m_Squelch[rx_chan].SetupParameters(rx_chan, frate);
 	m_Squelch[rx_chan].SetSquelch(0, 0);
 	
-	if (do_sdr) {
-		//printf("SOUND ENABLE channel %d\n", rx_chan);
-		rx_enable(rx_chan, RX_CHAN_ENABLE);
-	}
+    //printf("SOUND ENABLE channel %d\n", rx_chan);
+    rx_enable(rx_chan, RX_CHAN_ENABLE);
 
 	double adc_clock_corrected = 0;
 	s->spectral_inversion = kiwi.spectral_inversion;
@@ -352,7 +342,7 @@ void c2s_sound(void *param)
             i_phase = (u64_t) round(f_phase * pow(2,48));
             //cprintf(conn, "SND UPD freq %.3f kHz i_phase 0x%08x|%08x clk %.6f(%d)\n",
             //    s->freq, PRINTF_U64_ARG(i_phase), conn->adc_clock_corrected, clk.adc_clk_corrections);
-            if (do_sdr) spi_set3(CmdSetRXFreq, rx_chan, (u4_t) ((i_phase >> 16) & 0xffffffff), (u2_t) (i_phase & 0xffff));
+            spi_set3(CmdSetRXFreq, rx_chan, (u4_t) ((i_phase >> 16) & 0xffffffff), (u2_t) (i_phase & 0xffff));
 
 		    //cprintf(conn, "SND freq updated due to ADC clock correction\n");
 		}
@@ -364,11 +354,6 @@ void c2s_sound(void *param)
 		    continue;
 		}
         check(nb == NULL);
-
-		if (!do_sdr) {
-			NextTask("SND skip");
-			continue;
-		}
 
 		if (rx_chan >= rx_num) {
 			TaskSleepMsec(1000);

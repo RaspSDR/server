@@ -83,13 +83,11 @@ static void get_TZ(void *param)
 			cfg_string_free(lat_lon);
 		}
 	
-	    #ifdef USE_GPS
-            if (!haveLatLon && gps.StatLat) {
-                lat = gps.sgnLat; lon = gps.sgnLon;
-                lprintf("TIMEZONE: lat/lon from GPS: (%f, %f)\n", lat, lon);
-                haveLatLon = true;
-            }
-        #endif
+        if (!haveLatLon && gps.StatLat) {
+            lat = gps.sgnLat; lon = gps.sgnLon;
+            lprintf("TIMEZONE: lat/lon from GPS: (%f, %f)\n", lat, lon);
+            haveLatLon = true;
+        }
 		
 		// lowest priority since it will be least accurate
 		if (!haveLatLon && kiwi.ipinfo_ll_valid) {

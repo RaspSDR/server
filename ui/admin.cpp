@@ -780,7 +780,6 @@ void c2s_admin(void *param)
 // GPS
 ////////////////////////////////
 
-#ifdef USE_GPS
             n = strcmp(cmd, "SET gps_az_el_history");
             if (n == 0) {
                 int now; utc_hour_min_sec(NULL, &now);
@@ -962,7 +961,6 @@ void c2s_admin(void *param)
                 NextTask("gps_update5");
                 continue;
             }
-#endif
 
 
 ////////////////////////////////

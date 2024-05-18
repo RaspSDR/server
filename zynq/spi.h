@@ -38,7 +38,6 @@ typedef enum { // Embedded CPU commands, order must match 'Commands:' table in .
 	CmdSetADCLvl,
 
 	// GPS
-#ifdef USE_GPS
     CmdSample,
     CmdSetChans,
     CmdSetMask,
@@ -56,32 +55,11 @@ typedef enum { // Embedded CPU commands, order must match 'Commands:' table in .
     CmdGetGlitches,
     CmdIQLogReset,
     CmdIQLogGet,
-#endif
 
     CmdCheckLast,
     
     // pseudo for debugging
     CmdPumpFlush,
-
-#ifndef USE_GPS
-    CmdSample = 0,
-    CmdSetChans = 0,
-    CmdSetMask = 0,
-    CmdSetRateCG = 0,
-    CmdSetRateLO = 0,
-    CmdSetGainCG = 0,
-    CmdSetGainLO = 0,
-    CmdSetSat = 0,
-    CmdSetE1Bcode = 0,
-    CmdSetPolarity = 0,
-    CmdPause = 0,
-    CmdGetGPSSamples = 0,
-    CmdGetChan = 0,
-    CmdGetClocks = 0,
-    CmdGetGlitches = 0,
-    CmdIQLogReset = 0,
-    CmdIQLogGet = 0,
-#endif
 
 } SPI_CMD;
 

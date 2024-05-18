@@ -535,12 +535,11 @@ fail:
 		const char *gps_loc;
 		char *ipinfo_lat_lon = NULL;
 		if (strcmp(s4, "(-37.631120, 176.172210)") == 0) {
-		    #ifdef USE_GPS
-                if (kiwi.ipinfo_ll_valid) {
-                    asprintf(&ipinfo_lat_lon, "(%f, %f)", kiwi.ipinfo_lat, kiwi.ipinfo_lon);
-                    gps_loc = ipinfo_lat_lon;
-                } else
-            #endif
+			if (kiwi.ipinfo_ll_valid) {
+				asprintf(&ipinfo_lat_lon, "(%f, %f)", kiwi.ipinfo_lat, kiwi.ipinfo_lon);
+				gps_loc = ipinfo_lat_lon;
+			}
+			else
 			{
 				gps_loc = "(-69.0, 90.0)";		// Antarctica
 			}
@@ -687,25 +686,17 @@ fail:
 			users, users_max, preempt,
 			avatar_ctime,
 			gps_loc,
-			#ifdef USE_GPS
-			    gps.good, gps.fixes, gps.fixes_min, gps.fixes_hour,
-			#else
-			    0, 0, 0, 0,
-			#endif
+			gps.good, gps.fixes, gps.fixes_min, gps.fixes_hour,
 			(s7 = cfg_string("tdoa_id", NULL, CFG_OPTIONAL)), tdoa_ch,
 			cfg_int("rx_asl", NULL, CFG_OPTIONAL),
 			s5,
-			"KiwiSDR_v", version_maj, version_min,
+			"Web888_v", version_maj, version_min,
 			(s6 = cfg_string("rx_antenna", NULL, CFG_OPTIONAL)),
 			snr_all, snr_HF, ant_connected,
 			dpump.rx_adc_ovfl_cnt,
 			clk.ext_ADC_clk? 1:0, clk.do_corrections,
 			timer_sec(),
-			#ifdef USE_GPS
-			    1, 1,
-			#else
-			    0, 0,
-			#endif
+			1, 1,
 			utc_ctime_static(),
 			net.ip_blacklist_hash,
 			dx_db->actual_len, dx_db->file_hash, dx_db->file_size

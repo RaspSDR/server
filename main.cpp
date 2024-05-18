@@ -284,9 +284,7 @@ int main(int argc, char *argv[])
     }
 	
 	if (!GPS_CHANS) panic("no GPS_CHANS configured");
-	#ifdef USE_GPS
-		gps_main(argc, argv);
-	#endif
+	gps_main(argc, argv);
     
 	CreateTask(stat_task, NULL, MAIN_PRIORITY);
     

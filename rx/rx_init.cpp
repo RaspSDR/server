@@ -517,10 +517,8 @@ void update_vars_from_config(bool called_at_init)
     //int new_find_local = admcfg_int("options", NULL, CFG_REQUIRED) & 1;
     admcfg_default_int("options", 0, &update_admcfg);
 
-    #ifdef USE_GPS
-        admcfg_default_bool("GPS_tstamp", true, &update_admcfg);
-        admcfg_default_int("rssi_azel_iq", 0, &update_admcfg);
-    #endif
+    admcfg_default_bool("GPS_tstamp", true, &update_admcfg);
+    admcfg_default_int("rssi_azel_iq", 0, &update_admcfg);
     
     #ifdef CRYPT_PW
     

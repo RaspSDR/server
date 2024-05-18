@@ -651,19 +651,17 @@ static void dump_info_handler(int arg)
     char *sb;
     sb = kstr_asprintf(NULL, "echo '{ \"utc\": \"%s\"", utc_ctime_static());
     
-    #ifdef USE_GPS
-        sb = kstr_asprintf(sb, ", \"gps\": { \"lat\": %.6f, \"lon\": %.6f", gps.sgnLat, gps.sgnLon);
+    sb = kstr_asprintf(sb, ", \"gps\": { \"lat\": %.6f, \"lon\": %.6f", gps.sgnLat, gps.sgnLon);
 
-        latLon_t loc;
-        loc.lat = gps.sgnLat;
-        loc.lon = gps.sgnLon;
-        char grid6[LEN_GRID];
-        if (latLon_to_grid6(&loc, grid6) == 0) {
-            sb = kstr_asprintf(sb, ", \"grid\": \"%.6s\"", grid6);
-        }
+    latLon_t loc;
+    loc.lat = gps.sgnLat;
+    loc.lon = gps.sgnLon;
+    char grid6[LEN_GRID];
+    if (latLon_to_grid6(&loc, grid6) == 0) {
+        sb = kstr_asprintf(sb, ", \"grid\": \"%.6s\"", grid6);
+    }
 
-        sb = kstr_asprintf(sb, ", \"fixes\": %d, \"fixes_min\": %d }", gps.fixes, gps.fixes_min);
-    #endif
+    sb = kstr_asprintf(sb, ", \"fixes\": %d, \"fixes_min\": %d }", gps.fixes, gps.fixes_min);
 
     sb = kstr_cat(sb, " }' > /root/config/info.json");
     non_blocking_cmd_system_child("kiwi.info", kstr_sp(sb), NO_WAIT);

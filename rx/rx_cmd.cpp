@@ -1705,10 +1705,8 @@ bool rx_common_cmd(int stream_type, conn_t *conn, char *cmd)
                 audio_kbps[ch], waterfall_kbps[ch], waterfall_fps[ch], http_kbps, sum_kbps,
                 ext_update_get_sample_rateHz(ADC_CLK_SYS), snd_rate);
 
-            #ifdef USE_GPS
-                sb = kstr_asprintf(sb, ",\"ga\":%d,\"gt\":%d,\"gg\":%d,\"gf\":%d,\"gc\":%.6f,\"go\":%d",
-                    gps.acquiring, gps.tracking, gps.good, gps.fixes, adc_clock_system()/1e6, clk.adc_gps_clk_corrections);
-            #endif
+            sb = kstr_asprintf(sb, ",\"ga\":%d,\"gt\":%d,\"gg\":%d,\"gf\":%d,\"gc\":%.6f,\"go\":%d",
+                gps.acquiring, gps.tracking, gps.good, gps.fixes, adc_clock_system()/1e6, clk.adc_gps_clk_corrections);
 
                 //printf("ch=%d ug=%d haveLat=%d\n", ch, wspr_c.GPS_update_grid, (gps.StatLat != 0));
                 if (wspr_c.GPS_update_grid && gps.StatLat) {

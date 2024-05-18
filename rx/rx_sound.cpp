@@ -103,8 +103,6 @@ static str_hashes_t snd_cmd_hashes[] = {
     { "SET comp", CMD_COMPRESSION },
     { "SET rein", CMD_REINIT },
     { "SET litt", CMD_LITTLE_ENDIAN },
-    { "SET gen=", CMD_GEN_FREQ },
-    { "SET gena", CMD_GEN_ATTN },
     { "SET agc=", CMD_SET_AGC },
     { "SET sque", CMD_SQUELCH },
     { "SET nb a", CMD_NB_ALGO },

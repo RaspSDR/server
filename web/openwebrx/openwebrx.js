@@ -140,7 +140,6 @@ var wf_fps, wf_fps_max;
 var ws_snd, ws_wf;
 
 var spectrum_show = 0, spectrum_param = -1;
-var gen_freq = 0, gen_attn = 0;
 var squelch_threshold = 0;
 var wf_rate = '';
 var wf_mm = '';
@@ -338,8 +337,6 @@ function kiwi_main_ready()
 	s = 'wfi'; if (q[s]) wf_interp = parseInt(q[s]);
 	s = 'wfw'; if (q[s]) wf_winf = parseInt(q[s]);
 	s = 'sndw'; if (q[s]) snd_winf = parseInt(q[s]);
-	s = 'gen'; if (q[s]) gen_freq = q[s].parseFloatWithUnits('kM', 1e-3);
-	s = 'attn'; if (q[s]) gen_attn = Math.abs(parseInt(q[s]));
 	s = 'blen'; if (q[s]) audio_buffer_min_length_sec = parseFloat(q[s])/1000;
 	s = 'audio'; if (q[s]) audio_meas_dly_ena = parseFloat(q[s]);
 	s = 'gc'; if (q[s]) kiwi_gc = parseInt(q[s]);
@@ -406,18 +403,6 @@ function kiwi_main_ready()
       function() { return (isArg(rx_chan) && owrx.cfg_loaded); },
       function() {
          if (rx_chan != 0) return;
-
-         var attn_ampl = 0;
-         if (gen_attn != 0) {
-            var dB = gen_attn + wf.cal;
-            var ampl_gain = Math.pow(10, -dB/20);		// use the amplitude form since we are multipling a signal
-            attn_ampl = 0x01ffff * ampl_gain;
-            //console.log('### GEN dB='+ dB +' ampl_gain='+ ampl_gain +' attn_ampl='+ attn_ampl +' / '+ attn_ampl.toHex() +' offset='+ wf.cal);
-         }
-   
-         // always setup gen so it will get disabled (attn=0) if an rx0 page reloads using a URL where no gen is
-         // specified, but it was previously enabled by the URL (i.e. so the gen doesn't continue to run).
-         set_gen(gen_freq, attn_ampl);
       },
       null, 500
    );
@@ -12069,14 +12054,6 @@ function add_problem(what, append, sticky, el_id)
 		window.setTimeout(function(ps, ns) { try { ps.removeChild(ns); } catch(ex) {} }, 1000, el, new_span);
 	}
 }
-
-function set_gen(freq, attn_ampl)
-{
-   //console.log('set_gen freq='+ freq +' attn_ampl='+ attn_ampl);
-	snd_send("SET genattn="+ attn_ampl.toFixed(0));
-	snd_send("SET gen="+ freq +" mix=-1");
-}
-
 
 ////////////////////////////////
 // websocket

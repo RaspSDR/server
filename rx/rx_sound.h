@@ -110,7 +110,7 @@ typedef struct {
 	ext_receive_FFT_samps_t rsid_FFT;
 
 	double freq, gen, locut, hicut;
-	int mode, genattn, mute, test, deemp, deemp_nfm;
+	int mode, mute, test, deemp, deemp_nfm;
 	u4_t mparam, SAM_mparam;
 	bool spectral_inversion;
     u4_t cmd_recv;
@@ -136,7 +136,7 @@ extern snd_t snd_inst[MAX_RX_CHANS];
 
 enum snd_cmd_key_e {
     CMD_AUDIO_START=1, CMD_TUNE, CMD_COMPRESSION, CMD_REINIT, CMD_LITTLE_ENDIAN,
-    CMD_GEN_FREQ, CMD_GEN_ATTN, CMD_SET_AGC, CMD_SQUELCH, CMD_NB_ALGO, CMD_NR_ALGO, CMD_NB_TYPE,
+    CMD_SET_AGC, CMD_SQUELCH, CMD_NB_ALGO, CMD_NR_ALGO, CMD_NB_TYPE,
     CMD_NR_TYPE, CMD_MUTE, CMD_OVLD_MUTE, CMD_DE_EMP, CMD_TEST, CMD_UAR, CMD_AR_OKAY, CMD_UNDERRUN,
     CMD_SEQ, CMD_LMS_AUTONOTCH, CMD_SAM_PLL, CMD_SND_WINDOW_FUNC, CMD_SPEC, CMD_RF_ATTN
 };

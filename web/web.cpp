@@ -515,14 +515,10 @@ void reload_index_params()
 	kstr_free(sb);
 
 	// add the list of extensions (only used by admin.html)
-#ifdef USE_SDR
 	sb = extint_list_js();
 	iparams_add("EXT_LIST_JS", kstr_sp(sb));
 	//real_printf("%s\n", kstr_sp(sb));
 	kstr_free(sb);
-#else
-	iparams_add("EXT_LIST_JS", (char *) "");
-#endif
 }
 
 static char cached_ip[NET_ADDRSTRLEN];

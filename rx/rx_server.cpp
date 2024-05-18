@@ -39,9 +39,7 @@ Boston, MA  02110-1301, USA.
 #include "mongoose.h"
 #include "wspr.h"
 
-#ifdef USE_SDR
- #include "ext_int.h"
-#endif
+#include "ext_int.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -69,7 +67,6 @@ rx_stream_t rx_streams[] = {
 	{ AJAX_VERSION,		"VER" },
 	{ STREAM_ADMIN,		"admin",	&c2s_admin,		&c2s_admin_setup,		&c2s_admin_shutdown,	 TASK_MED_PRIORITY },
 	{ STREAM_MFG,		"mfg",		&c2s_admin,		&c2s_admin_setup,			NULL,                    TASK_MED_PRIORITY },
-#ifdef USE_SDR
 	{ STREAM_SOUND,		"SND",		&c2s_sound,		&c2s_sound_setup,		&c2s_sound_shutdown,	 SND_PRIORITY },
 	{ STREAM_WATERFALL,	"W/F",		&c2s_waterfall,	&c2s_waterfall_setup,	&c2s_waterfall_shutdown, WF_PRIORITY },
 	{ STREAM_EXT,		"EXT",		&extint_c2s,	&extint_setup_c2s,		&extint_shutdown_c2s,    TASK_MED_PRIORITY },
@@ -84,7 +81,6 @@ rx_stream_t rx_streams[] = {
 	{ AJAX_SNR,         "snr" },
 	{ AJAX_ADC,         "adc" },
 	{ AJAX_S_METER,     "s-meter" },
-#endif
 	{ 0 }
 };
 
@@ -118,9 +114,7 @@ void rx_enable(int chan, rx_chan_action_e action)
 
 	}
 	
-	#ifdef USE_SDR
-	    data_pump_start_stop();
-	#endif
+	data_pump_start_stop();
 }
 
 cfg_t cfg_ipl;
@@ -139,7 +133,9 @@ void rx_server_init()
 	}
 	
 	debug_init();
-	
+	c2s_sound_init();
+	c2s_waterfall_init();
+
     //#ifndef DEVSYS
     #if 0
 	    sig_arm(SIG_BACKTRACE, debug_exit_backtrace_handler);
@@ -160,10 +156,7 @@ void rx_server_init()
     json_init(&cfg_ipl, (char *) "{}", "cfg_ipl");
     
     ov_mask = 0xfc00;
-
-    #ifdef USE_SDR
-        spi_set(CmdSetOVMask, 0, ov_mask);
-    #endif
+	spi_set(CmdSetOVMask, 0, ov_mask);
 }
 
 void rx_server_remove(conn_t *c)
@@ -301,16 +294,6 @@ conn_t *rx_server_websocket(websocket_mode_e mode, struct mg_connection *mc, u4_
 	}
     kiwi_asfree(uri_m);
     
-	// handle case of server initially starting disabled, but then being enabled later by admin
-#ifdef USE_SDR
-	static bool init_snd_wf;
-	if (!init_snd_wf) {
-		c2s_sound_init();
-		c2s_waterfall_init();
-		init_snd_wf = true;
-	}
-#endif
-
 	// iptables will stop regular connection attempts from a blacklisted ip.
 	// But when proxied we need to check the forwarded ip address.
 	// Note that this code always sets ip_forwarded[] as a side-effect for later use (the real client ip).
@@ -535,15 +518,14 @@ retry:
                     }
                 }
                 
-                #ifdef USE_SDR
-                    if (isKiwi_UI && (mon_total < monitors_max)) {
-                        // turn first connection when no channels (SND or WF) into MONITOR
-                        c->type = STREAM_MONITOR;
-                        st = &rx_streams[STREAM_MONITOR];
-                        snd_or_wf_or_ext = snd_or_wf = false;
-                        conn_printf("STREAM_MONITOR 1st OK %s conn-%ld other conn-%d\n", st->uri, c-conns, cother->self_idx);
-                    } else
-                #endif
+				if (isKiwi_UI && (mon_total < monitors_max)) {
+					// turn first connection when no channels (SND or WF) into MONITOR
+					c->type = STREAM_MONITOR;
+					st = &rx_streams[STREAM_MONITOR];
+					snd_or_wf_or_ext = snd_or_wf = false;
+					conn_printf("STREAM_MONITOR 1st OK %s conn-%ld other conn-%d\n", st->uri, c-conns, cother->self_idx);
+				}
+				else
                 {
                     char *url_redirect = (char *) admcfg_string("url_redirect", NULL, CFG_REQUIRED);
                     if (url_redirect != NULL && *url_redirect != '\0' && !internal) {

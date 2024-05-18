@@ -22,11 +22,7 @@ Boston, MA  02110-1301, USA.
 #include "embed.h"
 #include "mongoose.h"
 
-#ifdef USE_SDR
- #define N_EXT 32
-#else
- #define N_EXT 0
-#endif
+#define N_EXT 32
 
 #define WEB_PRINTF
 #ifdef WEB_PRINTF

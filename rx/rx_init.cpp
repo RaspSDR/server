@@ -356,10 +356,8 @@ void update_vars_from_config(bool called_at_init)
     cfg_default_int("nr_specSNR", 30, &update_cfg);
 
     
-    #ifdef USE_SDR
-        if (wspr_update_vars_from_config(called_at_init)) update_cfg = true;
-        if (ft8_update_vars_from_config(called_at_init)) update_cfg = true;
-    #endif
+    if (wspr_update_vars_from_config(called_at_init)) update_cfg = true;
+    if (ft8_update_vars_from_config(called_at_init)) update_cfg = true;
     
     // enforce waterfall min_dB < max_dB
     int min_dB = cfg_default_int("init.min_dB", -110, &update_cfg);

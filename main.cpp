@@ -273,9 +273,7 @@ int main(int argc, char *argv[])
 	
 	rx_server_init();
 
-    #ifdef USE_SDR
-        extint_setup();
-    #endif
+	extint_setup();
 
 	web_server_init(WS_INIT_START);
     

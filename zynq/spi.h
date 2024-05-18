@@ -22,7 +22,6 @@ typedef enum { // Embedded CPU commands, order must match 'Commands:' table in .
     CmdGetSPRP,
 
 	// SDR
-#ifdef USE_SDR
     CmdSetRXFreq,
     CmdSetRXNsamps,
     CmdSetGenFreq,
@@ -37,7 +36,6 @@ typedef enum { // Embedded CPU commands, order must match 'Commands:' table in .
 	CmdSetOVMask,
 	CmdGetADCCtr,
 	CmdSetADCLvl,
-#endif
 
 	// GPS
 #ifdef USE_GPS
@@ -64,23 +62,6 @@ typedef enum { // Embedded CPU commands, order must match 'Commands:' table in .
     
     // pseudo for debugging
     CmdPumpFlush,
-
-#ifndef USE_SDR
-    CmdSetRXFreq = 0,
-    CmdSetRXNsamps = 0,
-    CmdSetGenFreq = 0,
-    CmdSetGenAttn = 0,
-    CmdGetRX = 0,
-    CmdClrRXOvfl = 0,
-    CmdSetWFFreq = 0,
-	CmdSetWFDecim = 0,
-    CmdWFReset = 0,
-    CmdGetWFSamples = 0,
-    CmdGetWFContSamps = 0,
-	CmdSetOVMask = 0,
-	CmdGetADCCtr = 0,
-	CmdSetADCLvl = 0,
-#endif
 
 #ifndef USE_GPS
     CmdSample = 0,

@@ -42,10 +42,8 @@ Boston, MA  02110-1301, USA.
 #include "wspr.h"
 #include "FT8.h"
 
-#ifdef USE_SDR
- #include "data_pump.h"
- #include "ext_int.h"
-#endif
+#include "data_pump.h"
+#include "ext_int.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -363,14 +361,12 @@ void c2s_admin(void *param)
 // status
 ////////////////////////////////
 
-#ifdef USE_SDR
 			i = strcmp(cmd, "SET dpump_hist_reset");
 			if (i == 0) {
 			    dpump.force_reset = true;
 			    dpump.resets = 0;
 				continue;
 			}
-#endif
 
 
 ////////////////////////////////
@@ -552,11 +548,10 @@ void c2s_admin(void *param)
                 system("frpc -c " DIR_CFG "/frpc.ini &");
 				
 				continue;
-			} else
-			if (n == 1)
+			} else if (n == 1) {
                 kiwi_asfree(user_m);
+            }
 			
-#ifdef USE_SDR
 			int ov_counts;
 			i = sscanf(cmd, "SET ov_counts=%d", &ov_counts);
 			if (i == 1) {
@@ -566,7 +561,6 @@ void c2s_admin(void *param)
                 spi_set(CmdSetOVMask, 0, ov_counts_mask);
 			    continue;
 			}
-#endif
 
 
 ////////////////////////////////
@@ -590,13 +584,11 @@ void c2s_admin(void *param)
 // public
 ////////////////////////////////
 
-#ifdef USE_SDR
 			i = strcmp(cmd, "SET public_wakeup");
 			if (i == 0) {
                 wakeup_reg_kiwisdr_com(WAKEUP_REG);
 				continue;
 			}
-#endif
 
 
 ////////////////////////////////
@@ -1110,7 +1102,6 @@ void c2s_admin(void *param)
 // extensions
 ////////////////////////////////
 
-#ifdef USE_SDR
 			i = strcmp(cmd, "ADM wspr_autorun_restart");
 			if (i == 0) {
 			    wspr_autorun_restart();
@@ -1149,8 +1140,6 @@ void c2s_admin(void *param)
 				continue;
 			}
 
-#endif
-
 
 ////////////////////////////////
 // security
@@ -1161,7 +1150,6 @@ void c2s_admin(void *param)
 // admin
 ////////////////////////////////
 
-#ifdef USE_SDR
 			i = strcmp(cmd, "SET admin_update");
 			if (i == 0) {
                 if (admcfg_bool("kiwisdr_com_register", NULL, CFG_REQUIRED) == false) {
@@ -1188,13 +1176,10 @@ void c2s_admin(void *param)
 				kstr_free(sb);
 				continue;
 			}
-#endif
 
 			i = strcmp(cmd, "SET extint_load_extension_configs");
 			if (i == 0) {
-#ifdef USE_SDR
 				extint_load_extension_configs(conn);
-#endif
 				continue;
 			}
 

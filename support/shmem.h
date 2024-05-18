@@ -29,11 +29,7 @@ Boston, MA  02110-1301, USA.
 #include "data_pump.h"
 #include "rx_waterfall.h"
 
-#ifdef USE_SDR
-    #include "wspr.h"
-#else
-    #define WSPR_SHMEM_DISABLE
-#endif
+#include "wspr.h"
 
 // needed because Debian 7 configs don't include extensions/DRM in search paths
 #ifdef DRM

@@ -45,8 +45,6 @@ bool have_snd_users;
 static rx_shmem_t rx_shmem;
 rx_shmem_t *rx_shmem_p = &rx_shmem;
 
-#ifdef USE_SDR
-
 // rescale factor from hardware samples to what CuteSDR code is expecting
 const TYPEREAL rescale = MPOW(2, -RXOUT_SCALE + CUTESDR_SCALE);
 static u4_t last_run_us;
@@ -228,7 +226,6 @@ static void data_pump(void *param)
 
 void data_pump_start_stop()
 {
-#ifdef USE_SDR
 	bool no_users = true;
 	for (int i = 0; i < rx_chans; i++) {
         rx_chan_t *rx = &rx_channels[i];
@@ -239,7 +236,6 @@ void data_pump_start_stop()
 	}
 	
 	have_snd_users = !no_users;
-#endif
 }
 
 void data_pump_init()
@@ -248,5 +244,3 @@ void data_pump_init()
 
 	CreateTaskF(data_pump, 0, DATAPUMP_PRIORITY, 0);
 }
-
-#endif

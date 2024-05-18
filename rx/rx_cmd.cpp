@@ -42,10 +42,8 @@ Boston, MA  02110-1301, USA.
 #include "security.h"
 #include "options.h"
 
-#ifdef USE_SDR
- #include "data_pump.h"
- #include "dx.h"
-#endif
+#include "data_pump.h"
+#include "dx.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -61,8 +59,6 @@ kstr_t *cpu_stats_buf;
 volatile float audio_kbps[MAX_RX_CHANS+1], waterfall_kbps[MAX_RX_CHANS+1], waterfall_fps[MAX_RX_CHANS+1], http_kbps;
 volatile u4_t audio_bytes[MAX_RX_CHANS+1], waterfall_bytes[MAX_RX_CHANS+1], waterfall_frames[MAX_RX_CHANS+1], http_bytes;
 int debug_v;
-
-#ifdef USE_SDR
 
 static dx_t *dx_list_first, *dx_list_last;
 
@@ -89,8 +85,6 @@ int bsearch_freqcomp(const void *key, const void *elem)
     }
     return 0;   // key > last in array so lower is last (degenerate case)
 }
-
-#endif
 
 static void _dx_done(conn_t *conn, u4_t mark, u4_t max_quanta, int loop=0, int nt_loop=0, int send=0, int nt_send=0, int msg_sl=0)
 {
@@ -804,8 +798,6 @@ bool rx_common_cmd(int stream_type, conn_t *conn, char *cmd)
 ////////////////////////////////
 // dx
 ////////////////////////////////
-
-#ifdef USE_SDR
 
 #define DX_SPACING_ZOOM_THRESHOLD	5
 #define DX_SPACING_THRESHOLD_PX		10
@@ -1669,7 +1661,6 @@ bool rx_common_cmd(int stream_type, conn_t *conn, char *cmd)
             return true;
         }
 	    break;
-#endif
 
 
 ////////////////////////////////
@@ -1719,7 +1710,6 @@ bool rx_common_cmd(int stream_type, conn_t *conn, char *cmd)
                     gps.acquiring, gps.tracking, gps.good, gps.fixes, adc_clock_system()/1e6, clk.adc_gps_clk_corrections);
             #endif
 
-            #ifdef USE_SDR
                 //printf("ch=%d ug=%d haveLat=%d\n", ch, wspr_c.GPS_update_grid, (gps.StatLat != 0));
                 if (wspr_c.GPS_update_grid && gps.StatLat) {
                     latLon_t loc;
@@ -1752,7 +1742,6 @@ bool rx_common_cmd(int stream_type, conn_t *conn, char *cmd)
             
                 sb = kstr_asprintf(sb, ",\"sa\":%d,\"sh\":%d,\"sl\":%d", snr_all, freq_offset_kHz? -1 : snr_HF,
                     kiwi.spectral_inversion_lockout? 1:0);
-            #endif
 
             char utc_s[32], local_s[32];
             time_t utc = utc_time();
@@ -1775,20 +1764,15 @@ bool rx_common_cmd(int stream_type, conn_t *conn, char *cmd)
         }
 	    break;
 
-#ifdef USE_SDR
-
     case CMD_GET_USERS:
-	if (strcmp(cmd, "SET GET_USERS") == 0) {
-		bool include_ip = (conn->type == STREAM_ADMIN);
-		sb = rx_users(include_ip);
-		send_msg(conn, false, "MSG user_cb=%s", kstr_sp(sb));
-		kstr_free(sb);
-		return true;
-	}
+        if (strcmp(cmd, "SET GET_USERS") == 0) {
+            bool include_ip = (conn->type == STREAM_ADMIN);
+            sb = rx_users(include_ip);
+            send_msg(conn, false, "MSG user_cb=%s", kstr_sp(sb));
+            kstr_free(sb);
+            return true;
+        }
 	    break;
-	    
-#endif
-
 
 ////////////////////////////////
 // UI
@@ -1914,7 +1898,6 @@ bool rx_common_cmd(int stream_type, conn_t *conn, char *cmd)
 	    break;
     }
 	
-#ifdef USE_SDR
     // used by signal generator etc.
     case CMD_WF_COMP: {
         int wf_comp;
@@ -1926,7 +1909,6 @@ bool rx_common_cmd(int stream_type, conn_t *conn, char *cmd)
         }
 	    break;
     }
-#endif
 
     case CMD_INACTIVITY_ACK: {
         if (strcmp(cmd, "SET inactivity_ack") == 0) {

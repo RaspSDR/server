@@ -80,8 +80,6 @@ Boston, MA  02110-1301, USA.
 
 snd_t snd_inst[MAX_RX_CHANS];
 
-#ifdef USE_SDR
-
 // 1st estimate of processing delay
 const double gps_delay    = 28926.838e-6;
 const double gps_week_sec = 7*24*3600.0;
@@ -1358,4 +1356,3 @@ void c2s_sound_shutdown(void *param)
     }
 }
 
-#endif

@@ -32,9 +32,7 @@ Boston, MA  02110-1301, USA.
 #include "utf8.h"
 #include "peri.h"
 
-#ifdef USE_SDR
- #include "dx.h"
-#endif
+#include "dx.h"
 
 #include <sys/types.h>
 #include <string.h>
@@ -202,9 +200,7 @@ void cfg_reload()
     bool err;
     kiwi.model = ZynqSDR_1;
 
-    #ifdef USE_SDR
-        dx_label_init();
-    #endif
+	dx_label_init();
 
     #ifdef CFG_TEST_YIELD_RACE
         CreateTaskF(_cfgTestTask, 0, GPS_ACQ_PRIORITY, CTF_NO_PRIO_INV);

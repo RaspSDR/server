@@ -888,11 +888,7 @@ char *rx_users(bool include_ip)
                     (c->type == STREAM_WATERFALL)? 1:0,
                     hr, min, sec, rtype, rn, r_hr, r_min, r_sec,
                     ext? ext:"", ip,
-                    #ifdef USE_SDR
-                        wdsp_SAM_carrier(i),
-                    #else
-                        0.,
-                    #endif
+                    wdsp_SAM_carrier(i),
                     freq_offset_kHz, rx->n_camp,
                     extint.notify_chan, extint.notify_seq);
                 kiwi_ifree(user, "rx_users user");

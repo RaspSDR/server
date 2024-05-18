@@ -101,16 +101,17 @@ static void LLH2XYZ(double lat, double lon, double alt, double *x, double *y)
 
 static void gps_task(void *param)
 {
+    double t_rx = 0;
     fpga_config->reset |= RESET_PPS;
     for (;;)
     {
-        TaskSleepMsec(500);
+        TaskSleepMsec(50);
 
         // fetch pps data
         while (fpga_status->pps_fifo > 0)
         {
             u64_t ticks = *fpga_pps_data;
-            clock_correction(ticks);
+            clock_correction(t_rx, ticks);
         }
 
         if (!gps_waiting(&gps_handle, 1000000))
@@ -148,6 +149,8 @@ static void gps_task(void *param)
                 }
                 gps.StatDaySec = d - (60 * 60 * 24) * gps.StatDay;
                 gps.StatWeekSec = d;
+
+                t_rx = d;
             }
 
             gps.tLS_valid = true;

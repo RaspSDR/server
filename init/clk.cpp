@@ -38,8 +38,6 @@ Boston, MA  02110-1301, USA.
 
 clk_t clk;
 
-static double last_t_rx;
-static u64_t last_ticks;
 static int outside_window;
 static bool clk_printfs;
 
@@ -110,8 +108,12 @@ void clock_manual_adj(int manual_adj)
 
 // Compute corrected ADC clock based on GPS time.
 // Called on each GPS solution.
-void clock_correction(u64_t ticks)
+void clock_correction(double t_rx, u64_t ticks)
 {
+    // record stats
+    clk.gps_secs = t_rx;
+    clk.ticks = ticks;
+    
     bool initial_temp_correction = (clk.adc_clk_corrections <= 5);
 
     if (clk.do_corrections == ADC_CLK_CORR_DISABLED) {

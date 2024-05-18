@@ -62,6 +62,6 @@ double adc_clock_system();
 void clock_manual_adj(int manual_adj);
 void clock_init();
 void clock_conn_init(conn_t *conn);
-void clock_correction(u64_t ticks);
+void clock_correction(double t_rx, u64_t ticks);
 void tod_correction(u4_t week, int sat);
 int *ClockBins();

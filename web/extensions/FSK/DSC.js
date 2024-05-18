@@ -7,7 +7,7 @@ function DSC(init, output_cb) {
 
    if (init) {
       output_cb('\f'+ ansi.RED +'WARNING: Do not use the DSC decoder in any life-safety application. Hobby radio monitoring only.\n'+ ansi.NORM +
-         'No distress messages are currently decoded. See the KiwiSDR forum for details.\n\n');
+         'No distress messages are currently decoded.\n\n');
    }
 
    t.dbg = 0;

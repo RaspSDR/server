@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 		system("rm -f /tmp/core-kiwi.*-*");     // remove old core files
 	#endif
 	
-	kiwi.platform = PLATFORM_ZYNQ;
+	kiwi.platform = PLATFORM_ZYNQ7010;
 
 	kstr_init();
 	shmem_init();

@@ -5,19 +5,13 @@
 var kiwi = {
    d: {},      // debug
    
-   KiwiSDR_1: 1,
-   KiwiSDR_2: 2,
    ZynqSDR_1: 3,
    model: 3,
    
-   PLATFORM_BBG_BBB: 0,
-   PLATFORM_BB_AI:   1,
-   PLATFORM_BB_AI64: 2,
-   PLATFORM_RPI:     3,
-   PLATFORM_ZYNQ:    4,
+   PLATFORM_ZYNQ:    0,
 
    platform: -1,
-   platform_s: [ 'BBG/B', 'BBAI', 'BBAI-64', 'RPi', "Zynq" ],
+   platform_s: [ "Zynq7010" ],
    
    cfg:   { seq:0, name:'cfg',   cmd:'save_cfg',   lock:0, timeout:null },
    dxcfg: { seq:0, name:'dxcfg', cmd:'save_dxcfg', lock:0, timeout:null },
@@ -166,7 +160,7 @@ function kiwi_bodyonload(error)
 
 	if (kiwi_isSmartTV() == 'LG' && kiwi_isChrome() < 87) {
 	   var s = 'Browser: '+ navigator.userAgent +
-	      '<br>Sorry, KiwiSDR requires SmartTV Chrome version >= 87';
+	      '<br>Sorry, SmartTV Chrome version >= 87 is required';
 		kiwi_serious_error(s);
 	} else
 	
@@ -2258,9 +2252,8 @@ function admin_stats_cb(audio_dropped, underruns, seq_errors, dp_resets, dp_hist
 
 function kiwi_too_busy(rx_chans)
 {
-	var s = 'Sorry, the KiwiSDR server is too busy right now ('+ rx_chans +' users max). <br>' +
+	var s = 'Sorry, the server is too busy right now ('+ rx_chans +' users max). <br>' +
 	'There is also a limit on the total number of channel queuers and campers. <br>' +
-	'Please check <a href="http://rx.kiwisdr.com" target="_self">rx.kiwisdr.com</a> for more KiwiSDR receivers available world-wide.';
 	kiwi_show_msg(s);
 }
 
@@ -2268,10 +2261,8 @@ function kiwi_exclusive_use()
 {
 	var s = 'Sorry, this Kiwi has been locked for special use. <br>' +
 	'This happens when using an extension (e.g. DRM decoder) that requires all available resources. <br>' +
-	'Please check <a href="http://rx.kiwisdr.com" target="_self">rx.kiwisdr.com</a> for more KiwiSDR receivers available world-wide. <br><br>' +
 	'申し訳ありませんが、このキーウィは特別な使用のためにロックされています。 <br>' +
 	'これは、利用可能なすべてのリソースを必要とする拡張機能（DRM デコーダーなど）を使用している場合に発生します。 <br>' +
-	'世界中で利用できる KiwiSDR レシーバーについては、<a href="http://rx.kiwisdr.com" target="_self">rx.kiwisdr.com</a> を確認してください。';
 	kiwi_show_msg(s);
 }
 
@@ -2290,7 +2281,7 @@ function kiwi_show_error_ask_exemption_cb(path, val, first)
 
 function kiwi_show_error_ask_exemption(s)
 {
-   s += '<br><br>If you have an exemption password from the KiwiSDR owner/admin <br> please enter it here: ' +
+   s += '<br><br>If you have an exemption password from the owner/admin <br> please enter it here: ' +
       w3_input('w3-retain-input-focus w3-margin-TB-8/w3-label-inline w3-label-not-bold/kiwi-pw|padding:1px|size=40',
          'Password:', 'id-epwd', '', 'kiwi_show_error_ask_exemption_cb');
 	kiwi_show_msg(s);
@@ -2299,15 +2290,13 @@ function kiwi_show_error_ask_exemption(s)
 
 function kiwi_inactivity_timeout(mins)
 {
-   var s = 'Sorry, this KiwiSDR has an inactivity timeout after '+ mins +' minutes.<br>Reload the page to continue.';
+   var s = 'Sorry, this server has an inactivity timeout after '+ mins +' minutes.<br>Reload the page to continue.';
 	kiwi_show_msg(s);
 }
 
 function kiwi_24hr_ip_limit(mins, ip)
 {
-	var s = 'Sorry, this KiwiSDR can only be used for '+ mins +' minutes every 24 hours by each IP address.<br>' +
-      //'Your IP address is: '+ ip +'<br>' +
-      'Please check <a href="http://rx.kiwisdr.com" target="_self">rx.kiwisdr.com</a> for more KiwiSDR receivers available world-wide.';
+	var s = 'Sorry, this server can only be used for '+ mins +' minutes every 24 hours by each IP address.<br>';
 	
 	kiwi_show_error_ask_exemption(s);
 }
@@ -2333,15 +2322,13 @@ function kiwi_down(type, reason)
 	type = +type;
 
 	if (type == 1) {
-		s = 'Sorry, software update in progress. Please check back in a few minutes.<br>' +
-			'Or check <a href="http://rx.kiwisdr.com" target="_self">rx.kiwisdr.com</a> for more KiwiSDR receivers available world-wide.';
+		s = 'Sorry, software update in progress. Please check back in a few minutes.<br>';
 	} else
 	if (type == 2) {
 		s = "Backup in progress.";
 	} else {
 		if (reason == null || reason == '') {
-			reason = 'Sorry, this KiwiSDR server is being used for development right now. <br>' +
-				'Please check <a href="http://rx.kiwisdr.com" target="_self">rx.kiwisdr.com</a> for more KiwiSDR receivers available world-wide.';
+			reason = 'Sorry, this server is being used for development right now. <br>';
 		}
 		s = reason;
 	}
@@ -2449,7 +2436,7 @@ function cpu_stats_cb(o, uptime_secs, waterfall_fps)
 	if (days) s += days +'d:';
 	s += hr +':'+ min.leadingZeros(2) +':'+ sec.leadingZeros(2);
 	w3_innerHTML('id-status-config',
-      w3_text('w3-text-css-orange', 'KiwiSDR '+ kiwi.model),
+      w3_text('w3-text-css-orange', 'Web-888'),
       w3_text('', s +', '+ kiwi_config_str)
 	);
 
@@ -2493,7 +2480,7 @@ function config_cb(rx_chans, gps_chans, serno, pub, port_ext, pvt, port_int, nm,
 				w3_col_percent('',
 					w3_div('', 'Public IP address (outside your firewall/router): '+ pub +' [port '+ port_ext +']'), 50,
 					w3_div('', 'Ethernet MAC address: '+ mac.toUpperCase()), 30,
-					w3_div('', 'KiwiSDR serial number: '+ serno), 20
+					w3_div('', 'Serial number: '+ serno), 20
 				),
 				w3_col_percent('',
 					w3_div('', 'Private IP address (inside your firewall/router): '+ pvt +' [port '+ port_int +']'), 50,
@@ -2895,10 +2882,6 @@ function kiwi_msg(param, ws)
 
 		case "debian_ver":
 			debian_ver = parseInt(param[1]);
-			break;
-
-		case "model":
-			kiwi.model = parseInt(param[1]);
 			break;
 
 		case "platform":

@@ -176,16 +176,15 @@ var kiwi_version_fail = false;
 function kiwi_version_cb(response_obj)
 {
 	version_maj = response_obj.maj; version_min = response_obj.min;
-	//console.log('v'+ version_maj +'.'+ version_min +': KiwiSDR server');
 	var s='';
 	
 	kiwi_check_js_version.forEach(function(el) {
 		if (el.VERSION_MAJ != version_maj || el.VERSION_MIN != version_min) {
 			if (kiwi_version_fail == false) {
-				s = 'Your browser is trying to use incorrect versions of the KiwiSDR Javascript files.<br>' +
+				s = 'Your browser is trying to use incorrect versions of the Javascript files.<br>' +
 					'Please clear your browser cache and try again.<br>' +
 					'Or click the button below to continue anyway.<br><br>' +
-					'v'+ version_maj +'.'+ version_min +': KiwiSDR server<br>';
+					'v'+ version_maj +'.'+ version_min +': server<br>';
 				kiwi_version_fail = true;
 			}
 			s += 'v'+ el.VERSION_MAJ +'.'+ el.VERSION_MIN +': '+ el.file +'<br>';

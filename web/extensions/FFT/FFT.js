@@ -623,7 +623,7 @@ function FFT_help(show)
    if (show) {
       var s = 
          w3_text('w3-medium w3-bold w3-text-aqua', 'Audio FFT help') +
-         '<br>Remember that on KiwiSDR the audio and waterfall channels are completely separate. <br>' +
+         '<br>Remember that the audio and waterfall channels are completely separate. <br>' +
          'For example you can pan the waterfall frequency without effecting the audio. <br>' +
          'By contrast this extension allows visualization of the <i>audio</i> channel itself by using<br>' +
          'an FFT, waterfall and integrator (summing waterfall) for weak signals. <br>' +

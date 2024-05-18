@@ -184,8 +184,7 @@ void cfg_reload()
         cfg_test();
     #endif
     
-    model_e model;
-    int serno = eeprom_check(&model);
+    int serno = eeprom_check();
     if ((serial_number = cfg_int("serial_number", NULL, CFG_OPTIONAL)) > 0) {
         lprintf("serial number override from configuration: %d\n", serial_number);
     } else {
@@ -198,7 +197,6 @@ void cfg_reload()
     }
 
     bool err;
-    kiwi.model = ZynqSDR_1;
 
 	dx_label_init();
 

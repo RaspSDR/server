@@ -10050,7 +10050,7 @@ function panels_setup()
       );
 
    // rf
-   kiwi.rf_attn = (kiwi.model == kiwi.KiwiSDR_1)? 0 : +initCookie('last_rf_attn', cfg.init.rf_attn);
+   kiwi.rf_attn = +initCookie('last_rf_attn', cfg.init.rf_attn);
 	w3_el("id-optbar-rf").innerHTML =
       w3_col_percent('w3-valign/class-slider',
          w3_text('w3-text-css-orange', 'RF attn'), 19,
@@ -10059,11 +10059,6 @@ function panels_setup()
       ) +
       w3_hr('|border-color:grey; margin:4px 6px 4px 0') +
       w3_div('id-optbar-rf-container');
-   if (kiwi.model == kiwi.KiwiSDR_1) {
-      var el = w3_el('id-rf-attn');
-      w3_disable(el, true);
-      el.title = 'no RF attenuator available';
-   }
 
    // wf
 	w3_el("id-optbar-wf").innerHTML =
@@ -10252,10 +10247,7 @@ function panels_setup()
 	w3_el('id-news').style.backgroundColor = news_color;
 	w3_el("id-news-inner").innerHTML =
 		'<span style="font-size: 14pt; font-weight: bold;">' +
-			'KiwiSDR now available on ' +
-			'<a href="https://www.kickstarter.com/projects/1575992013/kiwisdr-beaglebone-software-defined-radio-sdr-with" target="_blank">' +
-				'<img class="class-KS" src="icons/kickstarter-logo-light.150x18.png" />' +
-			'</a>' +
+			'Web-888 launched'
 		'</span>' +
 		'';
 
@@ -10278,7 +10270,7 @@ function panels_setup()
 
 	w3_el("id-readme-inner").innerHTML =
 		'<span style="font-size: 15pt; font-weight: bold;">Welcome!</span>' +
-		'&nbsp;&nbsp;&nbsp;Project website: <a href="http://kiwisdr.com" target="_blank">kiwisdr.com</a>&nbsp;&nbsp;&nbsp;&nbsp;Here are some tips:' +
+		'&nbsp;&nbsp;&nbsp;Project website: <a href="http://www.rx-888.com/web-888" target="_blank">www.rx-888.com/web-888</a>&nbsp;&nbsp;&nbsp;&nbsp;Here are some tips:' +
 		'<ul style="padding-left: 12px;">' +
 		'<li> Windows: Firefox, Chrome & Edge work; IE does not work. </li>' +
 		'<li> Mac & Linux: Safari, Firefox, Chrome & Opera should work fine. </li>' +
@@ -10292,8 +10284,6 @@ function panels_setup()
 		'<li> Control or alt click to page spectrum down and up in frequency. </li>' +
 		'<li> Adjust the "WF min" slider for best waterfall colors or use the "Auto Scale" button. </li>' +
 		"<li> Type 'h' or '?' to see the list of keyboard shortcuts. </li>" +
-		'<li> See the <a href="http://www.kiwisdr.com/quickstart/" target="_blank">Operating information</a> page ' +
-		     'and <a href="http://kiwisdr.com/docs/KiwiSDR/KiwiSDR.design.review.pdf" target="_blank">Design review document</a>. </li>' +
 		'</ul>';
 
 
@@ -10320,9 +10310,7 @@ function panels_setup()
 	      w3_text('w3-text-css-orange', 'Links'),
 	      w3_text('',
             (admin_email? '<a href="javascript:sendmail(\''+ admin_email +'\');">Owner/Admin</a> | ' : '') +
-            '<a href="http://kiwisdr.com" target="_blank">KiwiSDR</a> ' +
-            '| <a href="http://forum.kiwisdr.com/discussions" target="_blank">Forum</a> ' +
-            '| <a href="https://kiwiirc.com/client/chat.freenode.net/#kiwisdr" target="_blank">Chat</a> '
+            '<a href="http://www.rx-888.com" target="_blank">Web-888</a> '
          )
 		) +
 		w3_div('id-status-adc') +
@@ -10384,8 +10372,7 @@ function rf_attn_cb(path, val, done, first, update)
 {
    //console.log('rf_attn_cb val='+ val +' done='+ done +' first='+ first +' update='+ update +' kiwi.rf_attn='+ kiwi.rf_attn);
    //if (first) kiwi_trace();
-   if (kiwi.model == kiwi.KiwiSDR_1) return;
-   
+  
 	var attn = parseFloat(val);
    var input_attn = w3_el('id-rf-attn');
    var field_attn = w3_el('id-field-rf-attn');

@@ -202,8 +202,7 @@ var ant_sw = {
           w3_div('',
              w3_div('', 'Version 0.5: 16 Jun 2023 <br><br>' +
                 'If antenna switching is denied then users cannot switch antennas. <br>' +
-                'Admin can always switch antennas, either from a connection on the local network, or from the <br>' +
-                'KiwiSDR ssh root console using the script: <i>/root/extensions/ant_switch/frontend/ant-switch-frontend</i> <br><br>' +
+                'Admin can always switch antennas from a connection on the local network.' +
                 'The last option allows anyone connecting using a password to switch antennas <br>' +
                 'i.e. time limit exemption password on the admin page control tab, not the user login password. <br>' +
                 'Other connections made without passwords are denied.'

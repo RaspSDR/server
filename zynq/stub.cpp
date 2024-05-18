@@ -6,7 +6,7 @@ bool background_mode = false;
 bool backup_in_progress = false;
 bool sd_copy_in_progress = false;
 
-int eeprom_check(model_e *model)
+int eeprom_check()
 {
     int status;
     int serialno = -1;

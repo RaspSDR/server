@@ -1,3 +1,3 @@
 #pragma once
 
-int eeprom_check(model_e *model = NULL);
+int eeprom_check();

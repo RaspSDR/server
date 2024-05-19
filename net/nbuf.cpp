@@ -142,8 +142,6 @@ static void nbuf_free(nbuf_t *nb)
 static void nbuf_dumpq(ndesc_t *nd)
 {
 	nbuf_t *bp;
-	
-	//lock_enter(&nd->lock);
 
 	if (nd->dbug) printf("[");
 	bp = nd->q;
@@ -153,7 +151,6 @@ static void nbuf_dumpq(ndesc_t *nd)
 	}
 	if (nd->dbug) printf("] ");
 
-	//lock_leave(&nd->lock);
 }
 
 static bool nbuf_enqueue(ndesc_t *nd, nbuf_t *nb)
@@ -163,67 +160,65 @@ static bool nbuf_enqueue(ndesc_t *nd, nbuf_t *nb)
 	nbuf_t *dp;
 	bool ovfl = FALSE;
 	
-	lock_enter(&nd->lock);
-	
-		// collect done buffers (same thread where they're allocated)
+	// collect done buffers (same thread where they're allocated)
 #if 1
-		// decrement ttl counters
-		if (nd->ttl) {
-			dp = *q_head;
-			while (dp) {
-				check_nbuf(dp);
-				if (dp->done) {
-					assert(dp->ttl);
-					dp->ttl--;
-				}
-				dp = dp->prev;
-			}
-		}
-		
-		while ((dp = *q_head) && (((nd->ttl == 0) && dp->done) || ((nd->ttl != 0) && dp->done && (dp->ttl == 0))) ) {
+	// decrement ttl counters
+	if (nd->ttl) {
+		dp = *q_head;
+		while (dp) {
 			check_nbuf(dp);
-			if (nd->dbug) printf("R%d ", dp->id);
-			if (nd->dbug) nbuf_dumpq(nd);
-			assert(dp->buf);
-			kiwi_ifree(dp->buf, "nbuf:buf");
-			*q_head = dp->prev;
-			if (*q == dp) {
-				*q = NULL;
-				assert(*q_head == NULL);
-			} else {
-				(*q_head)->next = NULL;
+			if (dp->done) {
+				assert(dp->ttl);
+				dp->ttl--;
 			}
-			nbuf_free(dp);
-			if (nd->dbug) nbuf_dumpq(nd);
+			dp = dp->prev;
 		}
-#endif
-		
-		check_nbuf(nb);
-		if (nd->ovfl && (nd->cnt < ND_LOWAT)) {
-			nd->ovfl = FALSE;
-		}
-
-		if (nd->ovfl || (nd->cnt > ND_HIWAT)) {
-			//if (!nd->ovfl && (nd->cnt > ND_HIWAT)) printf("HIWAT\n");
-			nd->ovfl = TRUE;
-			ovfl = TRUE;
-		} else {
-			nd->cnt++;
-			check_nbuf(nb);
-			if (*q) (*q)->prev = nb;
-			nb->next = *q;
-			*q = nb;
-			nb->prev = NULL;
-			if (!*q_head) *q_head = nb;
-		}
-
-	lock_leave(&nd->lock);
+	}
 	
+	while ((dp = *q_head) && (((nd->ttl == 0) && dp->done) || ((nd->ttl != 0) && dp->done && (dp->ttl == 0))) ) {
+		check_nbuf(dp);
+		if (nd->dbug) printf("R%d ", dp->id);
+		if (nd->dbug) nbuf_dumpq(nd);
+		assert(dp->buf);
+		kiwi_ifree(dp->buf, "nbuf:buf");
+		*q_head = dp->prev;
+		if (*q == dp) {
+			*q = NULL;
+			assert(*q_head == NULL);
+		} else {
+			(*q_head)->next = NULL;
+		}
+		nbuf_free(dp);
+		if (nd->dbug) nbuf_dumpq(nd);
+	}
+#endif
+	
+	check_nbuf(nb);
+	if (nd->ovfl && (nd->cnt < ND_LOWAT)) {
+		nd->ovfl = FALSE;
+	}
+
+	if (nd->ovfl || (nd->cnt > ND_HIWAT)) {
+		//if (!nd->ovfl && (nd->cnt > ND_HIWAT)) printf("HIWAT\n");
+		nd->ovfl = TRUE;
+		ovfl = TRUE;
+	} else {
+		nd->cnt++;
+		check_nbuf(nb);
+		if (*q) (*q)->prev = nb;
+		nb->next = *q;
+		*q = nb;
+		nb->prev = NULL;
+		if (!*q_head) *q_head = nb;
+	}
+
 	return ovfl;
 }
 
 void nbuf_allocq(ndesc_t *nd, char *s, int sl)
 {
+	lock_holder holder(nd->lock);
+
 	check_ndesc(nd);
 	nbuf_t *nb;
 	bool ovfl;
@@ -256,26 +251,24 @@ void nbuf_allocq(ndesc_t *nd, char *s, int sl)
 
 nbuf_t *nbuf_dequeue(ndesc_t *nd)
 {
+	lock_holder holder(nd->lock);
+	
 	check_ndesc(nd);
 	nbuf_t **q_head = &nd->q_head;
 	nbuf_t *nb;
 	
-	lock_enter(&nd->lock);
-	
-		nb = *q_head;
+	nb = *q_head;
+	if (nb) check_nbuf(nb);
+	while (nb && nb->dequeued) {
+		nb = nb->prev;
 		if (nb) check_nbuf(nb);
-		while (nb && nb->dequeued) {
-			nb = nb->prev;
-			if (nb) check_nbuf(nb);
-		}
-		if (nb) {
-			if (nd->dbug) printf("D%d ", nb->id);
-			nb->dequeued = TRUE;
-			nd->cnt--;
-			if (nd->dbug) nbuf_dumpq(nd);
-		}
-		
-	lock_leave(&nd->lock);
+	}
+	if (nb) {
+		if (nd->dbug) printf("D%d ", nb->id);
+		nb->dequeued = TRUE;
+		nd->cnt--;
+		if (nd->dbug) nbuf_dumpq(nd);
+	}
 	
 	assert(!nb || (nb && !nb->done));
 	//assert(!nb || ((nb->mc->remote_port == nd->mc->remote_port) && (strcmp(nb->mc->remote_ip, nd->mc->remote_ip) == 0)));
@@ -285,52 +278,51 @@ nbuf_t *nbuf_dequeue(ndesc_t *nd)
 
 int nbuf_queued(ndesc_t *nd)
 {
+	lock_holder holder(nd->lock);
+
 	check_ndesc(nd);
 	nbuf_t *bp;
 	int queued = 0;
 	
-	lock_enter(&nd->lock);
-		bp = nd->q;
-		if (bp) check_nbuf(bp);
-		while (bp) {
-			if (!bp->dequeued) {
-				queued++;
-			}
-			bp = bp->next;
-			if (bp) check_nbuf(bp);
+	bp = nd->q;
+	if (bp) check_nbuf(bp);
+	while (bp) {
+		if (!bp->dequeued) {
+			queued++;
 		}
-	lock_leave(&nd->lock);
+		bp = bp->next;
+		if (bp) check_nbuf(bp);
+	}
 	
 	return queued;
 }
 
 void nbuf_cleanup(ndesc_t *nd)
 {
+	lock_holder holder(nd->lock);
 	check_ndesc(nd);
 	nbuf_t **q = &nd->q, **q_head = &nd->q_head;
 	nbuf_t *dp;
-	int i=0;
-	
-	lock_enter(&nd->lock);
-	
-		while ((dp = *q_head) != NULL) {
-			check_nbuf(dp);
-			//assert(dp->buf);
-			if (dp->buf == 0)
-				lprintf("WARNING: dp->buf == NULL\n");
-			else
+	int i = 0;
+
+	while ((dp = *q_head) != NULL)
+	{
+		check_nbuf(dp);
+		// assert(dp->buf);
+		if (dp->buf == 0)
+			lprintf("WARNING: dp->buf == NULL\n");
+		else
 			kiwi_ifree(dp->buf, "nbuf:buf");
 
-			*q_head = dp->prev;
-			if (dp == *q) *q = NULL;
-			nbuf_free(dp);
-			i++;
-		}
-		
-		nd->cnt = 0;
-		nd->ovfl = FALSE;
-		
-	lock_leave(&nd->lock);
+		*q_head = dp->prev;
+		if (dp == *q)
+			*q = NULL;
+		nbuf_free(dp);
+		i++;
+	}
 
-	//printf("nbuf_cleanup: removed %d, malloc %d\n", i, kiwi_malloc_stat());
+	nd->cnt = 0;
+	nd->ovfl = FALSE;
+
+	// printf("nbuf_cleanup: removed %d, malloc %d\n", i, kiwi_malloc_stat());
 }

@@ -28,6 +28,9 @@ const volatile uint32_t *fpga_pps_data;
 const volatile int32_t *fpga_rx_data;
 const volatile uint32_t *fpga_wf_data[4];
 
+static lock_t gpio_lock;
+static int current_gpio;
+
 static int wf_channels;
 static sem_t wf_sem;
 static std::atomic<int> wf_using[4];
@@ -101,6 +104,11 @@ void fpga_init()
     wf_channels = (fpga_status->signature >> 8) & 0x0f;
 
     sem_init(&wf_sem, 0, wf_channels);
+
+    current_gpio = 0;
+    fpga_config->gpios = current_gpio;
+
+    lock_init(&gpio_lock);
 }
 
 int fpga_get_wf(int rx_chan, int decimate, uint32_t freq)
@@ -145,4 +153,36 @@ void fpga_free_wf(int wf_chan, int rx_chan)
 
     int ret = sem_post(&wf_sem);
     if (ret) panic("sem_post failed");
+}
+
+void fpga_set_antenna(int mask)
+{
+  lock_holder holder(gpio_lock);
+
+  current_gpio = (current_gpio & 0xC0) | (mask & 0x3F);
+  fpga_config->gpios = current_gpio;
+}
+
+void fpga_set_pga(bool enabled)
+{
+  lock_holder holder(gpio_lock);
+
+  if (enabled)
+    current_gpio |= GPIO_PGA;
+  else
+    current_gpio &= ~GPIO_PGA;
+
+  fpga_config->gpios = current_gpio;
+}
+
+void fpga_set_dither(bool enabled)
+{
+  lock_holder holder(gpio_lock);
+
+  if (enabled)
+    current_gpio |= GPIO_DITHER;
+  else
+    current_gpio &= ~GPIO_DITHER;
+
+  fpga_config->gpios = current_gpio;
 }

@@ -31,6 +31,18 @@ u64_t fpga_dna();
 #define RESET_LEDON (1 << 7)
 #define RESET_PPS (1 << 8)
 
+#define GPIO_ANTENNA (1 << 0)
+#define GPIO_ANTENNA0 (1 << 0)
+#define GPIO_ANTENNA1 (1 << 1)
+#define GPIO_ANTENNA2 (1 << 2)
+#define GPIO_ANTENNA3 (1 << 3)
+#define GPIO_ANTENNA4 (1 << 4)
+#define GPIO_ANTENNA5 (1 << 5)
+
+#define GPIO_DITHER (1 << 6)
+#define GPIO_PGA (1 << 7)
+
+
 typedef struct {
     uint32_t reset;
     uint32_t rx_freq[16];
@@ -38,7 +50,7 @@ typedef struct {
         uint32_t wf_freq;
         uint32_t wf_decim;
     }wf_config[4];
-    uint8_t antenna;
+    uint8_t gpios;
 }__attribute__((packed)) FPGA_Config;
 static_assert(sizeof(FPGA_Config) == 808/8);
 
@@ -60,3 +72,7 @@ extern const volatile FPGA_Status *fpga_status;
 
 extern int fpga_get_wf(int rx_chan, int decimate, uint32_t freq);
 extern void fpga_free_wf(int wf_chan, int rx_chan);
+
+extern void fpga_set_antenna(int mask);
+extern void fpga_set_pga(bool enabled);
+extern void fpga_set_dither(bool enabled);

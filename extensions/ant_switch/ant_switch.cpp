@@ -61,7 +61,7 @@ void ant_switch_setantenna(int antenna)
         antenna_current = 0;
     else
         antenna_current |= 1 << antenna;
-    fpga_config->antenna = antenna_current;
+    fpga_set_antenna(antenna_current);
     return;
 }
 
@@ -72,7 +72,7 @@ void ant_switch_toggleantenna(int antenna)
     else
         antenna_current |= 1 << antenna;
 
-    fpga_config->antenna = antenna_current;
+    fpga_set_antenna(antenna_current);
 
     return;
 }

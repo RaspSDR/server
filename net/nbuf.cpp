@@ -53,40 +53,12 @@ Boston, MA  02110-1301, USA.
 	} \
 }
 
-// FIXME: remove this at some point and see if still as stable
-//#define NBUF_STATIC_ALLOC
-
-#ifdef NBUF_STATIC_ALLOC
-	static lock_t nbuf_lock;
-	#define NNBUF 1024
-	static nbuf_t nbuf[NNBUF];
-#endif
-
 void nbuf_init()
 {
-#ifdef NBUF_STATIC_ALLOC
-	lock_init(&nbuf_lock);
-	lock_register(&nbuf_lock);
-	memset(nbuf, 0, sizeof(nbuf));
-	int i;
-	for (i=0; i<NNBUF; i++) {
-		nbuf_t *nb = &nbuf[i];
-		nb->isFree = TRUE;
-	}
-#endif
 }
 
 void nbuf_stat()
 {
-//#ifdef NBUF_STATIC_ALLOC
-#if 0
-	int i, busy = 0;
-	for (i=0; i<NNBUF; i++) {
-		nbuf_t *nb = &nbuf[i];
-		if (!nb->isFree) busy++;
-	}
-	printf("NBUF %d/%d busy\n", busy, NNBUF);
-#endif
 }
 
 void ndesc_init(ndesc_t *nd, struct mg_connection *mc)
@@ -106,25 +78,10 @@ static nbuf_t *nbuf_malloc()
 {
 	nbuf_t *nb;
 	
-#ifdef NBUF_STATIC_ALLOC
-	// FIXME: don't need a lock here because there is no task preemption to cause contention
-	lock_enter(&nbuf_lock);
-		int i;
-		for (i=0; i<NNBUF; i++) {
-			nb = &nbuf[i];
-			if (nb->isFree)
-				break;
-		}
-		if (i == NNBUF) panic("out of nbufs");
-	lock_leave(&nbuf_lock);
-	memset(nb, 0, sizeof(nbuf_t));
-#else
 	nb = (nbuf_t*) kiwi_malloc("nbuf", sizeof(nbuf_t));
-#endif
 	nb->magic = NB_MAGIC;
 	nb->magic_b = NBUF_MAGIC_B;
 	nb->magic_e = NBUF_MAGIC_E;
-	check_nbuf(nb);
 	return nb;
 }
 
@@ -133,10 +90,7 @@ static void nbuf_free(nbuf_t *nb)
 	check_nbuf(nb);
 	nb->magic = nb->magic_b = nb->magic_e = 0;
 	nb->isFree = TRUE;
-#ifdef NBUF_STATIC_ALLOC
-#else
 	kiwi_free("nbuf", nb);
-#endif
 }
 
 static void nbuf_dumpq(ndesc_t *nd)
@@ -161,7 +115,6 @@ static bool nbuf_enqueue(ndesc_t *nd, nbuf_t *nb)
 	bool ovfl = FALSE;
 	
 	// collect done buffers (same thread where they're allocated)
-#if 1
 	// decrement ttl counters
 	if (nd->ttl) {
 		dp = *q_head;
@@ -191,7 +144,6 @@ static bool nbuf_enqueue(ndesc_t *nd, nbuf_t *nb)
 		nbuf_free(dp);
 		if (nd->dbug) nbuf_dumpq(nd);
 	}
-#endif
 	
 	check_nbuf(nb);
 	if (nd->ovfl && (nd->cnt < ND_LOWAT)) {

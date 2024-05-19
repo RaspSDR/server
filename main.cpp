@@ -87,7 +87,6 @@ void kiwi_restart()
 
 int main(int argc, char *argv[])
 {
-	int p_gps = 0;
 	bool err;
 	
 	version_maj = VERSION_MAJ;
@@ -96,9 +95,7 @@ int main(int argc, char *argv[])
 	main_argc = argc;
 	main_argv = argv;
 	
-	#ifdef DEVSYS
-		p_gps = -1;
-	#else
+	#ifndef DEVSYS
 		// enable generation of core file in /tmp
 		//scall("core_pattern", system("echo /tmp/core-%e-%s-%p-%t > /proc/sys/kernel/core_pattern"));
 		

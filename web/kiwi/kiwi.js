@@ -2459,7 +2459,7 @@ function config_str_update(rx_chans, gps_chans, vmaj, vmin)
 {
 	kiwi_config_str = 'v'+ vmaj +'.'+ vmin +', ch: '+ rx_chans +' SDR GPS';
 	w3_innerHTML('id-status-config', kiwi_config_str);
-	kiwi_config_str_long = platform_s[kiwi.platform] + ', v'+ vmaj +'.'+ vmin +', '+ rx_chans +' SDR channels with GPS';
+	kiwi_config_str_long = kiwi.platform_s[kiwi.platform] + ', v'+ vmaj +'.'+ vmin +', '+ rx_chans +' SDR channels with GPS';
 	w3_innerHTML('id-msg-config', kiwi_config_str);
 }
 

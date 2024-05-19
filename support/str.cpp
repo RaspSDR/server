@@ -24,6 +24,7 @@ Boston, MA  02110-1301, USA.
 #include "misc.h"
 #include "str.h"
 #include "sha256.h"
+#include "mongoose.h"
 
 #include <stdio.h>
 #include <unistd.h>

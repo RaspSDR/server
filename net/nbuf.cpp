@@ -32,6 +32,18 @@ Boston, MA  02110-1301, USA.
 #include <unistd.h>
 #include <stdlib.h>
 
+#define	ND_HIWAT	64
+#define	ND_LOWAT	32
+
+#define NB_MAGIC 0xbabecafe
+
+#define NBUF_MAGIC_B	0xbbbbbbbb
+#define NBUF_MAGIC_E	0xbbbbeeee
+
+#define NDESC_MAGIC_B	0xddddbbbb
+#define NDESC_MAGIC_E	0xddddeeee
+
+
 #define check_ndesc(nd) { \
 	if (nd->magic_b != NDESC_MAGIC_B || nd->magic_e != NDESC_MAGIC_E) { \
 		lprintf("BAD NDESC MAGIC 0x%x 0x%x, %s line %d #############################################\n", \

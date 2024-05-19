@@ -21,13 +21,11 @@ Boston, MA  02110-1301, USA.
 
 #include "types.h"
 #include "coroutines.h"     // lock_t
-#include "mongoose.h"       // struct mg_connection *
 
-#define NBUF_MAGIC_B	0xbbbbbbbb
-#define NBUF_MAGIC_E	0xbbbbeeee
+struct mg_connection;
+
 
 typedef struct nbuf_st {
-	#define NB_MAGIC 0xbabecafe
 	u4_t magic;
 	struct mg_connection *mc;
 	char *buf;
@@ -38,9 +36,6 @@ typedef struct nbuf_st {
 	u4_t magic_e;
 } nbuf_t;
 
-#define NDESC_MAGIC_B	0xddddbbbb
-#define NDESC_MAGIC_E	0xddddeeee
-
 typedef struct {
 	struct mg_connection *mc;
 	lock_t lock;
@@ -50,9 +45,6 @@ typedef struct {
 	u2_t cnt, ttl;
 	bool ovfl, dbug;
 } ndesc_t;
-
-#define	ND_HIWAT	64
-#define	ND_LOWAT	32
 
 void ndesc_init(ndesc_t *nd, struct mg_connection *mc);
 void ndesc_register(ndesc_t *nd);

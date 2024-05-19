@@ -21,6 +21,7 @@ Boston, MA  02110-1301, USA.
 
 #include "types.h"
 #include "ip_blacklist.h"
+#include "mongoose.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>

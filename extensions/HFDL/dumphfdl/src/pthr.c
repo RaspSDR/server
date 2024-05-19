@@ -18,7 +18,6 @@ int pthr_mutex_init(const char *id, pthr_mutex_t *mutex, const pthr_mutexattr_t 
     mutex->id = id;
     mutex->lock = malloc(sizeof(lock_t));
     lock_initS((lock_t *) mutex->lock, id);
-    lock_register((lock_t *) mutex->lock);
     pthr_printf("M-%04x INIT %s %s\n", M_PTR, mutex->id, Task_s(-1));
     return 0;
 }
@@ -40,7 +39,6 @@ int pthr_mutex_unlock(pthr_mutex_t *mutex)
 
 int pthr_mutex_destroy(pthr_mutex_t *mutex)
 {
-    lock_unregister((lock_t *) mutex->lock);
     ((lock_t *) mutex->lock)->init = false;
     return 0;
 }

@@ -183,8 +183,6 @@ typedef struct
 #define lock_initS(lock, name) _lock_init(lock, name, false)
 
 C_LINKAGE(void _lock_init(lock_t *lock, const char *name, bool recurisve));
-C_LINKAGE(void lock_register(lock_t *lock));
-C_LINKAGE(void lock_unregister(lock_t *lock));
 C_LINKAGE(void lock_dump());
 C_LINKAGE(bool lock_check());
 C_LINKAGE(void lock_enter(lock_t *lock));

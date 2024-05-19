@@ -432,9 +432,6 @@ void TaskSetUserParam(void *param)
  * ------------------------------------------------------------
  *  Lock related functions
  */
-#define MAX_LOCK_N 256
-static int n_lock_list = 0;
-static lock_t *locks[MAX_LOCK_N];
 
 void _lock_init(lock_t *lock, const char *name, bool recursive)
 {
@@ -452,12 +449,6 @@ void _lock_init(lock_t *lock, const char *name, bool recursive)
 	{
 		pthread_mutex_init(&lock->mutex, NULL);
 	}
-}
-
-void lock_register(lock_t *lock)
-{
-	int lock_index = __atomic_fetch_add(&n_lock_list, 1, __ATOMIC_SEQ_CST);
-	locks[lock_index] = lock;
 }
 
 void lock_dump()

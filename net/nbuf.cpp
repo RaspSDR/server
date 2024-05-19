@@ -100,7 +100,6 @@ void ndesc_init(ndesc_t *nd, struct mg_connection *mc)
 
 void ndesc_register(ndesc_t *nd)
 {
-	lock_register(&nd->lock);
 }
 
 static nbuf_t *nbuf_malloc()

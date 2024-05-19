@@ -91,7 +91,6 @@ void kstr_init()
 	for (i = 127; i < 256; i++) kiwi_snprintf_buf(ASCII[i], "%2x", i);
 	
     lock_initS(&kstr_lock, "kstr");
-    lock_register(&kstr_lock);
 	#if 0
         for (i = 0; i < 256; i++) {
             real_printf("%s ", ASCII[i]);

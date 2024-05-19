@@ -186,7 +186,6 @@ void printf_init()
     holdover = (char *) "";
 
 	lock_initS(&print_lock, "Print");
-	lock_register(&print_lock);
 }
 
 static void ll_printf(u4_t type, conn_t *conn, const char *fmt, va_list ap)

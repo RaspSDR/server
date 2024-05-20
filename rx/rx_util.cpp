@@ -664,7 +664,7 @@ static void dump_info_handler(int arg)
     sb = kstr_asprintf(sb, ", \"fixes\": %d, \"fixes_min\": %d }", gps.fixes, gps.fixes_min);
 
     sb = kstr_cat(sb, " }' > /root/config/info.json");
-    non_blocking_cmd_system_child("kiwi.info", kstr_sp(sb), NO_WAIT);
+    non_blocking_cmd_system_child("kiwi.info", kstr_sp(sb), POLL_MSEC(200));
     kstr_free(sb);
 	sig_arm(SIGHUP, dump_info_handler);
 }
@@ -687,7 +687,7 @@ void debug_init()
 {
     sig_arm(SIG_DEBUG, debug_dump_handler);
     sig_arm(SIGHUP, dump_info_handler);
-    sig_arm(SIGSEGV, signal_handler);
+    // sig_arm(SIGSEGV, signal_handler);
 }
 
 int rx_mode2enum(const char *mode)

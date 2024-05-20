@@ -549,7 +549,7 @@ void WSPR_Deco(void *param)
                         else
                             rcprintf(w->rx_chan, "%s UPLOAD: wsprnet.org said: \"%s\"\n", w->iwbp? "IWBP" : "WSPR", w->spot_log);
                     } else {
-                        non_blocking_cmd_system_child("kiwi.wsprnet.org", cmd, NO_WAIT);
+                        non_blocking_cmd_system_child("kiwi.wsprnet.org", cmd, POLL_MSEC(200));
                     }
                 #endif
                 kiwi_asfree(cmd);
@@ -609,7 +609,7 @@ void WSPR_Deco(void *param)
 		        #define WSPR_STAT "curl -L 'http://wsprnet.org/post?function=wsprstat&rcall=%s&rgrid=%s&rqrg=%.6f&tpct=0&tqrg=%.6f&dbm=0&version=web-888' >/dev/null 2>&1"
                 asprintf(&w->arun_stat_cmd, WSPR_STAT, wspr_c.rcall, wspr_c.rgrid, w->arun_cf_MHz, w->arun_cf_MHz);
                 //printf("AUTORUN %s\n", w->arun_stat_cmd);
-                non_blocking_cmd_system_child("kiwi.wsprnet.org", w->arun_stat_cmd, NO_WAIT);
+                non_blocking_cmd_system_child("kiwi.wsprnet.org", w->arun_stat_cmd, POLL_MSEC(200));
 		    }
 		    if (w->arun_decoded > w->arun_last_decoded) {
 		        input_msg_internal(w->arun_csnd, (char *) "SET geoloc=%d%%20decoded%s",
@@ -1084,7 +1084,7 @@ void wspr_autorun(int instance, bool initial)
 
     asprintf(&w->arun_stat_cmd, WSPR_STAT, wspr_c.rcall, wspr_c.rgrid, w->arun_cf_MHz, w->arun_cf_MHz);
     //printf("AUTORUN INIT %s\n", w->arun_stat_cmd);
-    non_blocking_cmd_system_child("kiwi.wsprnet.org", w->arun_stat_cmd, NO_WAIT);
+    non_blocking_cmd_system_child("kiwi.wsprnet.org", w->arun_stat_cmd, POLL_MSEC(200));
     w->arun_last_status_sent = timer_sec();
 }
 

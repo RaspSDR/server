@@ -15,13 +15,13 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-fortify-source -pthread")
+set(CMAKE_CXX_FLAGS "-Wall -Wno-fortify-source -pthread")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-set(CMAKE_CXX_FLAGS_RELEASE "-g -O2")
+set(CMAKE_CXX_FLAGS_RELEASE "-g -O3")
 
-set(CMAKE_C_FLAGS "-Wall -Wextra")
+set(CMAKE_C_FLAGS "-Wall")
 set(CMAKE_C_FLAGS_DEBUG "-g -O0")
-set(CMAKE_C_FLAGS_RELEASE "-g -O2")
+set(CMAKE_C_FLAGS_RELEASE "-g -O3")
 
 
 if(ZYNQ)

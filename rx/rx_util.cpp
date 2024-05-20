@@ -326,7 +326,7 @@ int rx_autorun_find_victim()
 
 void rx_autorun_restart_victims(bool initial)
 {
-    if (rx_util.arun_suspend_restart_victims || update_in_progress || backup_in_progress || sd_copy_in_progress) {
+    if (rx_util.arun_suspend_restart_victims) {
         //printf("rx_autorun_restart_victims SUSPENDED\n");
         return;
     }

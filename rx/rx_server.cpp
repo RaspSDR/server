@@ -311,27 +311,19 @@ conn_t *rx_server_websocket(websocket_mode_e mode, struct mg_connection *mc, u4_
         lprintf("WARNING: allow_admin_conns still unset > 60 seconds after startup\n");
     }
     
-	if (down || update_in_progress || backup_in_progress) {
-		conn_printf("down=%d UIP=%d BIP=%d stream=%s\n", down, update_in_progress, backup_in_progress, st->uri);
+	if (down) {
+		conn_printf("down=%d stream=%s\n", down, st->uri);
         conn_printf("URL <%s> <%s> %s\n", mc->uri, mc->query_string, ip_forwarded);
-        bool update_backup = (update_in_progress || backup_in_progress);
 
         // internal STREAM_SOUND connections don't understand "reason_disabled" API, see below
 		if (st->type == STREAM_SOUND && !internal) {
 			int type;
 			const char *reason_disabled = NULL;
 
-			if (!down && update_in_progress) {
-				type = 1;
-			} else
-			if (!down && backup_in_progress) {
-				type = 2;
-			} else {
-				bool error;
-				reason_disabled = cfg_string("reason_disabled", &error, CFG_OPTIONAL);
-				if (error) reason_disabled = "";
-				type = 0;
-			}
+			bool error;
+			reason_disabled = cfg_string("reason_disabled", &error, CFG_OPTIONAL);
+			if (error) reason_disabled = "";
+			type = 0;
 			
 			char *reason_enc = kiwi_str_encode((char *) reason_disabled);
 			conn_printf("send_msg_mc MSG reason=<%s> down=%d\n", reason_disabled, type);
@@ -341,9 +333,6 @@ conn_t *rx_server_websocket(websocket_mode_e mode, struct mg_connection *mc, u4_
             //printf("DOWN %s %s\n", rx_streams[st->type].uri, ip_forwarded);
 			return NULL;
 		} else
-		if (internal && update_backup) {
-			return NULL;
-		}
 
 		if (st->type != STREAM_ADMIN && !internal) {
             //printf("DOWN %s %s\n", rx_streams[st->type].uri, ip_forwarded);

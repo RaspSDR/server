@@ -788,7 +788,7 @@ int web_request(struct mg_connection *mc, enum mg_event evt) {
         int chan_count = rx_count_server_conns(INCLUDE_INTERNAL, EXCEPT_PREEMPTABLE);
         bool all_chans_full = (chan_count == rx_chans);
         //printf("WEB: index.html %s chans=%d/%d camp=%d\n", (evt == MG_CACHE_INFO)? "MG_CACHE_INFO" : "MG_REQUEST", chan_count, rx_chans, camp);
-        if ((!camp && all_chans_full) || down || update_in_progress || backup_in_progress) {
+        if ((!camp && all_chans_full) || down) {
             char *url_redirect = (char *) admcfg_string("url_redirect", NULL, CFG_REQUIRED);
             if (url_redirect != NULL && *url_redirect != '\0') {
             

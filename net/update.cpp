@@ -37,8 +37,8 @@ Boston, MA  02110-1301, USA.
 #include <unistd.h>
 #include <sys/stat.h>
 
-bool update_pending = false, update_task_running = false, update_in_progress = false;
-int pending_maj = -1, pending_min = -1;
+static bool update_pending = false, update_task_running = false, update_in_progress = false;
+static int pending_maj = -1, pending_min = -1;
 
 static bool file_auto_download_check = false;
 static bool file_auto_download_oneshot = false;
@@ -128,32 +128,6 @@ static void fetch_makefile_ctask(void *param)
 
 	child_exit(EXIT_SUCCESS);
 }
-
-/*
-    // task
-    _update_task()
-        status = child_task(fetch_makefile_ctask)
-	    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-	        error ...
-        status = child_task(update_build_ctask)
-	    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-	        error ...
-
-    child_task(func)
-        if (fork())
-            // child
-            func() -> fetch_makefile_ctask() / update_build_ctask()
-                status = system(...)
-                if (status < 0)
-                    child_exit(EXIT_FAILURE);
-                if (WIFEXITED(status))
-                    child_exit(WEXITSTATUS(status));
-                child_exit(EXIT_FAILURE);
-        // parent
-        while
-            waitpid(&status)
-        return status
-*/
 
 static void _update_task(void *param)
 {

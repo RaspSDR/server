@@ -73,7 +73,7 @@ char *rx_server_ajax(struct mg_connection *mc, char *ip_forwarded)
 	if (!st->uri) return NULL;
 
 	// these are okay to process while we're down or updating
-	if ((down || update_in_progress || backup_in_progress)
+	if (down
 		&& st->type != AJAX_VERSION
 		&& st->type != AJAX_STATUS
 		&& st->type != AJAX_USERS
@@ -599,7 +599,7 @@ fail:
 		//		no		private
 		//		yes		active, offline
 		
-		bool offline = (down || update_in_progress || backup_in_progress);
+		bool offline = down;
 		const char *status;
 
 		if (!kiwisdr_com_reg) {

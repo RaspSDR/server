@@ -583,6 +583,7 @@ static void pvt_NET(void *param)
     }
 
     DNS_lookup("www.rx-888.com", &net.ips_kiwisdr_com, N_IPS, NULL);
+    DNS_lookup("downloads.rx-888.com", &net.ips_downloads, N_IPS, NULL);
 
 	for (retry = 0; true; retry++) {
 

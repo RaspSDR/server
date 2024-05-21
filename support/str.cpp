@@ -585,9 +585,9 @@ char *kiwi_str_ASCII_static(char *src, int which)
 }
 
 // for use with e.g. an immediate printf argument
-char *kiwi_str_encode_static(char *src, int flags)
+char *kiwi_str_encode_static(const char *src, int flags)
 {
-	if (src == NULL) src = (char *) "null";		// JSON compatibility
+	if (src == NULL) src = "null";		// JSON compatibility
 	size_t slen = strlen(src);
 	check((slen * ENCODE_EXPANSION_FACTOR) < N_DST_STATIC_BUF);
 

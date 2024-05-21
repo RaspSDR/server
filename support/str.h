@@ -74,7 +74,7 @@ bool kiwi_sha256_strcmp(char *str, const char *key);
 enum { FEWER_ENCODED = 1, USE_MALLOC = 2 };
 char *kiwi_str_decode_selective_inplace(char *src, int flags DEF_0);
 char *kiwi_str_encode(char *s, const char *from DEF_NULL, int flags DEF_0);
-char *kiwi_str_encode_static(char *src, int flags DEF_0);
+char *kiwi_str_encode_static(const char *src, int flags DEF_0);
 
 typedef struct {
     char *str;

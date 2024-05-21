@@ -910,7 +910,15 @@ function update_html()
 				'<b>Force software reinstall </b> ' +
 				w3_button('w3-aqua w3-margin', 'Install now', 'update_build_now_cb')
 			)
-		)
+		) +
+
+      w3_divs('w3-container',
+         w3_switch_label('w3-label-inline w3-label-left', 'Update Channel', 'Alpha', 'Stable', 'adm.update_channel', adm.update_channel, 'admin_radio_YN_cb'),
+         w3_text('w3-bold',
+				   'Set to Alpha if you want to test the lastest release, which may contains bugs. In worse case, you may lose your customization settings. <br>' +
+				   'Set to Stable if you want to play safe.'
+				)
+      )
 	);
 	return s;
 }
@@ -928,8 +936,7 @@ function update_check_now_cb(id, idx)
 function update_build_now_cb(id, idx)
 {
 	ext_send('SET force_check=1 force_build=1');
-	w3_el('id-msg-update').innerHTML = w3_icon('', 'fa-refresh fa-spin', 24) +
-      ' &nbsp; Monitor build progress using console tab, "monitor build progress" button.';
+	w3_el('id-msg-update').innerHTML = w3_icon('', 'fa-refresh fa-spin', 24) + 'Updating';
 
 	if (adm.update_restart == 0)
 	   w3_show_block('id-build-restart');

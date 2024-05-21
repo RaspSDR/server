@@ -56,6 +56,11 @@ static void report_result(conn_t *conn)
 	assert(conn != NULL);
 	char *date_m = kiwi_str_encode((char *) __DATE__);
 	char *time_m = kiwi_str_encode((char *) __TIME__);
+	printf("MSG update_cb="
+	    "{\"f\":%d,\"p\":%d,\"i\":%d,\"r\":%d,\"g\":%d,"
+	    "\"v1\":%d,\"v2\":%d,\"p1\":%d,\"p2\":%d,\"d\":\"%s\",\"t\":\"%s\"}\n",
+		fail_reason, update_pending, update_in_progress, rx_chans, gps_chans,
+		version_maj, version_min, pending_maj, pending_min, date_m, time_m);
 	send_msg(conn, false, "MSG update_cb="
 	    "{\"f\":%d,\"p\":%d,\"i\":%d,\"r\":%d,\"g\":%d,"
 	    "\"v1\":%d,\"v2\":%d,\"p1\":%d,\"p2\":%d,\"d\":\"%s\",\"t\":\"%s\"}",
@@ -65,7 +70,18 @@ static void report_result(conn_t *conn)
 	kiwi_ifree(time_m, "time_m");
 }
 
-static void update_build_ctask(void *param)
+static void report_progress(conn_t *conn, const char* msg)
+{
+	// let admin interface know result
+	assert(conn != NULL);
+	char *msg_m = kiwi_str_encode((char *)msg);
+	printf( "MSG update_cb={\"msg\":\"%s\"}\n", msg_m);
+	send_msg(conn, false, "MSG update_cb={\"msg\":\"%s\"}\n", msg_m);
+
+	kiwi_ifree(msg_m, "msg_m");
+}
+
+static int update_build(conn_t *conn, bool report, const char *channel, bool force_build)
 {
 	sd_enable(true);
 
@@ -77,56 +93,65 @@ static void update_build_ctask(void *param)
 		goto exit;
 	}
 
-	status = system("curl -s -o /media/mmcblk0p1/update/sdr_receiver_kiwi.bit http://downloads.rx-888.com/web-888/sdr_receiver_kiwi.bit");
+	if (report) report_progress(conn, "Download FPGA firmware");
+
+	status = blocking_system("curl -s -o /media/mmcblk0p1/update/sdr_receiver_kiwi.bit http://downloads.rx-888.com/web-888/%s/sdr_receiver_kiwi.bit", channel);
 	if (status != 0)
     {
 	    printf("UPDATE: fetch bistream status=0x%08x\n", status);
 		goto exit;
 	}
 
-	status = system("curl -s -o /media/mmcblk0p1/update/kiwi.bin http://downloads.rx-888.com/web-888/kiwi.bin");
+	if (report) report_progress(conn, "Download Web-888 Server");
+
+	status = blocking_system("curl -s -o /media/mmcblk0p1/update/kiwi.bin http://downloads.rx-888.com/web-888/%s/kiwi.bin", channel);
 	if (status != 0)
     {
 	    printf("UPDATE: fetch binary status=0x%08x\n", status);
 		goto exit;
 	}
 
-	status = system("curl -s -o /media/mmcblk0p1/update/checksum http://downloads.rx-888.com/web-888/checksum");
+	if (report) report_progress(conn, "Download checksum file");
+	status = blocking_system("curl -s -o /media/mmcblk0p1/update/checksum http://downloads.rx-888.com/web-888/%s/checksum", channel);
 	if (status != 0)
     {
 	    printf("UPDATE: fetch checksum status=0x%08x\n", status);
 		goto exit;
 	}
 
+	if (report) report_progress(conn, "Checksum the downloaded files");
 	status = system("cd /media/mmcblk0p1/update; sha256sum -c /media/mmcblk0p1/update/checksum");
 	if (status != 0)
     {
 	    printf("UPDATE: checksum failed status=0x%08x\n", status);
+		if (report) report_progress(conn, "Checksum failed");
+
 		goto exit;
 	}
+
+	if (report) report_progress(conn, "Install update to SD card");
 
 	system("rm /media/mmcblk0p1/kiwi.bin.old");
 	system("rm /media/mmcblk0p1/sdr_receiver_kiwi.bit.old");
 	system("mv /media/mmcblk0p1/kiwi.bin /media/mmcblk0p1/kiwi.bin.old; mv /media/mmcblk0p1/update/kiwi.bin /media/mmcblk0p1/kiwi.bin");
 	system("mv /media/mmcblk0p1/sdr_receiver_kiwi.bit /media/mmcblk0p1/sdr_receiver_kiwi.bit.old; mv /media/mmcblk0p1/update/sdr_receiver_kiwi.bit /media/mmcblk0p1/sdr_receiver_kiwi.bit");
 
-	sd_enable(false);
-
-	child_exit(EXIT_SUCCESS);
+	status = EXIT_SUCCESS;
 
 exit:
-	child_status_exit(status);
+	sd_enable(false);
+
+	return status;
 }
 
-static void fetch_makefile_ctask(void *param)
+static int fetch_makefile(const char *channel)
 {
 	// fetch the version info from server
-	int status = system("curl -s -o /root/web-888.latest http://downloads.rx-888.com/web-888/version.txt");
+	int status = blocking_system("curl -s -o /root/web-888.latest http://downloads.rx-888.com/web-888/%s/version.txt", channel);
 	if (status != 0)
         printf("UPDATE: fetch origin status=0x%08x\n", status);
-	child_status_exit(status);
 
-	child_exit(EXIT_SUCCESS);
+	return status;
 }
 
 static void _update_task(void *param)
@@ -138,9 +163,17 @@ static void _update_task(void *param)
 	bool ver_changed, update_install;
 	int status;
 	fail_reason = FAIL_NONE;
-	
+
+	update_in_progress = true;
+
+	bool err;	
+	bool ch = admcfg_bool("update_channel", &err, CFG_OPTIONAL);
+    if (err) ch = false;
+    
 	lprintf("UPDATE: checking for updates\n");
 	if (force_check) update_pending = false;    // don't let pending status override version reporting when a forced check
+
+	if (report) report_progress(conn, "Checking internet connectivity");
     #define PING_INET "ping -qc2 1.1.1.1 >/dev/null 2>&1"
     status = non_blocking_cmd_system_child("kiwi.ck_inet", PING_INET, POLL_MSEC(250));
     if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
@@ -155,13 +188,14 @@ static void _update_task(void *param)
         }
     }
 
+	if (report) report_progress(conn, "Getting latest version information");
 	// get pending_maj, pending_min
 	// wget the latest version infor from www.rx-888.com
 	// Run fetch in a Linux child process otherwise this thread will block and cause trouble
 	// if the check is invoked from the admin page while there are active user connections.
-	status = child_task("kiwi.update", fetch_makefile_ctask, POLL_MSEC(1000));
+	status = fetch_makefile(ch?"alpha":"stable");
 
-	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+	if (status) {
 		lprintf("UPDATE: failed to get latest version information from server\n");
         fail_reason = FAIL_MAKEFILE;
 		if (report) report_result(conn);
@@ -177,13 +211,14 @@ static void _update_task(void *param)
 	}
 	
 	if (force_check) {
+		update_in_progress = false;
 		if (ver_changed)
 			lprintf("UPDATE: version changed (current %d.%d, new %d.%d), but check only\n",
 				version_maj, version_min, pending_maj, pending_min);
 		else
 			lprintf("UPDATE: running the most current version\n");
 		
-		report_result(conn);
+		if (report) report_result(conn);
 		goto common_return;
 	} else
 
@@ -198,12 +233,12 @@ static void _update_task(void *param)
 		lprintf("UPDATE: installing new version..\n");
 
 		u4_t build_time = timer_sec();
-		status = child_task("kiwi.build", update_build_ctask, POLL_MSEC(1000), TO_VOID_PARAM(force_build));
+		status = update_build(conn, report, ch?"alpha":"stable", force_build);
 		
-        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+        if (status) {
             lprintf("UPDATE: Build failed, check /root/build.log file\n");
             fail_reason = FAIL_BUILD;
-		    if (force_build) report_result(conn);
+		    if (force_build && report) report_result(conn);
 		    goto common_return;
 		}
 		

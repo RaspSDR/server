@@ -2496,12 +2496,17 @@ function config_cb(rx_chans, gps_chans, serno, pub, port_ext, pvt, port_int, nm,
 	}
 }
 
-function update_cb(fail_reason, pending, in_progress, rx_chans, gps_chans, vmaj, vmin, pmaj, pmin, build_date, build_time)
+function update_cb(fail_reason, pending, in_progress, rx_chans, gps_chans, vmaj, vmin, pmaj, pmin, build_date, build_time, msg_txt)
 {
-	config_str_update(rx_chans, gps_chans, vmaj, vmin);
-
 	var msg_update = w3_el("id-msg-update");
-	
+
+   if (msg_update && msg_txt) {
+      msg_update.innerHTML += '<BR>' + decodeURIComponent(msg_txt);
+      return;
+   }
+
+   config_str_update(rx_chans, gps_chans, vmaj, vmin);
+
 	if (msg_update) {
 		var s;
 		s = 'Installed version: v'+ vmaj +'.'+ vmin +', built '+ build_date +' '+ build_time;
@@ -3081,7 +3086,7 @@ function kiwi_msg(param, ws)
 			//console.log('update_cb='+ param[1]);
 			var o = kiwi_JSON_parse('update_cb', param[1]);
 			if (o) update_cb(o.f, o.p, o.i, o.r, o.g, o.v1, o.v2, o.p1, o.p2,
-				decodeURIComponent(o.d), decodeURIComponent(o.t));
+				decodeURIComponent(o.d), decodeURIComponent(o.t), o.msg);
 			break;
 
 		case "stats_cb":     // in response to "SET STATS_UPD"

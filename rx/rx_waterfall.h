@@ -68,7 +68,6 @@ struct iq_t {
 } __attribute__((packed));
 
 struct fft_t {
-	fftwf_plan hw_dft_plan;
 	fftwf_complex hw_c_samps[WF_C_NSAMPS];
 	fftwf_complex hw_fft[WF_C_NFFT];
 	iq_t sample_data[WF_C_NSAMPS];
@@ -171,6 +170,7 @@ struct wf_inst_t {
 struct wf_shmem_t {
     wf_inst_t wf_inst[MAX_RX_CHANS];        // NB: MAX_RX_CHANS even though there may be fewer MAX_WF_CHANS
     fft_t fft_inst[MAX_WF_CHANS];           // NB: MAX_WF_CHANS not MAX_RX_CHANS
+	fftwf_plan hw_dft_plan;
     float window_function[N_WF_WINF][WF_C_NSAMPS];
 	float samples[MAX_WF_CHANS][WF_C_NSAMPS];
     float CIC_comp[WF_C_NSAMPS];

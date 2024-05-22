@@ -54,6 +54,7 @@ Boston, MA  02110-1301, USA.
 #include <math.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <fftw3.h>
 
 kiwi_t kiwi;
 
@@ -108,6 +109,7 @@ int main(int argc, char *argv[])
 	
 	kiwi.platform = PLATFORM_ZYNQ7010;
 
+	fftwf_make_planner_thread_safe();
 	kstr_init();
 	shmem_init();
 	printf_init();

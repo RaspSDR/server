@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-pthread_mutex_t plan_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t plan_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool plan_created = false;
+static fftwf_plan fft_plan; ///< FFT plan
 
 static float hann_i(int i, int N)
 {
@@ -102,7 +104,11 @@ void monitor_init(monitor_t* me, const monitor_config_t* cfg)
     me->freqdata = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex) * (me->nfft / 2 + 1));
     
     pthread_mutex_lock(&plan_mutex);
-    me->fft_plan = fftwf_plan_dft_r2c_1d(me->nfft, me->timedata, me->freqdata, FFTW_ESTIMATE);
+    if (!plan_created)
+    {
+        fft_plan = fftwf_plan_dft_r2c_1d(me->nfft, me->timedata, me->freqdata, FFTW_ESTIMATE);
+        plan_created = true;
+    }
     pthread_mutex_unlock(&plan_mutex);
 }
 
@@ -155,7 +161,7 @@ void monitor_process(monitor_t* me, const float* frame)
         {
             me->timedata[pos] = me->window[pos] * me->last_frame[pos];
         }
-        fftwf_execute(me->fft_plan);
+        fftwf_execute_dft_r2c(fft_plan, me->timedata, me->freqdata);
 
         // Loop over possible frequency OSR offsets
         for (int freq_sub = 0; freq_sub < me->wf.freq_osr; ++freq_sub)

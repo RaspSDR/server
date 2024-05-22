@@ -36,7 +36,6 @@ typedef struct
     ftx_waterfall_t wf;  ///< Waterfall object
     float max_mag;       ///< Maximum detected magnitude (debug stats)
 
-    fftwf_plan fft_plan; ///< FFT plan
     float *timedata;
     fftwf_complex *freqdata;
 } monitor_t;

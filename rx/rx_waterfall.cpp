@@ -123,10 +123,8 @@ void c2s_waterfall_init()
 
 	// do these here, rather than the beginning of c2s_waterfall(), because they take too long
 	// and cause the data pump to overrun
-	for (i=0; i < MAX_WF_CHANS; i++) {
-	    fft_t *fft = &WF_SHMEM->fft_inst[i];
-		fft->hw_dft_plan = fftwf_plan_dft_1d(WF_C_NSAMPS, fft->hw_c_samps, fft->hw_fft, FFTW_FORWARD, FFTW_MEASURE);
-	}
+    fft_t *fft = &WF_SHMEM->fft_inst[0];
+    WF_SHMEM->hw_dft_plan = fftwf_plan_dft_1d(WF_C_NSAMPS, fft->hw_c_samps, fft->hw_fft, FFTW_FORWARD, FFTW_MEASURE);
 	
 	const float adc_scale_decim = powf(2, -16);		// gives +/- 0.5 float samples
 	//const float adc_scale_decim = powf(2, -15);		// gives +/- 1.0 float samples
@@ -1250,7 +1248,7 @@ void compute_frame(int rx_chan)
 
 	//NextTask("FFT1");
 	evWF(EC_EVENT, EV_WF, -1, "WF", "compute_frame: FFT start");
-	fftwf_execute(fft->hw_dft_plan);
+	fftwf_execute_dft(WF_SHMEM->hw_dft_plan, fft->hw_c_samps, fft->hw_fft);
 	evWF(EC_EVENT, EV_WF, -1, "WF", "compute_frame: FFT done");
 	//NextTask("FFT2");
 

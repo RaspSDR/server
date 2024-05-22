@@ -191,7 +191,7 @@ target_link_directories(kiwi.bin PUBLIC
 )
 
 target_link_libraries(kiwi.bin PRIVATE
-    ${FFTW3_STATIC_LIBRARIES}
+    libfftw3f.a libfftw3f_threads.a
     ${ZLIB_LIBRARIES}
     ${GPS_LIBRARIES}
     ${FDKAAC_LIBRARIES}

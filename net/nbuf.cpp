@@ -43,7 +43,7 @@ Boston, MA  02110-1301, USA.
 #define NDESC_MAGIC_B	0xddddbbbb
 #define NDESC_MAGIC_E	0xddddeeee
 
-
+#ifdef NBUF_DEBUG
 #define check_ndesc(nd) { \
 	if (nd->magic_b != NDESC_MAGIC_B || nd->magic_e != NDESC_MAGIC_E) { \
 		lprintf("BAD NDESC MAGIC 0x%x 0x%x, %s line %d #############################################\n", \
@@ -64,6 +64,10 @@ Boston, MA  02110-1301, USA.
 		dump_panic("check_nbuf"); \
 	} \
 }
+#else
+#define check_ndesc(nd)
+#define check_nbuf(nb)
+#endif
 
 void nbuf_init()
 {
@@ -76,8 +80,10 @@ void nbuf_stat()
 void ndesc_init(ndesc_t *nd, struct mg_connection *mc)
 {
 	memset(nd, 0, sizeof(ndesc_t));
+#ifdef NBUF_DEBUG
 	nd->magic_b = NDESC_MAGIC_B;
 	nd->magic_e = NDESC_MAGIC_E;
+#endif
 	lock_init(&nd->lock);
 	nd->mc = mc;
 }
@@ -91,16 +97,20 @@ static nbuf_t *nbuf_malloc()
 	nbuf_t *nb;
 	
 	nb = (nbuf_t*) kiwi_malloc("nbuf", sizeof(nbuf_t));
+#ifdef NBUF_DEBUG
 	nb->magic = NB_MAGIC;
 	nb->magic_b = NBUF_MAGIC_B;
 	nb->magic_e = NBUF_MAGIC_E;
+#endif
 	return nb;
 }
 
 static void nbuf_free(nbuf_t *nb)
 {
 	check_nbuf(nb);
+#ifdef NBUF_DEBUG
 	nb->magic = nb->magic_b = nb->magic_e = 0;
+#endif
 	nb->isFree = TRUE;
 	kiwi_free("nbuf", nb);
 }

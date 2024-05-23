@@ -22,26 +22,37 @@ Boston, MA  02110-1301, USA.
 #include "types.h"
 #include "coroutines.h"     // lock_t
 
+//#define NBUF_DEBUG
+
 struct mg_connection;
 
-
 typedef struct nbuf_st {
+#ifdef NBUF_DEBUG
 	u4_t magic;
+#endif
 	struct mg_connection *mc;
 	char *buf;
 	u2_t len, ttl, id;
 	bool done, expecting_done, dequeued, isFree;
+#if NBUF_DEBUG
 	u4_t magic_b;
+#endif
 	struct nbuf_st *next, *prev;
+#if NBUF_DEBUG
 	u4_t magic_e;
+#endif
 } nbuf_t;
 
 typedef struct {
 	struct mg_connection *mc;
 	lock_t lock;
+#if NBUF_DEBUG
 	u4_t magic_b;
+#endif
 	nbuf_t *q, *q_head;
+#if NBUF_DEBUG
 	u4_t magic_e;
+#endif
 	u2_t cnt, ttl;
 	bool ovfl, dbug;
 } ndesc_t;

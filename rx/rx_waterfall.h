@@ -34,6 +34,7 @@ Boston, MA  02110-1301, USA.
 #include "datatypes.h"
 #include "ext_int.h"
 #include "rx.h"
+#include "rx_noise.h"
 #include "rx_sound.h"
 #include "dx.h"
 #include "non_block.h"
@@ -135,9 +136,6 @@ struct wf_inst_t {
 	int window_func;
 	bool trigger;
 
-	// NB: matches rx_noise.h which is not included here to prevent re-compile cascade
-    #define NOISE_TYPES 4
-    #define NOISE_PARAMS 8
 	int nb_enable[NOISE_TYPES];
 	float nb_param[NOISE_TYPES][NOISE_PARAMS];
 	bool nb_param_change[NOISE_TYPES], nb_setup;
@@ -172,10 +170,9 @@ struct wf_shmem_t {
     fft_t fft_inst[MAX_WF_CHANS];           // NB: MAX_WF_CHANS not MAX_RX_CHANS
 	fftwf_plan hw_dft_plan;
     float window_function[N_WF_WINF][WF_C_NSAMPS];
-	float samples[MAX_WF_CHANS][WF_C_NSAMPS];
     float CIC_comp[WF_C_NSAMPS];
     bool empty;
-};     
+};
 
 #include "shmem_config.h"
 

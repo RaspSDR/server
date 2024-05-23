@@ -111,7 +111,7 @@ void fpga_init()
     lock_init(&gpio_lock);
 }
 
-int fpga_get_wf(int rx_chan, int decimate, uint32_t freq)
+int fpga_get_wf(int rx_chan, int decimate, uint64_t freq)
 {
   int ret = -1;
 
@@ -129,7 +129,7 @@ int fpga_get_wf(int rx_chan, int decimate, uint32_t freq)
     {
       // allocate wf channel i for rx_channel
       fpga_config->wf_config[i].wf_decim = decimate;
-      fpga_config->wf_config[i].wf_freq = (-freq) >> 2;
+      fpga_config->wf_config[i].wf_freq = freq;
 
       TaskSleepUsec(5);
       fpga_config->reset |= RESET_WF0 << i;

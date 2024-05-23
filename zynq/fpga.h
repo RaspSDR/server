@@ -47,12 +47,12 @@ typedef struct {
     uint32_t reset;
     uint32_t rx_freq[16];
     struct {
-        uint32_t wf_freq;
+        uint64_t wf_freq;
         uint32_t wf_decim;
-    }wf_config[4];
+    } __attribute__((packed)) wf_config[4];
     uint8_t gpios;
 }__attribute__((packed)) FPGA_Config;
-static_assert(sizeof(FPGA_Config) == 808/8);
+static_assert(sizeof(FPGA_Config) == 936/8);
 
 typedef struct {
     uint32_t signature;
@@ -70,7 +70,7 @@ extern const volatile uint32_t *fpga_pps_data;
 extern volatile FPGA_Config *fpga_config;
 extern const volatile FPGA_Status *fpga_status;
 
-extern int fpga_get_wf(int rx_chan, int decimate, uint32_t freq);
+extern int fpga_get_wf(int rx_chan, int decimate, uint64_t freq);
 extern void fpga_free_wf(int wf_chan, int rx_chan);
 
 extern void fpga_set_antenna(int mask);

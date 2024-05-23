@@ -309,10 +309,12 @@ void c2s_waterfall(void *param)
 			i_offset = (u64_t) (s64_t) ((spectral_inversion? off_freq_inv : off_freq) / conn->adc_clock_corrected * pow(2,48));
 			i_offset = -i_offset;
 			if (wf->isWF)
+            {
 			    wf->i_offset = i_offset;
             
-            if (!kiwi.wf_share)
-                spi_set3(CmdSetWFFreq, rx_chan, (i_offset >> 16) & 0xffffffff, i_offset & 0xffff);
+                if (!kiwi.wf_share)
+                    fpga_config->wf_config[rx_chan].wf_freq = i_offset;
+            }
 			//printf("WF%d freq updated due to ADC clock correction\n", rx_chan);
 		}
 
@@ -458,7 +460,7 @@ void c2s_waterfall(void *param)
                             wf->decim = decim;
 
                         if (!kiwi.wf_share)
-                            spi_set(CmdSetWFDecim, rx_chan, decim);
+                            fpga_config->wf_config[rx_chan].wf_decim = decim;
                     
                         // We've seen cases where the wf connects, but the sound never does.
                         // So have to check for conn->other being valid.
@@ -499,10 +501,12 @@ void c2s_waterfall(void *param)
                     #endif
                 
                     if (wf->isWF)
+                    {
                         wf->i_offset = i_offset;
 
-                    if (!kiwi.wf_share)
-                        spi_set3(CmdSetWFFreq, rx_chan, (i_offset >> 16) & 0xffffffff, i_offset & 0xffff);
+                        if (!kiwi.wf_share)
+                            fpga_config->wf_config[rx_chan].wf_freq = i_offset;
+                    }
                     //jksd
                     //printf("START s=%d ->s=%d\n", start, wf->start);
                     //wf->prev_start = (wf->start == -1)? start : wf->start;
@@ -981,7 +985,7 @@ void sample_wf(int rx_chan)
         int wf_chan;
 
         if (kiwi.wf_share)
-            wf_chan = fpga_get_wf(rx_chan, wf->decim, (wf->i_offset >> 16) & 0xffffffff);
+            wf_chan = fpga_get_wf(rx_chan, wf->decim, wf->i_offset);
         else
             wf_chan = rx_chan;
 

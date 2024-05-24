@@ -186,3 +186,29 @@ void fpga_set_dither(bool enabled)
 
   fpga_config->gpios = current_gpio;
 }
+
+void fpga_rxfreq(int rx_chan, uint64_t freq)
+{
+  fpga_config->rx_freq[rx_chan] = freq;
+}
+
+void fpga_wffreq(int wf_chan, uint64_t freq)
+{
+  fpga_config->wf_config[wf_chan].wf_freq = freq;
+}
+
+void fpga_wfreset(int wf_chan)
+{
+  fpga_config->reset &= ~(RESET_WF0 << wf_chan);
+  fpga_config->reset |= RESET_WF0 << wf_chan;
+}
+
+void fpga_setovmask(uint32_t mask)
+{
+
+}
+
+void fpga_setadclvl(uint32_t val)
+{
+
+}

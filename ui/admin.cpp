@@ -31,7 +31,6 @@ Boston, MA  02110-1301, USA.
 #include "web.h"
 #include "net.h"
 #include "peri.h"
-#include "spi.h"
 #include "gps_.h"
 #include "coroutines.h"
 #include "debug.h"
@@ -558,7 +557,7 @@ void c2s_admin(void *param)
                 // adjust ADC overload detect count mask
                 u4_t ov_counts_mask = (~(ov_counts - 1)) & 0xffff;
                 //printf("ov_counts_mask %d 0x%x\n", ov_counts, ov_counts_mask);
-                spi_set(CmdSetOVMask, 0, ov_counts_mask);
+                fpga_setovmask(ov_counts_mask);
 			    continue;
 			}
 

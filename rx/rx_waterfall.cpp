@@ -25,7 +25,6 @@ Boston, MA  02110-1301, USA.
 #include "misc.h"
 #include "nbuf.h"
 #include "web.h"
-#include "spi.h"
 #include "coroutines.h"
 #include "debug.h"
 #include "data_pump.h"
@@ -951,7 +950,7 @@ void sample_wf(int rx_chan)
                 rx_chan, wf->zoom, wf->samp_wait_us, 2*desired, desired);
             #endif
 
-            spi_set(CmdWFReset, rx_chan, WF_SAMP_RD_RST | WF_SAMP_WR_RST | WF_SAMP_CONTIN);
+            fpga_wfreset(rx_chan);
             // memmset(&fft->sample_data[0], 0, sizeof(iq_t) * WF_C_NSAMPS);
         } else {
             wf->overlapped_sampling = false;
@@ -968,7 +967,7 @@ void sample_wf(int rx_chan)
     if (!wf->overlapped_sampling || kiwi.wf_share)
     {
         if (!kiwi.wf_share)
-            spi_set(CmdWFReset, rx_chan, WF_SAMP_RD_RST | WF_SAMP_WR_RST | WF_SAMP_CONTIN);
+            fpga_wfreset(rx_chan);
         start = 0;
     }
     else

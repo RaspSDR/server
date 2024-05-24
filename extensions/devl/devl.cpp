@@ -3,7 +3,6 @@
 #include "ext.h"	// all calls to the extension interface begin with "ext_", e.g. ext_register()
 
 #include "kiwi.h"
-#include "spi.h"
 
 #include <stdio.h>
 #include <unistd.h>

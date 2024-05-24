@@ -28,7 +28,6 @@ Boston, MA  02110-1301, USA.
 #include "web.h"
 #include "peri.h"
 #include "eeprom.h"
-#include "spi.h"
 #include "gps_.h"
 #include "coroutines.h"
 #include "cfg.h"

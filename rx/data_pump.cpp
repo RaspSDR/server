@@ -25,7 +25,6 @@ Boston, MA  02110-1301, USA.
 #include "misc.h"
 #include "timer.h"
 #include "web.h"
-#include "spi.h"
 #include "coroutines.h"
 #include "debug.h"
 #include "data_pump.h"
@@ -148,7 +147,6 @@ static void snd_service()
 
             memset(dpump.hist, 0, sizeof(dpump.hist));
             memset(dpump.in_hist, 0, sizeof(dpump.in_hist));
-            spi_set(CmdSetRXNsamps, nrx_samps);
             diff = 0;
         }
         else

@@ -32,7 +32,6 @@ Boston, MA  02110-1301, USA.
 #include "timer.h"
 #include "nbuf.h"
 #include "web.h"
-#include "spi.h"
 #include "gps_.h"
 #include "coroutines.h"
 #include "cuteSDR.h"
@@ -338,7 +337,7 @@ void c2s_sound(void *param)
             i_phase = (u64_t) round(f_phase * pow(2,48));
             //cprintf(conn, "SND UPD freq %.3f kHz i_phase 0x%08x|%08x clk %.6f(%d)\n",
             //    s->freq, PRINTF_U64_ARG(i_phase), conn->adc_clock_corrected, clk.adc_clk_corrections);
-            spi_set3(CmdSetRXFreq, rx_chan, (u4_t) ((i_phase >> 16) & 0xffffffff), (u2_t) (i_phase & 0xffff));
+            fpga_rxfreq(rx_chan, i_phase);
 
 		    //cprintf(conn, "SND freq updated due to ADC clock correction\n");
 		}

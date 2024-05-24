@@ -21,7 +21,6 @@ Boston, MA  02110-1301, USA.
 #define _DATA_PUMP_H_
 
 #include "types.h"
-#include "spi.h"
 #include "cuteSDR.h"
 
 #include <atomic>

@@ -26,9 +26,9 @@ Boston, MA  02110-1301, USA.
 #include "printf.h"
 #include "timer.h"
 #include "web.h"
-#include "spi.h"
 #include "clk.h"
 #include "gps_.h"
+#include "fpga.h"
 #include "cfg.h"
 #include "coroutines.h"
 #include "non_block.h"
@@ -455,7 +455,7 @@ fail:
             //printf("/adc SET level=%d(0x%x)\n", adc_level, adc_level);
             #define COUNT_ADC_OVFL 0x2000
             if (adc_level == 0) adc_level = COUNT_ADC_OVFL;     // count ADC overflow instead of a level value
-            spi_set(CmdSetADCLvl, adc_level);
+			fpga_setadclvl(adc_level);
         }
         u4_t _adc_level = (adc_level == COUNT_ADC_OVFL)? 0 : adc_level;
 		asprintf(&sb, "{ \"adc_level_dec\":%u, \"adc_level_hex\":\"0x%x\", \"adc_count\":%u, \"ver_maj\":%d, \"ver_min\":%d }\n",

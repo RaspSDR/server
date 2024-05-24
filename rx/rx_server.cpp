@@ -30,8 +30,8 @@ Boston, MA  02110-1301, USA.
 #include "printf.h"
 #include "timer.h"
 #include "web.h"
-#include "spi.h"
 #include "gps_.h"
+#include "fpga.h"
 #include "cfg.h"
 #include "coroutines.h"
 #include "net.h"
@@ -156,7 +156,7 @@ void rx_server_init()
     json_init(&cfg_ipl, (char *) "{}", "cfg_ipl");
     
     ov_mask = 0xfc00;
-	spi_set(CmdSetOVMask, 0, ov_mask);
+	fpga_setovmask(ov_mask);
 }
 
 void rx_server_remove(conn_t *c)

@@ -6,7 +6,6 @@
 #include "misc.h"
 #include "str.h"
 #include "web.h"
-#include "spi.h"
 #include "coroutines.h"
 #include "debug.h"
 #include "printf.h"

@@ -26,7 +26,6 @@ Boston, MA  02110-1301, USA.
 #include "misc.h"
 #include "nbuf.h"
 #include "web.h"
-#include "spi.h"
 #include "coroutines.h"
 #include "debug.h"
 #include "data_pump.h"

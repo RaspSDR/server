@@ -21,8 +21,6 @@ Boston, MA  02110-1301, USA.
 
 #include "types.h"
 
-u64_t fpga_dna();
-
 #define RESET_RX (1 << 0)
 #define RESET_WF0 (1 << 1)
 #define RESET_WF1 (1 << 2)
@@ -45,14 +43,14 @@ u64_t fpga_dna();
 
 typedef struct {
     uint32_t reset;
-    uint32_t rx_freq[16];
+    uint64_t rx_freq[16];
     struct {
         uint64_t wf_freq;
         uint32_t wf_decim;
     } __attribute__((packed)) wf_config[4];
     uint8_t gpios;
 }__attribute__((packed)) FPGA_Config;
-static_assert(sizeof(FPGA_Config) == 936/8);
+static_assert(sizeof(FPGA_Config) == 1448/8);
 
 typedef struct {
     uint32_t signature;
@@ -70,9 +68,18 @@ extern const volatile uint32_t *fpga_pps_data;
 extern volatile FPGA_Config *fpga_config;
 extern const volatile FPGA_Status *fpga_status;
 
+extern u64_t fpga_dna();
+
 extern int fpga_get_wf(int rx_chan, int decimate, uint64_t freq);
 extern void fpga_free_wf(int wf_chan, int rx_chan);
 
 extern void fpga_set_antenna(int mask);
 extern void fpga_set_pga(bool enabled);
 extern void fpga_set_dither(bool enabled);
+
+extern void fpga_rxfreq(int rx_chan, uint64_t freq);
+extern void fpga_wffreq(int wf_chan, uint64_t freq);
+
+extern void fpga_wfreset(int wf_chan);
+extern void fpga_setovmask(uint32_t mask);
+extern void fpga_setadclvl(uint32_t val);

@@ -307,7 +307,6 @@ void c2s_waterfall(void *param)
 			off_freq = start * HZperStart;
             off_freq_inv = ((float) MAX_START(zoom) - start) * HZperStart;
 			i_offset = (u64_t) (s64_t) ((spectral_inversion? off_freq_inv : off_freq) / conn->adc_clock_corrected * pow(2,48));
-			i_offset = -i_offset;
 			if (wf->isWF)
             {
 			    wf->i_offset = i_offset;
@@ -493,7 +492,6 @@ void c2s_waterfall(void *param)
                     #endif
                 
 			        i_offset = (u64_t) (s64_t) ((spectral_inversion? off_freq_inv : off_freq) / conn->adc_clock_corrected * pow(2,48));
-			        i_offset = -i_offset;
 
                     #ifdef WF_INFO
                     if (!bg) cprintf(conn, "WF z%d OFFSET %.3f kHz i_offset 0x%012llx\n",

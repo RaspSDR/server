@@ -56,11 +56,6 @@ static void report_result(conn_t *conn)
 	assert(conn != NULL);
 	char *date_m = kiwi_str_encode((char *) __DATE__);
 	char *time_m = kiwi_str_encode((char *) __TIME__);
-	printf("MSG update_cb="
-	    "{\"f\":%d,\"p\":%d,\"i\":%d,\"r\":%d,\"g\":%d,"
-	    "\"v1\":%d,\"v2\":%d,\"p1\":%d,\"p2\":%d,\"d\":\"%s\",\"t\":\"%s\"}\n",
-		fail_reason, update_pending, update_in_progress, rx_chans, gps_chans,
-		version_maj, version_min, pending_maj, pending_min, date_m, time_m);
 	send_msg(conn, false, "MSG update_cb="
 	    "{\"f\":%d,\"p\":%d,\"i\":%d,\"r\":%d,\"g\":%d,"
 	    "\"v1\":%d,\"v2\":%d,\"p1\":%d,\"p2\":%d,\"d\":\"%s\",\"t\":\"%s\"}",
@@ -75,7 +70,6 @@ static void report_progress(conn_t *conn, const char* msg)
 	// let admin interface know result
 	assert(conn != NULL);
 	char *msg_m = kiwi_str_encode((char *)msg);
-	printf( "MSG update_cb={\"msg\":\"%s\"}\n", msg_m);
 	send_msg(conn, false, "MSG update_cb={\"msg\":\"%s\"}\n", msg_m);
 
 	kiwi_ifree(msg_m, "msg_m");
@@ -89,7 +83,7 @@ static int update_build(conn_t *conn, bool report, const char *channel, bool for
 	int status = system("mkdir -p /media/mmcblk0p1/update; rm -Rf /media/mmcblk0p1/update/*");
 	if (status != 0)
     {
-	    printf("UPDATE: create folder status=0x%08x\n", status);
+	    lprintf("UPDATE: create folder status=0x%08x\n", status);
 		goto exit;
 	}
 
@@ -98,7 +92,7 @@ static int update_build(conn_t *conn, bool report, const char *channel, bool for
 	status = blocking_system("curl -s -o /media/mmcblk0p1/update/sdr_receiver_kiwi.bit http://downloads.rx-888.com/web-888/%s/sdr_receiver_kiwi.bit", channel);
 	if (status != 0)
     {
-	    printf("UPDATE: fetch bistream status=0x%08x\n", status);
+	    lprintf("UPDATE: fetch bistream status=0x%08x\n", status);
 		goto exit;
 	}
 
@@ -107,7 +101,7 @@ static int update_build(conn_t *conn, bool report, const char *channel, bool for
 	status = blocking_system("curl -s -o /media/mmcblk0p1/update/kiwi.bin http://downloads.rx-888.com/web-888/%s/kiwi.bin", channel);
 	if (status != 0)
     {
-	    printf("UPDATE: fetch binary status=0x%08x\n", status);
+	    lprintf("UPDATE: fetch binary status=0x%08x\n", status);
 		goto exit;
 	}
 
@@ -115,7 +109,7 @@ static int update_build(conn_t *conn, bool report, const char *channel, bool for
 	status = blocking_system("curl -s -o /media/mmcblk0p1/update/checksum http://downloads.rx-888.com/web-888/%s/checksum", channel);
 	if (status != 0)
     {
-	    printf("UPDATE: fetch checksum status=0x%08x\n", status);
+	    lprintf("UPDATE: fetch checksum status=0x%08x\n", status);
 		goto exit;
 	}
 
@@ -123,7 +117,7 @@ static int update_build(conn_t *conn, bool report, const char *channel, bool for
 	status = system("cd /media/mmcblk0p1/update; sha256sum -c /media/mmcblk0p1/update/checksum");
 	if (status != 0)
     {
-	    printf("UPDATE: checksum failed status=0x%08x\n", status);
+	    lprintf("UPDATE: checksum failed status=0x%08x\n", status);
 		if (report) report_progress(conn, "Checksum failed");
 
 		goto exit;

@@ -67,7 +67,7 @@ int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
 	print_stats, debian_maj, debian_min, test_flag, dx_print,
 	use_foptim, is_locked, drm_nreg_chans;
 
-u4_t ov_mask, snd_intr_usec;
+u4_t ov_mask;
 
 bool create_eeprom, need_hardware, kiwi_reg_debug, have_ant_switch_ext,
     disable_led_task, debug_printfs, cmd_debug;
@@ -238,11 +238,10 @@ int main(int argc, char *argv[])
     assert(wf_chans <= MAX_WF_CHANS);
 
     nrx_samps = NRX_SAMPS_CHANS(rx_chans);
-    snd_intr_usec = 1e6 / ((float) snd_rate/nrx_samps);
     lprintf("firmware: RX rx_decim=%d RX1_STD_DECIM=%d RX2_STD_DECIM=%d USE_RX_CICF=%d\n",
         rx_decim, RX1_STD_DECIM, RX2_STD_DECIM, VAL_USE_RX_CICF);
-    lprintf("firmware: RX srate=%.3f(%d) bufs=%d samps=%d intr_usec=%d\n",
-        ext_update_get_sample_rateHz(ADC_CLK_TYP), snd_rate, nrx_bufs, nrx_samps, snd_intr_usec);
+    lprintf("firmware: RX srate=%.3f(%d) bufs=%d samps=%d\n",
+        ext_update_get_sample_rateHz(ADC_CLK_TYP), snd_rate, nrx_bufs, nrx_samps);
 
     assert(nrx_bufs <= MAX_NRX_BUFS);
     assert(nrx_samps <= MAX_NRX_SAMPS);

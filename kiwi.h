@@ -91,7 +91,7 @@ extern int wf_sim, wf_real, wf_time, ev_dump, wf_flip, wf_exit, wf_start, tone, 
 
 extern char **main_argv;
 
-extern u4_t ov_mask, snd_intr_usec;
+extern u4_t ov_mask;
 extern float g_genfreq, g_genampl, g_mixfreq, max_thr;
 extern double ui_srate, ui_srate_kHz, freq_offset_kHz, freq_offmax_kHz;
 #define freq_offset freq_offset_kHz     // ant switch ext compatibility

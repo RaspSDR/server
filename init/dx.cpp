@@ -723,25 +723,6 @@ void dx_label_init()
 	    dx.rx_db[i] = &dx.dx_db[DB_STORED];
 	}
 
-    const char *s;
-    if ((s = cfg_array("dx_type", NULL, CFG_OPTIONAL)) != NULL) {
-        cfg_array_free(s);
-        
-        // kiwi.json/dx_type[] exists
-        
-        if (kiwi_file_exists(DIR_CFG "/dx_config.json")) {
-            lprintf("DX config conversion: ERROR dx_config.json exists but also kiwi.json/{dx_type, band_svc, bands}?\n");
-            lprintf("DX config conversion: will leave dx_config.json intact, but remove kiwi.json/{dx_type, band_svc, bands}\n");
-        } else {
-            lprintf("DX config conversion: MOVING kiwi.json/{dx_type, band_svc, bands} => dx_config.json\n");
-            system("jq '{dx_type, band_svc, bands}' " DIR_CFG "/kiwi.json >" DIR_CFG "/dx_config.json");
-        }
-        system("jq 'del(.dx_type) | del(.band_svc) | del(.bands)' " DIR_CFG "/kiwi.json >" DIR_CFG "/kiwi.NEW.json");
-        system("mv " DIR_CFG "/kiwi.NEW.json " DIR_CFG "/kiwi.json");
-        lprintf("DX config conversion: RESTART Kiwi..\n");
-        kiwi_exit(0);
-    }
-
 	dxcfg_init();
 
 	TMEAS(u4_t start = timer_ms();)

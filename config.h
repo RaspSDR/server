@@ -42,7 +42,7 @@ typedef enum { ESPEED_AUTO = 0, ESPEED_10M = 1, ESPEED_100M = 2 } espeed_e;
 #define PROXY_SERVER_HOST   "proxy.rx-888.com"
 #define PROXY_SERVER_PORT   8073
 
-extern int rx_chans, wf_chans, nrx_bufs, nrx_samps,snd_rate, rx_decim;
+extern int rx_chans, wf_chans, nrx_bufs, nrx_samps, snd_rate, rx_decim;
 
 // INET6_ADDRSTRLEN (46) plus some extra in case ipv6 scope/zone is an issue
 // can't be in net.h due to #include recursion problems

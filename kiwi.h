@@ -80,9 +80,8 @@ extern bool background_mode, need_hardware, any_preempt_autorun,
 	have_ant_switch_ext, disable_led_task, debug_printfs, force_camp,
 	snr_local_time, log_local_ip, DRM_enable, have_snd_users, admin_keepalive;
 
-extern int wf_sim, wf_real, wf_time, ev_dump, wf_flip, wf_exit, wf_start, tone, down, navg,
-	rx_cordic, rx_cic, rx_cic2, rx_dump, wf_cordic, wf_cic, wf_mult, wf_mult_gen, meas, monitors_max,
-	rx_yield, gps_chans, rx_num, wf_num, do_slice, bg, dx_print,
+extern int ev_dump, tone, down, navg, meas, monitors_max,
+	gps_chans, rx_num, wf_num, bg, dx_print,
 	port, print_stats, serial_number, ip_limit_mins, is_locked, test_flag, n_camp,
 	inactivity_timeout_mins, S_meter_cal, waterfall_cal, current_nusers, debug_v, debian_ver,
 	utc_offset, dst_offset, reg_kiwisdr_com_status, kiwi_reg_lo_kHz, kiwi_reg_hi_kHz,

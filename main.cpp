@@ -60,9 +60,7 @@ kiwi_t kiwi;
 int version_maj, version_min;
 int rx_chans, wf_chans, nrx_samps, snd_rate, rx_decim;
 
-int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
-	rx_cordic, rx_cic, rx_cic2, rx_dump, wf_cordic, wf_cic, wf_mult, wf_mult_gen, do_slice=-1,
-	rx_yield=1000, gps_chans=GPS_MAX_CHANS, rx_num, wf_num,
+int ev_dump=0, tone, down, gps_chans=GPS_MAX_CHANS, rx_num, wf_num,
 	navg=1, meas, debian_ver, monitors_max, bg,
 	print_stats, debian_maj, debian_min, test_flag, dx_print,
 	use_foptim, is_locked, drm_nreg_chans;
@@ -144,30 +142,14 @@ int main(int argc, char *argv[])
 		if (ARG("-ctrace")) { ARGL(web_caching_debug); } else
 		if (ARG("-ext")) kiwi.ext_clk = true; else
 		if (ARG("-eeprom")) create_eeprom = true; else
-		if (ARG("-sim")) wf_sim = 1; else
-		if (ARG("-real")) wf_real = 1; else
-		if (ARG("-time")) wf_time = 1; else
 		if (ARG("-dump") || ARG("+dump")) { ARGL(ev_dump); } else
-		if (ARG("-flip")) wf_flip = 1; else
-		if (ARG("-start")) wf_start = 1; else
-		if (ARG("-mult")) wf_mult = 1; else
-		if (ARG("-multgen")) wf_mult_gen = 1; else
 		if (ARG("-meas")) meas = 1; else
-
-		if (ARG("-rcordic")) rx_cordic = 1; else
-		if (ARG("-rcic")) rx_cic = 1; else
-		if (ARG("-rcic2")) rx_cic2 = 1; else
-		if (ARG("-rdump")) rx_dump = 1; else
-		if (ARG("-wcordic")) wf_cordic = 1; else
-		if (ARG("-wcic")) wf_cic = 1; else
 		
 		if (ARG("-avg")) { ARGL(navg); } else
 		if (ARG("-tone")) { ARGL(tone); } else
-		if (ARG("-slc")) { ARGL(do_slice); } else
 		if (ARG("-rx")) { ARGL(rx_num); } else
 		if (ARG("-wf")) { ARGL(wf_num); } else
 		if (ARG("-ch")) { ARGL(gps_chans); } else
-		if (ARG("-y")) { ARGL(rx_yield); } else
 		
 		lprintf("unknown arg: \"%s\"\n", argv[ai]);
 

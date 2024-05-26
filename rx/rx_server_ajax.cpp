@@ -347,7 +347,7 @@ char *rx_server_ajax(struct mg_connection *mc, char *ip_forwarded)
 
             asprintf(&s_a[idx], "]}\n");
             idx++;
-        } else { rc = 4; goto fail; }
+        } else { type = -1; rc = 4; goto fail; }
 		
 		dx_param_t dxp;
 		dxp.type = type;

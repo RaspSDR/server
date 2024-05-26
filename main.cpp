@@ -58,7 +58,7 @@ Boston, MA  02110-1301, USA.
 kiwi_t kiwi;
 
 int version_maj, version_min;
-int rx_chans, wf_chans, nrx_bufs, nrx_samps, snd_rate, rx_decim;
+int rx_chans, wf_chans, nrx_samps, snd_rate, rx_decim;
 
 int wf_sim, wf_real, wf_time, ev_dump=0, wf_flip, wf_start=1, tone, down,
 	rx_cordic, rx_cic, rx_cic2, rx_dump, wf_cordic, wf_cic, wf_mult, wf_mult_gen, do_slice=-1,
@@ -226,7 +226,6 @@ int main(int argc, char *argv[])
 
     snd_rate = SND_RATE_4CH;
     rx_decim = (int)(ADC_CLOCK_TYP/12000); // 12k
-    nrx_bufs = RXBUF_SIZE_4CH / NRX_SPI;
 
     bool no_wf = cfg_bool("no_wf", &err, CFG_OPTIONAL);
     if (err) no_wf = false;
@@ -238,17 +237,12 @@ int main(int argc, char *argv[])
     assert(wf_chans <= MAX_WF_CHANS);
 
     nrx_samps = NRX_SAMPS_CHANS(rx_chans);
-    lprintf("firmware: RX rx_decim=%d RX1_STD_DECIM=%d RX2_STD_DECIM=%d USE_RX_CICF=%d\n",
-        rx_decim, RX1_STD_DECIM, RX2_STD_DECIM, VAL_USE_RX_CICF);
-    lprintf("firmware: RX srate=%.3f(%d) bufs=%d samps=%d\n",
-        ext_update_get_sample_rateHz(ADC_CLK_TYP), snd_rate, nrx_bufs, nrx_samps);
+    lprintf("firmware: RX rx_decim=%d USE_RX_CICF=%d\n", rx_decim, 0);
+    lprintf("firmware: RX srate=%.3f(%d) samps=%d\n",
+        ext_update_get_sample_rateHz(ADC_CLK_TYP), snd_rate, nrx_samps);
 
-    assert(nrx_bufs <= MAX_NRX_BUFS);
     assert(nrx_samps <= MAX_NRX_SAMPS);
     assert(nrx_samps < FASTFIR_OUTBUF_SIZE);    // see data_pump.h
-
-    lprintf("firmware: WF xfer=%d samps=%d rpt=%d loop=%d rem=%d\n",
-        NWF_NXFER, NWF_SAMPS, NWF_SAMPS_RPT, NWF_SAMPS_LOOP, NWF_SAMPS_REM);
 
     rx_num = rx_chans, wf_num = wf_chans;
     monitors_max = (rx_chans * N_CAMP) + N_QUEUERS;
@@ -280,7 +274,6 @@ int main(int argc, char *argv[])
         kiwi_msleep(100);
     }
 	
-	if (!GPS_CHANS) panic("no GPS_CHANS configured");
 	gps_main(argc, argv);
     
 	CreateTask(stat_task, NULL, MAIN_PRIORITY);

@@ -274,9 +274,6 @@ void c2s_waterfall(void *param)
 
 	#define WF_IQ_T 4
 	assert(sizeof(iq_t) == WF_IQ_T);
-	#if !((NWF_SAMPS * WF_IQ_T) <= SPIBUF_B)
-		#error !((NWF_SAMPS * WF_IQ_T) <= SPIBUF_B)
-	#endif
 
 	//clprintf(conn, "WF INIT conn: %p mc: %p %s:%d %s\n",
 	//	conn, conn->mc, conn->remote_ip, conn->remote_port, conn->mc->uri);
@@ -392,54 +389,23 @@ void c2s_waterfall(void *param)
                         #define CIC1_DECIM 0x0001
                         #define CIC2_DECIM 0x0100
                         u2_t decim, r1, r2;
-    #ifdef USE_WF_NEW
-                        // currently 11-levels of zoom: z0-z10, MAX_ZOOM == 10
-                        // z0-10: R = 2,4,8,16,32,64,128,256,512,1024,2048 for MAX_ZOOM == 10
-                        r1 = zoom + 1;
-                        r2 = 1;		// R2 = 1
-                        decim = ?;
-    #else
+
                         // NB: because we only use half of the FFT with CIC can zoom one level less
                         int zm1 = (WF_USING_HALF_CIC == 2)? (zoom? (zoom-1) : 0) : zoom;
 
-                        #ifdef USE_WF_1CIC
+                        // currently 15-levels of zoom: z0-z14, MAX_ZOOM == 14
+                        if (zm1 == 0) {
+                            // z0-1: R = 1,1
+                            r1 = 0;
+                        } else {
+                            // z2-14: R = 2,4,8,16,32,64,128,256,512,1k,2k,4k,8k for MAX_ZOOM = 14
+                            r1 = zm1;
+                        }
                     
-                            // currently 15-levels of zoom: z0-z14, MAX_ZOOM == 14
-                            if (zm1 == 0) {
-                                // z0-1: R = 1,1
-                                r1 = 0;
-                            } else {
-                                // z2-14: R = 2,4,8,16,32,64,128,256,512,1k,2k,4k,8k for MAX_ZOOM = 14
-                                r1 = zm1;
-                            }
-                        
-                            // hardware limitation
-                            assert(r1 >= 0 && r1 <= 15);
-                            assert(WF_1CIC_MAXD <= 32768);
-                            decim = CIC1_DECIM << r1;
-                        #else
-                            // currently 15-levels of zoom: z0-z14, MAX_ZOOM == 14
-                            if (zm1 == 0) {
-                                // z0-1: R = 1 (R1 = R2 = 1)
-                                r1 = r2 = 0;
-                            } else
-                            if (zm1 <= WF_2CIC_POW2) {
-                                // z2-8: R = 2,4,8,16,32,64,128 (R1 = 1; R2 = 2,4,8,16,32,64,128)
-                                r1 = 0;
-                                r2 = zm1;
-                            } else {
-                                // z9-14: R = 128,256,512,1k,2k,4k (R1 = 2,4,8,16,32,64; R2 = 128)
-                                r1 = zm1 - WF_2CIC_POW2;
-                                r2 = WF_2CIC_POW2;
-                            }
-                        
-                            // hardware limitation
-                            assert(r1 >= 0 && r1 <= 7);
-                            assert(r2 >= 0 && r2 <= 7);
-                            assert(WF_2CIC_MAXD <= 127);
-                            decim = (CIC2_DECIM << r2) | (CIC1_DECIM << r1);
-                        #endif
-    #endif
+                        // hardware limitation
+                        assert(r1 >= 0 && r1 <= 15);
+                        decim = CIC1_DECIM << r1;
+
                         samp_wait_us =  WF_C_NSAMPS * (1 << zm1) / conn->adc_clock_corrected * 1000000.0;
                         wf->samp_wait_us = (int) ceilf(samp_wait_us);
                         #ifdef WF_INFO
@@ -484,12 +450,7 @@ void c2s_waterfall(void *param)
 
                     off_freq = start * HZperStart;
                     off_freq_inv = ((float) maxstart - start) * HZperStart;
-                
-                    #ifdef USE_WF_NEW
-                        #error spectral_inversion
-                        off_freq += conn->adc_clock_corrected / (4<<zoom);
-                    #endif
-                
+
 			        i_offset = (u64_t) (s64_t) ((spectral_inversion? off_freq_inv : off_freq) / conn->adc_clock_corrected * pow(2,48));
 
                     #ifdef WF_INFO
@@ -733,12 +694,8 @@ void c2s_waterfall(void *param)
 		wf->fft_used = WF_C_NFFT / WF_USING_HALF_FFT;		// the result is contained in the first half of a complex FFT
 		
 		// if any CIC is used (z != 0) only look at half of it to avoid the aliased images
-		#ifdef USE_WF_NEW
-			wf->fft_used /= WF_USING_HALF_CIC;
-		#else
-			if (zoom != 0) wf->fft_used /= WF_USING_HALF_CIC;
-		#endif
-		
+        if (zoom != 0) wf->fft_used /= WF_USING_HALF_CIC;
+
 		float span = conn->adc_clock_corrected / 2 / (1<<zoom);
 		float disp_fs = ui_srate / (1<<zoom);
 		
@@ -752,40 +709,24 @@ void c2s_waterfall(void *param)
 		if (new_map) {
 			assert(wf->fft_used <= MAX_FFT_USED);
 
-            #ifdef USE_WF_NEW
-                #define WF_FFT_UNWRAP_NEEDED
-            #endif
-
 			wf->fft_used_limit = 0;
 
 			if (wf->fft_used >= wf->plot_width) {
 				// FFT >= plot
 
-                #ifdef WF_FFT_UNWRAP_NEEDED
-                    // IQ reverse unwrapping (X)
-                    #error spectral_inversion
-                    for (i=wf->fft_used/2,j=0; i<wf->fft_used; i++,j++) {
-                        wf->fft2wf_map[i] = wf->plot_width * j/wf->fft_used;
-                    }
-                    for (i=0; i<wf->fft_used/2; i++,j++) {
-                        wf->fft2wf_map[i] = wf->plot_width * j/wf->fft_used;
-                    }
-                #else
-                    // no unwrap
-                    #ifdef WF_SPEC_INV_DEBUG
-                        real_printf("$INV NORMAL_SAMPLE SETUP %s z%d fft_used %d plot_width %d\n",
-                        spectral_inversion? "REV":"NORM", zoom, wf->fft_used, wf->plot_width);
-                    #endif
-                    for (i=0; i < wf->fft_used; i++) {
-                        j = wf->plot_width * i/wf->fft_used;
-                        if (spectral_inversion)
-                            j = (j < WF_WIDTH)? (WF_WIDTH-1 - j) : -1;
-                        wf->fft2wf_map[i] = j;
-                        #ifdef WF_SPEC_INV_DEBUG
-                            real_printf("%d|%.2f=%d ", i, (float)i/wf->fft_used, j);
-                        #endif
-                    }
+                #ifdef WF_SPEC_INV_DEBUG
+                    real_printf("$INV NORMAL_SAMPLE SETUP %s z%d fft_used %d plot_width %d\n",
+                    spectral_inversion? "REV":"NORM", zoom, wf->fft_used, wf->plot_width);
                 #endif
+                for (i=0; i < wf->fft_used; i++) {
+                    j = wf->plot_width * i/wf->fft_used;
+                    if (spectral_inversion)
+                        j = (j < WF_WIDTH)? (WF_WIDTH-1 - j) : -1;
+                    wf->fft2wf_map[i] = j;
+                    #ifdef WF_SPEC_INV_DEBUG
+                        real_printf("%d|%.2f=%d ", i, (float)i/wf->fft_used, j);
+                    #endif
+                }
                 //for (i=0; i<wf->fft_used; i++) printf("%d>%d ", i, wf->fft2wf_map[i]);
 
                 // Not like above where fft2wf_map[] can map multiple FFT values per pixel for use

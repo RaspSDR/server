@@ -2,7 +2,6 @@
 #define _DEBUG_H_
 
 #include "types.h"
-#include "kiwi.gen.h"
 
 #define	EC_EVENT		    0
 #define	EC_DUMP			    1
@@ -132,27 +131,6 @@
 	#define evNT(c, e, p, s, s2) ev(c, e, p, s, s2)
 #else
 	#define evNT(c, e, p, s, s2)
-#endif
-
-//#define EV_MEAS_SPI_DEV
-#if defined(EV_MEAS) && (defined(EV_MEAS_SPI_DEV) || defined(SPI_PUMP_CHECK))
-	#define evSpiDev(c, e, p, s, s2) ev(c, e, p, s, s2)
-#else
-	#define evSpiDev(c, e, p, s, s2)
-#endif
-
-//#define EV_MEAS_SPI
-#if defined(EV_MEAS) && (defined(EV_MEAS_SPI) || defined(SPI_PUMP_CHECK))
-	#define evSpi(c, e, p, s, s2) ev(c, e, p, s, s2)
-#else
-	#define evSpi(c, e, p, s, s2)
-#endif
-
-//#define EV_MEAS_SPI_CMD
-#if defined(EV_MEAS) && defined(EV_MEAS_SPI_CMD)
-	#define evSpiCmd(c, e, p, s, s2) ev(c, e, p, s, s2)
-#else
-	#define evSpiCmd(c, e, p, s, s2)
 #endif
 
 //#define EV_MEAS_WF

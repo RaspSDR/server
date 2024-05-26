@@ -1733,8 +1733,8 @@ bool rx_common_cmd(int stream_type, conn_t *conn, char *cmd)
                 //printf("status sending wspr_c.rgrid=<%s>\n", wspr_c.rgrid);
         
                 sb = kstr_asprintf(sb, ",\"ad\":%d,\"au\":%d,\"ae\":%d,\"ar\":%d,\"an\":%d,\"an2\":%d,",
-                    dpump.audio_dropped, underruns, seq_errors, dpump.resets, nrx_bufs, N_DPBUF);
-                sb = kstr_cat(sb, kstr_list_int("\"ap\":[", "%u", "],", (int *) dpump.hist, nrx_bufs));
+                    dpump.audio_dropped, underruns, seq_errors, dpump.resets, MAX_NRX_BUFS, N_DPBUF);
+                sb = kstr_cat(sb, kstr_list_int("\"ap\":[", "%u", "],", (int *) dpump.hist, MAX_NRX_BUFS));
                 sb = kstr_cat(sb, kstr_list_int("\"ai\":[", "%u", "]", (int *) dpump.in_hist, N_DPBUF));
             
                 sb = kstr_asprintf(sb, ",\"sa\":%d,\"sh\":%d,\"sl\":%d", snr_all, freq_offset_kHz? -1 : snr_HF,

@@ -83,7 +83,7 @@ void c2s_admin_setup(void *param)
 
 	// send initial values
 	memset(&pushback, 0, sizeof(pushback));
-	send_msg(conn, SM_NO_DEBUG, "ADM admin_sdr_mode=%d", VAL_USE_SDR);
+	send_msg(conn, SM_NO_DEBUG, "ADM admin_sdr_mode=%d", 1);
 	const char *proxy_server = admcfg_string("proxy_server", NULL, CFG_REQUIRED);
 	send_msg_encoded(conn, "ADM", "proxy_url", "%s:%d", proxy_server, PROXY_SERVER_PORT);
 	admcfg_string_free(proxy_server);

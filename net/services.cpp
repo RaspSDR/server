@@ -552,8 +552,8 @@ void UPnP_port(nat_delete_e nat_delete)
     net.auto_nat = 0;
     bool add_nat = admcfg_bool("auto_add_nat", NULL, CFG_REQUIRED);
     printf("UPnP_port: auto_add_nat=%d\n", add_nat);
-    if (debian_ver == 7 && net.pvt_valid == IPV6) {
-        lprintf("auto NAT: not with Debian 7 and IPV6\n");
+    if (net.pvt_valid == IPV6) {
+        lprintf("auto NAT: not supported with IPV6\n");
     } else {
         if (!add_nat && nat_delete == NAT_NO_DELETE) {
             lprintf("auto NAT: is set false\n");

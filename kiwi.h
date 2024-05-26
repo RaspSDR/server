@@ -83,7 +83,7 @@ extern bool background_mode, need_hardware, any_preempt_autorun,
 extern int ev_dump, tone, down, navg, meas, monitors_max,
 	gps_chans, rx_num, wf_num, bg, dx_print,
 	port, print_stats, serial_number, ip_limit_mins, is_locked, test_flag, n_camp,
-	inactivity_timeout_mins, S_meter_cal, waterfall_cal, current_nusers, debug_v, debian_ver,
+	inactivity_timeout_mins, S_meter_cal, waterfall_cal, current_nusers, debug_v,
 	utc_offset, dst_offset, reg_kiwisdr_com_status, kiwi_reg_lo_kHz, kiwi_reg_hi_kHz,
 	debian_maj, debian_min, use_foptim, web_caching_debug,
 	drm_nreg_chans, snr_meas_interval_hrs, snr_all, snr_HF, ant_connected;

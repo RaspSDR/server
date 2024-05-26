@@ -1166,7 +1166,7 @@ function network_my_kiwi_cb(path, idx, first)
 
 function network_ssl_container_init()
 {
-   var show = dbgUs && (debian_ver >= 10);
+   var show = dbgUs;
    w3_hide2('id-net-ssl-vis', !show);
 
    var use_ssl = show && adm.use_ssl;
@@ -1531,11 +1531,7 @@ function network_dhcp_static_update_cb(path, idx)
    ext_set_cfg_param('adm.ip_address.commit_use_static', use_static, EXT_SAVE)
    w3_hide('id-net-need-update');
    
-   if (debian_ver <= 9)
-      w3_reboot_cb();      // show reboot button after confirm button pressed
-   else
-      // Debian 10 and above use connmanctl/networkctl which has immediate effect (no reboot required)
-		wait_then_reload_page(10, 'Waiting for configuration change');
+   w3_reboot_cb();      // show reboot button after confirm button pressed
 }
 
 function network_static_init()

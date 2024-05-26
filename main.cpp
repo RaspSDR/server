@@ -61,7 +61,7 @@ int version_maj, version_min;
 int rx_chans, wf_chans, nrx_samps, snd_rate, rx_decim;
 
 int ev_dump=0, tone, down, gps_chans=GPS_MAX_CHANS, rx_num, wf_num,
-	navg=1, meas, debian_ver, monitors_max, bg,
+	navg=1, meas, monitors_max, bg,
 	print_stats, debian_maj, debian_min, test_flag, dx_print,
 	use_foptim, is_locked, drm_nreg_chans;
 
@@ -166,7 +166,6 @@ int main(int argc, char *argv[])
     if (sscanf(kstr_sp(reply), "%d.%d", &debian_maj, &debian_min) != 2) panic("debian_version");
     kstr_free(reply);
     lprintf("/etc/debian_version %d.%d\n", debian_maj, debian_min);
-    debian_ver = debian_maj;
     
     #if defined(USE_ASAN)
     	lprintf("### compiled with USE_ASAN\n");

@@ -56,6 +56,16 @@ Boston, MA  02110-1301, USA.
 
 rx_util_t rx_util;
 
+/**
+ * Returns the other connection of the given type and rx_channel if it exists and matches the given type and rx_channel.
+ *
+ * @param conn The connection to check for the other connection.
+ * @param type The type of the other connection to find.
+ *
+ * @return The other connection of the given type and rx_channel if it exists and matches the given type and rx_channel, otherwise NULL.
+ *
+ * @throws None
+ */
 conn_t *conn_other(conn_t *conn, int type)
 {
     conn_t *cother = conn->other;
@@ -65,7 +75,17 @@ conn_t *conn_other(conn_t *conn, int type)
     return NULL;
 }
 
-// CAUTION: returned tstamp must be unique even if called in rapid succession!
+    /**
+     * Returns a unique timestamp that can be used to identify a connection.
+     * 
+     * Returned tstamp must be unique even if called in rapid succession!
+     *
+     * @return A 64-bit timestamp that is guaranteed to be monotonically increasing.
+     *         The timestamp is marked with a bit flag to indicate that it should skip
+     *         IP address matching and avoid collisions with older timestamp spaces.
+     *
+     * @throws None
+     */
 u64_t rx_conn_tstamp()
 {
     u64_t tstamp = timer_us64();
@@ -81,6 +101,14 @@ u64_t rx_conn_tstamp()
     return tstamp;
 }
 
+/**
+ * Logs information about a user connection.
+ *
+ * @param c The connection object representing the user connection.
+ * @param type The type of log message to be generated.
+ *
+ * @throws None
+ */
 void rx_loguser(conn_t *c, logtype_e type)
 {
     if (TaskFlags() & CTF_NO_LOG) return;
@@ -134,6 +162,18 @@ void rx_loguser(conn_t *c, logtype_e type)
 	kiwi_asfree(s);
 }
 
+/**
+ * Counts the number of free channels in the rx_channels array.
+ *
+ * @param flags The flags to determine the type of count.
+ * @param idx A pointer to an integer to store the index of the first free channel.
+ * @param heavy A pointer to an integer to store the count of heavy channels.
+ * @param preempt A pointer to an integer to store the count of preempted channels.
+ *
+ * @return The count of free channels.
+ *
+ * @throws None
+ */
 int rx_chan_free_count(rx_free_count_e flags, int *idx, int *heavy, int *preempt)
 {
 	int i, free_cnt = 0, free_idx = -1, heavy_cnt = 0, preempt_cnt = 0;
@@ -173,6 +213,15 @@ int rx_chan_free_count(rx_free_count_e flags, int *idx, int *heavy, int *preempt
 	return free_cnt;
 }
 
+/**
+ * Returns the channel number without password.
+ *
+ * @param pwd_check The password check flag.
+ *
+ * @return The channel number without password.
+ *
+ * @throws None
+ */
 int rx_chan_no_pwd(pwd_check_e pwd_check)
 {
     int chan_no_pwd = cfg_int("chan_no_pwd", NULL, CFG_REQUIRED);
@@ -188,6 +237,17 @@ int rx_chan_no_pwd(pwd_check_e pwd_check)
     return chan_no_pwd;
 }
 
+/**
+ * Counts the number of server connections based on the specified type and flags.
+ *
+ * @param type The type of connection count to perform.
+ * @param flags Additional flags to consider.
+ * @param our_conn The connection to exclude from the count (optional).
+ *
+ * @return The number of server connections matching the specified criteria.
+ *
+ * @throws None.
+ */
 int rx_count_server_conns(conn_count_e type, u4_t flags, conn_t *our_conn)
 {
 	int users=0, any=0;
@@ -241,6 +301,14 @@ int rx_count_server_conns(conn_count_e type, u4_t flags, conn_t *our_conn)
 	return (users? users : any);
 }
 
+/**
+ * Kicks users off based on the specified kick type and channel.
+ *
+ * @param kick The type of kick to perform. Possible values are KICK_CHAN, KICK_USERS, KICK_ALL, and KICK_ADMIN.
+ * @param chan The channel to kick users off from. If -1, all channels are affected.
+ *
+ * @throws None
+ */
 void rx_server_kick(kick_e kick, int chan)
 {
 	// kick users off (all or individual channel)
@@ -283,6 +351,15 @@ void rx_server_kick(kick_e kick, int chan)
 	//printf("rx_server_kick DONE\n");
 }
 
+/**
+ * Clears the eviction counters for all autorun groups.
+ *
+ * This function resets all the eviction counters for the autorun groups. This is done
+ * to ensure that the eviction rates are equal for all groups. This is typically done
+ * when one group (such as WSPR or FT8) performs a restart.
+ *
+ * @throws None
+ */
 void rx_autorun_clear()
 {
     // when one group (wspr, ft8) does a restart reset _all_ eviction counters
@@ -290,6 +367,15 @@ void rx_autorun_clear()
     memset(rx_util.arun_evictions, 0, sizeof(rx_util.arun_evictions));
 }
 
+/**
+ * Finds the victim for autorun preemption.
+ *
+ * This function iterates through all the available channels and selects the channel with the lowest eviction count.
+ * It also keeps track of the highest eviction count. If a channel with a lower eviction count is found, it updates
+ * the lowest eviction count, lowest eviction channel, and the lowest eviction connection.
+ *
+ * @return The channel number of the victim for autorun preemption, or -1 if no victim is found.
+ */
 int rx_autorun_find_victim()
 {
     conn_t *c, *lowest_eviction_conn;
@@ -323,6 +409,20 @@ int rx_autorun_find_victim()
     return -1;
 }
 
+/**
+ * Restarts the victims for autorun.
+ *
+ * This function checks if autorun restart of victims is suspended. If it is, the function returns without performing any further actions.
+ * If autorun is configured to use configurations with limited waveform channels (e.g., rx8_wf2), the function checks if there are any free channels.
+ * If there are no free channels, the function returns without performing any further actions.
+ * Finally, the function calls the autorun start functions for ft8 and wspr.
+ *
+ * @param initial a boolean indicating if it is the initial call
+ *
+ * @return void
+ *
+ * @throws None
+ */
 void rx_autorun_restart_victims(bool initial)
 {
     if (rx_util.arun_suspend_restart_victims) {
@@ -343,6 +443,13 @@ void rx_autorun_restart_victims(bool initial)
     wspr_autorun_start(initial);
 }
 
+/**
+ * Sends the configuration to the server connection.
+ *
+ * @param conn The server connection to send the configuration to.
+ *
+ * @throws None
+ */
 void rx_server_send_config(conn_t *conn)
 {
 	// SECURITY: only send configuration after auth has validated
@@ -374,8 +481,19 @@ void rx_server_send_config(conn_t *conn)
 	}
 }
 
-// Because of the false hash match problem with rx_common_cmd()
-// must only do auth after the command string compares.
+
+/**
+ * Checks if the connection is authorized to save the kiwi config.
+ *
+ * @param conn The connection to check authorization for.
+ *
+ * @return True if the connection is authorized, false otherwise.
+ *
+ * @throws None
+ * 
+ * @remark Because of the false hash match problem with rx_common_cmd()
+ *  must only do auth after the command string compares.
+ */
 static bool rx_auth_okay(conn_t *conn)
 {
     if (conn->auth_admin == FALSE) {
@@ -396,6 +514,15 @@ static bool rx_auth_okay(conn_t *conn)
     return true;
 }
 
+/**
+ * Checks if the connection is authorized to save the admin config.
+ *
+ * @param conn The connection to check authorization for.
+ *
+ * @return True if the connection is authorized, false otherwise.
+ *
+ * @throws None
+ */
 static bool admin_auth_okay(conn_t *conn)
 {
     if (conn->type != STREAM_ADMIN) {
@@ -576,6 +703,15 @@ bool save_config(u2_t key, conn_t *conn, char *cmd)
     return false;   // always (and only) return false if the cmd matching failed
 }
 
+/**
+ * Prints information about a connection.
+ *
+ * @param prefix The prefix to prepend to each line of output.
+ * @param printf_type The type of printf to use for output.
+ * @param cd The connection to print information about.
+ *
+ * @throws None
+ */
 void show_conn(const char *prefix, u4_t printf_type, conn_t *cd)
 {
     if (!cd->valid) {
@@ -603,6 +739,11 @@ void show_conn(const char *prefix, u4_t printf_type, conn_t *cd)
         lprintf("        user=<%s> isUserIP=%d geo=<%s>\n", cd->ident_user, cd->isUserIP, cd->geo);
 }
 
+/**
+ * Dumps the state of the system to the log.
+ *
+ * @return void
+ */
 void dump()
 {
 	int i;
@@ -689,6 +830,15 @@ void debug_init()
     // sig_arm(SIGSEGV, signal_handler);
 }
 
+/**
+ * Converts a mode string to its corresponding enumeration value.
+ *
+ * @param mode The mode string to be converted.
+ *
+ * @return The enumeration value corresponding to the mode string, or NOT_FOUND if the mode string is not found.
+ *
+ * @throws None
+ */
 int rx_mode2enum(const char *mode)
 {
 	for (int i = 0; i < ARRAY_LEN(mode_lc); i++) {
@@ -697,6 +847,13 @@ int rx_mode2enum(const char *mode)
 	return NOT_FOUND;
 }
 
+/**
+ * Converts an enumeration value to its corresponding mode string.
+ *
+ * @param e The enumeration value to be converted.
+ *
+ * @return The mode string corresponding to the enumeration value, or NULL if the enumeration value is out of range.
+ */
 const char *rx_enum2mode(int e)
 {
 	if (e < 0 || e >= ARRAY_LEN(mode_lc)) return NULL;
@@ -803,6 +960,15 @@ void geoloc_task(void *param)
         clprintf(conn, "GEOLOC: for %s FAILED for all geo servers\n", ip);
 }
 
+/**
+ * Returns a JSON string containing information about the users connected to the RX channels.
+ *
+ * @param include_ip Whether to include the IP address of the users in the output.
+ *
+ * @return A JSON string containing information about the users connected to the RX channels.
+ *
+ * @throws None
+ */
 char *rx_users(bool include_ip)
 {
     int i, n;
@@ -905,6 +1071,15 @@ char *rx_users(bool include_ip)
     return sb;
 }
 
+/**
+ * Converts a value in dB from a wire to dBm.
+ *
+ * @param db_value the value in dB from the wire
+ *
+ * @return the value in dBm
+ *
+ * @throws None
+ */
 int dB_wire_to_dBm(int db_value)
 {
     // (u1_t) 255..55 => 0 .. -200 dBm
@@ -923,6 +1098,18 @@ bool snr_local_time;
 SNR_meas_t SNR_meas_data[SNR_MEAS_MAX];
 static int dB_raw[WF_WIDTH];
 
+/**
+ * Calculates the Signal-to-Noise Ratio (SNR) for a given frequency range.
+ *
+ * @param meas a pointer to the SNR_meas_t structure that will store the SNR data
+ * @param meas_type the type of SNR measurement being performed (e.g., SNR_MEAS_HF)
+ * @param f_lo the lower frequency boundary of the frequency range
+ * @param f_hi the upper frequency boundary of the frequency range
+ *
+ * @return the calculated SNR value
+ *
+ * @throws None
+ */
 int SNR_calc(SNR_meas_t *meas, int meas_type, int f_lo, int f_hi)
 {
     static int dB[WF_WIDTH];

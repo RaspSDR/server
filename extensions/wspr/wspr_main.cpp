@@ -52,10 +52,8 @@
 #define	RUNNING		3
 #define	DECODING	4
 
-#ifdef WSPR_SHMEM_DISABLE
-    static wspr_shmem_t wspr_shmem;
-    wspr_shmem_t *wspr_shmem_p = &wspr_shmem;
-#endif
+static wspr_shmem_t wspr_shmem;
+wspr_shmem_t *wspr_shmem_p = &wspr_shmem;
 
 wspr_conf_t wspr_c;
 
@@ -477,39 +475,7 @@ void WSPR_Deco(void *param)
 		wspr_aprintf("DECO-P wakeup\n");
 	
 		wspr_status(w, DECODING, NONE);
-        #ifdef WSPR_SHMEM_DISABLE
-		    wspr_decode(rx_chan);
-		#else
-		    w->send_peaks_seq_parent = w->send_peaks_seq = 0;
-		    w->send_decode_seq_parent = w->send_decode_seq = 0;
-            wspr_aprintf("DECO-P INVOKE\n");
-            shmem_ipc_invoke(SIG_IPC_WSPR + w->rx_chan, w->rx_chan, NO_WAIT);    // invoke wspr_decode()
-
-            int done;
-		    do {
-                done = shmem_ipc_poll(SIG_IPC_WSPR + w->rx_chan, POLL_MSEC(250), w->rx_chan);
-		        // Use "if" instead of "while" here and a relatively slow polling interval so that peak marker
-		        // changes have some persistence.
-                if (w->send_peaks_seq_parent < w->send_peaks_seq) {     // make sure each one is processed
-                    wspr_send_peaks(w, wb->send_peaks_q[w->send_peaks_seq_parent].start, wb->send_peaks_q[w->send_peaks_seq_parent].stop);
-                    w->send_peaks_seq_parent++;
-                }
-                while (w->send_decode_seq_parent < w->send_decode_seq) {    // make sure each one is processed
-                    wspr_send_decode(w, w->send_decode_seq_parent);
-                    w->send_decode_seq_parent++;
-                }
-                if (w->send_decode_seq_parent != w->send_decode_seq)
-                    wspr_dprintf("send_decode_seq_parent(%d) != send_decode_seq(%d)\n", w->send_decode_seq_parent, w->send_decode_seq);
-            } while (!done);
-            
-            // process any remaining peak changes
-            while (w->send_peaks_seq_parent < w->send_peaks_seq) {     // make sure each one is processed
-                wspr_send_peaks(w, wb->send_peaks_q[w->send_peaks_seq_parent].start, wb->send_peaks_q[w->send_peaks_seq_parent].stop);
-                w->send_peaks_seq_parent++;
-            }
-            
-            wspr_aprintf("DECO-P DONE\n");
-		#endif
+        wspr_decode(rx_chan);
 	
 		if (w->abort_decode)
 			wspr_aprintf("DECO-P decoder aborted\n");
@@ -1201,13 +1167,6 @@ void wspr_main()
 		w->fftplan = WSPR_FFTW_PLAN_DFT_1D(NFFT, w->fftin, w->fftout, FFTW_FORWARD, FFTW_ESTIMATE);
 
 	    wspr_reset(w);
-
-        #ifdef WSPR_SHMEM_DISABLE
-        #else
-            // Needs to be done as separate Linux process per channel because wspr_decode() is
-            // long-running and there would be no time-slicing otherwise, i.e. no NextTask() equivalent.
-            shmem_ipc_setup(stprintf("kiwi.wspr-%02d", i), SIG_IPC_WSPR + i, wspr_decode);
-        #endif
 	}
 	
 	for (i=0; i < NFFT; i++) {

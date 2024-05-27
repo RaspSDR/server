@@ -102,7 +102,6 @@ typedef struct {
     #warning shmem_config.h not included
     #define DRM_SHMEM_DISABLE
     #define RX_SHMEM_DISABLE
-    #define WSPR_SHMEM_DISABLE
 #endif
 
 typedef struct {
@@ -124,12 +123,6 @@ typedef struct {
     #ifdef RX_SHMEM_DISABLE
     #else
         rx_shmem_t rx_shmem;
-    #endif
-
-    #ifdef WSPR_SHMEM_DISABLE
-    #else
-        // shared with WSPR offload process
-        wspr_shmem_t wspr_shmem;
     #endif
 
     #ifdef DRM_SHMEM_DISABLE

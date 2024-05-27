@@ -445,36 +445,10 @@ void wspr_init()
     wspr_update_vars_from_config(false);
 }
 
-#ifdef WSPR_SHMEM_DISABLE
-    #define send_peaks_all(w, npk) w->npk = npk; if (!w->autorun) wspr_send_peaks(w, 0, npk);
-    #define send_peak_single(w, pki) if (!w->autorun) wspr_send_peaks(w, pki, pki+1);
-    #define send_decode(w, seq) wspr_send_decode(w, seq-1);
-#else
-    #define send_peaks_all(w, npk) \
-        if (!w->autorun) { \
-            if (w->send_peaks_seq < MAX_NPKQ) { \
-                w->npk = npk; \
-                wb->send_peaks_q[w->send_peaks_seq].start = 0; \
-                wb->send_peaks_q[w->send_peaks_seq].stop = npk; \
-                w->send_peaks_seq++; \
-                /* printf("WSPR ALL send_peaks_seq=%d\n", w->send_peaks_seq); */ \
-            } else { \
-                lprintf("WSPR WARNING! send_peaks_seq(%d) >= MAX_NPKQ(%d)\n", w->send_peaks_seq, MAX_NPKQ); \
-            } \
-        }
-    #define send_peak_single(w, pki) \
-        if (!w->autorun) { \
-            if (w->send_peaks_seq < MAX_NPKQ) { \
-                wb->send_peaks_q[w->send_peaks_seq].start = pki; \
-                wb->send_peaks_q[w->send_peaks_seq].stop = pki+1; \
-                w->send_peaks_seq++; \
-                /* printf("WSPR SINGLE send_peaks_seq=%d\n", w->send_peaks_seq); */ \
-            } else { \
-                lprintf("WSPR WARNING! send_peaks_seq(%d) >= MAX_NPKQ(%d)\n", w->send_peaks_seq, MAX_NPKQ); \
-            } \
-        }
-    #define send_decode(w, seq) w->send_decode_seq = seq
-#endif
+
+#define send_peaks_all(w, npk) w->npk = npk; if (!w->autorun) wspr_send_peaks(w, 0, npk);
+#define send_peak_single(w, pki) if (!w->autorun) wspr_send_peaks(w, pki, pki+1);
+#define send_decode(w, seq) wspr_send_decode(w, seq-1);
 
 void wspr_decode(int rx_chan)
 {

@@ -333,24 +333,11 @@ typedef struct {
     wspr_buf_t wspr_buf[MAX_RX_CHANS];
 } wspr_shmem_t;
 
-#include "shmem_config.h"
-
-#include "shmem.h"
-
-#ifdef WSPR_SHMEM_DISABLE
-    extern wspr_shmem_t *wspr_shmem_p;
-    #define WSPR_SHMEM wspr_shmem_p
-#else
-    #define WSPR_SHMEM (&shmem->wspr_shmem)
-#endif
+extern wspr_shmem_t *wspr_shmem_p;
+#define WSPR_SHMEM wspr_shmem_p
 
 #define WSPR_YIELD NextTask("wspr")
-
-#ifdef WSPR_SHMEM_DISABLE
-    #define WSPR_SHMEM_YIELD NextTask("wspr")
-#else
-    #define WSPR_SHMEM_YIELD
-#endif
+#define WSPR_SHMEM_YIELD NextTask("wspr")
 #define YIELD_EVERY_N_TIMES 64
 
 void wspr_init();

@@ -29,6 +29,7 @@ Boston, MA  02110-1301, USA.
 #include "mongoose.h"
 #include "nbuf.h"
 #include "cfg.h"
+#include "rx.h"
 #include "net.h"
 #include "rx_util.h"
 
@@ -46,6 +47,8 @@ Boston, MA  02110-1301, USA.
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>
+
+net_t net;
 
 //#define TEST_DELAYED_IPV4
 static int test_delayed_ipv4 = 4;

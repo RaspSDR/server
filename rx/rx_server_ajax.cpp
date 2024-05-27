@@ -36,6 +36,7 @@ Boston, MA  02110-1301, USA.
 #include "dx.h"
 #include "rx.h"
 #include "rx_server_ajax.h"
+#include "data_pump.h"
 #include "rx_util.h"
 #include "security.h"
 

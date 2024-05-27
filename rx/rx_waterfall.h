@@ -90,7 +90,6 @@ struct wf_pkt_t {
 // beat against update rate and produce artifacts or blanking.
 
 #define	WF_SPEED_MAX		23
-#define	WEB_SERVER_POLL_US	(1000000 / WF_SPEED_MAX / 2)
 
 #define WF_SPEED_OFF        0
 #define	WF_SPEED_1FPS		1

@@ -264,6 +264,8 @@ static int iterate_callback(struct mg_connection *mc, enum mg_event evt)
 	return MG_TRUE;
 }
 
+#define	WEB_SERVER_POLL_US	(1000000 / 50 / 2)
+
 void web_server(void *param)
 {
 	struct mg_server *server = (struct mg_server *) param;

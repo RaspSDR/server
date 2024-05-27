@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <strings.h>
+#include <fcntl.h>
 #include <sys/mman.h>
 
 #define WSPR_DATA		0

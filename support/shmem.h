@@ -104,15 +104,7 @@ typedef struct {
 #endif
 
 typedef struct {
-    net_t net_shmem;
     int CAT_last_freqHz;
-
-    u4_t rv_u4_t[MAX_RX_CHANS];
-    u4_t status_u4[N_SHMEM_STATUS][MAX_RX_CHANS];
-    double status_f[N_SHMEM_STATUS][MAX_RX_CHANS];
-    
-    // users: (none currently)
-	char status_str_medium[N_SHMEM_STATUS_STR_MEDIUM];
 
 	// users: geoloc
 	char status_str_large[N_SHMEM_STATUS_STR_LARGE];

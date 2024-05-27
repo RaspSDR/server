@@ -21,6 +21,9 @@ Boston, MA  02110-1301, USA.
 
 #include "types.h"
 #include "ip_blacklist.h"
+#include "rx.h"
+#include "conn.h"
+#include "rx_sound.h"
 #include "mongoose.h"
 
 #include <sys/types.h>
@@ -146,10 +149,7 @@ typedef struct {
     char ip_blacklist_hash[N_IP_BLACKLIST_HASH_BYTES*2 + SPACE_FOR_NULL];
 } net_t;
 
-// (net_t) net located in shmem for benefit of e.g. led task
-// #include needs to be below definition of net_t
-#include "shmem.h"      // shmem->net_shmem
-#define net shmem->net_shmem
+extern net_t net;
 
 typedef enum { IS_NOT_LOCAL, IS_LOCAL, NO_LOCAL_IF } isLocal_t;
 // "struct conn_st" because of forward reference from inclusion by conn.h

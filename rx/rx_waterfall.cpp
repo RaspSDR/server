@@ -421,10 +421,12 @@ void c2s_waterfall(void *param)
                         wf->check_overlapped_sampling = true;
                     
                         if (wf->isWF)
+                        {
                             wf->decim = decim;
 
-                        if (!kiwi.wf_share)
-                            fpga_config->wf_config[rx_chan].wf_decim = decim;
+                            if (!kiwi.wf_share)
+                                fpga_config->wf_config[rx_chan].wf_decim = decim;
+                        }
                     
                         // We've seen cases where the wf connects, but the sound never does.
                         // So have to check for conn->other being valid.

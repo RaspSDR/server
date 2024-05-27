@@ -860,17 +860,6 @@ const char *rx_enum2mode(int e)
 	return (mode_lc[e]);
 }
 
-// Pass result json back to main process via shmem->status_str_large
-// since _geo_task runs in context of child_task()'s child process.
-// This presumes the returned JSON size is < N_SHMEM_STATUS_STR_LARGE.
-static int _geo_task(void *param)
-{
-	nbcmd_args_t *args = (nbcmd_args_t *) param;
-	char *sp = kstr_sp(args->kstr);
-    kiwi_strncpy(shmem->status_str_large, sp, N_SHMEM_STATUS_STR_LARGE);
-    return 0;
-}
-
 static bool geoloc_json(conn_t *conn, const char *geo_host_ip_s, const char *country_s, const char *region_s)
 {
 	char *cmd_p;
@@ -879,19 +868,21 @@ static bool geoloc_json(conn_t *conn, const char *geo_host_ip_s, const char *cou
     //cprintf(conn, "GEOLOC: <%s>\n", cmd_p);
     
     // NB: don't use non_blocking_cmd() here to prevent audio gliches
-    int status = non_blocking_cmd_func_forall("kiwi.geo", cmd_p, _geo_task, 0, POLL_MSEC(1000));
+    int status;
+    kstr_t *str = non_blocking_cmd(kstr_sp(cmd_p), &status);
     kiwi_asfree(cmd_p);
-    int exit_status;
-    if (WIFEXITED(status) && (exit_status = WEXITSTATUS(status))) {
-        clprintf(conn, "GEOLOC: curl(%d) failed for %s\n", exit_status, geo_host_ip_s);
+    if (status) {
+        clprintf(conn, "GEOLOC: curl(%d) failed for %s\n", status, geo_host_ip_s);
         return false;
     }
     //cprintf(conn, "GEOLOC: returned <%s>\n", shmem->status_str_large);
 
 	cfg_t cfg_geo;
-    if (json_init(&cfg_geo, shmem->status_str_large, "cfg_geo") == false) {
+    if (json_init(&cfg_geo, str, "cfg_geo") == false) {
         clprintf(conn, "GEOLOC: JSON parse failed for %s\n", geo_host_ip_s);
 	    json_release(&cfg_geo);
+
+        kstr_free(str);
         return false;
     }
     
@@ -924,6 +915,9 @@ static bool geoloc_json(conn_t *conn, const char *geo_host_ip_s, const char *cou
     json_string_free(&cfg_geo, city);
     
 	json_release(&cfg_geo);
+
+    kstr_free(str);
+
     return true;
 }
 

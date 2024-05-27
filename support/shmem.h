@@ -105,9 +105,6 @@ typedef struct {
 
 typedef struct {
     int CAT_last_freqHz;
-
-	// users: geoloc
-	char status_str_large[N_SHMEM_STATUS_STR_LARGE];
 	
     shmem_ipc_t ipc[SIG_MAX_USED];
 

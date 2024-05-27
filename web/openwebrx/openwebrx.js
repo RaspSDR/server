@@ -421,6 +421,7 @@ function kiwi_main_ready()
 	
 	wf_send("SERVER DE CLIENT openwebrx.js W/F");
 	wf_send("SET send_dB=1");
+   wf_send('SET zoom=0 start=0');
 	wf_send("SET maxdb=0 mindb=-100");
 
 	if (wf_compression == 0) wf_send('SET wf_comp=0');

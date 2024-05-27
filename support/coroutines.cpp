@@ -122,6 +122,11 @@ const char *Task_s(int id)
 	return Tasks[id].name;
 }
 
+const char *Task_ls(int id)
+{
+	return Task_s(id);
+}
+
 void TaskRemove(int id)
 {
 	struct Task *current_task = (struct Task *)&Tasks[id];

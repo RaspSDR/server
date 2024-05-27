@@ -156,7 +156,6 @@ int fano(
 
   // Start the Fano decoder
   for(i=1;i <= maxcycles;i++) {
-	WSPR_SHMEM_YIELD;
     if((int)(np-nodes) > (int)*maxnp) *maxnp=(int)(np-nodes);
 #ifdef	debug
     printf("k=%ld, g=%ld, t=%d, m[%d]=%d, maxnp=%d, encstate=%lx\n",

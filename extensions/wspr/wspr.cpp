@@ -123,9 +123,6 @@ static void sync_and_demodulate(wspr_t *w,
                         s2[j]=c2[j-1]*sdphi2 + s2[j-1]*cdphi2;
                         c3[j]=c3[j-1]*cdphi3 - s3[j-1]*sdphi3;
                         s3[j]=c3[j-1]*sdphi3 + s3[j-1]*cdphi3;
-						
-						if ((j%YIELD_EVERY_N_TIMES)==(YIELD_EVERY_N_TIMES-1))
-                            WSPR_SHMEM_YIELD;
                     }
                     fplast = fp;
                 }
@@ -149,9 +146,6 @@ static void sync_and_demodulate(wspr_t *w,
                         q2[i]=q2[i] - id[k]*s2[j] + qd[k]*c2[j];
                         i3[i]=i3[i] + id[k]*c3[j] + qd[k]*s3[j];
                         q3[i]=q3[i] - id[k]*s3[j] + qd[k]*c3[j];
-						
-						if ((j%YIELD_EVERY_N_TIMES)==(YIELD_EVERY_N_TIMES-1))
-                            WSPR_SHMEM_YIELD;
                     }
                 }
                 p0=i0[i]*i0[i] + q0[i]*q0[i];
@@ -198,7 +192,6 @@ static void sync_and_demodulate(wspr_t *w,
             f2sum=f2sum+fsymb[i]*fsymb[i]/FNSYM_162;
         }
         fac=sqrt(f2sum-fsum*fsum);
-        WSPR_SHMEM_YIELD;
 
         for (i=0; i<NSYM_162; i++) {
             fsymb[i]=symfac*fsymb[i]/fac;
@@ -206,10 +199,8 @@ static void sync_and_demodulate(wspr_t *w,
             if( fsymb[i] < -128 ) fsymb[i]=-128.0;
             symbols[i] = fsymb[i] + 128;
         }
-        WSPR_SHMEM_YIELD;
         return;
     }
-    WSPR_SHMEM_YIELD;
     return;
 }
 
@@ -229,13 +220,11 @@ void renormalize(wspr_t *w, float psavg[], float smspec[], float tmpsort[])
             WSPR_CHECK(else lprintf("WSPR WARNING! renormalize: k=%d i=%d j=%d\n", k, i, j);)
         }
     }
-	WSPR_SHMEM_YIELD;
 
 	// Sort spectrum values, then pick off noise level as a percentile
     for (j=0; j<nbins_411; j++)
         tmpsort[j] = smspec[j];
     qsort(tmpsort, nbins_411, sizeof(float), qsort_floatcomp);
-	WSPR_SHMEM_YIELD;
 
 	// Noise level of spectrum is estimated as 123/411= 30'th percentile
     float noise_level = tmpsort[122];
@@ -251,7 +240,6 @@ void renormalize(wspr_t *w, float psavg[], float smspec[], float tmpsort[])
 		smspec[j] = smspec[j]/noise_level - 1.0;
 		if (smspec[j] < w->min_snr) smspec[j]=0.1*w->min_snr;
 	}
-	WSPR_SHMEM_YIELD;
 }
 
 /***************************************************************************
@@ -562,7 +550,6 @@ void wspr_decode(int rx_chan)
 				}
 			}
 			wspr_d1printf("initial npk %d/%d\n", npk, NPK);
-			WSPR_SHMEM_YIELD;
 	
 			// Don't waste time on signals outside of the range [fmin,fmax].
 			i=0;
@@ -577,7 +564,6 @@ void wspr_decode(int rx_chan)
 			}
 			npk = i;
 			wspr_d1printf("freq range limited npk %d\n", npk);
-			WSPR_SHMEM_YIELD;
 			
 			// only look at a limited number of strong peaks
 			qsort(wb->pk_snr, npk, sizeof(wspr_pk_t), snr_comp);		// sort in decreasing snr order
@@ -682,7 +668,6 @@ void wspr_decode(int rx_chan)
                         }
 						//wspr_d1printf("drift %d  k0 %d  sync %f\n", idrift, k0, smax);
                     }
-					WSPR_SHMEM_YIELD;
                 }
             }
 			wspr_d1printf("npeak     #%02ld %6.1f snr  %9.6f (%7.2f) freq  %4.1f drift  %5d shift  %6.3f sync  %3d bin\n",

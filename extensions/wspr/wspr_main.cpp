@@ -181,9 +181,7 @@ void WSPR_FFT(void *param)
 			}
 			
 			//u4_t start = timer_us();
-			WSPR_YIELD;
 			WSPR_FFTW_EXECUTE(w->fftplan);
-			WSPR_YIELD;
 			//if (i==0) wspr_printf("512 FFT %.1f us\n", (float)(timer_us()-start));
 			
 			// NFFT = SPS*2
@@ -208,7 +206,6 @@ void WSPR_FFT(void *param)
 				wb->pwr_sampavg[w->fft_ping_pong][j] += pwr;
 				wb->savg[j] += pwr;
 			}
-			WSPR_YIELD;
 		}
 	
 		// send spectrum data to client

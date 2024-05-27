@@ -336,10 +336,6 @@ typedef struct {
 extern wspr_shmem_t *wspr_shmem_p;
 #define WSPR_SHMEM wspr_shmem_p
 
-#define WSPR_YIELD NextTask("wspr")
-#define WSPR_SHMEM_YIELD NextTask("wspr")
-#define YIELD_EVERY_N_TIMES 64
-
 void wspr_init();
 bool wspr_update_vars_from_config(bool called_at_init_or_restart);
 void wspr_data(int rx_chan, int instance, int nsamps, TYPECPX *samps);

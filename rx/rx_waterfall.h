@@ -171,13 +171,8 @@ struct wf_shmem_t {
 
 #include "shmem.h"
 
-#ifdef WF_SHMEM_DISABLE
-    extern wf_shmem_t *wf_shmem_p;
-    #define WF_SHMEM wf_shmem_p
-#else
-    #define WF_SHMEM (&shmem->wf_shmem)
-#endif
-
+extern wf_shmem_t *wf_shmem_p;
+#define WF_SHMEM wf_shmem_p
 
 enum wf_cmd_key_e {
     CMD_SET_ZOOM=1, CMD_SET_MAX_MIN_DB, CMD_SET_CMAP, CMD_SET_APER, CMD_SET_BAND,

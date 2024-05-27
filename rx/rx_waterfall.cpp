@@ -71,24 +71,15 @@ static const int wf_fps[] = { WF_SPEED_OFF, WF_SPEED_1FPS, WF_SPEED_SLOW, WF_SPE
 
 static const char *interp_s[] = { "max", "min", "last", "drop", "cma" };
 
-#ifdef WF_SHMEM_DISABLE
-    static wf_shmem_t wf_shmem;
-    wf_shmem_t *wf_shmem_p = &wf_shmem;
-#endif
+static wf_shmem_t wf_shmem;
+wf_shmem_t *wf_shmem_p = &wf_shmem;
 
 // FIXME: doesn't work yet because currently no way to use SPI from LINUX_CHILD_PROCESS()
 //#define WF_IPC_SAMPLE_WF
 
-#if defined(WF_SHMEM_DISABLE) || !defined(WF_IPC_SAMPLE_WF)
-    #define WFSleepReasonMsec(r, t) TaskSleepReasonMsec(r, t)
-    #define WFSleepReasonUsec(r, t) TaskSleepReasonUsec(r, t)
-    #define WFNextTask(r) NextTask(r)
-#else
-    // WF_IPC_SAMPLE_WF
-    #define WFSleepReasonMsec(r, t) kiwi_msleep(t)
-    #define WFSleepReasonUsec(r, t) kiwi_usleep(t)
-    #define WFNextTask(r)
-#endif
+#define WFSleepReasonMsec(r, t) TaskSleepReasonMsec(r, t)
+#define WFSleepReasonUsec(r, t) TaskSleepReasonUsec(r, t)
+#define WFNextTask(r) NextTask(r)
 
 #define	WF_OUT_HDR	((int) (sizeof(wf_pkt_t) - sizeof(out->un)))
 #define	WF_OUT_NOM	((int) (WF_OUT_HDR + sizeof(out->un.buf)))
@@ -110,6 +101,9 @@ static str_hashes_t wf_cmd_hashes[] = {
     { "SET windo", CMD_WF_WINDOW_FUNC },
     { 0 }
 };
+
+static void sample_wf(int rx_chan);
+static void compute_frame(int rx_chan);
 
 static str_hash_t wf_cmd_hash;
 
@@ -179,17 +173,6 @@ void c2s_waterfall_init()
 
 	assert(WF_C_NSAMPS == WF_C_NFFT);
 	assert(WF_C_NSAMPS <= 8192);	// hardware sample buffer length limitation
-	
-#ifdef WF_SHMEM_DISABLE
-#else
-    #ifdef WF_IPC_SAMPLE_WF
-        void sample_wf(int rx_chan);
-        shmem_ipc_setup("kiwi.waterfall", SIG_IPC_WF, sample_wf);
-    #else
-        void compute_frame(int rx_chan);
-        shmem_ipc_setup("kiwi.waterfall", SIG_IPC_WF, compute_frame);
-    #endif
-#endif
 }
 
 void c2s_waterfall_compression(int rx_chan, bool compression)
@@ -847,20 +830,11 @@ void c2s_waterfall(void *param)
 		    new_scale_mask = false;
 		}
 
-        void sample_wf(int rx_chan);
-        #ifdef WF_SHMEM_DISABLE
-            sample_wf(rx_chan);
-        #else
-            #ifdef WF_IPC_SAMPLE_WF
-                shmem_ipc_invoke(SIG_IPC_WF, wf->rx_chan);      // invoke sample_wf()
-            #else
-                sample_wf(rx_chan);
-            #endif
-        #endif
+        sample_wf(rx_chan);
 	}
 }
 
-void sample_wf(int rx_chan)
+static void sample_wf(int rx_chan)
 {
 	wf_inst_t *wf = &WF_SHMEM->wf_inst[rx_chan];
     int k;
@@ -1007,16 +981,7 @@ void sample_wf(int rx_chan)
     //if (wf->flush_wf_pipe) {
     //	wf->flush_wf_pipe--;
     //} else {
-        void compute_frame(int rx_chan);
-        #ifdef WF_SHMEM_DISABLE
-            compute_frame(rx_chan);
-        #else
-            #ifdef WF_IPC_SAMPLE_WF
-                compute_frame(rx_chan);
-            #else
-                shmem_ipc_invoke(SIG_IPC_WF, rx_chan);      // invoke compute_frame()
-            #endif
-        #endif
+        compute_frame(rx_chan);
 
         #ifndef WF_IPC_SAMPLE_WF
             if (wf->aper == AUTO && wf->done_autoscale > wf->sent_autoscale) {
@@ -1176,7 +1141,7 @@ static void aperture_auto(wf_inst_t *wf, u1_t *bp)
     wf->noise = min_dBm;
 }
 
-void compute_frame(int rx_chan)
+static void compute_frame(int rx_chan)
 {
 	wf_inst_t *wf = &WF_SHMEM->wf_inst[rx_chan];
 	int i;

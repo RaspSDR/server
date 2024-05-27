@@ -103,7 +103,6 @@ typedef struct {
     #define DRM_SHMEM_DISABLE
     #define RX_SHMEM_DISABLE
     #define WSPR_SHMEM_DISABLE
-    #define WF_SHMEM_DISABLE
 #endif
 
 typedef struct {
@@ -125,12 +124,6 @@ typedef struct {
     #ifdef RX_SHMEM_DISABLE
     #else
         rx_shmem_t rx_shmem;
-    #endif
-
-    #ifdef WF_SHMEM_DISABLE
-    #else
-        // shared with waterfall offload process
-        wf_shmem_t wf_shmem;
     #endif
 
     #ifdef WSPR_SHMEM_DISABLE

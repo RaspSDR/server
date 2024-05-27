@@ -335,8 +335,6 @@ typedef struct {
 
 #include "shmem_config.h"
 
-#define WSPR_SHMEM_DISABLE
-
 #include "shmem.h"
 
 #ifdef WSPR_SHMEM_DISABLE

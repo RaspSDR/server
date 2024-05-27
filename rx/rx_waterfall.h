@@ -169,8 +169,6 @@ struct wf_shmem_t {
 
 #include "shmem_config.h"
 
-#define WF_SHMEM_DISABLE
-
 #include "shmem.h"
 
 #ifdef WF_SHMEM_DISABLE

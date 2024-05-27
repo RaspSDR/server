@@ -101,7 +101,6 @@ typedef struct {
 #else
     #warning shmem_config.h not included
     #define DRM_SHMEM_DISABLE
-    #define RX_SHMEM_DISABLE
 #endif
 
 typedef struct {
@@ -119,11 +118,6 @@ typedef struct {
 	char status_str_large[N_SHMEM_STATUS_STR_LARGE];
 	
     shmem_ipc_t ipc[SIG_MAX_USED];
-
-    #ifdef RX_SHMEM_DISABLE
-    #else
-        rx_shmem_t rx_shmem;
-    #endif
 
     #ifdef DRM_SHMEM_DISABLE
     #else

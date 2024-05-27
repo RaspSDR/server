@@ -108,7 +108,6 @@ typedef struct {
     #ifdef DRM_SHMEM_DISABLE_TEST
         #warning do not forget to remove DRM_SHMEM_DISABLE_TEST
         #define DRM_SHMEM_DISABLE
-        #define RX_SHMEM_DISABLE
     #else
         // shared memory enabled
     #endif

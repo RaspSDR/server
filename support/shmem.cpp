@@ -43,17 +43,10 @@ void shmem_init()
     shmem->log_save.endp = (char *) shmem_end;
 
     // printf_init() hasn't been called yet
-    real_printf("SHMEM=%.3f MB: ipc=%.3f rx=%.3f drm=%.3f\n",
+    real_printf("SHMEM=%.3f MB: ipc=%.3f drm=%.3f\n",
         (float) rsize/M,
         
         (float) sizeof(shmem->ipc)/M,
-
-
-        #ifdef RX_SHMEM_DISABLE
-            0.,
-        #else
-            (float) sizeof(shmem->rx_shmem)/M,
-        #endif
 
         #ifdef DRM_SHMEM_DISABLE
             0.

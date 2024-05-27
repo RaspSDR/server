@@ -65,12 +65,8 @@ typedef struct {
 #include "shmem_config.h"
 #include "shmem.h"
 
-#ifdef RX_SHMEM_DISABLE
-    extern rx_shmem_t *rx_shmem_p;
-    #define RX_SHMEM rx_shmem_p
-#else
-    #define RX_SHMEM (&shmem->rx_shmem)
-#endif
+extern rx_shmem_t *rx_shmem_p;
+#define RX_SHMEM rx_shmem_p
 
 typedef struct {
     u4_t resets, hist[MAX_NRX_BUFS];

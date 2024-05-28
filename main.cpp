@@ -93,16 +93,14 @@ int main(int argc, char *argv[])
 	main_argc = argc;
 	main_argv = argv;
 	
-	#ifndef DEVSYS
-		// enable generation of core file in /tmp
-		//scall("core_pattern", system("echo /tmp/core-%e-%s-%p-%t > /proc/sys/kernel/core_pattern"));
-		
-		// use same filename to prevent looping dumps from filling up filesystem
-		scall("core_pattern", system("echo /tmp/core-%e > /proc/sys/kernel/core_pattern"));
-		const struct rlimit unlim = { RLIM_INFINITY, RLIM_INFINITY };
-		scall("setrlimit", setrlimit(RLIMIT_CORE, &unlim));
-		system("rm -f /tmp/core-kiwi.*-*");     // remove old core files
-	#endif
+	// enable generation of core file in /tmp
+	//scall("core_pattern", system("echo /tmp/core-%e-%s-%p-%t > /proc/sys/kernel/core_pattern"));
+	
+	// use same filename to prevent looping dumps from filling up filesystem
+	scall("core_pattern", system("echo /tmp/core-%e > /proc/sys/kernel/core_pattern"));
+	const struct rlimit unlim = { RLIM_INFINITY, RLIM_INFINITY };
+	scall("setrlimit", setrlimit(RLIMIT_CORE, &unlim));
+	system("rm -f /tmp/core-*");     // remove old core files
 	
 	kiwi.platform = PLATFORM_ZYNQ7010;
 

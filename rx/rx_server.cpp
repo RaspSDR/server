@@ -136,7 +136,6 @@ void rx_server_init()
 	c2s_sound_init();
 	c2s_waterfall_init();
 
-    //#ifndef DEVSYS
     #if 0
 	    sig_arm(SIG_BACKTRACE, debug_exit_backtrace_handler);
     #endif

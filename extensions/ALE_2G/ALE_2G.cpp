@@ -397,11 +397,7 @@ void ALE_2G_main()
     ale_2g.s2p_start = (s2_t *) file;
     u4_t off = *(ale_2g.s2p_start + 3);
 
-    #ifdef DEVSYS
-        ale_2g.file_off = p0;
-    #else
-        if (ale_2g.file_off == 0) ale_2g.file_off = 16;
-    #endif
+    if (ale_2g.file_off == 0) ale_2g.file_off = 16;
 
     off = FLIP16(off) + ale_2g.file_off;
     printf("ALE_2G: size=%ld file_off=%d off=%d(0x%x) first_word=0x%04x\n",
@@ -413,72 +409,5 @@ void ALE_2G_main()
     ale_2g.tsamps = words;
 #endif
 }
-
-// direct test called from Kiwi main()
-#if (defined(DEVSYS) && 1) || (defined(HOST) && 0)
-
-void ale_2g_test()
-{
-    int i, j;
-    
-    printf("ale_2g_test: p0 = file_off, p2 = 1[dsp=DBG]; or compile NO_RESAMPLING_8K\n");
-    int rx_chan = 0;
-    ale_2g_chan_t *e = &ale_2g_chan[rx_chan];
-    e->rx_chan = rx_chan;
-    ale_2g.file_off = p0;
-    
-    static float fout[FASTFIR_OUTBUF_SIZE];
-    
-#if 0
-    if (p1)
-        e->use_new_resampler = false;
-    else
-#endif
-        e->use_new_resampler = true;
-
-    #ifdef NO_RESAMPLING_8K
-        float f_srate = 8000;
-        ale_2g.test_fn_sel = FILE_8k;
-    #else
-        float f_srate = 12000;
-        ale_2g.test_fn_sel = FILE_12k;
-        
-        if (e->use_new_resampler == false)
-            panic("ale_2g_test() can't do OLD resampler currently, only NEW");
-    #endif
-
-    ALE_2G_main();
-    e->dsp = p2? DBG : CMDS;
-    e->decode.set_display(e->dsp);
-    e->decode.modem_init(e->rx_chan, e->use_new_resampler, f_srate, FASTFIR_OUTBUF_SIZE, false);
-
-    for (j = 0; j < 8; j++) {
-        printf("----------------------------------------------------- iter %d\n", j);
-        e->s2px = ale_2g.s2p_start;
-        
-        while (1) {
-            for (i = 0; i < FASTFIR_OUTBUF_SIZE; i++) {
-                if (e->s2px < ale_2g.s2p_end) {
-                    e->s2in[i] = (s2_t) FLIP16(*e->s2px);
-                    fout[i] = (float) e->s2in[i];
-                }
-                e->s2px++;
-            }
-        
-            if (e->s2px >= ale_2g.s2p_end)
-                break;
-        
-            if (e->use_new_resampler)
-                e->decode.do_modem_resampled(e->s2in, FASTFIR_OUTBUF_SIZE);
-            else
-                e->decode.do_modem(fout, FASTFIR_OUTBUF_SIZE);
-        }
-
-        e->decode.modem_reset();
-        if (p1 && j == 1) break;
-    }
-}
-
-#endif
 
 #endif

@@ -62,13 +62,7 @@ Boston, MA  02110-1301, USA.
 #ifdef HOST
     #include <sys/prctl.h>
 #endif
-
-#ifdef DEVSYS
-    //#include <util.h>
-    #define forkpty(master_pty_fd, x, y, z) 0
-#else
-    #include <pty.h>
-#endif
+#include <pty.h>
 
 typedef struct {
     bool have_pushback;

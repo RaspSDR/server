@@ -4,22 +4,6 @@
 
 #include <time.h>
 
-// not all development systems have clock_gettime()
-#ifdef DEVSYS
-    #ifdef __MACH__
-        #define clock_gettime(clk_id, tp) \
-            (tp)->tv_sec = 0; \
-            (tp)->tv_nsec = 0;
-        #define clock_settime(clk_id, tp) 0
-        #ifndef CLOCK_MONOTONIC
-            #define CLOCK_MONOTONIC 0
-            #define CLOCK_REALTIME 0
-        #endif
-    #endif
-#else
-	#include <time.h>
-#endif
-
 #define CTIME_R_BUFSIZE     (25 + SPACE_FOR_NULL)
 #define CTIME_R_NL          24      // offset of '\n' in ctime_r return buffer
 

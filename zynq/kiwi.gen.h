@@ -13,7 +13,6 @@
 #define SND_RATE_4CH 12000    // DEFp 0x2ee0
 #define NRX_SPI 2047    // DEFp 0x7ff
 #define RXO_BITS 31    // DEFp 0x18
-#define MAX_ZOOM 13    // DEFp 0xe
 #define GPS_MAX_CHANS 16    // DEFp 0xc
 
 #endif

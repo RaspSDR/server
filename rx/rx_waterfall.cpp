@@ -69,6 +69,8 @@ Boston, MA  02110-1301, USA.
 #define WF_NSPEEDS 5
 static const int wf_fps[] = { WF_SPEED_OFF, WF_SPEED_1FPS, WF_SPEED_SLOW, WF_SPEED_MED, WF_SPEED_FAST };
 
+#define MAX_ZOOM (kiwi.wf_share?7:13)
+
 static const char *interp_s[] = { "max", "min", "last", "drop", "cma" };
 
 static wf_shmem_t wf_shmem;

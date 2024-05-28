@@ -836,6 +836,14 @@ void c2s_waterfall(void *param)
 	}
 }
 
+static void cleanup_wf(void *arg)
+{
+    int wf_chan = *(int*)arg;
+    if (kiwi.wf_share && wf_chan > 0) {
+        fpga_free_wf(wf_chan, -1);
+    }
+}
+
 static void sample_wf(int rx_chan)
 {
 	wf_inst_t *wf = &WF_SHMEM->wf_inst[rx_chan];
@@ -898,8 +906,9 @@ static void sample_wf(int rx_chan)
     }
 
     {
-        int wf_chan;
+        int wf_chan = -1;
 
+        pthread_cleanup_push(cleanup_wf, &wf_chan);
         if (kiwi.wf_share)
             wf_chan = fpga_get_wf(rx_chan, wf->decim, wf->i_offset);
         else
@@ -923,8 +932,11 @@ static void sample_wf(int rx_chan)
                 avail--;
             }
         }
+
         if (kiwi.wf_share)
             fpga_free_wf(wf_chan, rx_chan);
+        
+        pthread_cleanup_pop(0);
     }
 
     for (int i = 0; i < WF_C_NSAMPS; i++) 

@@ -146,10 +146,18 @@ int fpga_get_wf(int rx_chan, int decimate, uint64_t freq)
 void fpga_free_wf(int wf_chan, int rx_chan)
 {
     fpga_config->reset &= ~(RESET_WF0 << wf_chan);
-    rx_chan += 10;
 
-    bool exchanged = wf_using[wf_chan].compare_exchange_strong(rx_chan, 0);
-    assert(exchanged);
+    if (rx_chan > 0)
+    {
+      rx_chan += 10;
+
+      bool exchanged = wf_using[wf_chan].compare_exchange_strong(rx_chan, 0);
+      assert(exchanged);
+    }
+    else
+    {
+      wf_using[wf_chan].store(0);
+    }
 
     int ret = sem_post(&wf_sem);
     if (ret) panic("sem_post failed");

@@ -244,8 +244,8 @@ static void webserver_collect_print_stats(int print)
     rx_autorun_restart_victims(false);
 }
 
-//#ifdef CAT_TASK_CHILD
 static int CAT_task_tid;
+static int CAT_last_freqHz;
 
 static void called_every_second()
 {
@@ -273,12 +273,9 @@ static void called_every_second()
             //printf("CAT_CH=%d ch=%d\n", kiwi.CAT_ch, ch);
             if (kiwi.CAT_ch < 0) kiwi.CAT_ch = ch;      // lock to the first channel encountered
 
-            if (c->freqHz != shmem->CAT_last_freqHz) {
-                shmem->CAT_last_freqHz = c->freqHz;
-                #ifdef CAT_TASK_CHILD
-                #else
-                    TaskWakeup(CAT_task_tid);
-                #endif
+            if (c->freqHz != CAT_last_freqHz) {
+                CAT_last_freqHz = c->freqHz;
+                TaskWakeup(CAT_task_tid);
             }
         }
 
@@ -382,40 +379,27 @@ static void called_every_second()
 static void CAT_write_tty(void *param)
 {
     int CAT_fd = (int) FROM_VOID_PARAM(param);
-    bool loop = false;
-    
-    #ifdef CAT_TASK_CHILD
-        loop = true;
-    #endif
-    
-    do {
-        static int last_freqHz;
-        if (last_freqHz != shmem->CAT_last_freqHz) {
-            char *s;
-            //asprintf(&s, "IF%011d     +000000 000%1d%1d00001 ;\n", shmem->CAT_last_freqHz, /* mode */ 0, /* vfo */ 0);
-            asprintf(&s, "FA%011d;\n", shmem->CAT_last_freqHz);
-            //real_printf("CAT %s", s);
-            write(CAT_fd, s, strlen(s));
-            free(s);
-            last_freqHz = shmem->CAT_last_freqHz;
-        }
-        
-        if (loop) kiwi_msleep(900);
-    } while (loop);
+
+    static int last_freqHz;
+    if (last_freqHz != CAT_last_freqHz) {
+        char *s;
+        //asprintf(&s, "IF%011d     +000000 000%1d%1d00001 ;\n", CAT_last_freqHz, /* mode */ 0, /* vfo */ 0);
+        asprintf(&s, "FA%011d;\n", CAT_last_freqHz);
+        //real_printf("CAT %s", s);
+        write(CAT_fd, s, strlen(s));
+        free(s);
+        last_freqHz = CAT_last_freqHz;
+    }
 }
 
 void CAT_task(void *param)
 {
     int CAT_fd = (int) FROM_VOID_PARAM(param);
 
-    #ifdef CAT_TASK_CHILD
-        child_task("kiwi.CAT", CAT_write_tty, NO_WAIT, param);
-    #else
-        while (1) {
-            TaskSleep();
-            CAT_write_tty(TO_VOID_PARAM(CAT_fd));
-        }
-    #endif
+    while (1) {
+        TaskSleep();
+        CAT_write_tty(TO_VOID_PARAM(CAT_fd));
+    }
 }
 
 void stat_task(void *param)

@@ -104,8 +104,6 @@ typedef struct {
 #endif
 
 typedef struct {
-    int CAT_last_freqHz;
-	
     shmem_ipc_t ipc[SIG_MAX_USED];
 
     #ifdef DRM_SHMEM_DISABLE

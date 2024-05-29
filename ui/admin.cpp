@@ -964,7 +964,7 @@ void c2s_admin(void *param)
 			i = sscanf(cmd, "SET log_update=%d", &firsttime);
 			if (i == 1) {
 				int start;
-				log_save_t *ls = log_save_p;
+				log_save_t *ls = &log_save;
 				
 				if (ls->not_shown == 0) {
 					start = firsttime? 0 : conn->log_last_sent;

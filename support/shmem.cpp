@@ -33,14 +33,12 @@ shmem_t *shmem;
 
 void shmem_init()
 {
-    u4_t size = sizeof(shmem_t) + (N_LOG_SAVE * N_LOG_MSG_LEN);
+    u4_t size = sizeof(shmem_t);
     u4_t rsize = round_up(size, sysconf(_SC_PAGE_SIZE));
     shmem = (shmem_t *) mmap((caddr_t) 0, rsize, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
     assert(shmem != MAP_FAILED);
     scall("mlock", mlock(shmem, rsize));
     memset(shmem, 0, rsize);
-    u1_t *shmem_end = ((u1_t *) shmem) + rsize;
-    shmem->log_save.endp = (char *) shmem_end;
 
     // printf_init() hasn't been called yet
     real_printf("SHMEM=%.3f MB: ipc=%.3f rx=%.3f drm=%.3f\n",

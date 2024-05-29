@@ -22,6 +22,20 @@
  #define ALT_PRINTF printf
 #endif
 
+
+#define N_LOG_MSG_LEN   256
+#define N_LOG_SAVE      256
+typedef struct {
+    #define LOG_MAGIC 0xf00dcafe
+    u4_t magic;
+    bool init;
+	int idx, not_shown;
+	char *arr[N_LOG_SAVE];
+	char *endp;
+} log_save_t;
+
+extern log_save_t log_save;
+
 #define printf ALT_PRINTF
 void alt_printf(const char *fmt, ...);
 

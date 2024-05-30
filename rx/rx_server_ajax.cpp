@@ -510,7 +510,7 @@ fail:
                 }
                 snd_pkt_real_t *snd = (snd_pkt_real_t *) nb->buf;
                 // 0 10 .. 1304 => 0 1 130.4 (/10) => -127 -126 .. 3.4 dBm (-127)
-                sMeter_dBm = GET_BE_U16(snd->h.smeter) / 10 - 127;
+                sMeter_dBm = GET_BE_U16(snd->h.smeter) / 10 - SMETER_BIAS;
                 //printf("/s-meter nsamps=%d rcv=%d <%.3s> smeter=%02x|%02x|%d\n", nsamps, n, snd->h.id, snd->h.smeter[0], snd->h.smeter[1], sMeter_dBm);
                 if (strncmp(snd->h.id, "SND", 3) != 0) continue;
                 nsamps++;

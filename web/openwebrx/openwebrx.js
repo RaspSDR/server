@@ -9133,7 +9133,7 @@ function dx_help(show)
 var smeter_width;
 var SMETER_RHS = 38;
 var SMETER_SCALE_HEIGHT = 29;
-var SMETER_BIAS = 127;
+var SMETER_BIAS = 140;
 var SMETER_INPUT_MAX = 3.4;
 var SMETER_INPUT_RANGE = (SMETER_BIAS + SMETER_INPUT_MAX);
 var SMETER_DISPLAY_MAX = -6;     // don't display all the way to SMETER_INPUT_MAX

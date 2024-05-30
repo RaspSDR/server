@@ -1213,8 +1213,7 @@ void c2s_sound(void *param)
                 
         // send s-meter data with each audio packet
         // -127 -126 .. 3.4 dBm => 0 1 .. 130.4 (+127) => 0 10 .. 1304 (*10)
-        #define SMETER_BIAS 127.0
-        if (sMeter_dBm < -127.0) sMeter_dBm = -127.0; else
+        if (sMeter_dBm < -SMETER_BIAS) sMeter_dBm = -SMETER_BIAS; else
         if (sMeter_dBm >    3.4) sMeter_dBm =    3.4;
         u2_t sMeter = (u2_t) ((sMeter_dBm + SMETER_BIAS) * 10);
         SET_BE_U16(smeter, sMeter);

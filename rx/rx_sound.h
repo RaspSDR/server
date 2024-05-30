@@ -81,6 +81,8 @@ typedef struct {
 #define SPEC_SND_AF     2
 #define N_SND_SPEC      3
 
+#define SMETER_BIAS		140.0
+
 typedef struct {
     snd_pkt_real_t out_pkt_real;
     snd_pkt_iq_t   out_pkt_iq;

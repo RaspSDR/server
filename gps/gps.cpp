@@ -8,6 +8,7 @@
 
 #include <gps.h>
 #include <math.h>
+#include <unistd.h>
 
 gps_t gps;
 
@@ -27,6 +28,16 @@ void gps_main(int argc, char *argv[])
     {
         printf("open gpsd failed\n");
         return;
+    }
+
+    // enable satellite for gps
+    // Construct the command
+    // Content is coming from gpsctl -D 4 command
+    const char *command = "?DEVICE={\"path\":\"/dev/ttyPS1\",\"hexdata\":\"245043415330332c312c312c312c312c312c312c312c312c302c302c2c2c312c312c2c2c2c312a33330d0a\"}\n";
+    
+    // Send the command to GPSD
+    if (write(gps_handle.gps_fd, command, strlen(command))) {
+        fprintf(stderr, "Enable satellite on gps failed\n");
     }
 
     // Set non-blocking mode

@@ -26,8 +26,7 @@ Boston, MA  02110-1301, USA.
 #define RESET_WF1 (1 << 2)
 #define RESET_WF2 (1 << 3)
 #define RESET_WF3 (1 << 4)
-#define RESET_LEDON (1 << 7)
-#define RESET_PPS (1 << 8)
+#define RESET_PPS (1 << 7)
 
 #define GPIO_ANTENNA (1 << 0)
 #define GPIO_ANTENNA0 (1 << 0)
@@ -39,18 +38,19 @@ Boston, MA  02110-1301, USA.
 
 #define GPIO_DITHER (1 << 6)
 #define GPIO_PGA (1 << 7)
-
+#define GPIO_LED (1 << 8)
 
 typedef struct {
     uint32_t reset;
-    uint64_t rx_freq[16];
+    uint64_t rx_freq[13];
     struct {
         uint64_t wf_freq;
         uint32_t wf_decim;
-    } __attribute__((packed)) wf_config[4];
-    uint8_t gpios;
+    } __attribute__((packed)) wf_config[2];
+    uint32_t gpios;
+    uint32_t adc_ovl_mask;
 }__attribute__((packed)) FPGA_Config;
-static_assert(sizeof(FPGA_Config) == 1448/8);
+static_assert(sizeof(FPGA_Config) == 1120/8);
 
 typedef struct {
     uint32_t signature;
@@ -76,6 +76,7 @@ extern void fpga_free_wf(int wf_chan, int rx_chan);
 extern void fpga_set_antenna(int mask);
 extern void fpga_set_pga(bool enabled);
 extern void fpga_set_dither(bool enabled);
+extern void fpga_set_led(bool enabled);
 
 extern void fpga_rxfreq(int rx_chan, uint64_t freq);
 extern void fpga_wffreq(int wf_chan, uint64_t freq);

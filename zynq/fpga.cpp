@@ -57,12 +57,12 @@ void fpga_init()
     fpga_status = (FPGA_Status *)mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ, MAP_SHARED, fd, 0x41000000);
     fpga_rx_data = (const int32_t *)mmap(NULL, 2 * sysconf(_SC_PAGESIZE), PROT_READ, MAP_SHARED, fd, 0x42000000);
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 2; i++)
     {
         fpga_wf_data[i] = (const uint32_t *)mmap(NULL, 1 * sysconf(_SC_PAGESIZE), PROT_READ, MAP_SHARED, fd, 0x43000000 + 0x01000000 * i);
     }
 
-    fpga_pps_data =  (const uint32_t *)mmap(NULL, 1 * sysconf(_SC_PAGESIZE), PROT_READ, MAP_SHARED, fd, 0x47000000);
+    fpga_pps_data =  (const uint32_t *)mmap(NULL, 1 * sysconf(_SC_PAGESIZE), PROT_READ, MAP_SHARED, fd, 0x45000000);
 
     close(fd);
 
@@ -195,6 +195,18 @@ void fpga_set_dither(bool enabled)
   fpga_config->gpios = current_gpio;
 }
 
+void fpga_set_led(bool enabled)
+{
+  lock_holder holder(gpio_lock);
+
+  if (enabled)
+    current_gpio |= GPIO_LED;
+  else
+    current_gpio &= ~GPIO_LED;
+
+  fpga_config->gpios = current_gpio;
+}
+
 void fpga_rxfreq(int rx_chan, uint64_t freq)
 {
   fpga_config->rx_freq[rx_chan] = freq;
@@ -213,10 +225,9 @@ void fpga_wfreset(int wf_chan)
 
 void fpga_setovmask(uint32_t mask)
 {
-
+  fpga_config->adc_ovl_mask = mask;
 }
 
 void fpga_setadclvl(uint32_t val)
 {
-
 }

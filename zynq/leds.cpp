@@ -69,10 +69,7 @@ static void led_set_one(int led, int v)
 {
     bool full_on = (led_delay_off == 0);
 
-    if (v)
-        fpga_config->reset |= RESET_LEDON;
-    else
-        fpga_config->reset &= ~RESET_LEDON;
+    fpga_set_led(v);
 }
 
 static void led_set(int l0, int l1, int l2, int l3, int msec)

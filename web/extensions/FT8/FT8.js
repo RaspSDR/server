@@ -13,8 +13,8 @@ var ft8 = {
    mode_s: ['FT8', 'FT4'],
 
    freq_s: {
-      'FT8': [ '1840', '3573', '5357', '7074', '10136', '14074', '18100', '21074', '24915', '28074' ],
-      'FT4': [ '3575.5', '7047.5', '10140', '14080', '18104', '21140', '24919', '28180' ]
+      'FT8': [ '1840', '3573', '5357', '7074', '10136', '14074', '18100', '21074', '24915', '28074', '50313' ],
+      'FT4': [ '3575.5', '7047.5', '10140', '14080', '18104', '21140', '24919', '28180', '50318' ]
    },
    PASSBAND_LO: 100,
    PASSBAND_HI: 3100,
@@ -34,8 +34,8 @@ var ft8 = {
    // yes, there are really no assigned FT4 freqs for 160m and 60m
    autorun_u: [
       'regular use',
-      'FT8-160m', 'FT8-80m', 'FT8-60m', 'FT8-40m', 'FT8-30m', 'FT8-20m', 'FT8-17m', 'FT8-15m', 'FT8-12m', 'FT8-10m',
-                  'FT4-80m',            'FT4-40m', 'FT4-30m', 'FT4-20m', 'FT4-17m', 'FT4-15m', 'FT4-12m', 'FT4-10m'
+      'FT8-160m', 'FT8-80m', 'FT8-60m', 'FT8-40m', 'FT8-30m', 'FT8-20m', 'FT8-17m', 'FT8-15m', 'FT8-12m', 'FT8-10m', 'FT8-6m',
+                  'FT4-80m',            'FT4-40m', 'FT4-30m', 'FT4-20m', 'FT4-17m', 'FT4-15m', 'FT4-12m', 'FT4-10m', 'FT4-6m'
    ],
 
    PREEMPT_NO: 0,
@@ -254,7 +254,7 @@ function ft8_mode_cb(path, idx, first)
 function ft8_clear_button_cb(path, idx, first)
 {
    if (first) return;
-   ft8.console_status_msg_p.s = '\f';
+   ft8.console_status_msg_p.s = '\u000C';
    kiwi_output_msg('id-ft8-console-msgs', 'id-ft8-console-msg', ft8.console_status_msg_p);
    ft8.log_txt = '';
 }

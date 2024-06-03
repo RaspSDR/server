@@ -110,6 +110,7 @@ if (down_converter_6m) {
    bands.push({ s:svc.A, min:21000, max:21450, region:'*', name:"15m" });
    bands.push({ s:svc.A, min:24890, max:24990, region:'*', name:"12m" });
    bands.push({ s:svc.A, min:28000, max:29700, region:'*', name:"10m" });
+   bands.push({ s:svc.A, min:50000, max:54000, region:'*', name:"6m" });
    
    bands.push({ s:svc.L, min:14100, max:14100, sel:"14100cwn", region:'m', name:"IBP 20m" });
    bands.push({ s:svc.L, min:18110, max:18110, sel:"18110cwn", region:'m', name:"IBP 17m" });

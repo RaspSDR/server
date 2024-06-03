@@ -194,6 +194,9 @@ void *_TaskSleep(const char *reason, u64_t usec, u4_t *wakeup_test)
 // Wakeup the sepecific task via signal the condition variable
 void _TaskWakeup(int id, u4_t flags, void *wake_param)
 {
+	if (Tasks[id].entry == nullptr)
+		return;
+
 	pthread_mutex_lock(&Tasks[id].mutex);
 	if (Tasks[id].sleeping)
 	{

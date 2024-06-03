@@ -489,8 +489,6 @@ void c2s_sound(void *param)
 		tid_t receive_iq_pre_agc_tid                = isNBFM? (tid_t) NULL : ext_users[rx_chan].receive_iq_pre_agc_tid;
 		ext_receive_iq_samps_t receive_iq_post_agc  = isNBFM? NULL : ext_users[rx_chan].receive_iq_post_agc;
 		tid_t receive_iq_post_agc_tid               = isNBFM? (tid_t) NULL : ext_users[rx_chan].receive_iq_post_agc_tid;
-		ext_receive_real_samps_t receive_real       = ext_users[rx_chan].receive_real;
-		tid_t receive_real_tid                      = ext_users[rx_chan].receive_real_tid;
 		
 		int ns_out;
 		int fir_pos;
@@ -1095,7 +1093,12 @@ void c2s_sound(void *param)
                 iq->iq_wr_pos = (iq->iq_wr_pos+1) & (N_DPBUF-1);
                 int freqHz = rx->freqHz[rx->real_wr_pos];
                 rx->real_wr_pos = (rx->real_wr_pos+1) & (N_DPBUF-1);
-    
+
+                // TODO: We don't have lock here. there is chance we will get out of sync of the callback
+                // and result hang.
+                ext_receive_real_samps_t receive_real       = ext_users[rx_chan].receive_real;
+                tid_t receive_real_tid                      = ext_users[rx_chan].receive_real_tid;
+
                 // Forward real (not IQ) samples if requested.
                 // Remember that receive_real() is used by some extensions to pushback test data.
                 if (receive_real != NULL)

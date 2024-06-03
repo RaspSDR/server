@@ -30,6 +30,7 @@ void gps_main(int argc, char *argv[])
         return;
     }
 
+#if 0
     // enable satellite for gps
     // Construct the command
     // Content is coming from gpsctl -D 4 command
@@ -39,6 +40,7 @@ void gps_main(int argc, char *argv[])
     if (write(gps_handle.gps_fd, command, strlen(command))) {
         fprintf(stderr, "Enable satellite on gps failed\n");
     }
+#endif
 
     // Set non-blocking mode
     if (gps_stream(&gps_handle, WATCH_ENABLE | WATCH_JSON, NULL) != 0)

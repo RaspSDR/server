@@ -25,7 +25,7 @@ Boston, MA  02110-1301, USA.
 
 #include <atomic>
 			
-#define N_DPBUF	32
+#define N_DPBUF	128
 
 typedef struct {
     std::atomic<u4_t> wr_pos, rd_pos;

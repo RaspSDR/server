@@ -25,8 +25,8 @@ Boston, MA  02110-1301, USA.
 #include "web.h"
 
 // ADC clk generated from FPGA via Si5351
-#define ADC_CLOCK_NOM	    (138.24*MHz)		// 66.6666 MHz 15.0 ns
-#define ADC_CLOCK_TYP	    (138.24*MHz)		// typical 20 degC value
+#define ADC_CLOCK_NOM	    (122.88*MHz)		// 66.6666 MHz 15.0 ns
+#define ADC_CLOCK_TYP	    (122.88*MHz)		// typical 20 degC value
 #define ADC_CLOCK_PPM_TYP   100                 // max auto adjustment we allow
 #define ADC_CLOCK_PPM_LIMIT 100                 // max manual adjustment we allow
 

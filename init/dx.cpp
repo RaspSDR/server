@@ -330,7 +330,7 @@ void dx_prep_list(dx_db_t *dx_db, bool need_sort, dx_t *_dx_list, int _dx_list_l
     dx.update_seq++;
 }
 
-enum { E_ARRAY = 0, E_FREQ, E_MODE, E_IDENT, E_NOTES, E_OPT_ARRAY, E_OPT_ID, E_SORT, E_UNEXPECTED } error_e;
+enum { E_ARRAY = 0, E_FREQ, E_MODE, E_IDENT, E_NOTES, E_OPT_ARRAY, E_OPT_ID, E_SORT, E_UNEXPECTED };
 	
 static const char *error_s[] = {
     "enclosing array missing",

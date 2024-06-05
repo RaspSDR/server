@@ -176,7 +176,7 @@ char *rx_server_ajax(struct mg_connection *mc, char *ip_forwarded)
 	case AJAX_DX: {
 		char vname[64], fname[64];		// mg_parse_multipart() checks size of these
 		const char *data;
-		int type, idx, rc = 0, line, status, key_cmp, data_len;
+		int type, idx, rc = 0, line = 0, status, key_cmp, data_len;
         char **s_a = NULL;
         int s_size = 0;
 		char *r_buf = NULL;

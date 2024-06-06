@@ -41,7 +41,8 @@ Boston, MA  02110-1301, USA.
 #define GPIO_LED (1 << 8)
 
 typedef struct {
-    uint32_t reset;
+    uint16_t reset;
+    uint16_t rx_decim;
     uint64_t rx_freq[13];
     struct {
         uint64_t wf_freq;

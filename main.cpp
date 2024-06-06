@@ -185,7 +185,6 @@ int main(int argc, char *argv[])
 	TaskInit();
 	misc_init();
     cfg_reload();
-    clock_init();
 
     bool update_admcfg = false;
     kiwi.anti_aliased = admcfg_default_bool("anti_aliased", false, &update_admcfg);
@@ -194,6 +193,7 @@ int main(int argc, char *argv[])
 
     if (update_admcfg) admcfg_save_json(cfg_adm.json);      // during init doesn't conflict with admin cfg
 
+    clock_init();
 	peri_init();
     fpga_init();
 

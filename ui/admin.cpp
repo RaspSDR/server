@@ -380,20 +380,6 @@ void c2s_admin(void *param)
 				continue;
 			}
 
-            int airband_enabled;
-            i = sscanf(cmd, "SET airband=%d", &airband_enabled);
-			if (i == 1) {
-				clprintf(conn, "ADMIN: airband=%d\n", airband_enabled);
-				
-                if (kiwi.airband != airband_enabled)
-                {
-                    kiwi.airband = airband_enabled;
-                    rf_enable_airband(kiwi.airband);
-                }
-
-                continue;
-			}
-
             int wf_share;
             i = sscanf(cmd, "SET wf_share=%d", &wf_share);
 			if (i == 1) {

@@ -99,6 +99,11 @@ void fpga_init()
 #endif
     lprintf("FPGA Bitstream signature: 0x%x\n", fpga_status->signature);
 
+    // Initialize RX Decim
+    uint16_t decim = uint16_t(ADC_CLOCK_NOM / 12000 / 256);
+    fpga_config->rx_decim = decim;
+    lprintf("FPGA RX Decim: %d\n", decim);
+
     fpga_config->reset = RESET_RX;
 
     wf_channels = (fpga_status->signature >> 8) & 0x0f;

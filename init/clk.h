@@ -24,9 +24,11 @@ Boston, MA  02110-1301, USA.
 #include "kiwi.h"
 #include "web.h"
 
+extern double adc_clock_hz;
+
 // ADC clk generated from FPGA via Si5351
-#define ADC_CLOCK_NOM	    (122.88*MHz)		// 66.6666 MHz 15.0 ns
-#define ADC_CLOCK_TYP	    (122.88*MHz)		// typical 20 degC value
+#define ADC_CLOCK_NOM	    adc_clock_hz		// 66.6666 MHz 15.0 ns
+#define ADC_CLOCK_TYP	    adc_clock_hz		// typical 20 degC value
 #define ADC_CLOCK_PPM_TYP   100                 // max auto adjustment we allow
 #define ADC_CLOCK_PPM_LIMIT 100                 // max manual adjustment we allow
 

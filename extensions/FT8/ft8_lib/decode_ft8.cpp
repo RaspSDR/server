@@ -6,6 +6,8 @@
 #include "coroutines.h"
 #include "FT8.h"
 #include "PSKReporter.h"
+#include "printf.h"
+#include "ext.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -33,6 +35,15 @@
     #define CALLSIGN_HASHTABLE_MAX 256
     #define CALLSIGN_AGE_MAX 3
 #endif
+
+#define kMin_score 10 // Minimum sync score threshold for candidates
+#define kMax_candidates 140
+#define kLDPC_iterations 25
+
+#define kMax_decoded_messages 140
+
+const int kFreq_osr = 2; // Frequency oversampling rate (bin subdivision)
+const int kTime_osr = 2; // Time oversampling rate (symbol subdivision)
 
 typedef struct {
     // NB: callsign is NOT null terminated (to save a byte). Must use strncpy() / strncmp()
@@ -66,18 +77,20 @@ typedef struct {
 
     callsign_hashtable_t *callsign_hashtable;
     int callsign_hashtable_size;
+
+    ftx_candidate_t candidate_list[kMax_candidates];
+    uint64_t padding0;
+    ftx_message_t decoded[kMax_decoded_messages];
+    uint64_t padding1;
+    ftx_message_t* decoded_hashtable[kMax_decoded_messages];
+    uint64_t padding2;
+
 } decode_ft8_t;
 
+// #define CHECK_PADDING(ft8) do { if (ft8->padding0 != 0xdeadbeec || ft8->padding1 != 0xdeadbeed || ft8->padding2 != 0xdeadbeee) { panic("FT8 padding error"); } } while (0)
+#define CHECK_PADDING(ft8) do {} while(0)
+
 static decode_ft8_t decode_ft8[MAX_RX_CHANS];
-
-const int kMin_score = 10; // Minimum sync score threshold for candidates
-const int kMax_candidates = 140;
-const int kLDPC_iterations = 25;
-
-const int kMax_decoded_messages = 50;
-
-const int kFreq_osr = 2; // Frequency oversampling rate (bin subdivision)
-const int kTime_osr = 2; // Time oversampling rate (symbol subdivision)
 
 static void hashtable_init(int rx_chan)
 {
@@ -85,12 +98,17 @@ static void hashtable_init(int rx_chan)
     ft8->callsign_hashtable_size = 0;
     ft8->callsign_hashtable = (callsign_hashtable_t *) malloc(sizeof(callsign_hashtable_t) * CALLSIGN_HASHTABLE_MAX);
     memset(ft8->callsign_hashtable, 0, sizeof(callsign_hashtable_t) * CALLSIGN_HASHTABLE_MAX);
+
+    ft8->padding0 = 0xdeadbeec;
+    ft8->padding1 = 0xdeadbeed;
+    ft8->padding2 = 0xdeadbeee;
 }
 
 static void hashtable_cleanup(int rx_chan, uint8_t max_age)
 {
     decode_ft8_t *ft8 = &decode_ft8[rx_chan];
     callsign_hashtable_t *ht = ft8->callsign_hashtable;
+    CHECK_PADDING(ft8);
 
     for (int idx_hash = 0; idx_hash < CALLSIGN_HASHTABLE_MAX; ++idx_hash, ht++)
     {
@@ -201,20 +219,21 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
 {
     decode_ft8_t *ft8 = &decode_ft8[rx_chan];
 
+    CHECK_PADDING(ft8);
+
     const ftx_waterfall_t* wf = &mon->wf;
     // Find top candidates by Costas sync score and localize them in time and frequency
-    ftx_candidate_t candidate_list[kMax_candidates];
-    int num_candidates = ftx_find_candidates(wf, kMax_candidates, candidate_list, kMin_score);
+    int num_candidates = ftx_find_candidates(wf, kMax_candidates, ft8->candidate_list, kMin_score);
+
+    CHECK_PADDING(ft8);
 
     // Hash table for decoded messages (to check for duplicates)
     int num_decoded = 0, num_spots = 0;
-    ftx_message_t decoded[kMax_decoded_messages];
-    ftx_message_t* decoded_hashtable[kMax_decoded_messages];
 
     // Initialize hash table pointers
     for (int i = 0; i < kMax_decoded_messages; ++i)
     {
-        decoded_hashtable[i] = NULL;
+        ft8->decoded_hashtable[i] = NULL;
     }
 
     // Go over candidates and attempt to decode messages
@@ -224,7 +243,7 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
     for (int idx = 0; idx < num_candidates; ++idx)
     {
         NextTask("candidate");
-        const ftx_candidate_t* cand = &candidate_list[idx];
+        const ftx_candidate_t* cand = &ft8->candidate_list[idx];
 
         float freq_hz = (mon->min_bin + cand->freq_offset + (float)cand->freq_sub / wf->freq_osr) / mon->symbol_period;
         float time_sec = (cand->time_offset + (float)cand->time_sub / wf->time_osr) * mon->symbol_period;
@@ -256,6 +275,7 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
             }
             continue;
         }
+        CHECK_PADDING(ft8);
 
         LOG(LOG_DEBUG, "Checking hash table for %4.1fs / %4.1fHz [%d]...\n", time_sec, freq_hz, cand->score);
         int idx_hash = message.hash % kMax_decoded_messages;
@@ -264,12 +284,12 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
         
         do
         {
-            if (decoded_hashtable[idx_hash] == NULL)
+            if (ft8->decoded_hashtable[idx_hash] == NULL)
             {
                 LOG(LOG_DEBUG, "Found an empty slot\n");
                 found_empty_slot = true;
             }
-            else if ((decoded_hashtable[idx_hash]->hash == message.hash) && (0 == memcmp(decoded_hashtable[idx_hash]->payload, message.payload, sizeof(message.payload))))
+            else if ((ft8->decoded_hashtable[idx_hash]->hash == message.hash) && (0 == memcmp(ft8->decoded_hashtable[idx_hash]->payload, message.payload, sizeof(message.payload))))
             {
                 LOG(LOG_DEBUG, "Found a duplicate!\n");
                 found_duplicate = true;
@@ -282,11 +302,13 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
             }
         } while (!found_empty_slot && !found_duplicate);
 
+    CHECK_PADDING(ft8);
+
         if (found_empty_slot)
         {
             // Fill the empty hashtable slot
-            memcpy(&decoded[idx_hash], &message, sizeof(message));
-            decoded_hashtable[idx_hash] = &decoded[idx_hash];
+            memcpy(&ft8->decoded[idx_hash], &message, sizeof(message));
+            ft8->decoded_hashtable[idx_hash] = &ft8->decoded[idx_hash];
             ++num_decoded;
 
             char text[FTX_MAX_MESSAGE_LENGTH];
@@ -371,6 +393,7 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
                     #endif
                 }
             }
+    CHECK_PADDING(ft8);
 
             if (need_header) {
                 ext_send_msg_encoded(rx_chan, false, "EXT", "chars",
@@ -454,6 +477,8 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
             if (need_free) for (n = 0; n < 4; n++) free(f[n]);     // NB: free(NULL) is okay
         }
     }
+    CHECK_PADDING(ft8);
+
     LOG(LOG_INFO, "Decoded %d messages, callsign hashtable size %d\n", num_decoded, ft8->callsign_hashtable_size);
     if (num_decoded > 0) {
         char *ks = NULL;
@@ -527,6 +552,7 @@ void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, 
         ft8->slot++;
         ft8->tsync = true;
     }
+    CHECK_PADDING(ft8);
     
     for (int i = 0; i < nsamps /*&& ft8->in_pos < ft8->num_samples*/; i++) {
         // NB: must normalize to +/- 1.0 or there won't be any decodes
@@ -549,12 +575,19 @@ void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, 
     LOG(LOG_DEBUG, "FT8 Waterfall accumulated %d symbols\n", ft8->mon.wf.num_blocks);
     LOG(LOG_INFO, "FT8 Max magnitude: %.1f dB\n", ft8->mon.max_mag);
 
+    CHECK_PADDING(ft8);
+
     // Decode accumulated data (containing slightly less than a full time slot)
     NextTask("decode");
     decode(rx_chan, &ft8->mon, freqHz);
 
+    CHECK_PADDING(ft8);
+
     // Reset internal variables for the next time slot
     monitor_reset(&ft8->mon);
+
+    CHECK_PADDING(ft8);
+
     ft8->tsync = false;
 }
 

@@ -51,7 +51,7 @@ typedef struct {
     uint32_t gpios;
     uint32_t adc_ovl_mask;
 }__attribute__((packed)) FPGA_Config;
-static_assert(sizeof(FPGA_Config) == 1120/8);
+static_assert(sizeof(FPGA_Config) == 1120/8, "FPGA Config register is not match");
 
 typedef struct {
     uint32_t signature;
@@ -61,7 +61,7 @@ typedef struct {
     uint64_t fpga_dna;
     uint64_t tsc;
 }__attribute__((packed)) FPGA_Status;
-static_assert(sizeof(FPGA_Status) == 352/8);
+static_assert(sizeof(FPGA_Status) == 352/8, "FPGA Status register is not match");
 
 extern const volatile int32_t *fpga_rx_data;
 extern const volatile uint32_t *fpga_wf_data[4];

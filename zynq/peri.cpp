@@ -53,18 +53,16 @@ void peri_init()
     uint32_t ref_clk;
     if (clk.ext_ADC_clk)
     {
-        ref_clk = 10000000;
         int_clk = 0;
     }
     else
     {
-        ref_clk = 27000000;
         int_clk = 1;
     }
 
     ioctl(ad8370_fd, CLK_SET, &int_clk);
 
-    bool i2c_found = si5351->init(SI5351_CRYSTAL_LOAD_0PF, ref_clk, 0);
+    bool i2c_found = si5351->init(SI5351_CRYSTAL_LOAD_0PF, clk.clock_ref, 0);
     if (!i2c_found)
     {
         panic("i2c si5351 is not found\n\n");
@@ -74,6 +72,11 @@ void peri_init()
     {
         int ret = si5351->set_freq((uint64_t)(ADC_CLOCK_NOM * 100), SI5351_CLK0);
         printf("i2c si5351 initialized, error=%d\n", ret);
+    }
+
+    if (clk.gpsdo_ext_clk > 0)
+    {
+        si5351->set_freq((uint64_t)(clk.gpsdo_ext_clk * 100), SI5351_CLK2);
     }
 
     scall("/dev/ad8370", ad8370_fd = open("/dev/ad8370", O_RDWR | O_SYNC));
@@ -140,5 +143,22 @@ void sd_enable(bool write)
         {
             system("mount -o ro,remount /media/mmcblk0p1");
         }
+    }
+}
+
+static uint32_t ext_clk_adjusted = 0;
+void adjust_clock_output()
+{
+    if (clk.gpsdo_ext_clk == 0)
+        return;
+
+    uint32_t ext_clk_adjusted_new = 
+        clk.gpsdo_ext_clk * ADC_CLOCK_NOM / clk.adc_clock_base;
+
+    if (ext_clk_adjusted_new != ext_clk_adjusted)
+    {
+        si5351->set_freq(ext_clk_adjusted_new, SI5351_CLK2);
+        ext_clk_adjusted = ext_clk_adjusted_new;
+        lprintf("Clock Output at %d Hz\n",ext_clk_adjusted);
     }
 }

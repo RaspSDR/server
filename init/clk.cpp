@@ -25,6 +25,7 @@ Boston, MA  02110-1301, USA.
 #include "timing.h"
 #include "web.h"
 #include "misc.h"
+#include "peri.h"
 
 #include <time.h>
 
@@ -41,9 +42,6 @@ clk_t clk;
 static int outside_window;
 static bool clk_printfs;
 
-static int ns_bin[1024];
-static int ns_nom;
-
 double adc_clock_hz;
 
 void clock_init()
@@ -56,19 +54,18 @@ void clock_init()
     if (err) clk.do_corrections = ADC_CLK_CORR_CONTINUOUS;
     clk.ext_ADC_clk = cfg_bool("ext_ADC_clk", &err, CFG_OPTIONAL);
     if (err) clk.ext_ADC_clk = false;
-    double ext_clk_freq = (double) cfg_int("ext_ADC_freq", &err, CFG_OPTIONAL);
-    if (err) ext_clk_freq = 1000000; // external is always 10Mhz
-    
-    //#define TEST_CLK_EXT
-    #ifdef TEST_CLK_EXT
-        clk.adc_clock_base = ext_clk_freq;
-        printf("ADC_CLOCK: %s%.6f MHz\n", clk.adc_clock_base/MHz);
-    #else
-        clk.adc_clock_base = clk.ext_ADC_clk? ext_clk_freq : ADC_CLOCK_TYP;
-        printf("ADC_CLOCK: %.6f MHz %s\n",
-            clk.adc_clock_base/MHz, clk.ext_ADC_clk? "(ext clk connector)" : "");
-    #endif
-    
+    clk.gpsdo_ext_clk = cfg_int("ext_ADC_freq", &err, CFG_OPTIONAL);
+    if (err) clk.gpsdo_ext_clk = 0; // external is always 10Mhz
+
+    if (clk.ext_ADC_clk)
+        clk.clock_ref = 10*MHz;
+    else
+        clk.clock_ref = 27*MHz;
+
+    clk.adc_clock_base = ADC_CLOCK_TYP;
+    printf("ADC_CLOCK: %.6f MHz %s\n",
+        clk.adc_clock_base/MHz, clk.ext_ADC_clk? "(ext clk connector)" : "");
+
     clk.manual_adj = 0;
     clk_printfs = kiwi_file_exists(DIR_CFG "/clk.debug");
 }
@@ -249,8 +246,6 @@ void clock_correction(double t_rx, u64_t ticks)
         clk_printf("%-12s APPLY clk=%.3lf(%d)\n", "CLK", clk.adc_clock_base, clk.adc_clk_corrections);
         last = now;
     }
-}
 
-int *ClockBins() {
-	return ns_bin;
+    adjust_clock_output();
 }

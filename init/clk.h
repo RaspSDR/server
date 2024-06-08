@@ -54,6 +54,8 @@ typedef struct {
     int adc_gps_clk_corrections;    // GPS-derived corrections
     int temp_correct_offset;
     double adc_clock_base, gps_secs;
+    uint32_t gpsdo_ext_clk;                // ext clock output
+    uint32_t clock_ref;                 // reference clock freq
     int manual_adj;
     u64_t ticks;                    // ticks value captured at the corresponding gps_secs
 } clk_t;
@@ -66,4 +68,3 @@ void clock_init();
 void clock_conn_init(conn_t *conn);
 void clock_correction(double t_rx, u64_t ticks);
 void tod_correction(u4_t week, int sat);
-int *ClockBins();

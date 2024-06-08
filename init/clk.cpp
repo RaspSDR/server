@@ -57,7 +57,7 @@ void clock_init()
     clk.ext_ADC_clk = cfg_bool("ext_ADC_clk", &err, CFG_OPTIONAL);
     if (err) clk.ext_ADC_clk = false;
     double ext_clk_freq = (double) cfg_int("ext_ADC_freq", &err, CFG_OPTIONAL);
-    if (err) ext_clk_freq = (int) round(ADC_CLOCK_TYP);
+    if (err) ext_clk_freq = 1000000; // external is always 10Mhz
     
     //#define TEST_CLK_EXT
     #ifdef TEST_CLK_EXT

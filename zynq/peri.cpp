@@ -31,6 +31,8 @@ static Si5351 *si5351;
 
 #define AD8370_SET _IOW('Z', 0, uint32_t)
 #define MODE_SET _IOW('Z', 1, uint32_t)
+#define CLK_SET _IOW('Z', 2, uint32_t)
+
 int ad8370_fd;
 
 void peri_init()
@@ -38,13 +40,35 @@ void peri_init()
     if (init)
         return;
 
+    scall("/dev/ad8370", ad8370_fd = open("/dev/ad8370", O_RDWR | O_SYNC));
+    if (ad8370_fd <= 0)
+    {
+        panic("Failed to open kernel driver");
+    }
+
     i2c = new LinuxInterface(buss_id, chip_addr);
     si5351 = new Si5351(chip_addr, i2c);
-  
-    bool i2c_found = si5351->init(SI5351_CRYSTAL_LOAD_0PF, 27000000, 0);
-    if(!i2c_found)
+
+    int int_clk;
+    uint32_t ref_clk;
+    if (clk.ext_ADC_clk)
     {
-        printf("i2c si5351 is not found\n\n");
+        ref_clk = 10000000;
+        int_clk = 0;
+    }
+    else
+    {
+        ref_clk = 27000000;
+        int_clk = 1;
+    }
+
+    ioctl(ad8370_fd, CLK_SET, &int_clk);
+
+    bool i2c_found = si5351->init(SI5351_CRYSTAL_LOAD_0PF, ref_clk, 0);
+    if (!i2c_found)
+    {
+        panic("i2c si5351 is not found\n\n");
+        return;
     }
     else
     {
@@ -52,34 +76,28 @@ void peri_init()
         printf("i2c si5351 initialized, error=%d\n", ret);
     }
 
-    scall("/dev/ad8370", ad8370_fd = open("/dev/ad8370", O_RDWR|O_SYNC));
-    if (ad8370_fd > 0)
-    {
-        int data = 0;
+    scall("/dev/ad8370", ad8370_fd = open("/dev/ad8370", O_RDWR | O_SYNC));
 
-        // set airband mode
-        rf_enable_airband(kiwi.airband);
+    // set airband mode
+    rf_enable_airband(kiwi.airband);
 
-        // set default attn to 0
-        rf_attn_set(0);
-    }
+    // set default attn to 0
+    rf_attn_set(0);
 
     init = TRUE;
 }
 
-void rf_attn_set(float f) {
+void rf_attn_set(float f)
+{
     if (f > 0)
         return;
 
     int gain = (int)(-f * 2);
 
-    if (ad8370_fd > 0)
+    printf("Set PE4312 with %d/0x%x\n", gain, gain);
+    if (ioctl(ad8370_fd, AD8370_SET, &gain) < 0)
     {
-        printf("Set PE4312 with %d/0x%x\n", gain, gain);
-        if(ioctl(ad8370_fd, AD8370_SET, &gain) < 0)
-        {
-            printf("AD8370 set RF failed: %s\n", strerror(errno));
-        }
+        printf("AD8370 set RF failed: %s\n", strerror(errno));
     }
 
     return;
@@ -88,12 +106,9 @@ void rf_attn_set(float f) {
 void rf_enable_airband(bool enabled)
 {
     int data = (int)enabled;
-    if (ad8370_fd > 0)
+    if (ioctl(ad8370_fd, MODE_SET, &data) < 0)
     {
-        if(ioctl(ad8370_fd, MODE_SET, &data) < 0)
-        {
-            printf("AD8370 set mode failed\n");
-        }
+        printf("AD8370 set mode failed\n");
     }
 
     return;
@@ -113,14 +128,16 @@ void sd_enable(bool write)
     {
         int v = std::atomic_fetch_add(&write_enabled, 1);
 
-        if (v == 0) {
+        if (v == 0)
+        {
             system("mount -o rw,remount /media/mmcblk0p1");
         }
     }
     else
     {
         int v = std::atomic_fetch_add(&write_enabled, -1);
-        if (v == 1) {
+        if (v == 1)
+        {
             system("mount -o ro,remount /media/mmcblk0p1");
         }
     }

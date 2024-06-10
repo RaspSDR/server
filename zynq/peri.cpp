@@ -21,6 +21,8 @@
 #include "../si5351/LinuxInterface.h"
 #include "../si5351/si5351.h"
 
+#include "arm_math.h"
+
 static bool init;
 
 static const uint8_t buss_id = 0;
@@ -146,19 +148,37 @@ void sd_enable(bool write)
     }
 }
 
-static uint32_t ext_clk_adjusted = 0;
-void adjust_clock_output()
+static arm_pid_instance_f32 PID;
+static float32_t Kp = 1.4f;  // Proportional gain
+static float32_t Ki = 0.15f;  // Integral gain
+static float32_t Kd = 0.01f; // Derivative gain
+static float32_t setpoint = 1.0f;  // Desired setpoint
+static float32_t measured_value = 0.0f; // Current measured value
+static float32_t control_output = 0.0f; // Control output
+
+static int last = 100;
+
+void clock_correction(float error)
 {
-    if (clk.gpsdo_ext_clk == 0)
-        return;
-
-    uint32_t ext_clk_adjusted_new = 
-        clk.gpsdo_ext_clk * ADC_CLOCK_NOM / clk.adc_clock_base;
-
-    if (ext_clk_adjusted_new != ext_clk_adjusted)
+    if (last < 3)
     {
-        si5351->set_freq(ext_clk_adjusted_new, SI5351_CLK2);
-        ext_clk_adjusted = ext_clk_adjusted_new;
-        lprintf("Clock Output at %d Hz\n",ext_clk_adjusted);
+        last++;
+        return;
     }
+    last = 0;
+
+    if (PID.Kp == 0.0f)
+    {
+        // initialize
+        PID.Kp = Kp;
+        PID.Ki = Ki;
+        PID.Kd = Kd;
+        arm_pid_init_f32(&PID, 1); // Initialize the PID instance with reset state
+    }
+
+    control_output = arm_pid_f32(&PID, error);
+
+    si5351->set_correction((int)control_output, SI5351_PLL_INPUT_XO);
+
+    //printf("Set correction to %d\n", (int)control_output);
 }

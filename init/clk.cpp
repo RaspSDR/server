@@ -174,6 +174,10 @@ void clock_correction(double t_rx, u64_t ticks)
     clk.manual_adj = 0;     // remove any manual adjustment now that we're automatically correcting
     clk.adc_clock_base = adc_clock_mma;
     
+    // update the system with the reflction of si5351
+    // printf("CLOCK Drift = %f\n", (adc_clock_mma - ADC_CLOCK_TYP) * 1.0f / (ADC_CLOCK_TYP/MHz)*1000.0f);
+    clock_correction((adc_clock_mma - ADC_CLOCK_TYP) * 1.0f / (ADC_CLOCK_TYP/MHz)*1000.0f);
+
     #if 0
         if (!ns_nom) ns_nom = clk.adc_clock_base;
         int bin = ns_nom - clk.adc_clock_base;
@@ -246,6 +250,4 @@ void clock_correction(double t_rx, u64_t ticks)
         clk_printf("%-12s APPLY clk=%.3lf(%d)\n", "CLK", clk.adc_clock_base, clk.adc_clk_corrections);
         last = now;
     }
-
-    adjust_clock_output();
 }

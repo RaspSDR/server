@@ -23,6 +23,8 @@
 
 #include "arm_math.h"
 
+#include "ioctl.h"
+
 static bool init;
 
 static const uint8_t buss_id = 0;
@@ -31,10 +33,6 @@ static const uint8_t chip_addr = 0x60;
 static I2CInterface *i2c;
 static Si5351 *si5351;
 
-#define AD8370_SET _IOW('Z', 0, uint32_t)
-#define MODE_SET _IOW('Z', 1, uint32_t)
-#define CLK_SET _IOW('Z', 2, uint32_t)
-
 int ad8370_fd;
 
 void peri_init()
@@ -42,7 +40,7 @@ void peri_init()
     if (init)
         return;
 
-    scall("/dev/ad8370", ad8370_fd = open("/dev/ad8370", O_RDWR | O_SYNC));
+    scall("/dev/zynqsdr", ad8370_fd = open("/dev/zynqsdr", O_RDWR | O_SYNC));
     if (ad8370_fd <= 0)
     {
         panic("Failed to open kernel driver");

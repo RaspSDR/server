@@ -270,9 +270,17 @@ int _CreateTask(funcP_t entry, const char *name, void *param, int priority, u4_t
 	// initialize attributes for thread
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
-	// set priority
-	pthread_attr_setschedpolicy(&attr, SCHED_RR);
-	pthread_attr_setschedparam(&attr, &current_task->priority);
+
+	if (priority >= TASK_MED_PRIORITY)
+	{
+		// set priority
+		pthread_attr_setschedpolicy(&attr, SCHED_RR);
+		pthread_attr_setschedparam(&attr, &current_task->priority);
+	}
+	else
+	{
+		pthread_attr_setschedpolicy(&attr, SCHED_BATCH);
+	}
 
 	pthread_create(&current_task->pthread, &attr, ThreadEntry, current_task);
 

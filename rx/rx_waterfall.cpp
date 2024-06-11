@@ -925,12 +925,15 @@ static void sample_wf(int rx_chan)
                     WFSleepReasonUsec("fill pipe", wf->samp_wait_us/WF_C_NSAMPS*(WF_C_NSAMPS - start)/2 + 1);
             }
 
-            while(avail > 0 && start < WF_C_NSAMPS)
+            int needed = WF_C_NSAMPS - start;
+            if (needed > avail) needed = avail;
+
+            for(int i = 0 ; i < needed; i++)
             {
-                *(uint32_t*)(&fft->sample_data[start]) = *fpga_wf_data[wf_chan];
-                start++;
-                avail--;
+                *(uint32_t*)(&fft->sample_data[start+i]) = *fpga_wf_data[wf_chan];
             }
+            start += needed;
+            avail -= needed;
         }
 
         if (kiwi.wf_share)

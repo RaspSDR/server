@@ -462,54 +462,42 @@ void reload_index_params()
 	// or in development mode when "-fopt" argument is used.
 	// Otherwise javascript errors would give line numbers in the optimized files which are
 	// useless for debugging.
-	// Currently this only applies to the kiwisdr.min.{js,css} package.
-	int embed = bg? 1 : (use_foptim? 1:0);
 
-	const char *gen_list_css[2][7] = {
-	    {
-		    "pkgs/font-awesome/css/font-awesome.css",
-		    "pkgs/text-security/text-security-disc.css",
-		    "pkgs/w3/w3.css",
-		    "kiwi/w3_ext.css",
-		    "openwebrx/openwebrx.css",
-		    "kiwi/kiwi.css",
-		    NULL
-		}, {
-		    "kiwisdr.min.css",
-		    NULL
-		}
+	const char *gen_list_css[] = {
+        "pkgs/font-awesome/css/font-awesome.css",
+        "pkgs/text-security/text-security-disc.css",
+        "pkgs/w3/w3.css",
+        "kiwi/w3_ext.css",
+        "openwebrx/openwebrx.css",
+        "kiwi/kiwi.css",
+        NULL
 	};
 
 	sb = NULL;
-	for (i=0; gen_list_css[embed][i] != NULL; i++) {
-		sb = kstr_asprintf(sb, "<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\" />\n", gen_list_css[embed][i]);
+	for (i=0; gen_list_css[i] != NULL; i++) {
+		sb = kstr_asprintf(sb, "<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\" />\n", gen_list_css[i]);
 	}
 	iparams_add("GEN_LIST_CSS", kstr_sp(sb));
 	kstr_free(sb);
 	
-	const char *gen_list_js[2][14] = {
-	    {
-		    "kiwi/kiwi_util.js",
-		    "kiwi/kiwi.js",
-		    "kiwi/kiwi_ui.js",
-		    "kiwi/kiwi_map.js",
-		    "kiwi/w3_util.js",
-		    "pkgs/w3/w3color.js",
-		    "kiwi/monitor.js",
-		    "openwebrx.js",
-		    "ima_adpcm.js",
-		    "audio.js",
-		    "extensions/ext.js",
-		    NULL
-		}, {
-		    "kiwisdr.min.js",
-		    NULL
-		}
+	const char *gen_list_js[] = {
+        "kiwi/kiwi_util.js",
+        "kiwi/kiwi.js",
+        "kiwi/kiwi_ui.js",
+        "kiwi/kiwi_map.js",
+        "kiwi/w3_util.js",
+        "pkgs/w3/w3color.js",
+        "kiwi/monitor.js",
+        "openwebrx.js",
+        "ima_adpcm.js",
+        "audio.js",
+        "extensions/ext.js",
+        NULL
 	};
 
 	sb = NULL;
-	for (i=0; gen_list_js[embed][i] != NULL; i++) {
-		sb = kstr_asprintf(sb, "<script src=\"%s\"></script>\n", gen_list_js[embed][i]);
+	for (i=0; gen_list_js[i] != NULL; i++) {
+		sb = kstr_asprintf(sb, "<script src=\"%s\"></script>\n", gen_list_js[i]);
 	}
 	iparams_add("GEN_LIST_JS", kstr_sp(sb));
 	kstr_free(sb);

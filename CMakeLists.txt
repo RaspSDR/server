@@ -221,6 +221,9 @@ target_compile_definitions(kiwi.bin PUBLIC
     COMPILE_HOST="${_host_name}"
     EDATA_EMBED
 
+    # for CMSIS
+    ARM_MATH_LOOPUNROLL
+
     # for extensions
     DRM HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H HAVE_STRINGS_H
     HAVE_STRING_H STDC_HEADERS HAVE_INTTYPES_H HAVE_SYS_STAT_H

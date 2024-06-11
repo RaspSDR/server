@@ -21,12 +21,12 @@ Boston, MA  02110-1301, USA.
 
 #include "types.h"
 
-#define RESET_RX (1 << 0)
-#define RESET_WF0 (1 << 1)
-#define RESET_WF1 (1 << 2)
-#define RESET_WF2 (1 << 3)
-#define RESET_WF3 (1 << 4)
-#define RESET_PPS (1 << 7)
+#define RESET_RX (0)
+#define RESET_WF0 (1)
+#define RESET_WF1 (2)
+#define RESET_WF2 (3)
+#define RESET_WF3 (4)
+#define RESET_PPS (7)
 
 #define GPIO_ANTENNA (1 << 0)
 #define GPIO_ANTENNA0 (1 << 0)
@@ -85,3 +85,6 @@ extern void fpga_wffreq(int wf_chan, uint64_t freq);
 extern void fpga_wfreset(int wf_chan);
 extern void fpga_setovmask(uint32_t mask);
 extern void fpga_setadclvl(uint32_t val);
+
+extern void fpga_enable(int device);
+extern void fpga_disable(int device);

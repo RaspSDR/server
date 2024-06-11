@@ -81,8 +81,6 @@ void peri_init()
         si5351->set_freq((uint64_t)(clk.gpsdo_ext_clk * 100), SI5351_CLK2);
     }
 
-    scall("/dev/ad8370", ad8370_fd = open("/dev/ad8370", O_RDWR | O_SYNC));
-
     // set airband mode
     rf_enable_airband(kiwi.airband);
 

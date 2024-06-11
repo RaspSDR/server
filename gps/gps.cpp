@@ -115,7 +115,7 @@ static void LLH2XYZ(double lat, double lon, double alt, double *x, double *y)
 static void gps_task(void *param)
 {
     double t_rx = 0;
-    fpga_config->reset |= RESET_PPS;
+    fpga_enable(RESET_PPS);
     for (;;)
     {
         TaskSleepMsec(50);

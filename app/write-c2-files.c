@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
   fpga_config->reset = 0;
 
 
-  fpga_config->reset |= 0xff;
+  fpga_config->reset = 0xff;
   for (i = 0; i < 8; ++i)
   {
     fpga_config->rx_freq[i] = MAKE_FREQ(freq[i], corr);
@@ -171,37 +171,5 @@ int main(int argc, char *argv[])
 
   printf("RX: sample rate= %f (should close to 12,000, otherwise there is bug)\n", 24000.0 / (stop_spec.tv_sec - start_spec.tv_sec + (stop_spec.tv_nsec - start_spec.tv_nsec) * 1e-9));
 
-  #if 0
-  printf("Count Addr&: %x\n", &fpga_status->wf_fifo[0]);
-
-  for (int i = 0; i < 1; i++)
-  {
-       // test each WF channels
-    fpga_config->reset &= ~(RESET_WF0 << i);
-    fpga_config->reset |= RESET_WF0 << i;
-
-    clock_gettime(CLOCK_REALTIME, &start_spec);
-    offset = 0;
-
-    while (offset < 24000)
-    {
-      while (fpga_status->wf_fifo[i] < 250) {
-        printf("Count: %d\n", fpga_status->wf_fifo[i]);
-        usleep(1000);
-      }
- 
-      for (i = 0; i < 250; ++i)
-      {
-        int data = fpga_data->wf_data[i];
-      }
-
-      offset += 250;
-      printf("%d\n", offset);
-    }
-
-    clock_gettime(CLOCK_REALTIME, &stop_spec);
-    printf("RX: sample rate= %f (should close to 12000, otherwise there is bug)\n", 24000.0 / (stop_spec.tv_sec - start_spec.tv_sec + (stop_spec.tv_nsec - start_spec.tv_nsec) * 1e-9));
-  }
-#endif
   return EXIT_SUCCESS;
 }

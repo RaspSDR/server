@@ -66,37 +66,6 @@ void fpga_init()
 
     close(fd);
 
-#if 0
-  fpga_config->reset = 0x1f;
-
-  for (int i = 0; i < 8; ++i)
-  {
-    fpga_config->rx_freq[i] = (uint32_t)floor(7e6 / 125.0e6 * (1 << 30) + 0.5);
-  }
-
-  for (int i = 0; i < 4; i++)
-  {
-    fpga_config->wf_config[i].wf_freq = (uint32_t)floor(7e6 / 125.0e6 * (1 << 30) + 0.5);;
-    fpga_config->wf_config[i].wf_decim = 2048;    //1 << (i * 2 + 5);
-    printf("CHN[%d] Decimate set to %d\n", i, 2048);    //1 << (i * 2 + 5));
-  }
-
-  printf("RX  \tWF0\tWF1\tWF2\tWF3\tPPS\tRX_I\tRX_Q\t\tWF0\tWF1\tWF2\tWF3\n");
-  for (int i = 0; i < 1500; i++)
-  {
-    int data0,data00, data1, data2, data3, data4;
-    printf("%d\t%d\t%d\t%d\t%d\t%d\t", fpga_status->rx_fifo, fpga_status->wf_fifo[0], fpga_status->wf_fifo[1], fpga_status->wf_fifo[2], fpga_status->wf_fifo[3], fpga_status->pps_fifo);
-    data0 = *fpga_rx_data;
-    data00 = *fpga_rx_data;
-    data1 = *fpga_wf_data[0];
-    data2 = *fpga_wf_data[1];
-    data3 = *fpga_wf_data[2];
-    data4 = *fpga_wf_data[3];
-
-    printf("%08x %08x | %08x %08x %08x %08x |\n", data0, data00, data1, data2, data3, data4);
-    //usleep(100);
-  }
-#endif
     lprintf("FPGA Bitstream signature: 0x%x\n", fpga_status->signature);
 
     // Initialize RX Decim
@@ -104,7 +73,7 @@ void fpga_init()
     fpga_config->rx_decim = decim;
     lprintf("FPGA RX Decim: %d\n", decim);
 
-    fpga_config->reset = RESET_RX;
+    fpga_enable(RESET_RX);
 
     wf_channels = (fpga_status->signature >> 8) & 0x0f;
 
@@ -137,7 +106,7 @@ int fpga_get_wf(int rx_chan, int decimate, uint64_t freq)
       fpga_config->wf_config[i].wf_freq = freq;
 
       TaskSleepUsec(5);
-      fpga_config->reset |= RESET_WF0 << i;
+      fpga_enable(RESET_WF0 + i);
 
       return i;
     }
@@ -150,7 +119,7 @@ int fpga_get_wf(int rx_chan, int decimate, uint64_t freq)
 
 void fpga_free_wf(int wf_chan, int rx_chan)
 {
-    fpga_config->reset &= ~(RESET_WF0 << wf_chan);
+    fpga_disable(RESET_WF0 + wf_chan);
 
     if (rx_chan > 0)
     {
@@ -224,8 +193,8 @@ void fpga_wffreq(int wf_chan, uint64_t freq)
 
 void fpga_wfreset(int wf_chan)
 {
-  fpga_config->reset &= ~(RESET_WF0 << wf_chan);
-  fpga_config->reset |= RESET_WF0 << wf_chan;
+  fpga_disable(RESET_WF0 + wf_chan);
+  fpga_enable(RESET_WF0 + wf_chan);
 }
 
 void fpga_setovmask(uint32_t mask)
@@ -235,4 +204,18 @@ void fpga_setovmask(uint32_t mask)
 
 void fpga_setadclvl(uint32_t val)
 {
+}
+
+static uint32_t reset = 0;
+
+void fpga_enable(int device)
+{
+  reset |= (1 << device);
+  fpga_config->reset = reset;
+}
+
+void fpga_disable(int device)
+{
+  reset &= ~(1 << device);
+  fpga_config->reset = reset;
 }

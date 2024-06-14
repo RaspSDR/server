@@ -1732,9 +1732,8 @@ function gps_html()
             w3_table('id-gps-ch w3-table-6-8 w3-striped')
          ),
          w3_div('id-gps-azel-container w3-hide',
-            w3_div('w3-hcenter w3-relative',
-               '<img id="id-gps-azel-graph" src="gfx/gpsEarth.png" width="400" height="400" style="position:absolute; top:-2px" />',
-               '<canvas id="id-gps-azel-canvas" width="400" height="400" style="position:absolute"></canvas>'
+            w3_div('w3-relative',
+               '<canvas id="id-gps-azel-canvas" width="400" height="400"></canvas>'
             )
          )
 		) +
@@ -2112,14 +2111,25 @@ function gps_update_azel()
    gps_azel_canvas.ctx = gps_azel_canvas.getContext("2d");
    var ctx = gps_azel_canvas.ctx;
 
+   // Create a new image object
+   var img = new Image();
+
+   // Set the source of the image
+   img.src = 'gfx/gpsEarth.png';
+
+   // Draw the image on the canvas once it has loaded
+   img.onload = function() {
+
    var gW = 400;
    var gD = 360;
    var gHD = gD/2;
    var gM = (gW-gD)/2;
    var gO = gHD + gM;
    ctx.clearRect(0, 0, gW, gW);
-   
-   if (adm.rssi_azel_iq == _gps.AZEL && gps_shadow_map) {
+
+   ctx.drawImage(img, 0, 0, gps_azel_canvas.width, gps_azel_canvas.height);
+
+   if (gps_shadow_map) {
       ctx.fillStyle = "cyan";
       ctx.globalAlpha = 0.1;
       var z = 4;
@@ -2222,6 +2232,7 @@ function gps_update_azel()
          }
       }
    }
+   };
 }
 
 

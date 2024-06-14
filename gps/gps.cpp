@@ -227,6 +227,13 @@ static void gps_task(void *param)
                     continue;
 
                 gps.shadow_map[az] |= (1 << int(std::round(el / 90.0 * 31.0)));
+
+                // special treatment for QZS_3
+                if (gps.ch[i].type == 'Q' && gps.ch[i].sat == 199)
+                {
+                    gps.qzs_3.az = gps_handle.skyview[i].azimuth;
+                    gps.qzs_3.el = gps_handle.skyview[i].elevation;
+                }
             }
         }
     }

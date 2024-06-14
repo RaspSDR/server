@@ -397,7 +397,7 @@ function FT8_gps_info_cb(o)
    if (ft8_gps) {
       //console.log(ft8_gps);
       w3_set_value('id-ft8-grid', ft8_gps.grid);
-      w3_input_change('ft8.grid');     // for w3-restart
+      w3_input_change('ft8.grid', 'w3_string_set_cfg_cb');     // for w3-restart
    }
    ft8.single_shot_update = false;
 }

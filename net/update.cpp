@@ -184,7 +184,7 @@ static void _update_task(void *param)
 
 	if (report) report_progress(conn, "Getting latest version information");
 	// get pending_maj, pending_min
-	// wget the latest version infor from www.rx-888.com
+	// get the latest version infor from www.rx-888.com
 	// Run fetch in a Linux child process otherwise this thread will block and cause trouble
 	// if the check is invoked from the admin page while there are active user connections.
 	status = fetch_makefile(ch?"alpha":"stable");

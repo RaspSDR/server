@@ -645,7 +645,7 @@ static bool dx_download_file(const char *host, const char *src, const char *dst)
     char *cmd, *tmp;
     lprintf("DX: checking %s against %s/%s\n", dst, host, src);
     asprintf(&tmp, "%s.tmp", dst);
-    asprintf(&cmd, "wget --timeout=10 --tries=2 -q -O %s %s/%s 2>&1", tmp, host, src);
+    asprintf(&cmd, "curl --max-time 10 --retry 2 --silent --show-error --output %s %s/%s 2>&1", tmp, host, src);
     int status = system(cmd);
     if (status) {
         lprintf("DX: <%s>\n", cmd);

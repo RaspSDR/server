@@ -102,10 +102,10 @@ int ip_blacklist_add_iptables(char *ip_s)
     return rv;
 }
 
-static void ip_blacklist_init_list(const char *list)
+static kstr_t* ip_blacklist_init_list(kstr_t *iptable, const char *list)
 {
     const char *bl_s = admcfg_string(list, NULL, CFG_REQUIRED);
-    if (bl_s == NULL) return;
+    if (bl_s == NULL) return iptable;
 
     char *r_buf;
     str_split_t ips[N_IP_BLACKLIST+1];
@@ -114,21 +114,55 @@ static void ip_blacklist_init_list(const char *list)
     lprintf("ip_blacklist_init_list: %d entries: %s\n", n, list);
     
     for (int i=0; i < n; i++) {
-        ip_blacklist_add_iptables(ips[i].str);
+        bool whitelist;
+        if (ip_blacklist_add(ips[i].str, &whitelist) != 0) continue;
+
+        iptable = kstr_asprintf(iptable, "-I KIWI -s %s -j %s\n", ips[i].str, whitelist? "RETURN" : "DROP");
     }
 
     kiwi_ifree(r_buf, "ip_bl");
     admcfg_string_free(bl_s);
+
+    return iptable;
+}
+
+static void iptable_restore(kstr_t *iptable_save)
+{
+    iptable_save = kstr_cat(iptable_save, "-A KIWI -j RETURN\nCOMMIT\n");
+
+    // Open a pipe to the iptables-restore command
+    FILE *fp = popen("iptables-restore", "w");
+    if (fp == NULL) {
+        perror("popen");
+        return;
+    }
+
+       // Write the iptables rules to the pipe
+    if (fputs(kstr_sp(iptable_save), fp) == EOF) {
+        pclose(fp);
+        return;
+    }
+
+   // Close the pipe and check for errors
+    int status = pclose(fp);
+    if (status != 0) {
+        printf("iptables-restore exited with status %d\n", status);
+        return;
+    }
+
+    kstr_free(iptable_save);
 }
 
 void ip_blacklist_init()
 {
     net.ip_blacklist_len = 0;
     // clean out old KIWI table first (if any)
-    system("iptables -D INPUT -j KIWI; iptables -F KIWI; iptables -X KIWI; iptables -N KIWI");
-    ip_blacklist_init_list("ip_blacklist");
-    ip_blacklist_init_list("ip_blacklist_local");
-    system("iptables -A KIWI -j RETURN; iptables -A INPUT -j KIWI");
+    kstr_t * iptable_save = kstr_cat(NULL, "*filter\n:KIWI - [0:0]\n-A INPUT -j KIWI\n");
+
+    iptable_save = ip_blacklist_init_list(iptable_save, "ip_blacklist");
+    iptable_save = ip_blacklist_init_list(iptable_save, "ip_blacklist_local");
+
+    iptable_restore(iptable_save);
 }
 
 // check internal blacklist for proxied Kiwis (iptables can't be used)
@@ -278,17 +312,22 @@ bool ip_blacklist_get(bool download_diff_restart)
             // reload iptables
             lprintf("ip_blacklist_get: using DOWNLOADED blacklist from %s/%s\n", rx888_downloads, BLACKLIST_FILE);
             net.ip_blacklist_len = 0;
-            system("iptables -D INPUT -j KIWI; iptables -N KIWI; iptables -F KIWI");
+            kstr_t *iptable_save = kstr_cat(NULL, "*filter\n:KIWI - [0:0]\n-A INPUT -j KIWI\n");
             for (jt = bl_json.tokens + 1; jt != end_tok; jt++) {
                 const char *ip_s;
                 if (_cfg_type_json(&bl_json, JSMN_STRING, jt, &ip_s)) {
-                    ip_blacklist_add_iptables((char *) ip_s);
+                    bool whitelist;
+                    if (ip_blacklist_add((char*)ip_s, &whitelist) == 0) 
+                    {
+                        iptable_save = kstr_asprintf(iptable_save, "-I KIWI -s %s -j %s\n", 
+                            (char*)ip_s, whitelist? "RETURN" : "DROP");
+                    }
                     json_string_free(&bl_json, ip_s);
                 }
             }
 
-            ip_blacklist_init_list("ip_blacklist_local");
-            system("iptables -A KIWI -j RETURN; iptables -A INPUT -j KIWI");
+            iptable_save = ip_blacklist_init_list(iptable_save, "ip_blacklist_local");
+            iptable_restore(iptable_save);
         } else {
             lprintf("ip_blacklist_get: using STORED blacklist\n");
             failed = false;

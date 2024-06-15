@@ -49,7 +49,7 @@ extern cfg_t cfg_cfg, cfg_adm, cfg_dx, cfg_dxcfg, cfg_dxcomm, cfg_dxcomm_cfg;
 #define CFG_PRINT		0x00001
 #define CFG_REQUIRED	0x00002
 #define CFG_SAVE        0x00004
-#define CFG_YIELD       0x00008
+//#define CFG_YIELD       0x00008
 #define CFG_SET			0x00010
 #define CFG_REMOVE		0x00020
 #define CFG_COPY		0x00040

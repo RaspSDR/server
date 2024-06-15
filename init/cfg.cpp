@@ -151,23 +151,6 @@ static void cfg_test()
 }
 #endif
 
-//#define CFG_TEST_YIELD_RACE
-#ifdef CFG_TEST_YIELD_RACE
-
-static void _cfgTestTask(void *param) {
-    int seq = 0;
-    
-	while (1) {
-	    real_printf(" %d>", seq); fflush(stdout);
-	    admcfg_bool("always_acq_gps", NULL, CFG_REQUIRED);
-	    real_printf("<%d ", seq); fflush(stdout);
-	    seq++;
-	    TaskSleepMsec(100);
-	}
-}
-#endif
-
-
 ////////////////////////////////
 // init
 ////////////////////////////////
@@ -199,10 +182,6 @@ void cfg_reload()
     bool err;
 
 	dx_label_init();
-
-    #ifdef CFG_TEST_YIELD_RACE
-        CreateTaskF(_cfgTestTask, 0, GPS_ACQ_PRIORITY, CTF_NO_PRIO_INV);
-    #endif
 }
 
 cfg_t cfg_cfg, cfg_adm, cfg_dx, cfg_dxcfg, cfg_dxcomm, cfg_dxcomm_cfg;
@@ -252,7 +231,7 @@ bool _cfg_init(cfg_t *cfg, int flags, char *buf, const char *id)
 
 		if (cfg == &cfg_dx) {
 			cfg->filename = DX_FN;
-			flags |= CFG_NO_PARSE | CFG_INT_BASE10 | CFG_YIELD | CFG_NO_INTEG;
+			flags |= CFG_NO_PARSE | CFG_INT_BASE10 | CFG_NO_INTEG;
 		} else
 
 		if (cfg == &cfg_dxcfg) {
@@ -1336,8 +1315,6 @@ void *_cfg_walk(cfg_t *cfg, const char *lvl_id, cfg_walk_cb_t cb, void *param1, 
 
 static bool _cfg_parse_json(cfg_t *cfg, u4_t flags)
 {
-    // the dx list can be huge, so yield during the time-consuming parsing process
-    bool yield = ((cfg->flags & CFG_YIELD) && !cfg->init_load);
     if (!cfg->basename) cfg->basename = cfg->filename;
     TMEAS(printf("cfg_parse_json: START %s yield=%d\n", cfg->basename, yield);)
     
@@ -1568,8 +1545,6 @@ void _cfg_save_json(cfg_t *cfg, char *json)
     #endif
 
     // This takes forever for a large file.
-    // But we fixed the realtime impact by putting a NextTask() in jsmn_parse()
-    // (conditional on cfg->flags & CFG_YIELD)
     if ((cfg->flags & CFG_NO_UPDATE) == 0) {
         _cfg_parse_json(cfg, FL_PANIC);
     } else {

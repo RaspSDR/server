@@ -2380,7 +2380,7 @@ function xfer_stats_cb(audio_kbps, waterfall_kbps, waterfall_fps, http_kbps, sum
 
 	kiwi_xfer_stats_str_long = 'Network (all channels): audio '+ audio_kbps.toFixed(0) +' kB/s, waterfall '+ waterfall_kbps.toFixed(0) +
 		' kB/s ('+ waterfall_fps.toFixed(0) +' fps)' +
-		', http '+ http_kbps.toFixed(0) +' kB/s, total '+ sum_kbps.toFixed(0) +' kB/s ('+ (sum_kbps*8).toFixed(0) +' kb/s)';
+		', http '+ http_kbps.toFixed(0) +' kB/s, total '+ sum_kbps.toFixed(0) +' kB/s ('+ (sum_kbps*8).toFixed(0) +' kbps)';
 }
 
 var kiwi_cpu_stats_str = '';

@@ -11,6 +11,10 @@
 #include <unistd.h>
 
 gps_t gps;
+lock_t gps_lock;
+SATELLITE Sats[MAX_SATS];
+
+extern int Sats_num;
 
 const char *Week[] = {
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -21,8 +25,10 @@ static void gps_task(void *param);
 
 void gps_main(int argc, char *argv[])
 {
-    memset(&gps, 0, sizeof(gps));
     gps.start = timer_ms();
+
+    memset(Sats, 0xff, sizeof(Sats));
+    lock_init(&gps_lock);
 
     if (0 != gps_open("localhost", "2947", &gps_handle))
     {
@@ -101,6 +107,22 @@ static double rc_normal(double phi) {
     return a/std::sqrt(1.0 - e2*sp*sp);
 }
 
+static int find_sat(sat_e type, int prn)
+{
+    int i;
+    for (i = 0; i < MAX_SATS && Sats[i].prn != -1; i++)
+    {
+        if (Sats[i].prn == prn && Sats[i].type == type)
+            return i;
+    }
+
+    Sats[i].prn = prn;
+    Sats[i].type = type;
+    snprintf(Sats[i].prn_s, sizeof(Sats[i].prn_s), "%c%d", sat_s[type], prn);
+
+    return i;
+}
+
 // LLH -> XYZ  (LLH = LonLatAlt)
 static void LLH2XYZ(double lat, double lon, double alt, double *x, double *y)
 {
@@ -133,7 +155,6 @@ static void gps_task(void *param)
         gps_read(&gps_handle, NULL, 0);
 
         // print_gps_data(&gps_handle);
-
         if (MODE_SET != (MODE_SET & gps_handle.set))
         {
             // did not even get mode, nothing to see here
@@ -145,6 +166,7 @@ static void gps_task(void *param)
             gps.acquiring = true;
         }
 
+        lock_enter(&gps_lock);
         // Check if the receiver has obtained a position fix
         if ((gps_handle.fix.mode > MODE_NO_FIX) && (gps.ttff == 0)) {
             gps.ttff = (timer_ms() - gps.start) / 1000;
@@ -210,13 +232,14 @@ static void gps_task(void *param)
             gps.fixes = gps_handle.satellites_used;
             memset(gps.shadow_map, 0, sizeof(gps.shadow_map));
             memset(gps.ch, 0, sizeof(gps.ch));
-            for (int i = 0; i < gps_handle.satellites_visible && i < GPS_MAX_CHANS; i++)
+            int i;
+            for (i = 0; i < gps_handle.satellites_visible && i < GPS_MAX_CHANS; i++)
             {
                 gps.ch[i].snr = gps_handle.skyview[i].ss;
-                gps.ch[i].sat = gps_handle.skyview[i].PRN;
+                gps.ch[i].sat = find_sat((sat_e)gps_handle.skyview[i].gnssid, gps_handle.skyview[i].PRN);
                 gps.ch[i].el = gps_handle.skyview[i].elevation;
                 gps.ch[i].az = gps_handle.skyview[i].azimuth;
-                gps.ch[i].type = sat_s[gps_handle.skyview[i].gnssid];
+
                 gps.ch[i].has_soln = gps_handle.skyview[i].used;
 
                 const int el = std::round(gps.ch[i].el);
@@ -229,12 +252,24 @@ static void gps_task(void *param)
                 gps.shadow_map[az] |= (1 << int(std::round(el / 90.0 * 31.0)));
 
                 // special treatment for QZS_3
-                if (gps.ch[i].type == 'Q' && gps.ch[i].sat == 199)
+                SATELLITE *s = &Sats[gps.ch[i].sat];
+                if (s->type == QZSS && s->sat == 199)
                 {
                     gps.qzs_3.az = gps_handle.skyview[i].azimuth;
                     gps.qzs_3.el = gps_handle.skyview[i].elevation;
                 }
+
+                gps.el[gps.last_samp][gps.ch[i].sat] = el;
+                gps.az[gps.last_samp][gps.ch[i].sat] = az;
             }
+            for(; i < GPS_MAX_CHANS; i++)
+            {
+                gps.ch[i].sat = -1;
+            }
+
+            gps.last_samp = (gps.last_samp + 1) % AZEL_NSAMP;
+
         }
+        lock_leave(&gps_lock);
     }
 }

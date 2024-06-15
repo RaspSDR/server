@@ -761,6 +761,8 @@ void c2s_admin(void *param)
 
             n = strcmp(cmd, "SET gps_az_el_history");
             if (n == 0) {
+                lock_holder holder(gps_lock);
+
                 int now; utc_hour_min_sec(NULL, &now);
                 
                 int az, el;
@@ -781,7 +783,7 @@ void c2s_admin(void *param)
                     }
                     if (sat_seen[sat]) nsats++;
                 }
-        
+
                 #if 0
                 if (gps_debug) {
                     // any sat/prn seen during specific sample period
@@ -815,7 +817,7 @@ void c2s_admin(void *param)
                     }
                 }
                 #endif
-        
+
                 // send history only for sats seen
                 sb = kstr_asprintf(NULL, "{\"n_sats\":%d,\"n_samp\":%d,\"now\":%d,", MAX_SATS, AZEL_NSAMP, now);
                 sb = kstr_cat(sb, kstr_list_int("\"sat_seen\":[", "%d", "],\"prn_seen\":[", sat_seen, MAX_SATS, sat_seen, -1));   // -1 bias
@@ -823,9 +825,10 @@ void c2s_admin(void *param)
                 int first = 1;
                 for (int sat = 0; sat < MAX_SATS; sat++) {
                     if (!sat_seen[sat]) continue;
-                    const char *prn_s = "N";
+                    // const char *prn_s = "N";
                     // char *prn_s = PRN(prn_seen[sat]-1);
                     // if (*prn_s == 'N') prn_s++;
+                    const char * prn_s = Sats[sat].prn_s;
                     sb = kstr_asprintf(sb, "%s\"%s\"", first? "":",", prn_s);
                     first = 0;
                 }
@@ -885,9 +888,9 @@ void c2s_admin(void *param)
                     c = &gps.ch[i];
                     int prn = -1;
                     char prn_s = 'x';
-                    if (c->sat >= 0 && c->type != '\0') {
-                        prn_s = c->type;
-                        prn = c->sat;
+                    if (c->sat >= 0) {
+                        prn_s = Sats[c->sat].prn_s[0];
+                        prn = Sats[c->sat].prn;
                     }
                     sb = kstr_asprintf(sb, "%s{\"ch\":%d,\"prn_s\":\"%c\",\"prn\":%d,\"snr\":%d,\"rssi\":%d,\"gain\":%d,\"age\":\"%s\",\"old\":%d,\"hold\":%d,\"wdog\":%d"
                         ",\"unlock\":%d,\"parity\":%d,\"alert\":%d,\"sub\":%d,\"sub_renew\":%d,\"soln\":%d,\"ACF\":%d,\"novfl\":%d,\"az\":%d,\"el\":%d}",

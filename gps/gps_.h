@@ -53,8 +53,18 @@ const double F = -4.442807633e-10; // -2*sqrt(MU)/pow(C,2)
 typedef enum { Navstar, SBAS, E1B, BeiDou, IMESS, QZSS, GLONASS } sat_e;
 const char sat_s[] = { 'N', 'S', 'E', 'B', 'I', 'Q', 'G' };
 
-#define MAX_SATS    64
+typedef struct {
+    int prn;
+    sat_e type;
 
+    int sat;
+    char prn_s[10];
+    bool busy;
+} SATELLITE;
+
+extern SATELLITE Sats[];
+
+#define MAX_SATS    156
 
 //////////////////////////////////////////////////////////////
 // User interface
@@ -93,7 +103,7 @@ typedef struct {
     int sat;
     int snr;
     int rssi, gain;
-    char type;
+
     #define GPS_N_AGE (8 + SPACE_FOR_NULL)
     char age[GPS_N_AGE];
     bool too_old;
@@ -169,3 +179,5 @@ typedef struct {        /* time struct */
     time_t time;        /* time (s) expressed by standard time_t */
     double sec;         /* fraction of second under 1 s */
 } gtime_t;
+
+extern lock_t gps_lock;

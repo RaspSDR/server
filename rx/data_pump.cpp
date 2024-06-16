@@ -200,7 +200,7 @@ static void data_pump(void *param)
         #else
             //TaskSleepReason("wait for interrupt");
             while (fpga_status->rx_fifo < nrx_samps * 2 * rx_chans) {
-                TaskSleepMsec(1);
+                TaskSleepUsec(100);
             }
         #endif
 

@@ -32,7 +32,7 @@ typedef enum { ESPEED_AUTO = 0, ESPEED_10M = 1, ESPEED_100M = 2 } espeed_e;
 #define MAX_WF_CHANS    16
 #define MAX_NRX_BUFS    16      // for RXBUF_SIZE_14CH
 #define MAX_NRX_SAMPS   226     // for nch = 3
-#define NRX_SAMPS_CHANS(nch)    96
+#define NRX_SAMPS_CHANS(nch)    200
 
 #define N_CONN_ADMIN        8   // simultaneous admin connections
 

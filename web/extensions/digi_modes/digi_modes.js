@@ -247,7 +247,7 @@ function digi_modes_help(show)
          '<br>Spots are uploaded to pskreporter.info if the <i>reporter call</i> and <i>reporter grid</i> ' +
          'fields on the admin page, extensions tab, FT8 subtab have valid entries. ' +
          'Leave the callsign field blank if you do not want any uploads to pskreporter.info ' +
-         'But consider leaving the grid field set so the km distance from the Kiwi to the ' +
+         'But consider leaving the grid field set so the km distance from the SDR to the ' +
          'spot will be shown.<br><br>' +
          
          'Uploaded spots are highlighted in green. Spots are only uploaded once every 60 minutes. ' +
@@ -255,11 +255,11 @@ function digi_modes_help(show)
          '<br>SNR information is currently not uploaded as it is not accurate.<br><br>' +
          
          'Clicking the <i>pskreporter.info</i> link will take you directly to the map with the ' +
-         'reporter callsign of the Kiwi preset.<br><br>' +
+         'reporter callsign of the SDR preset.<br><br>' +
          
          'URL parameters:<br>' +
          'The first parameters can select one of the entries in the <i>freq</i> menu<br>' +
-         'e.g. <i>my_kiwi:8073/?ext=ft8,10136</i>' +
+         'e.g. <i>mysdr:8073/?ext=ft8,10136</i>' +
          '';
       confirmation_show_content(s, 610, 300);
    }

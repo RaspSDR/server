@@ -435,18 +435,14 @@ var ant_sw = {
     if (show) {
        var s = 
           w3_text('w3-medium w3-bold w3-text-aqua', 'Antenna switch help') +
-          '<br>Please see the information at ' +
-          '<a href="https://github.com/OH1KK/KiwiSDR-antenna-switch-extension" target="_blank">' +
-          'github.com/OH1KK/KiwiSDR-antenna-switch-extension</a><br><br>' +
-          
           'When starting the extension from the browser URL the antenna(s) to select can be<br>' +
-          'specified with a parameter, e.g. my_kiwi:8073/?ext=ant,6 would select antenna #6<br>' +
-          'and my_kiwi:8073/?ext=ant,6,3 would select antennas #6 and #3 if antenna mixing<br>' +
+          'specified with a parameter, e.g. my_sdr:8073/?ext=ant,6 would select antenna #6<br>' +
+          'and my_sdr:8073/?ext=ant,6,3 would select antennas #6 and #3 if antenna mixing<br>' +
           'is allowed.<br><br>' +
           
           'Instead of an antenna number a string can be specified that matches any<br>' +
           'case insensitive sub-string of the antenna description<br>' +
-          'e.g. my_kiwi:8073/?ext=ant,loop would match the description "E-W Attic Loop ".<br>' +
+          'e.g. my_sdr:8073/?ext=ant,loop would match the description "E-W Attic Loop ".<br>' +
           'The first description match wins.' +
           '';
        confirmation_show_content(s, 600, 250);

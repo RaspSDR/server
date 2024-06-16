@@ -342,7 +342,7 @@ static void misc_NET(void *param)
         kiwi_asfree(cmd_p2);
     }
 
-    // register for my.kiwisdr.com
+    // register for my.rx-888.com
     // this must be at the end of the routine since it waits an arbitrary amount of time
     
     NET_WAIT_COND("my_kiwi", "misc_NET", net.pvt_valid && net.pub_valid);
@@ -467,7 +467,7 @@ static int _UPnP_port_open(void *param)
             rtn = 7;
         } else {
             lprintf("UPnP: No IGD UPnP local network firewall/router found\n");
-            lprintf("UPnP: See kiwisdr.com for help manually adding a NAT rule on your firewall/router\n");
+            lprintf("UPnP: See rx-888.com for help manually adding a NAT rule on your firewall/router\n");
             rtn = 2;
         }
     } else {

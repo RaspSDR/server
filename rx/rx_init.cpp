@@ -236,7 +236,7 @@ void update_vars_from_config(bool called_at_init)
 	    cfg_rem_string("tdoa.server_url");
 	    update_cfg = true;
 	} else {
-        cfg_default_string("tdoa.server", "http://tdoa.kiwisdr.com", &update_admcfg);
+        cfg_default_string("tdoa.server", "http://tdoa.rx-888.com", &update_admcfg);
     }
 
 
@@ -411,7 +411,7 @@ void update_vars_from_config(bool called_at_init)
     // sdr.hu => rx.kiwisdr.com in status msg
     char *status_msg = (char *) cfg_string("status_msg", NULL, CFG_REQUIRED);
     bool caller_must_free;
-	char *nsm = kiwi_str_replace(status_msg, "sdr.hu", "rx.kiwisdr.com", &caller_must_free);
+	char *nsm = kiwi_str_replace(status_msg, "sdr.hu", "rx.rx-888.com", &caller_must_free);
 	if (nsm) {
 	    nsm = kiwi_str_replace(nsm, "/?top=kiwi", "");  // shrinking, so nsm same memory space
 	    cfg_set_string("status_msg", nsm);
@@ -431,7 +431,7 @@ void update_vars_from_config(bool called_at_init)
 
     char *rx_title = (char *) cfg_string("index_html_params.RX_TITLE", NULL, CFG_REQUIRED);
     // shrinking, so same memory space
-	nsm = kiwi_str_replace(rx_title, " at <a href='http://kiwisdr.com' target='_blank' onclick='dont_toggle_rx_photo()'>ZL/KF6VO</a>", "");
+	nsm = kiwi_str_replace(rx_title, " at <a href='http://rx-888.com' target='_blank' onclick='dont_toggle_rx_photo()'>CALLSIGN</a>", "");
 	if (nsm) {
         cfg_set_string("index_html_params.RX_TITLE", nsm);
         update_cfg = true;

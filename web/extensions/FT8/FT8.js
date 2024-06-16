@@ -295,8 +295,8 @@ function FT8_config_html()
                
                w3_div('w3-margin-T-10 w3-valign',
                   '<header class="id-ft8-warn-full w3-container w3-yellow"><h6>' +
-                  'If your Kiwi is publicly listed you must <b>not</b> configure all the channels to use FT8-autorun!<br>' +
-                  'This defeats the purpose of making your Kiwi public and public registration will be disabled<br>' +
+                  'If your SDR is publicly listed you must <b>not</b> configure all the channels to use FT8-autorun!<br>' +
+                  'This defeats the purpose of making your SDR public and public registration will be disabled<br>' +
                   'until you make at least one channel available for connection. Check the Admin Public tab.' +
                   '</h6></header>'
                ),

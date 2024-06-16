@@ -986,15 +986,13 @@ function kiwi_reg_html()
 		w3_div('',
          w3_div('w3-margin-T-10 w3-valign',
             '<header class="w3-container w3-yellow"><h5>' +
-            'More information on <a href="http://kiwisdr.com/quickstart/index.html#id-config-kiwi-reg" target="_blank">kiwisdr.com</a><br><br>' +
+            'More information on <a href="http://rx-888.com/web-888/index.html#id-config-kiwi-reg" target="_blank">rx-888.com</a><br><br>' +
 
-            'To list your Kiwi on <a href="http://rx.kiwisdr.com" target="_blank">rx.kiwisdr.com</a> ' +
+            'To list your SDR on <a href="http://rx.rx-888.com/" target="_blank">rx.rx-888.com</a> ' +
             'edit the fields below and set the "<i>Register</i>" switch to <b>Yes</b>. ' +
             'Look for a successful status result within a few minutes.<br>' +
             
-            'The "<i>Location (lat, lon)</i>" field must be set properly for your Kiwi to be listed in the correct location on ' +
-            '<a href="http://map.kiwisdr.com" target="_blank">map.kiwisdr.com</a>' +
-
+            'The "<i>Location (lat, lon)</i>" field must be set properly for your SDR to be listed in the correct location.' +
             '</h5></header>'
          )
       ) +
@@ -1002,11 +1000,11 @@ function kiwi_reg_html()
 		'<hr>' +
 
 		w3_divs('w3-margin-bottom w3-container w3-center',
-         w3_switch_label('w3-label-inline w3-label-left w3-center', 'Register on <a href="http://rx.kiwisdr.com" target="_blank">rx.kiwisdr.com</a>?',
+         w3_switch_label('w3-label-inline w3-label-left w3-center', 'Register on <a href="http://rx.rx-888.com" target="_blank">rx.rx-888.com</a>?',
             'Yes', 'No', 'adm.kiwisdr_com_register', adm.kiwisdr_com_register, 'kiwisdr_com_register_cb'),
          w3_div('id-kiwisdr_com-reg-status-container',
             w3_div('w3-container',
-               w3_label('w3-show-inline-block w3-margin-R-16 w3-text-teal', 'kiwisdr.com registration status:') +
+               w3_label('w3-show-inline-block w3-margin-R-16 w3-text-teal', 'rx-888.com registration status:') +
                w3_div('id-kiwisdr_com-reg-status w3-show-inline-block w3-padding-LR-8 w3-text-black', '')
             )
          )
@@ -1053,7 +1051,7 @@ function kiwi_reg_html()
 		   w3_div('',
             w3_input_get('', 'Coverage frequency low (kHz)', 'sdr_hu_lo_kHz', 'admin_int_cb'),
 				w3_div('w3-text-black',
-				   'These two settings effect the frequency coverage label displayed on rx.kiwisdr.com <br>' +
+				   'These two settings effect the frequency coverage label displayed on rx.rx-888.com <br>' +
 				   'e.g. when set to 0 and 30000 "HF" is shown. If you\'re using a transverter <br>' +
 				   'then appropriate entries will cause "2m" or "70cm" to be shown. Other labels will be <br>' +
 				   'shown if you limit the range at HF due to antenna or filtering limitations.'
@@ -1100,7 +1098,7 @@ function kiwisdr_com_register_cb(path, idx, first)
       error = true;
    } else
    if (idx == w3_SWITCH_YES_IDX) {
-      text = '(waiting for kiwisdr.com response, can take several minutes in some cases)';
+      text = '(waiting for rx-888.com response, can take several minutes in some cases)';
    } else {    // w3_SWITCH_NO_IDX
       text = '(registration not enabled)';
    }
@@ -1124,9 +1122,9 @@ function sdr_hu_focus()
 	admin_set_decoded_value('rx_gps');
 	admin_set_decoded_value('admin_email');
 
-	// The default in the factory-distributed kiwi.json is the kiwisdr.com NZ location.
+	// The default in the factory-distributed kiwi.json is the rx-888.com location.
 	// Detect this and ask user to change it so the Kiwi map doesn't end up with multiple SDRs
-	// defined at the kiwisdr.com location.
+	// defined at the rx-888.com location.
 	var gps = kiwi_decodeURIComponent('rx_gps', ext_get_cfg_param('rx_gps'));
 	public_check_gps_cb('rx_gps', gps, /* first */ true);
 	
@@ -1237,7 +1235,7 @@ function dx_html()
             w3_text('', 'Warning: The configuration file /root/kiwi.config/dxcfg.json is corrupt. <br>' +
                'The error is: '+ dx.dxcfg_parse_error +
                '<br>Please use a text editor to fix the file (for example "nano /root/kiwi.config/dxcfg.json" in the admin console tab), ' +
-               'or restore from backup, and restart the Kiwi. <br> Or ask for help on the Kiwi forum or email support@kiwisdr.com')
+               'or restore from backup, and restart the Kiwi. <br> Or ask for help on the Kiwi forum or email support@rx-888.com')
          );
       color = ' w3-red';
 	   abort = true;
@@ -1249,7 +1247,7 @@ function dx_html()
             w3_text('', 'Warning: The configuration file /root/kiwi.config/dx_community_config.json is corrupt. <br>' +
                'The error is: '+ dx.dxcomm_cfg_parse_error +
                '<br>Please use a text editor to fix the file (for example "nano /root/kiwi.config/dx_community_config.json" in the admin console tab), ' +
-               'or restore from backup, and restart the Kiwi. <br> Or ask for help on the Kiwi forum or email support@kiwisdr.com')
+               'or restore from backup, and restart the Kiwi. <br> Or ask for help on the Kiwi forum or email support@rx-888.com')
          );
       color = ' w3-red';
 	}
@@ -1323,7 +1321,7 @@ function dx_html()
       w3_inline('w3-margin-T-16 w3-halign-space-between/',
          w3_inline('/w3-margin-between-16 w3-valign',
             w3_button(dx.button_section, '-', 'dx_expand_cb', 0),
-            w3_link(dx.link1, 'http://kiwisdr.com/quickstart/index.html#id-config-DX-list', 'Stored DX labels'),
+            w3_link(dx.link1, 'http://rx-888.com/web-888/index.html#id-config-DX-list', 'Stored DX labels'),
             w3_text('id-dx-list-saved w3-margin-left w3-padding-medium w3-text-black w3-hide', 'Changes saved')
          ),
          w3_inline('/w3-margin-between-16 w3-valign',
@@ -1359,7 +1357,7 @@ function dx_html()
       w3_inline('w3-margin-T-24 w3-halign-space-between/',
          w3_inline('/w3-margin-between-16 w3-valign',
             w3_button(dx.button_section, '+', 'dx_expand_cb', 1),
-            w3_link(dx.link2, 'http://kiwisdr.com/quickstart/index.html#id-config-DX-type', 'DX type menu'),
+            w3_link(dx.link2, 'http://rx-888.com/web-888/index.html#id-config-DX-type', 'DX type menu'),
             w3_text('w3-margin-left w3-text-black',
                'Defines content of <b>Type</b> menu in <i>DX labels</i> section above.<br>' +
                'Follow link at left for important info before making changes.'),
@@ -1378,7 +1376,7 @@ function dx_html()
       w3_inline('w3-margin-T-24 w3-halign-space-between/',
          w3_inline('/w3-margin-between-16 w3-valign',
             w3_button(dx.button_section, '+', 'dx_expand_cb', 2),
-            w3_link(dx.link2, 'http://kiwisdr.com/quickstart/index.html#id-config-band-bars', 'Band bars'),
+            w3_link(dx.link2, 'http://rx-888.com/web-888/index.html#id-config-band-bars', 'Band bars'),
             w3_text('w3-margin-left w3-text-black',
                'Defines content of band bars and <b>select band</b> menu on user page.<br>' +
                'Follow link at left for important info before making changes.'),
@@ -1397,7 +1395,7 @@ function dx_html()
       w3_inline('w3-margin-TB-24 w3-halign-space-between/',
          w3_inline('/w3-margin-between-16 w3-valign',
             w3_button(dx.button_section, '+', 'dx_expand_cb', 3),
-            w3_link(dx.link2, 'http://kiwisdr.com/quickstart/index.html#id-config-band-svc', 'Band service menu'),
+            w3_link(dx.link2, 'http://rx-888.com/web-888/index.html#id-config-band-svc', 'Band service menu'),
             w3_text('w3-margin-left w3-text-black',
                'Defines content of <b>Service</b> menu in <i>Band bars</i> section above.<br>' +
                'Follow link at left for important info before making changes.'),

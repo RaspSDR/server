@@ -9047,7 +9047,7 @@ function dx_help(show)
                '<br><br>' +
                
                'Information about using the controls for editing the stored labels can be found ' +
-               '<a href="http://kiwisdr.com/quickstart/index.html#id-user-marker" target="_blank">here</a>.' +
+               '<a href="http://rx-888.com/web-888/index.html#id-user-marker" target="_blank">here</a>.' +
                '<br><br>' +
                
                'Because there are so many EiBi labels (about 6000) they are organized into 12 categories with visibility ' +
@@ -9062,8 +9062,7 @@ function dx_help(show)
                'When a label is moused-over a popup is shown with additional information. ' +
                'On Safari and Chrome the popups take a few seconds to appear. EiBi information includes the station\'s home country, transmission schedule, ' +
                'language and target area (if any). ' +
-               'Information about the EiBi database, including descriptions of the language and target codes seen in the mouse-over popups, ' +
-               '<a href="http://kiwisdr.com/files/EiBi/README.txt" target="_blank">can be found here.</a>' +
+               'Information about the EiBi database, including descriptions of the language and target codes seen in the mouse-over popups. ' +
                '<br><br>' +
          
                'Labels that have an extension specified have a black bar on the right part of the label. <br>' +

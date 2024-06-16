@@ -31,7 +31,7 @@ function status_html()
       (
          w3_div('w3-container w3-section',
             w3_text('w3-text-black',
-               'Your Kiwi <i>may</i> restart during the nightly update window for the following reasons. ' +
+               'Your SDR <i>may</i> restart during the nightly update window for the following reasons. ' +
                'The restart will not occur when there are active user connections. <br>' +
                'But <b>will</b> occur if there are only "background" connections such as FT8/WSPR autorun, kiwirecorder (e.g. wsprdaemon) etc. <br>' +
                'To prevent <i>any</i> restarts disable all of the restart sources listed below until all of the icons are grey in color.'
@@ -219,7 +219,7 @@ function control_html()
          w3_divs('w3-restart/w3-center w3-tspace-8',
             w3_select('w3-width-auto', 'Number of audio campers per channel', '', 'n_camp', n_camp, n_camp_u, 'admin_select_cb'),
             w3_div('w3-text-black',
-               'Reduce this value if your Kiwi is experiencing <br>' +
+               'Reduce this value if your SDR is experiencing <br>' +
                'performance problems from too many audio campers.'
             )
          ),
@@ -230,13 +230,13 @@ function control_html()
 				   'Enables automatic sampling of <br>' +
 				   'signal-to-noise ratio (SNR) at the specified interval. <br>' +
 				   'Access SNR data in JSON format using <br>' +
-				   'URL of the form: <i>my_kiwi:8073/snr</i>'
+				   'URL of the form: <i>my_sdr:8073/snr</i>'
 				)
 			),
 			
 			w3_divs('/w3-tspace-8',
             //w3_switch_label('w3-center', 'Timestamp SNR with local time?', 'Yes', 'No', 'cfg.snr_local_time', cfg.snr_local_time, 'admin_radio_YN_cb')
-            w3_checkbox_get_param('//w3-label-inline w3-restart', 'Non-Kiwi connections (kiwirecorder, TDoA) can preempt autorun processes', 'any_preempt_autorun', 'admin_bool_cb', true),
+            w3_checkbox_get_param('//w3-label-inline w3-restart', 'Non native connections can preempt autorun processes', 'any_preempt_autorun', 'admin_bool_cb', true),
             w3_checkbox_get_param('//w3-label-inline', 'Timestamp SNR with local time', 'snr_local_time', 'admin_bool_cb', true),
             w3_button('w3-aqua w3-margin-T-16', 'Measure SNR now', 'control_snr_measure_cb')
          )
@@ -372,7 +372,7 @@ var connect = {
    timeout: null
 };
 
-// REMEMBER: cfg.server_url is what's used in kiwisdr.com registration
+// REMEMBER: cfg.server_url is what's used in registration
 // cfg.sdr_hu_dom_sel is just the selector of connect_dom_sel (e.g. cfg.sdr_hu_dom_sel == connect_dom_sel.NAM)
 // Both these are cfg parameters stored in kiwi.json, so don't get confused.
 
@@ -394,7 +394,7 @@ function connect_html()
    var s1 =
 		w3_div('w3-valign',
 			'<header class="w3-container w3-yellow"><h5>' +
-			'If you are not able to make an incoming connection from the Internet to your Kiwi because ' +
+			'If you are not able to make an incoming connection from the Internet to your SDR because ' +
 			'of problems <br> with your router or Internet Service Provider (ISP) then please consider using the KiwiSDR ' +
 			'<a href='+ dq('http://'+ admin.proxy_host) +' target="_blank">reverse proxy service</a>.' +
 			'</h5></header>'
@@ -402,8 +402,8 @@ function connect_html()
 		
       '<hr>' +
       w3_divs('w3-container/w3-tspace-8',
-         w3_label('w3-bold', 'What domain name or IP address will people use to connect to your KiwiSDR?<br>' +
-            'If you are listing on rx.kiwisdr.com this information will be part of your entry.<br>' +
+         w3_label('w3-bold', 'What domain name or IP address will people use to connect to your Web-888?<br>' +
+            'If you are listing on rx.rx-888.com this information will be part of your entry.<br>' +
             'Click one of the five options below and enter any additional information:<br><br>'),
          
          // (n/a anymore) w3-static because w3-sidenav does a position:fixed which is no good here at the bottom of the page
@@ -441,9 +441,9 @@ function connect_html()
             'Use this setting to get multiple Kiwis to respond to a single URL.<br>' +
             'When all the channels of this Kiwi are busy further connection attempts ' +
             'will be redirected to the above URL.<br>' +
-            'Example: Your Kiwi is known as "mykiwi.com:8073". ' +
-            'Configure another Kiwi to use port 8074 and be known as "mykiwi.com:8074".<br>' +
-            'On the port 8073 Kiwi set the above field to "http://mykiwi.com:8074".<br>' +
+            'Example: Your SDR is known as "mysdr.com:8073". ' +
+            'Configure another Kiwi to use port 8074 and be known as "mysdr.com:8074".<br>' +
+            'On the port 8073 Kiwi set the above field to "http://mysdr.com:8074".<br>' +
             'On the port 8074 Kiwi leave the above field blank.<br>' +
             'Configure the port 8074 Kiwi as normal (i.e. router port open, dynamic DNS, proxy etc.)<br><br>' +
             '<b>CAUTION:</b> Do not create a cycle by redirecting Kiwis like: A -> B -> A &nbsp;' +
@@ -609,7 +609,7 @@ function connect_update_url()
 
    if (cfg.sdr_hu_dom_sel != connect_dom_sel.REV) {
       host_and_port += ':'+ adm.port_ext;
-      w3_set_label('Based on above selection, and external port from Network tab, the URL to connect to your Kiwi is:', 'connect-url-text');
+      w3_set_label('Based on above selection, and external port from Network tab, the URL to connect to your SDR is:', 'connect-url-text');
    } else {
       // using proxy
       if (admin.proxy_port != 80) {
@@ -617,7 +617,7 @@ function connect_update_url()
          if (adm.port_ext != admin.proxy_port)
             host_and_port += ' (proxy always uses port '+ admin.proxy_port +' even though your external port is '+ adm.port_ext +')';
       }
-      w3_set_label('Based on the above selection the URL to connect to your Kiwi is:', 'connect-url-text');
+      w3_set_label('Based on the above selection the URL to connect to your SDR is:', 'connect-url-text');
    }
    
    ok = (host != '');
@@ -1073,12 +1073,12 @@ function network_html()
             )
          ),
          w3_div('w3-center w3-text-teal',
-            w3_switch_label('w3-center', 'Register this Kiwi on my.kiwisdr.com<br>on each reboot?',
+            w3_switch_label('w3-center', 'Register this Kiwi on my.rx-888.com<br>on each reboot?',
                'Yes', 'No', 'adm.my_kiwi', adm.my_kiwi, 'network_my_kiwi_cb'),
             w3_text('w3-block w3-center w3-text-black',
-               'Registering on <a href="http://my.kiwisdr.com" target="_blank">my.kiwisdr.com</a> allows the local ip address of Kiwis <br>' +
-               'to be easily discovered. Set to "no" if you don\'t want your Kiwi <br>' +
-               'sending information to kiwisdr.com. Defaults to "yes".'
+               'Registering on <a href="http://my.rx-888.com" target="_blank">my.rx-888.com</a> allows the local ip address of Kiwis <br>' +
+               'to be easily discovered. Set to "no" if you don\'t want your SDR <br>' +
+               'sending information to rx-888.com. Defaults to "yes".'
             )
          )
       );
@@ -1091,11 +1091,9 @@ function network_html()
                w3_text('w3-bold w3-text-teal', 'IP address blacklist'),
                w3_text('w3-text-black w3-show-block',
                   'IP addresses/ranges listed here are<br>' +
-                  'blocked from accessing your Kiwi. <br>' +
+                  'blocked from accessing your SDR. <br>' +
                   'Use CIDR notation for ranges, e.g.<br>' +
-                  '"ip/24" is netmask "255.255.255.0".<br>' +
-                  'More information at the ' +
-                  w3_link('w3-link-darker-color', 'http://forum.kiwisdr.com/index.php?p=/discussion/2352/call-for-ip-address-blacklist-contributions/p1', 'Kiwi forum') +'.'
+                  '"ip/24" is netmask "255.255.255.0".<br>'
                )
             ),
             
@@ -1111,7 +1109,7 @@ function network_html()
                ,
                w3_text('w3-text-black w3-center',
                   'Downloads a standard blacklist definition from<br>' +
-                  w3_link('w3-link-darker-color', network.ip_blacklist_file, 'kiwisdr.com') +
+                  w3_link('w3-link-darker-color', network.ip_blacklist_file, 'rx-888.com') +
                   '. A local, writeable blacklist<br>can be entered below.'
                )
             ),
@@ -1226,14 +1224,14 @@ function network_download_blacklist_cb(bl)
       if (network.ip_blacklist_double_fault) {
          console.log('network_download_blacklist_cb: default blacklist fetch FAILED');
          console.log(bl);
-         w3_innerHTML('id-ip-blacklist-status', 'download failed: could not contact kiwisdr.com or find default file');
+         w3_innerHTML('id-ip-blacklist-status', 'download failed: could not contact rx-888.com or find default file');
          return;
       } else {
          w3_innerHTML('id-ip-blacklist-status', 'download failed, using default..'+ w3_icon('w3-margin-left', 'fa-refresh fa-spin', 24));
          network.show_updating = false;
       }
       
-      // load the default blacklist if unable to contact kiwisdr.com
+      // load the default blacklist if unable to contact rx-888.com
       var url = kiwi_url_origin() +'/kiwi/ip_blacklist.default.cjson';
       console.log('network_download_blacklist_cb: using default station list '+ url);
       network.ip_blacklist_double_fault = true;
@@ -1315,7 +1313,7 @@ function network_download_blacklist_cb(bl)
    network_ip_blacklist_cb('adm.ip_blacklist', ip_bl_s);
    network.show_updating = true;
 
-   // silently fail if kiwisdr.com can't be contacted for the mtime check
+   // silently fail if rx-888.com can't be contacted for the mtime check
    //kiwi_ajax(network.ip_blacklist_file_SSL_mtime, 'network_blacklist_mtime_cb', 1, -2000);
    kiwi_ajax(network.ip_blacklist_file_SSL_mtime, 'network_blacklist_mtime_cb', 1, 10000);
 }
@@ -2818,9 +2816,7 @@ function security_html()
 
 			w3_div('w3-text-black',
 				'However we expect most Kiwi owners will want to participate and we encourage ' +
-				'you to do so. Your precise GPS location is not revealed by the timestamp information. ' +
-				'For more discussion please see the ' +
-				w3_link('w3-link-darker-color', 'http://forum.kiwisdr.com/discussion/1218/participation-of-kiwis-in-the-tdoa-process/p1', 'Kiwi forum') +'.'
+				'you to do so. Your precise GPS location is not revealed by the timestamp information. '
 			), 33
 		);
 
@@ -3075,7 +3071,7 @@ function admin_update(p)
    var obj = kiwi_JSON_parse('admin_update', json);
 	if (obj) admin.reg_status = obj;
 	
-	// rx.kiwisdr.com registration status
+	// rx.rx-888.com registration status
 	if (adm.kiwisdr_com_register && admin.reg_status.kiwisdr_com != undefined && admin.reg_status.kiwisdr_com != '') {
 	   w3_innerHTML('id-kiwisdr_com-reg-status', 'Web-888 public list registration: successful');
 	}

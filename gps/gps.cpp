@@ -26,6 +26,8 @@ static void gps_task(void *param);
 void gps_main(int argc, char *argv[])
 {
     gps.start = timer_ms();
+    gps.last_samp_hour = -1;
+    gps.last_samp = -1;
 
     memset(Sats, 0xff, sizeof(Sats));
     lock_init(&gps_lock);
@@ -134,14 +136,34 @@ static void LLH2XYZ(double lat, double lon, double alt, double *x, double *y)
     // z = ((1-e2())*nu + llh.alt())*sp}});
 }
 
+static void update_gps_info_before(int samp_hour, int samp_min)
+{
+    if (gps.last_samp_hour != samp_hour) {
+        gps.fixes_hour = gps.fixes_hour_incr;
+        gps.fixes_hour_incr = 0;
+        gps.fixes_hour_samples++;
+        gps.last_samp_hour = samp_hour;
+    }
+        
+    //printf("GPS last_samp=%d samp_min=%d fixes_min=%d\n", gps.last_samp, samp_min, gps.fixes_min);
+    if (gps.last_samp != samp_min) {
+        //printf("GPS fixes_min=%d fixes_min_incr=%d\n", gps.fixes_min, gps.fixes_min_incr);
+        gps.fixes_min = gps.fixes_min_incr;
+        gps.fixes_min_incr = 0;
+        for (int sat = 0; sat < MAX_SATS; sat++) {
+            gps.az[gps.last_samp][sat] = 0;
+            gps.el[gps.last_samp][sat] = 0;
+        }
+        gps.last_samp = samp_min;
+    }
+}
+
 static void gps_task(void *param)
 {
     double t_rx = 0;
     fpga_enable(RESET_PPS);
     for (;;)
     {
-        TaskSleepMsec(50);
-
         // fetch pps data
         while (fpga_status->pps_fifo > 0)
         {
@@ -184,6 +206,8 @@ static void gps_task(void *param)
                 }
                 gps.StatDaySec = d - (60 * 60 * 24) * gps.StatDay;
                 gps.StatWeekSec = d;
+
+                update_gps_info_before(((int)d/60/60) % 24, ((int)d/60) % 60);
 
                 t_rx = d;
             }
@@ -235,12 +259,17 @@ static void gps_task(void *param)
             int i;
             for (i = 0; i < gps_handle.satellites_visible && i < GPS_MAX_CHANS; i++)
             {
+                int sat = find_sat((sat_e)gps_handle.skyview[i].gnssid, gps_handle.skyview[i].PRN);
                 gps.ch[i].snr = gps_handle.skyview[i].ss;
-                gps.ch[i].sat = find_sat((sat_e)gps_handle.skyview[i].gnssid, gps_handle.skyview[i].PRN);
+                gps.ch[i].sat = sat;
                 gps.ch[i].el = gps_handle.skyview[i].elevation;
                 gps.ch[i].az = gps_handle.skyview[i].azimuth;
 
                 gps.ch[i].has_soln = gps_handle.skyview[i].used;
+
+                // already have az/el for this sat in this sample period? 
+                if (gps.el[gps.last_samp][sat])
+                    continue;
 
                 const int el = std::round(gps.ch[i].el);
                 const int az = std::round(gps.ch[i].az);
@@ -252,24 +281,30 @@ static void gps_task(void *param)
                 gps.shadow_map[az] |= (1 << int(std::round(el / 90.0 * 31.0)));
 
                 // special treatment for QZS_3
-                SATELLITE *s = &Sats[gps.ch[i].sat];
-                if (s->type == QZSS && s->sat == 199)
+                SATELLITE *s = &Sats[sat];
+                if (s->type == QZSS && s->prn == 199)
                 {
-                    gps.qzs_3.az = gps_handle.skyview[i].azimuth;
-                    gps.qzs_3.el = gps_handle.skyview[i].elevation;
+                    gps.qzs_3.az = az;
+                    gps.qzs_3.el = el;
                 }
 
-                gps.el[gps.last_samp][gps.ch[i].sat] = el;
-                gps.az[gps.last_samp][gps.ch[i].sat] = az;
+                gps.el[gps.last_samp][sat] = el;
+                gps.az[gps.last_samp][sat] = az;
             }
             for(; i < GPS_MAX_CHANS; i++)
             {
                 gps.ch[i].sat = -1;
             }
-
-            gps.last_samp = (gps.last_samp + 1) % AZEL_NSAMP;
-
         }
+
+        gps.fixes++; gps.fixes_min_incr++; gps.fixes_hour_incr++;
+        
+        // at startup immediately indicate first solution
+        if (gps.fixes_min == 0) gps.fixes_min++;
+
+        // at startup incrementally update until first hour sample period has ended
+        if (gps.fixes_hour_samples <= 1) gps.fixes_hour++;
+
         lock_leave(&gps_lock);
     }
 }

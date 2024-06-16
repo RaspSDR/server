@@ -1427,7 +1427,7 @@ function dx_convert_label_foff_cb(path, idx)
             adm.dx_labels_converted = true;
             cfg_save_json('dx_convert_label_foff_cb', 'adm.dx_labels_converted');
             ext_send_after_cfg_save('SET DX_UPD g=-9 f=-1');
-            wait_then_reload_page(60, 'DX labels converted, restarting KiwiSDR server');
+            wait_then_reload_page(10, 'DX labels converted, restarting KiwiSDR server');
 	      }
 	   );
    }

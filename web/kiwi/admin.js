@@ -3047,7 +3047,7 @@ function admin_close()
          w3_show_block('id-kiwi-container');
          //kiwi_show_msg('Server has closed connection.');
          //if (dbgUs) console.log('admin close'); else
-            wait_then_reload_page(60, 'Server has closed connection. Will retry.');
+            wait_then_reload_page(10, 'Server has closed connection. Will retry.');
       }
    } else {
       //console.log('ignoring admin keepalive (websocket close)');
@@ -3332,7 +3332,7 @@ function w3_reboot_cb()
 function admin_restart_now_cb()
 {
 	ext_send('SET restart');
-	wait_then_reload_page(60, 'Restarting Web-888 server');
+	wait_then_reload_page(10, 'Restarting Web-888 server');
 }
 
 function admin_restart_cancel_cb()
@@ -3344,7 +3344,7 @@ function admin_restart_cancel_cb()
 function admin_reboot_now_cb()
 {
 	ext_send('SET reboot');
-	wait_then_reload_page(90, 'Rebooting Web-888');
+	wait_then_reload_page(45, 'Rebooting Web-888');
 }
 
 function admin_reboot_cancel_cb()

@@ -225,11 +225,6 @@ function config_html()
    // but don't move it without leaving an explanation since old forum posts may refer to it as being here
    var s6 =
 		'<hr>' +
-      w3_div('w3-valign w3-container w3-section',
-         '<header class="w3-container w3-yellow"><h6>' +
-         'If the Kiwi doesn\'t like your external clock you can still connect (user and admin). However the waterfall will be dark and the audio silent.' +
-         '</h6></header>'
-      ) +
 		w3_third('w3-margin-bottom w3-text-teal', 'w3-container',
 			w3_divs('w3-restart w3-center w3-tspace-8',
             w3_switch_label('w3-center', 'External Reference clock?', 'Yes', 'No', 'ext_ADC_clk', cfg.ext_ADC_clk, 'config_ext_clk_sel_cb'),
@@ -252,40 +247,14 @@ function config_html()
 		
    var s7 =
 		'<hr>' +
-		w3_div('w3-container',
-         w3_div('w3-valign',
-            '<header class="w3-container w3-yellow"><h6>' +
-            'To manually adjust/calibrate the ADC clock (e.g. when there is no GPS signal or GPS correction is disabled) follow these steps:' +
-            '</h6></header>'
-         ),
-         
-         w3_label('w3-text-teal',
-            '<ul>' +
-               '<li>Close any admin page connections to the Kiwi</li>' +
-               '<li>Open a normal user connection to the Kiwi</li>' +
-               '<li>Tune to a time station or other accurate signal and zoom all the way in</li>' +
-               '<li>Higher frequency shortwave stations are better because they will show more offset than LF/VLF stations</li>' +
-               '<li>Select AM mode and click exactly on the signal carrier line in the waterfall</li>' +
-               '<li>On the right-click menu select the <i>cal ADC clock (admin)</i> entry</li>' +
-               '<li>You may have to give the admin password if not already authenticated</li>' +
-               '<li>The adjustment is calculated and the carrier on the waterfall should move to the nearest 1 kHz marker</li>' +
-               '<li>Use the fine-tuning controls on the IQ extension panel if necessary</li>' +
-            '</ul>'
-         ),
-
-         w3_label('w3-text-teal',         
-            'You can fine-tune after the above steps as follows:' +
-            '<ul>' +
-               '<li>Close any admin page connections to the Kiwi</li>' +
-               '<li>Open IQ display extension</li>' +
-               '<li>Set the receive frequency to the exact nominal carrier (e.g. 15000 kHz for WWV)</li>' +
-               '<li>Press the <i>40</i> button (i.e. sets mode to AM with 40 Hz passband)</li>' +
-               '<li>Set menus: Draw = points, Mode = carrier, PLL = off</li>' +
-               '<li>Adjust the gain until you see a point rotating in a circle</li>' +
-               '<li>Use the <i>Fcal</i> buttons to slow the rotation as much as possible</li>' +
-               '<li>The total accumulated Fcal adjustment is shown</li>' +
-               '<li>A full rotation in less than two seconds is good calibration</li>' +
-            '</ul>'
+		w3_third('w3-margin-bottom w3-text-teal', 'w3-container',
+			w3_divs('w3-center w3-tspace-8',
+            w3_switch_label('w3-center', 'Enable ADC dithering?', 'Yes', 'No', 'adc_dither', cfg.adc_dither, 'config_adc_dither_cb'),
+				w3_text('w3-text-black', 'enabling ADC dithering helps to improve the linearity <br> and dynamic range of ADC by adding a small amount of noise')
+			),
+         w3_divs('w3-tspace-8',
+            w3_switch_label('w3-center', 'Enable ADC PGA?', 'Yes', 'No', 'adc_pga', cfg.adc_pga, 'config_adc_pga_cb'),
+				w3_text('w3-text-black', 'enabling the ADC Programmable Gain Amplifier (PGA) <br> allows you to increase the gain of the input signal.')
          )
       ) +
       '<hr>';
@@ -642,6 +611,18 @@ function overload_mute_cb(path, val, complete, first)
 	var s = 'Passband overload mute '+ val +' dBm';
 	if (val >= -73) s += ' (S9+'+ (val - -73) +')';
 	w3_set_label(s, path);
+}
+
+function config_adc_dither_cb(path, idx)
+{
+   ext_send("SET dither="+ idx);
+   admin_int_cb(path, idx);
+}
+
+function config_adc_pga_cb(path, idx)
+{
+   ext_send("SET pga="+ idx);
+   admin_int_cb(path, idx);
 }
 
 function config_ext_clk_sel_cb(path, idx)

@@ -569,6 +569,23 @@ void c2s_admin(void *param)
 				continue;
 			}
 
+////////////////////////////////
+// adc
+////////////////////////////////
+
+			int adc_dither;
+			i = sscanf(cmd, "SET dither=%d", &adc_dither);
+			if (i == 1) {
+				fpga_set_dither(!adc_dither);
+				continue;
+			}
+
+			int adc_pga;
+			i = sscanf(cmd, "SET pga=%d", &adc_pga);
+			if (i == 1) {
+				fpga_set_pga(!adc_pga);
+				continue;
+			}
 
 ////////////////////////////////
 // dx

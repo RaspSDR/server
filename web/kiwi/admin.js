@@ -287,7 +287,7 @@ function airband_switch_cb(path, idx, first)
 	admin_bool_cb(path, enabled, first);
 
    if (enabled)
-      admin_float_cb("freq_offset", 101376, first, [0,3]);
+      admin_float_cb("freq_offset", 98304, first, [0,3]);
    else
       admin_float_cb("freq_offset", "0", first, [0,3]);
 	//console.log('### config_freq_offset '+ path +'='+ val +' cfg.freq_offset='+ cfg.freq_offset);

@@ -48,7 +48,7 @@ void clock_init()
 {
     bool err;       // NB: all CFG_OPTIONAL because don't get defaulted early enough
 
-    adc_clock_hz = kiwi.airband?101.376*MHz:122.88*MHz;
+    adc_clock_hz = kiwi.airband?ADC_CLOCK_VHF:ADC_CLOCK_HF;
 
     clk.do_corrections = cfg_int("ADC_clk2_corr", &err, CFG_OPTIONAL);
     if (err) clk.do_corrections = ADC_CLK_CORR_CONTINUOUS;

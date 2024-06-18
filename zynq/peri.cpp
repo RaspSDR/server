@@ -76,7 +76,7 @@ void peri_init()
 
     if (clk.gpsdo_ext_clk > 0)
     {
-        si5351->set_freq((uint64_t)(clk.gpsdo_ext_clk * 100), SI5351_CLK2);
+        si5351->set_freq((uint64_t)clk.gpsdo_ext_clk * 100, SI5351_CLK2);
     }
 
     // set airband mode
@@ -145,12 +145,9 @@ void sd_enable(bool write)
 }
 
 static arm_pid_instance_f32 PID;
-static float32_t Kp = 1.4f;  // Proportional gain
-static float32_t Ki = 0.15f;  // Integral gain
-static float32_t Kd = 0.01f; // Derivative gain
-static float32_t setpoint = 1.0f;  // Desired setpoint
-static float32_t measured_value = 0.0f; // Current measured value
-static float32_t control_output = 0.0f; // Control output
+static const float32_t Kp = 1.4f;  // Proportional gain
+static const float32_t Ki = 0.15f;  // Integral gain
+static const float32_t Kd = 0.01f; // Derivative gain
 
 static int last = 100;
 
@@ -172,7 +169,7 @@ void clock_correction(float error)
         arm_pid_init_f32(&PID, 1); // Initialize the PID instance with reset state
     }
 
-    control_output = arm_pid_f32(&PID, error);
+    float32_t control_output = arm_pid_f32(&PID, error);
 
     si5351->set_correction((int)control_output, SI5351_PLL_INPUT_XO);
 

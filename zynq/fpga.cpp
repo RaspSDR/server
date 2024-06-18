@@ -30,6 +30,7 @@ const volatile uint32_t *fpga_wf_data[4];
 
 static lock_t gpio_lock;
 static int current_gpio;
+static uint32_t reset;
 
 static int wf_channels;
 static sem_t wf_sem;
@@ -70,6 +71,7 @@ void fpga_init()
 
     // Initialize RX Decim
     uint16_t decim = uint16_t(ADC_CLOCK_NOM / 12000 / 256);
+    fpga_config->reset = reset = 0;
     fpga_config->rx_decim = decim;
     lprintf("FPGA RX Decim: %d\n", decim);
 
@@ -205,8 +207,6 @@ void fpga_setovmask(uint32_t mask)
 void fpga_setadclvl(uint32_t val)
 {
 }
-
-static uint32_t reset = 0;
 
 void fpga_enable(int device)
 {

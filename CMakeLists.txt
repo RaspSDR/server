@@ -306,18 +306,18 @@ foreach(file ${FILES_EMBED_FILES})
         add_custom_command(
             OUTPUT ${PROJECT_BINARY_DIR}/htdoc/${target_path}
             DEPENDS ${UPSTREAM_DIR}/web/${file}
-            COMMAND uglifycss
+            COMMAND ${MINIFY_COMMAND} --type css
                 ${UPSTREAM_DIR}/web/${file} # Source file path
-                > ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
+                -o ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
             COMMENT "Minify CSS ${file} to ${target_path}"
         )
     elseif(${file} MATCHES "\\.js$")
         add_custom_command(
             OUTPUT ${PROJECT_BINARY_DIR}/htdoc/${target_path}
             DEPENDS ${UPSTREAM_DIR}/web/${file}
-            COMMAND uglifyjs
+            COMMAND ${MINIFY_COMMAND} --type js
                 ${UPSTREAM_DIR}/web/${file} # Source file path
-                > ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
+                -o ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
             COMMENT "Minify JS ${file} to ${target_path}"
         )
     elseif(${file} MATCHES "\\.html$")

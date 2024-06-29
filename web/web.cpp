@@ -1062,7 +1062,7 @@ int web_request(struct mg_connection *mc, enum mg_event evt) {
     int ver_size = 0;
     bool isJS = (suffix && strcmp(suffix, ".js") == 0);
     if (!isAJAX && isJS) {
-        asprintf(&ver, "kiwi_check_js_version.push({ VERSION_MAJ:%d, VERSION_MIN:%d, file:'%s' });\n", version_maj, version_min, uri);
+        asprintf(&ver, "  ;;\nkiwi_check_js_version.push({ VERSION_MAJ:%d, VERSION_MIN:%d, file:'%s' });\n", version_maj, version_min, uri);
         if (MTR) real_printf("-> ver ASPR %p %d<%s>\n", ver, strlen(ver), ver);
         ver_size = strlen(ver);
     }

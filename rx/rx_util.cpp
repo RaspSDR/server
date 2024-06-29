@@ -878,7 +878,7 @@ static bool geoloc_json(conn_t *conn, const char *geo_host_ip_s, const char *cou
     //cprintf(conn, "GEOLOC: returned <%s>\n", shmem->status_str_large);
 
 	cfg_t cfg_geo;
-    if (json_init(&cfg_geo, str, "cfg_geo") == false) {
+    if (json_init(&cfg_geo, kstr_sp(str), "cfg_geo") == false) {
         clprintf(conn, "GEOLOC: JSON parse failed for %s\n", geo_host_ip_s);
 	    json_release(&cfg_geo);
 

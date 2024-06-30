@@ -16,11 +16,11 @@ endif(NOT CMAKE_BUILD_TYPE)
 # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 set (CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wno-fortify-source -pthread")
+set(CMAKE_CXX_FLAGS "-Wall -fsingle-precision-constant -pthread")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-g -O3")
 
-set(CMAKE_C_FLAGS "-Wall")
+set(CMAKE_C_FLAGS "-Wall -fsingle-precision-constant")
 set(CMAKE_C_FLAGS_DEBUG "-g -O0")
 set(CMAKE_C_FLAGS_RELEASE "-g -O3")
 
@@ -222,6 +222,7 @@ target_compile_definitions(kiwi.bin PUBLIC
     EDATA_EMBED
 
     # for CMSIS
+    ARM_MATH_NEON
     ARM_MATH_LOOPUNROLL
 
     # for extensions

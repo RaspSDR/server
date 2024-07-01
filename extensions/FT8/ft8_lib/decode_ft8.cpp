@@ -311,11 +311,11 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
             ft8->decoded_hashtable[idx_hash] = &ft8->decoded[idx_hash];
             ++num_decoded;
 
-            char text[FTX_MAX_MESSAGE_LENGTH];
+            char text[FTX_MAX_MESSAGE_LENGTH * 2 + 1];
             int hash_idx = -1;
             bool need_free = false, uploaded = false;
             char *f[4];
-            int n, km = 0;
+            int n = 0, km = 0;
             ftx_message_rc_t unpack_status = ftx_message_decode(&message, &hash_if, text, &hash_idx);
             if (unpack_status != FTX_MESSAGE_RC_OK && unpack_status != FTX_MESSAGE_RC_PSKR_OK && unpack_status != FTX_MESSAGE_RC_ERROR_TYPE)
             {
@@ -335,7 +335,7 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
                         // n=3: "call_to call_de grid4"  "{<...> DE QRZ CQ CQ_nnn CQ_ABCD} call_de grid4"
                         // n=4: "CQ DX call_de grid4"
                         // n=4: "call_to call_de R grid4"
-                        char *call, *grid;
+                        const char *call = NULL, *grid = NULL;
                         need_free = true;
                         for (n = 0; n < 4; n++) f[n] = NULL;
                         n = sscanf(text, "%ms %ms %ms %ms", &f[0], &f[1], &f[2], &f[3]);

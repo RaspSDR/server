@@ -15,8 +15,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "fpga.h"
-
 // #define ANT_SWITCH_DEBUG_MSG	true
 #define ANT_SWITCH_DEBUG_MSG false
 

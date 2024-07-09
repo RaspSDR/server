@@ -28,7 +28,7 @@ Boston, MA  02110-1301, USA.
 #include "coroutines.h"
 #include "debug.h"
 #include "data_pump.h"
-#include "fpga.h"
+#include "peri.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -53,6 +53,7 @@ static u4_t last_run_us;
 	static u2_t snd_seq;
 #endif
 
+s4_t snd_data[MAX_RX_CHANS * 2 * MAX_NRX_SAMPS];
 
 static void snd_service()
 {
@@ -68,10 +69,11 @@ static void snd_service()
             i_samps[ch] = rx->in_samps[rx->wr_pos];
         }
 
+        fpga_read_rx(snd_data, sizeof(s4_t) * 2 * rx_chans * nrx_samps);
+
         for (int i = 0; i < nrx_samps;i++)
         {
-            s4_t data[MAX_RX_CHANS * 2];
-            memcpy(data, (void*)fpga_rx_data, sizeof(s4_t) * 2 * rx_chans);
+            s4_t *data = &snd_data[i * 2 * rx_chans];
             for (int ch = 0; ch < rx_chans; ch++)
             {
                 s4_t i, q;
@@ -169,13 +171,7 @@ static void snd_service()
 
 static void data_pump(void *param)
 {
-	evDP(EC_EVENT, EV_DPUMP, -1, "dpump_init", evprintf("INIT: SPI CTRL_SND_INTR %d",
-		GPIO_READ_BIT(SND_INTR)));
-
 	while (1) {
-
-		evDP(EC_EVENT, EV_DPUMP, -1, "data_pump", evprintf("SLEEPING: SPI CTRL_SND_INTR %d",
-			GPIO_READ_BIT(SND_INTR)));
 
 		//#define MEAS_DATA_PUMP
 		#ifdef MEAS_DATA_PUMP
@@ -197,15 +193,7 @@ static void data_pump(void *param)
                 sum_quanta += quanta;
                 cps++;
             }
-        #else
-            //TaskSleepReason("wait for interrupt");
-            while (fpga_status->rx_fifo < nrx_samps * 2 * rx_chans) {
-                TaskSleepUsec(500);
-            }
         #endif
-
-		evDP(EC_EVENT, EV_DPUMP, -1, "data_pump", evprintf("WAKEUP: SPI CTRL_SND_INTR %d",
-			GPIO_READ_BIT(SND_INTR)));
 
 		snd_service();
 		
@@ -239,6 +227,6 @@ void data_pump_start_stop()
 void data_pump_init()
 {
 	//printf("data pump: rescale=%.6g\n", rescale);
-
+    fpga_start_rx();
 	CreateTaskF(data_pump, 0, DATAPUMP_PRIORITY, 0);
 }

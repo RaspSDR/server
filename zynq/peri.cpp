@@ -17,6 +17,7 @@
 #include <sys/ioctl.h>
 
 #include <atomic>
+#include <semaphore.h>
 
 #include "../si5351/LinuxInterface.h"
 #include "../si5351/si5351.h"
@@ -33,7 +34,11 @@ static const uint8_t chip_addr = 0x60;
 static I2CInterface *i2c;
 static Si5351 *si5351;
 
-int ad8370_fd;
+static int ad8370_fd;
+
+static sem_t wf_sem;
+static std::atomic<int> wf_using[4];
+static int wf_channels;
 
 void peri_init()
 {
@@ -43,14 +48,13 @@ void peri_init()
     scall("/dev/zynqsdr", ad8370_fd = open("/dev/zynqsdr", O_RDWR | O_SYNC));
     if (ad8370_fd <= 0)
     {
-        panic("Failed to open kernel driver");
+        sys_panic("Failed to open kernel driver");
     }
 
     i2c = new LinuxInterface(buss_id, chip_addr);
     si5351 = new Si5351(chip_addr, i2c);
 
     int int_clk;
-    uint32_t ref_clk;
     if (clk.ext_ADC_clk)
     {
         int_clk = 0;
@@ -65,7 +69,7 @@ void peri_init()
     bool i2c_found = si5351->init(SI5351_CRYSTAL_LOAD_0PF, clk.clock_ref, 0);
     if (!i2c_found)
     {
-        panic("i2c si5351 is not found\n\n");
+        sys_panic("i2c si5351 is not found\n\n");
         return;
     }
     else
@@ -84,6 +88,9 @@ void peri_init()
 
     // set default attn to 0
     rf_attn_set(0);
+
+    wf_channels = fpga_signature() & 0xf;
+    sem_init(&wf_sem, 0, wf_channels);
 
     init = TRUE;
 }
@@ -174,4 +181,267 @@ void clock_correction(float error)
     si5351->set_correction((int)control_output, SI5351_PLL_INPUT_XO);
 
     //printf("Set correction to %d\n", (int)control_output);
+}
+
+////////////////////////////////
+// FPGA DNA
+////////////////////////////////
+
+u64_t fpga_dna()
+{
+    int rc;
+    uint64_t signature = 0;
+    rc = ioctl(ad8370_fd, GET_DNA, &signature);
+    if (rc)
+        sys_panic("Get FPGA Signature failed");
+
+    return signature;
+}
+
+void fpga_start_rx()
+{
+    uint32_t decim = uint32_t(ADC_CLOCK_NOM / 12000 / 256);
+    int rc = ioctl(ad8370_fd, RX_START, &decim);
+    if (rc)
+        sys_panic("Start RX failed");
+}
+
+void fpga_rxfreq(int rx_chan, uint64_t freq)
+{
+    int rc;
+    struct rx_param_op param = {(__u8)rx_chan, freq};
+    rc = ioctl(ad8370_fd, RX_PARAM, &param);
+    if (rc)
+        sys_panic("Set RX freq failed");
+}
+
+void fpga_read_rx(void *buf, uint32_t size)
+{
+    int rc;
+    struct rx_read_op read_op = {(__u32)buf, size};
+
+    while (true)
+    {
+        // printf("In: 0x%x %d\t", read_op.address, read_op.length);
+        rc = ioctl(ad8370_fd, RX_READ, &read_op);
+        if (rc)
+            break;
+        // printf("OUT: 0x%x %d -> %d\n", read_op.address, read_op.length, read_op.readed);
+
+        if (read_op.readed != read_op.length)
+        {
+            read_op.address += read_op.readed;
+            read_op.length -= read_op.readed;
+            TaskSleepMsec(10);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (rc < 0)
+    {
+        sys_panic("Read RX failed");
+    }
+}
+
+void fpga_start_pps()
+{
+    uint32_t start = 1;
+    int rc = ioctl(ad8370_fd, PPS_START, &start);
+    if (rc)
+        sys_panic("Start PPS failed");
+}
+
+uint64_t fpga_read_pps()
+{
+    uint64_t pps;
+    int rc;
+    
+    rc = ioctl(ad8370_fd, PPS_READ, &pps);
+    if (rc && errno == EBUSY) {
+        return 0;
+    }
+
+    if (rc)
+        sys_panic("read PPS failed");
+
+    return pps;
+}
+
+int fpga_set_antenna(int mask)
+{
+    uint32_t gpio;
+    int rc = ioctl(ad8370_fd, SET_GPIO_MASK, &gpio);
+    if (rc)
+        sys_panic("Get GPIO failed");
+
+    gpio &= ~GPIO_ANNENNA_MASK;
+    gpio |= (mask & GPIO_ANNENNA_MASK);
+
+    rc = ioctl(ad8370_fd, SET_GPIO_MASK, &gpio);
+    if (rc)
+        sys_panic("Set GPIO failed");
+
+
+    return 0;
+}
+
+static int fpga_set_bit(bool enabled, int bit)
+{
+    uint32_t gpio;
+    int rc = ioctl(ad8370_fd, SET_GPIO_MASK, &gpio);
+    if (rc)
+        sys_panic("Get GPIO failed");
+
+    if (enabled)
+        gpio |= bit;
+    else
+        gpio &= ~bit;
+
+    rc = ioctl(ad8370_fd, SET_GPIO_MASK, &gpio);
+    if (rc)
+        sys_panic("Set GPIO failed");
+
+
+    return 0;
+}
+
+int fpga_set_pga(bool enabled)
+{
+    return fpga_set_bit(enabled, GPIO_PGA);
+}
+
+int fpga_set_dither(bool enabled)
+{
+    return fpga_set_bit(enabled, GPIO_DITHER);
+}
+
+int fpga_set_led(bool enabled)
+{
+    return fpga_set_bit(enabled, GPIO_LED);
+}
+
+uint32_t fpga_signature()
+{
+    int rc;
+    uint32_t signature = 0;
+    rc = ioctl(ad8370_fd, GET_SIGNATURE, &signature);
+    if (rc)
+        sys_panic("Get FPGA Signature failed");
+
+    return signature;
+}
+
+void fpga_setovmask(uint32_t mask)
+{
+    ///TODO
+}
+
+void fpga_setadclvl(uint32_t val)
+{
+    ///TODO
+}
+
+int fpga_reset_wf(int wf_chan, bool cont)
+{
+    int rc;
+    int data = wf_chan;
+
+    if (cont) {
+        data |= WF_READ_CONTINUES;
+    }
+
+    rc = ioctl(ad8370_fd, WF_START, &wf_chan);
+    if (rc)
+        sys_panic("WF Start failed");
+
+    printf("WF %d started[%d]\n", wf_chan, cont);
+
+    return rc;
+}
+
+int fpga_wf_param(int wf_chan, int decimate, uint64_t freq)
+{
+    int rc;
+    wf_param_op param = {(__u16)wf_chan, (__u16)decimate, freq};
+    rc = ioctl(ad8370_fd, WF_PARAM, &param);
+    if (rc)
+        sys_panic("WF Parameter failed");
+
+    return rc;
+}
+
+int fpga_get_wf(int rx_chan)
+{
+  int ret = -1;
+
+  while (ret)
+  {
+    ret = sem_wait(&wf_sem);
+  }
+
+  for (int i = 0; i < wf_channels; i++)
+  {
+    int empty = 0;
+    bool exchanged = wf_using[i].compare_exchange_strong(empty, rx_chan+10);
+
+    if (exchanged)
+    {
+      return i;
+    }
+  }
+
+  panic("Run out of wf channels");
+
+  return -1;
+}
+
+void fpga_free_wf(int wf_chan, int rx_chan)
+{
+    if (rx_chan > 0)
+    {
+      rx_chan += 10;
+
+      bool exchanged = wf_using[wf_chan].compare_exchange_strong(rx_chan, 0);
+      assert(exchanged);
+    }
+    else
+    {
+      wf_using[wf_chan].store(0);
+    }
+
+    int ret = sem_post(&wf_sem);
+    if (ret) panic("sem_post failed");
+}
+
+void fpga_read_wf(int wf_chan, void *buf, uint32_t size)
+{
+    int rc;
+    struct wf_read_op read_op = {(__u16)wf_chan, (__u32)buf, (__u32)size};
+    while (true)
+    {
+        //printf("In: 0x%x %d\t", read_op.address, read_op.length);
+        rc = ioctl(ad8370_fd, WF_READ, &read_op);
+
+        if (rc)
+            break;
+        //printf("OUT: 0x%x %d -> %d\n", read_op.address, read_op.length, read_op.readed);
+
+        if (read_op.readed != read_op.length)
+        {
+            read_op.address += read_op.readed;
+            read_op.length -= read_op.readed;
+            TaskSleepMsec(1);
+            continue;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (rc)
+        sys_panic("Read WF failed");
 }

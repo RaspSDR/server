@@ -36,7 +36,6 @@ Boston, MA  02110-1301, USA.
 #include "sanitizer.h"
 #include "shmem.h"      // shmem_init()
 #include "debug.h"
-#include "fpga.h"
 
 #ifdef EV_MEAS
     #warning NB: EV_MEAS is enabled
@@ -195,13 +194,13 @@ int main(int argc, char *argv[])
 
     clock_init();
 	peri_init();
-    fpga_init();
 
-    rx_chans = fpga_status->signature & 0x0f;
+	uint32_t signature = fpga_signature();
+    rx_chans = signature & 0x0f;
 	if (kiwi.wf_share)
 		wf_chans = rx_chans; // always give most wf channels
 	else
-		wf_chans = (fpga_status->signature >> 8) & 0x0f;
+		wf_chans = (signature >> 8) & 0x0f;
 
     snd_rate = SND_RATE_4CH;
     rx_decim = (int)(ADC_CLOCK_TYP/12000); // 12k

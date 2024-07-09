@@ -2,7 +2,7 @@
 #include "config.h"
 #include "kiwi.h"
 #include "coroutines.h"
-#include "fpga.h"
+#include "peri.h"
 #include "gps_.h"
 #include "clk.h"
 
@@ -161,15 +161,15 @@ static void update_gps_info_before(int samp_hour, int samp_min)
 static void gps_task(void *param)
 {
     double t_rx = 0;
-    fpga_enable(RESET_PPS);
+    fpga_start_pps();
     for (;;)
     {
         // fetch pps data
-        while (fpga_status->pps_fifo > 0)
-        {
-            u64_t ticks = *fpga_pps_data;
+        u64_t ticks;
+        ticks = fpga_read_pps(); 
+
+        if (ticks)
             clock_correction(t_rx, ticks);
-        }
 
         if (!gps_waiting(&gps_handle, 1000000))
             continue;

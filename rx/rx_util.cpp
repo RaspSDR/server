@@ -1188,7 +1188,7 @@ void SNR_meas_task(void *param)
             if (internal_conn_setup(ICONN_WS_WF, &iconn, 0, PORT_BASE_INTERNAL_SNR, WS_FL_PREEMPT_AUTORUN | WS_FL_NO_LOG,
                 NULL, 0, 0, 0,
                 "SNR-measure", "internal%20task", "SNR",
-                WF_ZOOM_MIN, 15000, -110, -10, SNR_MEAS_SELECT, WF_COMP_OFF) == false) {
+                WF_ZOOM_MIN, ADC_CLOCK_NOM / 4.0, -110, -10, SNR_MEAS_SELECT, WF_COMP_OFF) == false) {
                 printf("SNR_meas: all channels busy\n");
                 break;
             };

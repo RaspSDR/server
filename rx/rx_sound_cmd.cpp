@@ -58,7 +58,6 @@ Boston, MA  02110-1301, USA.
 #include "rx_waterfall.h"
 #include "rx_filter.h"
 #include "wdsp.h"
-#include "fpga.h"
 #include "peri.h"
 
 #ifdef DRM
@@ -90,8 +89,6 @@ void rx_sound_cmd(conn_t *conn, double frate, int n, char *cmd)
 
     TaskStat(TSTAT_INCR|TSTAT_ZERO, 0, "cmd");
 
-    evDP(EC_EVENT, EV_DPUMP, -1, "SND", evprintf("SND: %s", cmd));
-    
     #if 0
         if (strcmp(conn->remote_ip, "") == 0 /* && strcmp(cmd, "SET keepalive") != 0 */)
             cprintf(conn, "SND <%s> cmd_recv 0x%x/0x%x\n", cmd, s->cmd_recv, CMD_ALL);

@@ -58,7 +58,7 @@ Boston, MA  02110-1301, USA.
 #include "rx_waterfall.h"
 #include "rx_filter.h"
 #include "wdsp.h"
-#include "fpga.h"
+#include "peri.h"
 #include "rsid.h"
 
 #ifdef DRM

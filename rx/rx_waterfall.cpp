@@ -41,7 +41,8 @@ Boston, MA  02110-1301, USA.
 #include "rx_waterfall.h"
 #include "rx_util.h"
 #include "options.h"
-#include "fpga.h"
+#include "peri.h"
+#include "arm_math.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -75,6 +76,10 @@ static const char *interp_s[] = { "max", "min", "last", "drop", "cma" };
 
 static wf_shmem_t wf_shmem;
 wf_shmem_t *wf_shmem_p = &wf_shmem;
+
+struct iq_t {
+	s2_t i, q;
+} __attribute__((packed));
 
 // FIXME: doesn't work yet because currently no way to use SPI from LINUX_CHILD_PROCESS()
 //#define WF_IPC_SAMPLE_WF
@@ -293,7 +298,7 @@ void c2s_waterfall(void *param)
 			    wf->i_offset = i_offset;
             
                 if (!kiwi.wf_share)
-                    fpga_config->wf_config[rx_chan].wf_freq = i_offset;
+                    fpga_wf_param(rx_chan, wf->decim, wf->i_offset);
             }
 			//printf("WF%d freq updated due to ADC clock correction\n", rx_chan);
 		}
@@ -410,7 +415,7 @@ void c2s_waterfall(void *param)
                             wf->decim = decim;
 
                             if (!kiwi.wf_share)
-                                fpga_config->wf_config[rx_chan].wf_decim = decim;
+                                fpga_wf_param(rx_chan, wf->decim, wf->i_offset);
                         }
                     
                         // We've seen cases where the wf connects, but the sound never does.
@@ -450,7 +455,7 @@ void c2s_waterfall(void *param)
                         wf->i_offset = i_offset;
 
                         if (!kiwi.wf_share)
-                            fpga_config->wf_config[rx_chan].wf_freq = i_offset;
+                            fpga_wf_param(rx_chan, wf->decim, wf->i_offset);
                     }
                     //jksd
                     //printf("START s=%d ->s=%d\n", start, wf->start);
@@ -877,8 +882,7 @@ static void sample_wf(int rx_chan)
                 rx_chan, wf->zoom, wf->samp_wait_us, 2*desired, desired);
             #endif
 
-            fpga_wfreset(rx_chan);
-            // memmset(&fft->sample_data[0], 0, sizeof(iq_t) * WF_C_NSAMPS);
+            fpga_reset_wf(rx_chan, true);
         } else {
             wf->overlapped_sampling = false;
 
@@ -891,50 +895,23 @@ static void sample_wf(int rx_chan)
 
     int start;
     float *window = WF_SHMEM->window_function[wf->window_func];
-    if (!wf->overlapped_sampling || kiwi.wf_share)
-    {
-        if (!kiwi.wf_share)
-            fpga_wfreset(rx_chan);
-        start = 0;
-    }
-    else
-    {
-        int n = WF_C_NSAMPS * ((desired / 2.0) / (wf->samp_wait_us/1000.0)) ; // how many samples we should receive
-        for (int i = 0; i + n < WF_C_NSAMPS; i++)
-            fft->sample_data[0 + i] = fft->sample_data[n + i];
-        start = WF_C_NSAMPS - n;
-    }
+    iq_t sample_data[WF_C_NSAMPS];
 
     {
         int wf_chan = -1;
 
         pthread_cleanup_push(cleanup_wf, &wf_chan);
         if (kiwi.wf_share)
-            wf_chan = fpga_get_wf(rx_chan, wf->decim, wf->i_offset);
+            wf_chan = fpga_get_wf(rx_chan);
         else
             wf_chan = rx_chan;
 
-        while(start < WF_C_NSAMPS)
-        {
-            int avail;
-            while ((avail = fpga_status->wf_fifo[wf_chan]) == 0)
-            {
-                if (start > WF_C_NSAMPS/2)
-                    WFSleepReasonUsec("fill pipe", wf->samp_wait_us/WF_C_NSAMPS*(WF_C_NSAMPS - start) + 1);
-                else
-                    WFSleepReasonUsec("fill pipe", wf->samp_wait_us/WF_C_NSAMPS*(WF_C_NSAMPS - start)/2 + 1);
-            }
-
-            int needed = WF_C_NSAMPS - start;
-            if (needed > avail) needed = avail;
-
-            for(int i = 0 ; i < needed; i++)
-            {
-                *(uint32_t*)(&fft->sample_data[start+i]) = *fpga_wf_data[wf_chan];
-            }
-            start += needed;
-            avail -= needed;
+        if (!wf->overlapped_sampling) {
+            fpga_wf_param(wf_chan, wf->decim, wf->i_offset);
+            fpga_reset_wf(wf_chan, false);
         }
+
+        fpga_read_wf(wf_chan, sample_data, sizeof(iq_t) * WF_C_NSAMPS);
 
         if (kiwi.wf_share)
             fpga_free_wf(wf_chan, rx_chan);
@@ -946,8 +923,8 @@ static void sample_wf(int rx_chan)
     {
         s4_t ii, qq;
 
-        ii = (s4_t) (s2_t) fft->sample_data[i].i;
-        qq = (s4_t) (s2_t) fft->sample_data[i].q;
+        ii = (s4_t) (s2_t) sample_data[i].i;
+        qq = (s4_t) (s2_t) sample_data[i].q;
 
         float fi = ((float) ii) * window[i];
         float fq = ((float) qq) * window[i];

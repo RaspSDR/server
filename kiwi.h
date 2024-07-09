@@ -117,7 +117,6 @@ typedef enum { RX4_WF4=0, RX8_WF2=1, RX3_WF3=2, RX14_WF0=3 } firmware_e;
 #define IDENT_LEN_MIN   16      // e.g. "wsprdaemon_v3.0a" is 16 chars
 
 void kiwi_restart();
-void fpga_init();
 
 void update_freqs(bool *update_cfg = NULL);
 void update_vars_from_config(bool called_at_init = false);

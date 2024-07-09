@@ -154,13 +154,6 @@
 	#define evSnd(c, e, p, s, s2)
 #endif
 
-//#define EV_MEAS_DPUMP
-#if defined(EV_MEAS) && defined(EV_MEAS_DPUMP)
-	#define evDP(c, e, p, s, s2) ev(c, e, p, s, s2)
-#else
-	#define evDP(c, e, p, s, s2)
-#endif
-
 //#define EV_MEAS_DPUMP_CHUNK
 #if defined(EV_MEAS) && defined(EV_MEAS_DPUMP_CHUNK)
 	#define evDPC(c, e, p, s, s2) ev(c, e, p, s, s2)

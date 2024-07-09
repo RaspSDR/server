@@ -82,9 +82,12 @@ typedef struct {
 	double lat, lon;
 } latLon_t;
 
-#define latLon_deg_to_rad(loc) \
-	loc.lat = DEG_2_RAD(loc.lat); \
-	loc.lon = DEG_2_RAD(loc.lon);
+#define latLon_deg_to_rad(loc)        \
+	do                                \
+	{                                 \
+		loc.lat = DEG_2_RAD(loc.lat); \
+		loc.lon = DEG_2_RAD(loc.lon); \
+	} while (0)
 
 // field square subsquare (extended square)
 //   A-R    0-9       a-x              0-9

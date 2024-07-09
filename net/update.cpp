@@ -141,7 +141,7 @@ exit:
 static int fetch_makefile(const char *channel)
 {
 	// fetch the version info from server
-	int status = blocking_system("curl -s -o /root/web-888.latest http://downloads.rx-888.com/web-888/%s/version.txt", channel);
+	int status = blocking_system("curl -s -o /root/config/web-888.latest http://downloads.rx-888.com/web-888/%s/version.txt", channel);
 	if (status != 0)
         printf("UPDATE: fetch origin status=0x%08x\n", status);
 
@@ -197,7 +197,7 @@ static void _update_task(void *param)
 	}
 
 	{
-		kstr_t *ver = read_file_string_reply("/root/web-888.latest");
+		kstr_t *ver = read_file_string_reply("/root/config/web-888.latest");
 		int n = sscanf(kstr_sp(ver), "%d.%d", &pending_maj, &pending_min);
 
 		ver_changed = (n == 2 && (pending_maj > version_maj  || (pending_maj == version_maj && pending_min > version_min)));

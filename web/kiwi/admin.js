@@ -911,8 +911,8 @@ function update_html()
       w3_divs('w3-container',
          w3_switch_label('w3-label-inline w3-label-left', 'Update Channel', 'Alpha', 'Stable', 'adm.update_channel', adm.update_channel, 'admin_radio_YN_cb'),
          w3_text('w3-bold',
-				   'Set to Alpha if you want to test the lastest release, which may contains bugs. In worse case, you may lose your customization settings. <br>' +
-				   'Set to Stable if you want to play safe.'
+		   'Set to Alpha if you want to test the latest release, which may contains bugs. In worse case, you may lose your customization settings. <br>' +
+		   'Set to Stable if you want to play safe.'
 				)
       )
 	);

@@ -89,7 +89,7 @@ void peri_init()
     // set default attn to 0
     rf_attn_set(0);
 
-    wf_channels = fpga_signature() & 0xf;
+    wf_channels = (fpga_signature() >> 8) & 0x0f;
     sem_init(&wf_sem, 0, wf_channels);
 
     init = TRUE;

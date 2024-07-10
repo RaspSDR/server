@@ -357,7 +357,7 @@ int fpga_reset_wf(int wf_chan, bool cont)
     if (rc)
         sys_panic("WF Start failed");
 
-    printf("WF %d started[%d]\n", wf_chan, cont);
+    // printf("WF %d started[%d]\n", wf_chan, cont);
 
     return rc;
 }

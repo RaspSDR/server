@@ -179,7 +179,6 @@ void update_vars_from_config(bool called_at_init)
 
     // force DC offsets to the default value if not configured
     // also if set to the previous default value
-    admcfg_default_bool("anti_aliased", false, &update_admcfg);
     TYPEREAL Ioff, Qoff;
 
     Ioff = cfg_float("DC_offset_I", &err, CFG_OPTIONAL);

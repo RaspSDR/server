@@ -186,7 +186,6 @@ int main(int argc, char *argv[])
     cfg_reload();
 
     bool update_admcfg = false;
-    kiwi.anti_aliased = admcfg_default_bool("anti_aliased", false, &update_admcfg);
 	kiwi.airband = admcfg_default_bool("airband", false, &update_admcfg);
 	kiwi.wf_share = admcfg_default_bool("wf_share", false, &update_admcfg);
 

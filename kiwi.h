@@ -46,7 +46,6 @@ const char * const platform_s[] = { "zynq7010" };
 typedef struct {
     platform_e platform;
     bool dbgUs;
-    bool anti_aliased;
 	bool airband;
 
     bool ext_clk;

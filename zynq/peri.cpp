@@ -256,7 +256,7 @@ void fpga_start_pps()
 
 uint64_t fpga_read_pps()
 {
-    uint64_t pps;
+    uint32_t pps;
     int rc;
     
     rc = ioctl(ad8370_fd, PPS_READ, &pps);

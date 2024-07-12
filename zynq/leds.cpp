@@ -48,32 +48,30 @@ Boston, MA  02110-1301, USA.
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 
-#define LED_DLY_POST_CYLON   100
-#define LED_DLY_SHOW_DIGIT  3000
-#define LED_DLY_POST_DIGIT   500
-#define LED_DLY_PRE_NUM      100
-#define LED_DLY_POST_NUM     100
+#define LED_DLY_POST_CYLON 100
+#define LED_DLY_SHOW_DIGIT 3000
+#define LED_DLY_POST_DIGIT 500
+#define LED_DLY_PRE_NUM    100
+#define LED_DLY_POST_NUM   100
 
-#define LED_FLASHES_POST_DIGIT  2
-#define LED_FLASHES_POST_NUM    6
-#define LED_FLASHES_IPV6        16
-#define LED_FLASHES_IP_ERROR    32
+#define LED_FLASHES_POST_DIGIT 2
+#define LED_FLASHES_POST_NUM   6
+#define LED_FLASHES_IPV6       16
+#define LED_FLASHES_IP_ERROR   32
 
 // flags
-#define LED_F_NONE              0x00
-#define LED_F_FLASH_POST_NUM    0x01
+#define LED_F_NONE           0x00
+#define LED_F_FLASH_POST_NUM 0x01
 
 static int led_delay_off;
 
-static void led_set_one(int led, int v)
-{
+static void led_set_one(int led, int v) {
     bool full_on = (led_delay_off == 0);
 
     fpga_set_led(v);
 }
 
-static void led_set(int l0, int l1, int l2, int l3, int msec)
-{
+static void led_set(int l0, int l1, int l2, int l3, int msec) {
     if (l0 != 2) led_set_one(0, l0);
 
 #if NLED > 1
@@ -91,60 +89,55 @@ static void led_set(int l0, int l1, int l2, int l3, int msec)
     kiwi_msleep(msec);
 }
 
-static void led_clear(int msec)
-{
-    led_set(0,0,0,0, msec);
+static void led_clear(int msec) {
+    led_set(0, 0, 0, 0, msec);
 }
 
-static void led_cylon(int n, int msec)
-{
-    #define CYLON_DELAY 40
-    
+static void led_cylon(int n, int msec) {
+#define CYLON_DELAY 40
+
     while (n--) {
-        led_set(0,0,0,0, CYLON_DELAY);
-        led_set(1,2,2,2, CYLON_DELAY);
-        led_set(0,1,2,2, CYLON_DELAY);
-        led_set(2,0,1,2, CYLON_DELAY);
-        led_set(2,2,0,1, CYLON_DELAY);
-        led_set(2,2,2,0, CYLON_DELAY);
-        led_set(2,2,2,1, CYLON_DELAY);
-        led_set(2,2,1,0, CYLON_DELAY);
-        led_set(2,1,0,2, CYLON_DELAY);
-        led_set(1,0,2,2, CYLON_DELAY);
-        led_set(0,2,2,2, CYLON_DELAY);
+        led_set(0, 0, 0, 0, CYLON_DELAY);
+        led_set(1, 2, 2, 2, CYLON_DELAY);
+        led_set(0, 1, 2, 2, CYLON_DELAY);
+        led_set(2, 0, 1, 2, CYLON_DELAY);
+        led_set(2, 2, 0, 1, CYLON_DELAY);
+        led_set(2, 2, 2, 0, CYLON_DELAY);
+        led_set(2, 2, 2, 1, CYLON_DELAY);
+        led_set(2, 2, 1, 0, CYLON_DELAY);
+        led_set(2, 1, 0, 2, CYLON_DELAY);
+        led_set(1, 0, 2, 2, CYLON_DELAY);
+        led_set(0, 2, 2, 2, CYLON_DELAY);
     }
-    
+
     kiwi_msleep(msec);
 }
 
-static void led_flash_all(int n)
-{
+static void led_flash_all(int n) {
     while (n--) {
-        led_set(1,1,1,1, 30);
+        led_set(1, 1, 1, 1, 30);
         led_clear(100);
     }
     led_clear(100);
 }
 
-static void led_digits(int n, int ndigits, int ndigits2)
-{
+static void led_digits(int n, int ndigits, int ndigits2) {
     if (ndigits <= 0) {
-        //printf("led_digits .\n");
+        // printf("led_digits .\n");
         return;
     }
-    led_digits(n/10, ndigits-1, ndigits2);
-    n = n%10;
+    led_digits(n / 10, ndigits - 1, ndigits2);
+    n = n % 10;
     if (n == 0) n = 0xf;
-    //printf("led_digits %d 0x%x %d%d%d%d nd=%d nd2=%d\n", n, n, n&8?1:0, n&4?1:0, n&2?1:0, n&1?1:0, ndigits, ndigits2);
-    led_set(n&8?1:0, n&4?1:0, n&2?1:0, n&1?1:0, LED_DLY_SHOW_DIGIT);
+    // printf("led_digits %d 0x%x %d%d%d%d nd=%d nd2=%d\n", n, n, n&8?1:0, n&4?1:0, n&2?1:0, n&1?1:0, ndigits, ndigits2);
+    led_set(n & 8 ? 1 : 0, n & 4 ? 1 : 0, n & 2 ? 1 : 0, n & 1 ? 1 : 0, LED_DLY_SHOW_DIGIT);
     led_clear(LED_DLY_POST_DIGIT);
     if (ndigits != ndigits2)
         led_flash_all(LED_FLASHES_POST_DIGIT);
     return;
 }
 
-static void led_num(int n, int ndigits, int flags)
-{
+static void led_num(int n, int ndigits, int flags) {
     led_clear(LED_DLY_PRE_NUM);
     led_digits(n, ndigits, ndigits);
     if (flags & LED_F_FLASH_POST_NUM)
@@ -155,47 +148,48 @@ static void led_num(int n, int ndigits, int flags)
 // Get pseudo LED brightness by using Beagle LED PWM feature.
 // So e.g. 1ms on, 20ms off is our dimmest mode. Any longer off times results in visible flickering.
 // 0:'brighest', 1:'medium', 2:'dimmer', 3:'dimmest', 4:'off'
-static int pwm_off_time_ms[] = { 0, 5, 10, 20, -1 };   // 0 = full brightness (no PWM), -1 = no LEDs at all
+static int pwm_off_time_ms[] = { 0, 5, 10, 20, -1 }; // 0 = full brightness (no PWM), -1 = no LEDs at all
 
-void led_task(void *param)
-{
+void led_task(void* param) {
     bool error;
     int ip_error;
     u1_t a, b, c, d;
 
     while (1) {
-    
+
         // these checks are inside the loop to react to admin config changes and delayed pvt_valid
         if (net.pvt_valid == IPV4) {
-            inet4_d2h(net.ip_pvt, (bool *) &ip_error, &a, &b, &c, &d);
-            //printf("led_reporter ip4_valid=%d ip4_6_valid=%d ip_pvt=%s inet4_d2h.error=%d\n",
-            //    net.ip4_valid, net.ip4_6_valid, net.ip_pvt, ip_error);
+            inet4_d2h(net.ip_pvt, (bool*)&ip_error, &a, &b, &c, &d);
+            // printf("led_reporter ip4_valid=%d ip4_6_valid=%d ip_pvt=%s inet4_d2h.error=%d\n",
+            //     net.ip4_valid, net.ip4_6_valid, net.ip_pvt, ip_error);
             if (ip_error) ip_error = LED_FLASHES_IP_ERROR;
-        } else
-        if (net.pvt_valid == IPV6) {
-            ip_error = LED_FLASHES_IPV6;    // don't show ipv6
-        } else {
+        }
+        else if (net.pvt_valid == IPV6) {
+            ip_error = LED_FLASHES_IPV6; // don't show ipv6
+        }
+        else {
             ip_error = LED_FLASHES_IP_ERROR;
         }
-        //printf("led_reporter net.pvt_valid=%d ip_error=%d\n", net.pvt_valid, ip_error);
-        
+        // printf("led_reporter net.pvt_valid=%d ip_error=%d\n", net.pvt_valid, ip_error);
+
         // after an upgrade from v1.2 "use_static" can be undefined before being defaulted
         // NB: this will match "ip_address:{use_static:}" value
         bool use_static = (admcfg_bool("use_static", &error, CFG_OPTIONAL) == true);
         if (error) use_static = false;
-        
+
         int brightness_idx = cfg_int("led_brightness", &error, CFG_OPTIONAL);
         if (error || brightness_idx < 0 || brightness_idx > 4) brightness_idx = 0;
         led_delay_off = pwm_off_time_ms[brightness_idx];
 
         led_cylon(3, LED_DLY_POST_CYLON);
-        led_num(use_static? 2:1, 1, LED_F_NONE);
+        led_num(use_static ? 2 : 1, 1, LED_F_NONE);
         led_cylon(2, LED_DLY_POST_CYLON);
-        
+
         if (ip_error) {
             led_flash_all(ip_error);
             led_clear(LED_DLY_POST_NUM);
-        } else {
+        }
+        else {
             led_num(a, 3, LED_F_FLASH_POST_NUM);
             led_num(b, 3, LED_F_FLASH_POST_NUM);
             led_num(c, 3, LED_F_FLASH_POST_NUM);
@@ -205,7 +199,7 @@ void led_task(void *param)
         // end marker
         kiwi_msleep(500);
         led_cylon(1, LED_DLY_POST_CYLON);
-        led_set(1,1,1,1, 5000);
-        led_set(0,0,0,0, 3000);
+        led_set(1, 1, 1, 1, 5000);
+        led_set(0, 0, 0, 0, 3000);
     }
 }

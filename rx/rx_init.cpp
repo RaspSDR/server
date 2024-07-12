@@ -42,9 +42,9 @@ Boston, MA  02110-1301, USA.
 #include "options.h"
 
 #ifdef DRM
- #include "DRM.h"
+#include "DRM.h"
 #else
- #define DRM_NREG_CHANS_DEFAULT 3
+#define DRM_NREG_CHANS_DEFAULT 3
 #endif
 
 #include <string.h>
@@ -56,70 +56,69 @@ Boston, MA  02110-1301, USA.
 #include <signal.h>
 
 // copy admin-related configuration from kiwi.json to new admin.json file
-void cfg_adm_transition()
-{
-	int i;
-	bool b;
-	const char *s;
+void cfg_adm_transition() {
+    int i;
+    bool b;
+    const char* s;
 
-	s = cfg_string("user_password", NULL, CFG_REQUIRED);
-	admcfg_set_string("user_password", s);
-	cfg_string_free(s);
-	b = cfg_bool("user_auto_login", NULL, CFG_REQUIRED);
-	admcfg_set_bool("user_auto_login", b);
-	s = cfg_string("admin_password", NULL, CFG_REQUIRED);
-	admcfg_set_string("admin_password", s);
-	cfg_string_free(s);
-	b = cfg_bool("admin_auto_login", NULL, CFG_REQUIRED);
-	admcfg_set_bool("admin_auto_login", b);
-	
-	i = cfg_int("port", NULL, CFG_REQUIRED);
-	admcfg_set_int("port", i);
-	
-	b = cfg_bool("enable_gps", NULL, CFG_REQUIRED);
-	admcfg_set_bool("enable_gps", b);
+    s = cfg_string("user_password", NULL, CFG_REQUIRED);
+    admcfg_set_string("user_password", s);
+    cfg_string_free(s);
+    b = cfg_bool("user_auto_login", NULL, CFG_REQUIRED);
+    admcfg_set_bool("user_auto_login", b);
+    s = cfg_string("admin_password", NULL, CFG_REQUIRED);
+    admcfg_set_string("admin_password", s);
+    cfg_string_free(s);
+    b = cfg_bool("admin_auto_login", NULL, CFG_REQUIRED);
+    admcfg_set_bool("admin_auto_login", b);
 
-	b = cfg_bool("update_check", NULL, CFG_REQUIRED);
-	admcfg_set_bool("update_check", b);
-	b = cfg_bool("update_install", NULL, CFG_REQUIRED);
-	admcfg_set_bool("update_install", b);
-	
-	b = cfg_bool("sdr_hu_register", NULL, CFG_REQUIRED);
-	admcfg_set_bool("sdr_hu_register", b);
-	s = cfg_string("api_key", NULL, CFG_REQUIRED);
-	admcfg_set_string("api_key", s);
-	cfg_string_free(s);
+    i = cfg_int("port", NULL, CFG_REQUIRED);
+    admcfg_set_int("port", i);
 
+    b = cfg_bool("enable_gps", NULL, CFG_REQUIRED);
+    admcfg_set_bool("enable_gps", b);
 
-	// remove from kiwi.json file
-	cfg_rem_string("user_password");
-	cfg_rem_bool("user_auto_login");
-	cfg_rem_string("admin_password");
-	cfg_rem_bool("admin_auto_login");
+    b = cfg_bool("update_check", NULL, CFG_REQUIRED);
+    admcfg_set_bool("update_check", b);
+    b = cfg_bool("update_install", NULL, CFG_REQUIRED);
+    admcfg_set_bool("update_install", b);
 
-	cfg_rem_int("port");
-
-	cfg_rem_bool("enable_gps");
-
-	cfg_rem_bool("update_check");
-	cfg_rem_bool("update_install");
-
-	cfg_rem_bool("sdr_hu_register");
-	cfg_rem_string("api_key");
+    b = cfg_bool("sdr_hu_register", NULL, CFG_REQUIRED);
+    admcfg_set_bool("sdr_hu_register", b);
+    s = cfg_string("api_key", NULL, CFG_REQUIRED);
+    admcfg_set_string("api_key", s);
+    cfg_string_free(s);
 
 
-	// won't be present first time after upgrading from v1.2
-	// first admin page connection will create
-	if ((s = cfg_object("ip_address", NULL, CFG_OPTIONAL)) != NULL) {
-		admcfg_set_object("ip_address", s);
-		cfg_object_free(s);
-		cfg_rem_object("ip_address");
-	}
+    // remove from kiwi.json file
+    cfg_rem_string("user_password");
+    cfg_rem_bool("user_auto_login");
+    cfg_rem_string("admin_password");
+    cfg_rem_bool("admin_auto_login");
+
+    cfg_rem_int("port");
+
+    cfg_rem_bool("enable_gps");
+
+    cfg_rem_bool("update_check");
+    cfg_rem_bool("update_install");
+
+    cfg_rem_bool("sdr_hu_register");
+    cfg_rem_string("api_key");
 
 
-	// update JSON files
-	admcfg_save_json(cfg_adm.json);     // during init doesn't conflict with admin cfg
-	cfg_save_json(cfg_cfg.json);        // during init doesn't conflict with admin cfg
+    // won't be present first time after upgrading from v1.2
+    // first admin page connection will create
+    if ((s = cfg_object("ip_address", NULL, CFG_OPTIONAL)) != NULL) {
+        admcfg_set_object("ip_address", s);
+        cfg_object_free(s);
+        cfg_rem_object("ip_address");
+    }
+
+
+    // update JSON files
+    admcfg_save_json(cfg_adm.json); // during init doesn't conflict with admin cfg
+    cfg_save_json(cfg_cfg.json);    // during init doesn't conflict with admin cfg
 }
 
 int inactivity_timeout_mins, ip_limit_mins;
@@ -130,52 +129,50 @@ float max_thr;
 int n_camp;
 bool log_local_ip, DRM_enable, admin_keepalive, any_preempt_autorun;
 
-#define DC_OFFSET_DEFAULT -0.02F
-#define DC_OFFSET_DEFAULT_PREV 0.05F
+#define DC_OFFSET_DEFAULT       -0.02F
+#define DC_OFFSET_DEFAULT_PREV  0.05F
 #define DC_OFFSET_DEFAULT_20kHz -0.034F
 TYPEREAL DC_offset_I, DC_offset_Q;
 
 #define WATERFALL_CALIBRATION_DEFAULT -13
-#define SMETER_CALIBRATION_DEFAULT -13
+#define SMETER_CALIBRATION_DEFAULT    -13
 
 #define N_MTU 3
 static int mtu_v[N_MTU] = { 1500, 1440, 1400 };
 
 static int snr_interval[] = { 0, 1, 4, 6, 24 };
 
-void update_freqs(bool *update_cfg)
-{
-    ui_srate = ADC_CLOCK_TYP/2.0;
-    ui_srate_kHz = round(ui_srate/kHz);
+void update_freqs(bool* update_cfg) {
+    ui_srate = ADC_CLOCK_TYP / 2.0;
+    ui_srate_kHz = round(ui_srate / kHz);
     freq_offset_kHz = cfg_default_float("freq_offset", 0, update_cfg);
     freq_offmax_kHz = freq_offset_kHz + ui_srate_kHz;
-	//printf("ui_srate=%.3f ui_srate_kHz=%.3f freq_offset_kHz=%.3f freq_offmax_kHz=%.3f\n",
-	//    ui_srate, ui_srate_kHz, freq_offset_kHz, freq_offmax_kHz);
+    // printf("ui_srate=%.3f ui_srate_kHz=%.3f freq_offset_kHz=%.3f freq_offmax_kHz=%.3f\n",
+    //     ui_srate, ui_srate_kHz, freq_offset_kHz, freq_offmax_kHz);
 }
 
-void update_vars_from_config(bool called_at_init)
-{
+void update_vars_from_config(bool called_at_init) {
     int n;
-	bool update_cfg = false;
-	bool update_admcfg = false;
-	const char *s;
+    bool update_cfg = false;
+    bool update_admcfg = false;
+    const char* s;
     bool err;
 
     // When called by client-side "SET save_cfg/save_adm=":
-	//  Makes C copies of vars that must be updated when configuration saved from js.
-	//
-	// When called by server-side rx_server_init():
-	//  Makes C copies of vars that must be updated when configuration loaded from cfg files.
-	//  Creates configuration parameters with default values that must exist for client connections.
+    //  Makes C copies of vars that must be updated when configuration saved from js.
+    //
+    // When called by server-side rx_server_init():
+    //  Makes C copies of vars that must be updated when configuration loaded from cfg files.
+    //  Creates configuration parameters with default values that must exist for client connections.
 
     inactivity_timeout_mins = cfg_default_int("inactivity_timeout_mins", 0, &update_cfg);
     ip_limit_mins = cfg_default_int("ip_limit_mins", 0, &update_cfg);
-    
-	double prev_freq_offset_kHz = freq_offset_kHz;
+
+    double prev_freq_offset_kHz = freq_offset_kHz;
     update_freqs(&update_cfg);
-	if (freq_offset_kHz != prev_freq_offset_kHz) {
-	    update_masked_freqs();
-	}
+    if (freq_offset_kHz != prev_freq_offset_kHz) {
+        update_masked_freqs();
+    }
 
     // force DC offsets to the default value if not configured
     // also if set to the previous default value
@@ -211,30 +208,31 @@ void update_vars_from_config(bool called_at_init)
     drm_nreg_chans = cfg_default_int("DRM.nreg_chans", DRM_NREG_CHANS_DEFAULT, &update_cfg);
 
     s = cfg_string("DRM.test_file1", NULL, CFG_OPTIONAL);
-	if (!s || strcmp(s, "Kuwait.15110.1.12k.iq.au") == 0) {
-	    cfg_set_string("DRM.test_file1", "DRM.BBC.Journaline.au");
-	    update_cfg = true;
+    if (!s || strcmp(s, "Kuwait.15110.1.12k.iq.au") == 0) {
+        cfg_set_string("DRM.test_file1", "DRM.BBC.Journaline.au");
+        update_cfg = true;
     }
     cfg_string_free(s);
 
     s = cfg_string("DRM.test_file2", NULL, CFG_OPTIONAL);
-	if (!s || strcmp(s, "Delhi.828.1.12k.iq.au") == 0) {
-	    cfg_set_string("DRM.test_file2", "DRM.KTWR.slideshow.au");
-	    update_cfg = true;
+    if (!s || strcmp(s, "Delhi.828.1.12k.iq.au") == 0) {
+        cfg_set_string("DRM.test_file2", "DRM.KTWR.slideshow.au");
+        update_cfg = true;
     }
     cfg_string_free(s);
-    
-    
+
+
     // TDoA extension related
     cfg_default_object("tdoa", "{}", &update_cfg);
     // FIXME: switch to using new SSL version of TDoA service at some point: https://tdoa2.kiwisdr.com
     // workaround to prevent collision with 1st-level "server_url" until we can fix cfg code
-	if ((s = cfg_string("tdoa.server_url", NULL, CFG_OPTIONAL)) != NULL) {
-		cfg_set_string("tdoa.server", s);
-	    cfg_string_free(s);
-	    cfg_rem_string("tdoa.server_url");
-	    update_cfg = true;
-	} else {
+    if ((s = cfg_string("tdoa.server_url", NULL, CFG_OPTIONAL)) != NULL) {
+        cfg_set_string("tdoa.server", s);
+        cfg_string_free(s);
+        cfg_rem_string("tdoa.server_url");
+        update_cfg = true;
+    }
+    else {
         cfg_default_string("tdoa.server", "http://tdoa.rx-888.com", &update_admcfg);
     }
 
@@ -253,24 +251,24 @@ void update_vars_from_config(bool called_at_init)
     cfg_default_string("rx_antenna", "", &update_cfg);
     cfg_default_string("owner_info", "", &update_cfg);
     cfg_default_string("reason_disabled", "", &update_cfg);
-    
+
     // pcb.jpg => pcb.png since new pcb photo has alpha channel that only .png supports.
     // Won't disturb an RX_PHOTO_FILE set to kiwi.config/photo.upload by admin photo upload process.
-	if ((s = cfg_string("index_html_params.RX_PHOTO_FILE", NULL, CFG_OPTIONAL)) != NULL) {
-	    if (strcmp(s, "kiwi/pcb.jpg") == 0) {
-		    cfg_set_string("index_html_params.RX_PHOTO_FILE", "kiwi/pcb.png");
-	    }
-	    cfg_string_free(s);
-	    update_cfg = true;
-	}
+    if ((s = cfg_string("index_html_params.RX_PHOTO_FILE", NULL, CFG_OPTIONAL)) != NULL) {
+        if (strcmp(s, "kiwi/pcb.jpg") == 0) {
+            cfg_set_string("index_html_params.RX_PHOTO_FILE", "kiwi/pcb.png");
+        }
+        cfg_string_free(s);
+        update_cfg = true;
+    }
 
-	if ((s = cfg_string("index_html_params.RX_PHOTO_DESC", NULL, CFG_OPTIONAL)) != NULL) {
-	    if (strcmp(s, "First production PCB") == 0) {
-		    cfg_set_string("index_html_params.RX_PHOTO_DESC", "");
-	    }
-	    cfg_string_free(s);
-	    update_cfg = true;
-	}
+    if ((s = cfg_string("index_html_params.RX_PHOTO_DESC", NULL, CFG_OPTIONAL)) != NULL) {
+        if (strcmp(s, "First production PCB") == 0) {
+            cfg_set_string("index_html_params.RX_PHOTO_DESC", "");
+        }
+        cfg_string_free(s);
+        update_cfg = true;
+    }
 
     S_meter_cal = cfg_default_int("S_meter_cal", SMETER_CALIBRATION_DEFAULT, &update_cfg);
     waterfall_cal = cfg_default_int("waterfall_cal", WATERFALL_CALIBRATION_DEFAULT, &update_cfg);
@@ -282,7 +280,7 @@ void update_vars_from_config(bool called_at_init)
     cfg_default_bool("index_html_params.RX_PHOTO_LEFT_MARGIN", true, &update_cfg);
 
     cfg_default_bool("ext_ADC_clk", false, &update_cfg);
-    cfg_default_int("ext_ADC_freq", (int) round(ADC_CLOCK_TYP), &update_cfg);
+    cfg_default_int("ext_ADC_freq", (int)round(ADC_CLOCK_TYP), &update_cfg);
     cfg_default_int("ADC_clk2_corr", ADC_CLK_CORR_CONTINUOUS, &update_cfg);
 
     cfg_default_string("tdoa_id", "", &update_cfg);
@@ -297,7 +295,7 @@ void update_vars_from_config(bool called_at_init)
     cfg_default_float("init.rf_attn", 0, &update_cfg);
     cfg_default_int("S_meter_OV_counts", 10, &update_cfg);
     cfg_default_bool("webserver_caching", true, &update_cfg);
-    max_thr = (float) cfg_default_int("overload_mute", -15, &update_cfg);
+    max_thr = (float)cfg_default_int("overload_mute", -15, &update_cfg);
     cfg_default_bool("agc_thresh_smeter", true, &update_cfg);
     n_camp = cfg_default_int("n_camp", N_CAMP, &update_cfg);
     snr_meas_interval_hrs = snr_interval[cfg_default_int("snr_meas_interval_hrs", 1, &update_cfg)];
@@ -314,10 +312,10 @@ void update_vars_from_config(bool called_at_init)
 
     cfg_default_int("nb_algo", 0, &update_cfg);
     cfg_default_int("nb_wf", 1, &update_cfg);
-	// NB_STD
+    // NB_STD
     cfg_default_int("nb_gate", 100, &update_cfg);
     cfg_default_int("nb_thresh", 50, &update_cfg);
-	// NB_WILD
+    // NB_WILD
     cfg_default_float("nb_thresh2", 0.95, &update_cfg);
     cfg_default_int("nb_taps", 10, &update_cfg);
     cfg_default_int("nb_samps", 7, &update_cfg);
@@ -325,31 +323,31 @@ void update_vars_from_config(bool called_at_init)
     cfg_default_int("nr_algo", 0, &update_cfg);
     cfg_default_int("nr_de", 1, &update_cfg);
     cfg_default_int("nr_an", 0, &update_cfg);
-   // NR_WDSP
+    // NR_WDSP
     cfg_default_int("nr_wdspDeTaps", 64, &update_cfg);
-    cfg_default_int("nr_wdspDeDelay",16, &update_cfg);
+    cfg_default_int("nr_wdspDeDelay", 16, &update_cfg);
     cfg_default_int("nr_wdspDeGain", 10, &update_cfg);
     cfg_default_int("nr_wdspDeLeak", 7, &update_cfg);
     cfg_default_int("nr_wdspAnTaps", 64, &update_cfg);
-    cfg_default_int("nr_wdspAnDelay",16, &update_cfg);
+    cfg_default_int("nr_wdspAnDelay", 16, &update_cfg);
     cfg_default_int("nr_wdspAnGain", 10, &update_cfg);
     cfg_default_int("nr_wdspAnLeak", 7, &update_cfg);
-   // NR_ORIG
-    cfg_default_int("nr_origDeDelay",1, &update_cfg);
+    // NR_ORIG
+    cfg_default_int("nr_origDeDelay", 1, &update_cfg);
     cfg_default_float("nr_origDeBeta", 0.05, &update_cfg);
     cfg_default_float("nr_origDeDecay", 0.98, &update_cfg);
-    cfg_default_int("nr_origAnDelay",48, &update_cfg);
+    cfg_default_int("nr_origAnDelay", 48, &update_cfg);
     cfg_default_float("nr_origAnBeta", 0.125, &update_cfg);
     cfg_default_float("nr_origAnDecay", 0.99915, &update_cfg);
-   // NR_SPECTRAL
+    // NR_SPECTRAL
     cfg_default_int("nr_specGain", 0, &update_cfg);
     cfg_default_float("nr_specAlpha", 0.95, &update_cfg);
     cfg_default_int("nr_specSNR", 30, &update_cfg);
 
-    
+
     if (wspr_update_vars_from_config(called_at_init)) update_cfg = true;
     if (ft8_update_vars_from_config(called_at_init)) update_cfg = true;
-    
+
     // enforce waterfall min_dB < max_dB
     int min_dB = cfg_default_int("init.min_dB", -110, &update_cfg);
     int max_dB = cfg_default_int("init.max_dB", -10, &update_cfg);
@@ -363,7 +361,7 @@ void update_vars_from_config(bool called_at_init)
 
     int _dom_sel = cfg_default_int("sdr_hu_dom_sel", DOM_SEL_NAM, &update_cfg);
 
-    #if 0
+#if 0
         // try and get this Kiwi working with the proxy
         //printf("serno=%d dom_sel=%d\n", serial_number, _dom_sel);
 	    if (serial_number == 1006 && _dom_sel == DOM_SEL_NAM) {
@@ -371,18 +369,18 @@ void update_vars_from_config(bool called_at_init)
             update_cfg = true;
             lprintf("######## FORCE DOM_SEL_REV serno=%d ########\n", serial_number);
 	    }
-    #endif
-    
+#endif
+
     // remove old kiwisdr.example.com default
     cfg_default_string("server_url", "", &update_cfg);
-    const char *server_url = cfg_string("server_url", NULL, CFG_REQUIRED);
-	if (strcmp(server_url, "kiwisdr.example.com") == 0) {
-	    cfg_set_string("server_url", "");
-	    update_cfg = true;
+    const char* server_url = cfg_string("server_url", NULL, CFG_REQUIRED);
+    if (strcmp(server_url, "kiwisdr.example.com") == 0) {
+        cfg_set_string("server_url", "");
+        update_cfg = true;
     }
-    
-    // not sure I want to do this yet..
-    #if 0
+
+// not sure I want to do this yet..
+#if 0
         // Strange problem where cfg.sdr_hu_dom_sel seems to get changed occasionally between modes
         // DOM_SEL_NAM=0 and DOM_SEL_PUB=2. This can result in DOM_SEL_NAM selected but the corresponding
         // domain field blank which has bad consequences (e.g. TDoA host file corrupted).
@@ -394,71 +392,77 @@ void update_vars_from_config(bool called_at_init)
             // FIXME: but then server_url needs to be set when pub ip is detected
             update_cfg = true;
         }
-	#endif
-    cfg_string_free(server_url); server_url = NULL;
-    
+#endif
+    cfg_string_free(server_url);
+    server_url = NULL;
+
     // move kiwi.json tlimit_exempt_pwd to admin.json
-	if ((s = cfg_string("tlimit_exempt_pwd", NULL, CFG_OPTIONAL)) != NULL) {
-		admcfg_set_string("tlimit_exempt_pwd", s);
-	    cfg_string_free(s);
-	    cfg_rem_string("tlimit_exempt_pwd");
-	    update_cfg = update_admcfg = true;
-	} else {
+    if ((s = cfg_string("tlimit_exempt_pwd", NULL, CFG_OPTIONAL)) != NULL) {
+        admcfg_set_string("tlimit_exempt_pwd", s);
+        cfg_string_free(s);
+        cfg_rem_string("tlimit_exempt_pwd");
+        update_cfg = update_admcfg = true;
+    }
+    else {
         admcfg_default_string("tlimit_exempt_pwd", "", &update_admcfg);
     }
-    
-    // sdr.hu => rx.kiwisdr.com in status msg
-    char *status_msg = (char *) cfg_string("status_msg", NULL, CFG_REQUIRED);
-    bool caller_must_free;
-	char *nsm = kiwi_str_replace(status_msg, "sdr.hu", "rx.rx-888.com", &caller_must_free);
-	if (nsm) {
-	    nsm = kiwi_str_replace(nsm, "/?top=kiwi", "");  // shrinking, so nsm same memory space
-	    cfg_set_string("status_msg", nsm);
-	    if (caller_must_free) kiwi_ifree(nsm, "update_vars_from_config nsm");
-	    update_cfg = true;
-    }
-    cfg_string_free(status_msg); status_msg = NULL;
 
-    char *rx_name = (char *) cfg_string("rx_name", NULL, CFG_REQUIRED);
+    // sdr.hu => rx.kiwisdr.com in status msg
+    char* status_msg = (char*)cfg_string("status_msg", NULL, CFG_REQUIRED);
+    bool caller_must_free;
+    char* nsm = kiwi_str_replace(status_msg, "sdr.hu", "rx.rx-888.com", &caller_must_free);
+    if (nsm) {
+        nsm = kiwi_str_replace(nsm, "/?top=kiwi", ""); // shrinking, so nsm same memory space
+        cfg_set_string("status_msg", nsm);
+        if (caller_must_free) kiwi_ifree(nsm, "update_vars_from_config nsm");
+        update_cfg = true;
+    }
+    cfg_string_free(status_msg);
+    status_msg = NULL;
+
+    char* rx_name = (char*)cfg_string("rx_name", NULL, CFG_REQUIRED);
     // shrinking, so same memory space
-	nsm = kiwi_str_replace(rx_name, ", ZL/KF6VO, New Zealand", "");
-	if (nsm) {
+    nsm = kiwi_str_replace(rx_name, ", ZL/KF6VO, New Zealand", "");
+    if (nsm) {
         cfg_set_string("rx_name", nsm);
         update_cfg = true;
     }
-    cfg_string_free(rx_name); rx_name = NULL;
+    cfg_string_free(rx_name);
+    rx_name = NULL;
 
-    char *rx_title = (char *) cfg_string("index_html_params.RX_TITLE", NULL, CFG_REQUIRED);
+    char* rx_title = (char*)cfg_string("index_html_params.RX_TITLE", NULL, CFG_REQUIRED);
     // shrinking, so same memory space
-	nsm = kiwi_str_replace(rx_title, " at <a href='http://rx-888.com' target='_blank' onclick='dont_toggle_rx_photo()'>CALLSIGN</a>", "");
-	if (nsm) {
+    nsm = kiwi_str_replace(rx_title, " at <a href='http://rx-888.com' target='_blank' onclick='dont_toggle_rx_photo()'>CALLSIGN</a>", "");
+    if (nsm) {
         cfg_set_string("index_html_params.RX_TITLE", nsm);
         update_cfg = true;
     }
-    cfg_string_free(rx_title); rx_title = NULL;
+    cfg_string_free(rx_title);
+    rx_title = NULL;
 
     // change init.mode from mode menu idx to a mode string
-	n = cfg_int("init.mode", &err, CFG_OPTIONAL);
-	if (err) {
-	    s = cfg_string("init.mode", &err, CFG_OPTIONAL);
-	    if (err) {
-	        cfg_set_string("init.mode", "lsb");     // init.mode never existed?
-	        update_cfg = true;
-	    }
+    n = cfg_int("init.mode", &err, CFG_OPTIONAL);
+    if (err) {
+        s = cfg_string("init.mode", &err, CFG_OPTIONAL);
+        if (err) {
+            cfg_set_string("init.mode", "lsb"); // init.mode never existed?
+            update_cfg = true;
+        }
         cfg_string_free(s);
-	} else {
-	    cfg_rem_int("init.mode");
-	    cfg_set_string("init.mode", mode_lc[n]);
-	    update_cfg = true;
-	}
+    }
+    else {
+        cfg_rem_int("init.mode");
+        cfg_set_string("init.mode", mode_lc[n]);
+        update_cfg = true;
+    }
 
-	if (update_cfg)
-		cfg_save_json(cfg_cfg.json);    // during init doesn't conflict with admin cfg
+    if (update_cfg)
+        cfg_save_json(cfg_cfg.json); // during init doesn't conflict with admin cfg
 
 
-	// same, but for admin config
-	// currently just default values that need to exist
-	
+    // same, but for admin config
+    // currently just default values that need to exist
+
     admcfg_default_bool("server_enabled", true, &update_admcfg);
     admcfg_default_bool("auto_add_nat", false, &update_admcfg);
     admcfg_default_bool("duc_enable", false, &update_admcfg);
@@ -484,10 +488,10 @@ void update_vars_from_config(bool called_at_init)
     admin_keepalive = admcfg_default_bool("admin_keepalive", true, &update_admcfg);
     log_local_ip = admcfg_default_bool("log_local_ip", true, &update_admcfg);
     admcfg_default_bool("dx_comm_auto_download", true, &update_admcfg);
-    
+
     // decouple rx.kiwisdr.com and sdr.hu registration
     bool sdr_hu_register = admcfg_bool("sdr_hu_register", NULL, CFG_REQUIRED);
-	admcfg_bool("kiwisdr_com_register", &err, CFG_OPTIONAL);
+    admcfg_bool("kiwisdr_com_register", &err, CFG_OPTIONAL);
     // never set
     if (err) {
         admcfg_set_bool("kiwisdr_com_register", sdr_hu_register);
@@ -495,111 +499,111 @@ void update_vars_from_config(bool called_at_init)
     }
 
     // disable public registration if all the channels are full of WSPR/FT8 autorun
-	bool isPublic = admcfg_bool("kiwisdr_com_register", NULL, CFG_REQUIRED);
-	int wspr_autorun = cfg_int("WSPR.autorun", NULL, CFG_REQUIRED);
-	int ft8_autorun = cfg_int("ft8.autorun", NULL, CFG_REQUIRED);
-	if (isPublic && (wspr_autorun + ft8_autorun) >= rx_chans) {
-	    lprintf("REG: WSPR.autorun(%d) + ft8.autorun(%d) >= rx_chans(%d) -- DISABLING PUBLIC REGISTRATION\n", wspr_autorun, ft8_autorun, rx_chans);
+    bool isPublic = admcfg_bool("kiwisdr_com_register", NULL, CFG_REQUIRED);
+    int wspr_autorun = cfg_int("WSPR.autorun", NULL, CFG_REQUIRED);
+    int ft8_autorun = cfg_int("ft8.autorun", NULL, CFG_REQUIRED);
+    if (isPublic && (wspr_autorun + ft8_autorun) >= rx_chans) {
+        lprintf("REG: WSPR.autorun(%d) + ft8.autorun(%d) >= rx_chans(%d) -- DISABLING PUBLIC REGISTRATION\n", wspr_autorun, ft8_autorun, rx_chans);
         admcfg_set_bool("kiwisdr_com_register", false);
         update_admcfg = true;
-	}
+    }
 
     // historical uses of options parameter:
-    //int new_find_local = admcfg_int("options", NULL, CFG_REQUIRED) & 1;
+    // int new_find_local = admcfg_int("options", NULL, CFG_REQUIRED) & 1;
     admcfg_default_int("options", 0, &update_admcfg);
 
     admcfg_default_bool("GPS_tstamp", true, &update_admcfg);
     admcfg_default_int("rssi_azel_iq", 0, &update_admcfg);
-    
-    #ifdef CRYPT_PW
-    
-        // Either:
-        // 1) Transitioning on startup from passwords stored in admin.json file from a prior version
-        //      (.eup/.eap files will not exist).
-        // or
-        // 2) In response to a password change from the admin UI (sequence number will increment).
-        //
-        // Generates and saves a new salt/hash in either case.
-        // The old {user,admin}_password fields are kept because other code needs to know when
-        // the password is blank/empty. So it is either set to the empty string or "(encrypted)".
-        // This does not preclude the user from using the string "(encrypted)" as an actual password.
-        
-        bool ok;
-        const char *key;
-        char *encrypted;
-        static u4_t user_pwd_seq, admin_pwd_seq;
-        
-        if (called_at_init) {
-            user_pwd_seq = admcfg_default_int("user_pwd_seq", 0, &update_admcfg);
-            admin_pwd_seq = admcfg_default_int("admin_pwd_seq", 0, &update_admcfg);
-        }
-        u4_t updated_user_pwd_seq = admcfg_int("user_pwd_seq", NULL, CFG_REQUIRED);
-        u4_t updated_admin_pwd_seq = admcfg_int("admin_pwd_seq", NULL, CFG_REQUIRED);
 
-        bool eup_exists = kiwi_file_exists(DIR_CFG "/.eup");
-        bool user_seq_diff = (user_pwd_seq != updated_user_pwd_seq);
-        if (!eup_exists || user_seq_diff) {
-            user_pwd_seq = updated_user_pwd_seq;
-    	    key = admcfg_string("user_password", NULL, CFG_REQUIRED);
-    	    
-    	    if (!eup_exists) {
-    	        // if hash file is missing, but key indicates encryption previously used, make key empty
-    	        if (key && strcmp(key, "(encrypted)") == 0) {
-                    cfg_string_free(key);
-                    key = NULL;
-                }
-    	    }
+#ifdef CRYPT_PW
 
-            encrypted = kiwi_crypt_generate(key, user_pwd_seq);
-            printf("### user crypt ok=%d seq=%d key=<%s> => %s\n", ok, updated_user_pwd_seq, key, encrypted);
-            n = kiwi_file_write("eup", DIR_CFG "/.eup", encrypted, strlen(encrypted), /* add_nl */ true);
-            free(encrypted);
+    // Either:
+    // 1) Transitioning on startup from passwords stored in admin.json file from a prior version
+    //      (.eup/.eap files will not exist).
+    // or
+    // 2) In response to a password change from the admin UI (sequence number will increment).
+    //
+    // Generates and saves a new salt/hash in either case.
+    // The old {user,admin}_password fields are kept because other code needs to know when
+    // the password is blank/empty. So it is either set to the empty string or "(encrypted)".
+    // This does not preclude the user from using the string "(encrypted)" as an actual password.
 
-            if (n) {
-                admcfg_set_string("user_password", (key == NULL || *key == '\0')? "" : "(encrypted)");
-                update_admcfg = true;
+    bool ok;
+    const char* key;
+    char* encrypted;
+    static u4_t user_pwd_seq, admin_pwd_seq;
+
+    if (called_at_init) {
+        user_pwd_seq = admcfg_default_int("user_pwd_seq", 0, &update_admcfg);
+        admin_pwd_seq = admcfg_default_int("admin_pwd_seq", 0, &update_admcfg);
+    }
+    u4_t updated_user_pwd_seq = admcfg_int("user_pwd_seq", NULL, CFG_REQUIRED);
+    u4_t updated_admin_pwd_seq = admcfg_int("admin_pwd_seq", NULL, CFG_REQUIRED);
+
+    bool eup_exists = kiwi_file_exists(DIR_CFG "/.eup");
+    bool user_seq_diff = (user_pwd_seq != updated_user_pwd_seq);
+    if (!eup_exists || user_seq_diff) {
+        user_pwd_seq = updated_user_pwd_seq;
+        key = admcfg_string("user_password", NULL, CFG_REQUIRED);
+
+        if (!eup_exists) {
+            // if hash file is missing, but key indicates encryption previously used, make key empty
+            if (key && strcmp(key, "(encrypted)") == 0) {
+                cfg_string_free(key);
+                key = NULL;
             }
-
-            cfg_string_free(key);
         }
 
-        bool eap_exists = kiwi_file_exists(DIR_CFG "/.eap");
-        bool admin_seq_diff = (admin_pwd_seq != updated_admin_pwd_seq);
-        if (!eap_exists || admin_seq_diff) {
-            admin_pwd_seq = updated_admin_pwd_seq;
-    	    key = admcfg_string("admin_password", NULL, CFG_REQUIRED);
+        encrypted = kiwi_crypt_generate(key, user_pwd_seq);
+        printf("### user crypt ok=%d seq=%d key=<%s> => %s\n", ok, updated_user_pwd_seq, key, encrypted);
+        n = kiwi_file_write("eup", DIR_CFG "/.eup", encrypted, strlen(encrypted), /* add_nl */ true);
+        free(encrypted);
 
-    	    if (!eap_exists) {
-    	        // if hash file is missing, but key indicates encryption previously used, make key empty
-    	        if (key && strcmp(key, "(encrypted)") == 0) {
-                    cfg_string_free(key);
-                    key = NULL;
-                }
-    	    }
+        if (n) {
+            admcfg_set_string("user_password", (key == NULL || *key == '\0') ? "" : "(encrypted)");
+            update_admcfg = true;
+        }
 
-            encrypted = kiwi_crypt_generate(key, admin_pwd_seq);
-            printf("### admin crypt ok=%d seq=%d key=<%s> => %s\n", ok, updated_admin_pwd_seq, key, encrypted);
-            n = kiwi_file_write("eap", DIR_CFG "/.eap", encrypted, strlen(encrypted), /* add_nl */ true);
-            free(encrypted);
+        cfg_string_free(key);
+    }
 
-            if (n) {
-                admcfg_set_string("admin_password", (key == NULL || *key == '\0')? "" : "(encrypted)");
-                update_admcfg = true;
+    bool eap_exists = kiwi_file_exists(DIR_CFG "/.eap");
+    bool admin_seq_diff = (admin_pwd_seq != updated_admin_pwd_seq);
+    if (!eap_exists || admin_seq_diff) {
+        admin_pwd_seq = updated_admin_pwd_seq;
+        key = admcfg_string("admin_password", NULL, CFG_REQUIRED);
+
+        if (!eap_exists) {
+            // if hash file is missing, but key indicates encryption previously used, make key empty
+            if (key && strcmp(key, "(encrypted)") == 0) {
+                cfg_string_free(key);
+                key = NULL;
             }
-
-            cfg_string_free(key);
         }
-    #endif
-    
+
+        encrypted = kiwi_crypt_generate(key, admin_pwd_seq);
+        printf("### admin crypt ok=%d seq=%d key=<%s> => %s\n", ok, updated_admin_pwd_seq, key, encrypted);
+        n = kiwi_file_write("eap", DIR_CFG "/.eap", encrypted, strlen(encrypted), /* add_nl */ true);
+        free(encrypted);
+
+        if (n) {
+            admcfg_set_string("admin_password", (key == NULL || *key == '\0') ? "" : "(encrypted)");
+            update_admcfg = true;
+        }
+
+        cfg_string_free(key);
+    }
+#endif
+
     // FIXME: resolve problem of ip_address.xxx vs ip_address:{xxx} in .json files
-    //admcfg_default_bool("ip_address.use_static", false, &update_admcfg);
+    // admcfg_default_bool("ip_address.use_static", false, &update_admcfg);
 
-	if (update_admcfg)
-		admcfg_save_json(cfg_adm.json);     // during init doesn't conflict with admin cfg
+    if (update_admcfg)
+        admcfg_save_json(cfg_adm.json); // during init doesn't conflict with admin cfg
 
 
     // one-time-per-run initializations
-    
+
     static bool initial_clk_adj;
     if (!initial_clk_adj) {
         int clk_adj = cfg_int("clk_adj", &err, CFG_OPTIONAL);

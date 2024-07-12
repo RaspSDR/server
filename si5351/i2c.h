@@ -27,17 +27,18 @@
 
 class I2C {
 public:
-  I2C(uint8_t, uint8_t);
-  virtual ~I2C();
-  int32_t read_byte(uint8_t);
-  int32_t write_byte(uint8_t, uint8_t);
-  int32_t write_bulk(uint8_t, uint8_t*, uint8_t);
+    I2C(uint8_t, uint8_t);
+    virtual ~I2C();
+    int32_t read_byte(uint8_t);
+    int32_t write_byte(uint8_t, uint8_t);
+    int32_t write_bulk(uint8_t, uint8_t*, uint8_t);
+
 private:
-  int _bus_addr;
-  int _dev_addr;
-  char _filename[64];
-  int _fd;
-  int32_t set_device_address(uint8_t);
+    int _bus_addr;
+    int _dev_addr;
+    char _filename[64];
+    int _fd;
+    int32_t set_device_address(uint8_t);
 };
 
 #endif /* I2C_H_ */

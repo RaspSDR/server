@@ -26,10 +26,10 @@ Boston, MA  02110-1301, USA.
 
 //#define CRYPT_PW
 
-extern char *current_authkey;
+extern char* current_authkey;
 
-char *kiwi_authkey();
+char* kiwi_authkey();
 
-bool kiwi_crypt_file_read(const char *fn, int *seq, char **salt, char **hash);
-char *kiwi_crypt_generate(const char *key, int seq);
-bool kiwi_crypt_validate(const char *key, char *salt, char *hash);
+bool kiwi_crypt_file_read(const char* fn, int* seq, char** salt, char** hash);
+char* kiwi_crypt_generate(const char* key, int seq);
+bool kiwi_crypt_validate(const char* key, char* salt, char* hash);

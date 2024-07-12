@@ -26,12 +26,12 @@ Boston, MA  02110-1301, USA.
 #include "ima_adpcm.h"
 #include "ext.h"
 
-#define CMD_FREQ		0x01
-#define CMD_MODE		0x02
-#define CMD_PASSBAND	0x04
-#define CMD_AGC			0x08
-#define	CMD_AR_OK		0x10
-#define	CMD_ALL			(CMD_FREQ | CMD_MODE | CMD_PASSBAND | CMD_AGC | CMD_AR_OK)
+#define CMD_FREQ     0x01
+#define CMD_MODE     0x02
+#define CMD_PASSBAND 0x04
+#define CMD_AGC      0x08
+#define CMD_AR_OK    0x10
+#define CMD_ALL      (CMD_FREQ | CMD_MODE | CMD_PASSBAND | CMD_AGC | CMD_AR_OK)
 
 #define LOOP_BC 1024
 
@@ -46,12 +46,12 @@ extern CFastFIR m_chan_null_FIR[MAX_RX_CHANS];
 extern CFir m_AM_FIR[MAX_RX_CHANS];
 
 #ifdef OPTION_EXPERIMENT_CICF
-    extern CFir m_CICF_FIR[MAX_RX_CHANS];
+extern CFir m_CICF_FIR[MAX_RX_CHANS];
 #endif
 
-extern CFir m_nfm_deemp_FIR[MAX_RX_CHANS];     // see: tools/FIR.m
+extern CFir m_nfm_deemp_FIR[MAX_RX_CHANS]; // see: tools/FIR.m
 extern CFir m_am_ssb_deemp_FIR[MAX_RX_CHANS];
 
-extern CIir m_deemp_Biquad[MAX_RX_CHANS];      // see: tools/biquad.MZT.m
+extern CIir m_deemp_Biquad[MAX_RX_CHANS]; // see: tools/biquad.MZT.m
 
-void rx_sound_cmd(conn_t *conn, double frate, int n, char *cmd);
+void rx_sound_cmd(conn_t* conn, double frate, int n, char* cmd);

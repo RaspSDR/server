@@ -30,14 +30,14 @@
 
 typedef std::complex<double> cmplx;
 
-inline cmplx cmac (const cmplx *a, const cmplx *b, int ptr, int len) {
-	cmplx z;
-	ptr %= len;
-	for (int i = 0; i < len; i++) {
-		z += a[i] * b[ptr];
-		ptr = (ptr + 1) % len;
-		}
-	return z;
+inline cmplx cmac(const cmplx* a, const cmplx* b, int ptr, int len) {
+    cmplx z;
+    ptr %= len;
+    for (int i = 0; i < len; i++) {
+        z += a[i] * b[ptr];
+        ptr = (ptr + 1) % len;
+    }
+    return z;
 }
 
 #endif

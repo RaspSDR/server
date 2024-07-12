@@ -24,18 +24,18 @@ Boston, MA  02110-1301, USA.
 #include "cuteSDR.h"
 
 #include <atomic>
-			
-#define N_DPBUF	128
+
+#define N_DPBUF 128
 
 typedef struct {
     std::atomic<u4_t> wr_pos, rd_pos;
     // array size really nrx_samps but made pow2 FASTFIR_OUTBUF_SIZE for indexing efficiency
     TYPECPX in_samps[N_DPBUF][FASTFIR_OUTBUF_SIZE];
     u64_t ticks[N_DPBUF];
-    #ifdef SND_SEQ_CHECK
-        u4_t in_seq[N_DPBUF];
-    #endif
-    
+#ifdef SND_SEQ_CHECK
+    u4_t in_seq[N_DPBUF];
+#endif
+
     TYPECPX agc_samples_c[FASTFIR_OUTBUF_SIZE];
 
     TYPEREAL demod_samples_r[FASTFIR_OUTBUF_SIZE];
@@ -45,15 +45,15 @@ typedef struct {
     std::atomic<u4_t> real_seq;
     u4_t real_seqnum[N_DPBUF];
     TYPEMONO16 real_samples_s2[N_DPBUF][FASTFIR_OUTBUF_SIZE];
-    
-    int freqHz[N_DPBUF];    // approx freq in effect when buffer captured
+
+    int freqHz[N_DPBUF]; // approx freq in effect when buffer captured
 } rx_dpump_t;
 
 extern rx_dpump_t rx_dpump[MAX_RX_CHANS];
 
 typedef struct {
     // IQ mode input buf for DRM etc.
-    u4_t iq_wr_pos;     // readers maintain their own private iq_rd_pos
+    u4_t iq_wr_pos; // readers maintain their own private iq_rd_pos
     u4_t iq_seq, iq_seqnum[N_DPBUF];
     TYPECPX iq_samples[N_DPBUF][FASTFIR_OUTBUF_SIZE];
 } iq_buf_t;
@@ -66,10 +66,10 @@ typedef struct {
 #include "shmem.h"
 
 #ifdef RX_SHMEM_DISABLE
-    extern rx_shmem_t *rx_shmem_p;
-    #define RX_SHMEM rx_shmem_p
+extern rx_shmem_t* rx_shmem_p;
+#define RX_SHMEM rx_shmem_p
 #else
-    #define RX_SHMEM (&shmem->rx_shmem)
+#define RX_SHMEM (&shmem->rx_shmem)
 #endif
 
 typedef struct {

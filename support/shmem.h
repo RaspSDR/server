@@ -32,47 +32,47 @@ Boston, MA  02110-1301, USA.
 
 // needed because Debian 7 configs don't include extensions/DRM in search paths
 #ifdef DRM
- #include "DRM.h"
+#include "DRM.h"
 #else
- #define DRM_SHMEM_DISABLE
- 
- #ifndef DRM_MAX_RX
-    #define DRM_MAX_RX 0
- #endif
+#define DRM_SHMEM_DISABLE
+
+#ifndef DRM_MAX_RX
+#define DRM_MAX_RX 0
+#endif
 #endif
 
 #include <signal.h>
 
-#define N_SHMEM_STATUS              4
-#define N_SHMEM_STATUS_STR_MEDIUM   256
-#define N_SHMEM_STATUS_STR_LARGE    1024
+#define N_SHMEM_STATUS            4
+#define N_SHMEM_STATUS_STR_MEDIUM 256
+#define N_SHMEM_STATUS_STR_LARGE  1024
 
 #ifndef linux
- #define SIGRTMIN 0
- #define SIGRTMAX 0
+#define SIGRTMIN 0
+#define SIGRTMAX 0
 #endif
 
-#define SIG_DEBUG       SIGUSR1
+#define SIG_DEBUG SIGUSR1
 
-#define SIG_IPC_MIN     SIGRTMIN
-#define SIG_IPC_SPI     SIG_IPC_MIN
-#define SIG_IPC_WF      (SIG_IPC_SPI + 1)
-#define SIG_IPC_WSPR    (SIG_IPC_WF + 1)
-#define SIG_IPC_DRM     (SIG_IPC_WSPR + MAX_RX_CHANS)
-#define SIG_BACKTRACE   (SIG_IPC_DRM + DRM_MAX_RX)
-#define SIG_MAX_USED    (1 + 1 + MAX_RX_CHANS + DRM_MAX_RX + 1)      // done this way because SIGRTMIN is not a constant
+#define SIG_IPC_MIN   SIGRTMIN
+#define SIG_IPC_SPI   SIG_IPC_MIN
+#define SIG_IPC_WF    (SIG_IPC_SPI + 1)
+#define SIG_IPC_WSPR  (SIG_IPC_WF + 1)
+#define SIG_IPC_DRM   (SIG_IPC_WSPR + MAX_RX_CHANS)
+#define SIG_BACKTRACE (SIG_IPC_DRM + DRM_MAX_RX)
+#define SIG_MAX_USED  (1 + 1 + MAX_RX_CHANS + DRM_MAX_RX + 1) // done this way because SIGRTMIN is not a constant
 
-#define SIG2IPC(sig)    ((sig) - SIG_IPC_MIN)
+#define SIG2IPC(sig) ((sig)-SIG_IPC_MIN)
 
 typedef struct {
-    #define N_SHMEM_PNAME 16
+#define N_SHMEM_PNAME 16
     char pname[N_SHMEM_PNAME];
     int tid;
     funcPI_t func;
     int child_sig, child_signalled;
     int parent_pid, child_pid;
     int which_hiwat;
-    #define N_SHMEM_WHICH 32
+#define N_SHMEM_WHICH 32
     u4_t request[N_SHMEM_WHICH], done[N_SHMEM_WHICH];
     u4_t request_tx, request_rx, request_func[2];
     bool no_wait[N_SHMEM_WHICH];
@@ -80,29 +80,29 @@ typedef struct {
 
 #ifdef SHMEM_CONFIG_H_INCLUDED
 #else
-    #warning shmem_config.h not included
-    #define DRM_SHMEM_DISABLE
-    #define RX_SHMEM_DISABLE
+#warning shmem_config.h not included
+#define DRM_SHMEM_DISABLE
+#define RX_SHMEM_DISABLE
 #endif
 
 typedef struct {
     shmem_ipc_t ipc[SIG_MAX_USED];
 
-    #ifdef RX_SHMEM_DISABLE
-    #else
-        rx_shmem_t rx_shmem;
-    #endif
+#ifdef RX_SHMEM_DISABLE
+#else
+    rx_shmem_t rx_shmem;
+#endif
 
-    #ifdef DRM_SHMEM_DISABLE
-    #else
-        drm_shmem_t drm_shmem;
-    #endif
+#ifdef DRM_SHMEM_DISABLE
+#else
+    drm_shmem_t drm_shmem;
+#endif
 } shmem_t;
 
-extern shmem_t *shmem;
+extern shmem_t* shmem;
 
 void shmem_init();
-void sig_arm(int signal, funcPI_t handler, int flags=0);
-void shmem_ipc_invoke(int signal, int which=0, int wait=1);
-int shmem_ipc_poll(int signal, int poll_msec, int which=0);
-void shmem_ipc_setup(const char *pname, int signal, funcPI_t func);
+void sig_arm(int signal, funcPI_t handler, int flags = 0);
+void shmem_ipc_invoke(int signal, int which = 0, int wait = 1);
+int shmem_ipc_poll(int signal, int poll_msec, int which = 0);
+void shmem_ipc_setup(const char* pname, int signal, funcPI_t func);

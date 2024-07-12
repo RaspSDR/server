@@ -42,40 +42,35 @@ dpump_t dpump;
 
 bool have_snd_users;
 static rx_shmem_t rx_shmem;
-rx_shmem_t *rx_shmem_p = &rx_shmem;
+rx_shmem_t* rx_shmem_p = &rx_shmem;
 
 // rescale factor from hardware samples to what CuteSDR code is expecting
 const TYPEREAL rescale = MPOW(2, -RXOUT_SCALE + CUTESDR_SCALE);
 static u4_t last_run_us;
 
 #ifdef SND_SEQ_CHECK
-	static bool initial_seq;
-	static u2_t snd_seq;
+static bool initial_seq;
+static u2_t snd_seq;
 #endif
 
 s4_t snd_data[MAX_RX_CHANS * 2 * MAX_NRX_SAMPS];
 
-static void snd_service()
-{
+static void snd_service() {
     u4_t diff, moved = 0;
 
     evLatency(EC_EVENT, EV_DPUMP, 0, "DATAPUMP", "snd_service() BEGIN");
-    do
-    {
-        TYPECPX *i_samps[MAX_RX_CHANS];
-        for (int ch = 0; ch < rx_chans; ch++)
-        {
-            rx_dpump_t *rx = &rx_dpump[ch];
+    do {
+        TYPECPX* i_samps[MAX_RX_CHANS];
+        for (int ch = 0; ch < rx_chans; ch++) {
+            rx_dpump_t* rx = &rx_dpump[ch];
             i_samps[ch] = rx->in_samps[rx->wr_pos];
         }
 
         fpga_read_rx(snd_data, sizeof(s4_t) * 2 * rx_chans * nrx_samps);
 
-        for (int i = 0; i < nrx_samps;i++)
-        {
-            s4_t *data = &snd_data[i * 2 * rx_chans];
-            for (int ch = 0; ch < rx_chans; ch++)
-            {
+        for (int i = 0; i < nrx_samps; i++) {
+            s4_t* data = &snd_data[i * 2 * rx_chans];
+            for (int ch = 0; ch < rx_chans; ch++) {
                 s4_t i, q;
                 i = data[ch * 2];
                 q = data[ch * 2 + 1];
@@ -91,11 +86,9 @@ static void snd_service()
         }
 
         // move wr_pos to inform reader to consume
-        for (int ch = 0; ch < rx_chans; ch++)
-        {
-            if (rx_channels[ch].data_enabled)
-            {
-                rx_dpump_t *rx = &rx_dpump[ch];
+        for (int ch = 0; ch < rx_chans; ch++) {
+            if (rx_channels[ch].data_enabled) {
+                rx_dpump_t* rx = &rx_dpump[ch];
 
                 rx->ticks[rx->wr_pos] = 0;
 
@@ -110,8 +103,7 @@ static void snd_service()
 
 // #define DATA_PUMP_DEBUG
 #ifdef DATA_PUMP_DEBUG
-                if (rx->wr_pos == rx->rd_pos)
-                {
+                if (rx->wr_pos == rx->rd_pos) {
                     real_printf("#%d ", ch);
                     fflush(stdout);
                 }
@@ -123,8 +115,7 @@ static void snd_service()
 
         evLatency(EC_EVENT, EV_DPUMP, 0, "DATAPUMP", evprintf("MOVED %d diff %d sto %d cur %d %.3f msec", moved, diff, stored, current, (timer_us() - last_run_us) / 1e3));
 
-        if (dpump.force_reset)
-        {
+        if (dpump.force_reset) {
             if (!dpump.force_reset)
                 dpump.resets++;
             dpump.force_reset = false;
@@ -133,8 +124,7 @@ static void snd_service()
 #ifdef EV_MEAS_DPUMP_LATENCY
             // if (ev_dump /*&& dpump.resets > 1*/) {
             u4_t last = timer_us() - last_run_us;
-            if ((ev_dump || bg) && last_run_us != 0 && last >= 40000)
-            {
+            if ((ev_dump || bg) && last_run_us != 0 && last >= 40000) {
                 evLatency(EC_EVENT, EV_DPUMP, 0, "DATAPUMP", evprintf("latency %.3f msec", last / 1e3));
                 evLatency(EC_DUMP, EV_DPUMP, ev_dump, "DATAPUMP", evprintf("DUMP in %.3f sec", ev_dump / 1000.0));
             }
@@ -151,8 +141,7 @@ static void snd_service()
             memset(dpump.in_hist, 0, sizeof(dpump.in_hist));
             diff = 0;
         }
-        else
-        {
+        else {
             dpump.hist[diff]++;
 #if 0
                 if (ev_dump && p1 && p2 && dpump.hist[p1] > p2) {
@@ -169,64 +158,62 @@ static void snd_service()
     evLatency(EC_EVENT, EV_DPUMP, 0, "DATAPUMP", evprintf("MOVED %d", moved));
 }
 
-static void data_pump(void *param)
-{
-	while (1) {
+static void data_pump(void* param) {
+    while (1) {
 
-		//#define MEAS_DATA_PUMP
-		#ifdef MEAS_DATA_PUMP
-		    u4_t quanta = FROM_VOID_PARAM(TaskSleepReason("wait for interrupt"));
-            static u4_t last, cps, max_quanta, sum_quanta;
-            u4_t now = timer_sec();
-            if (last != now) {
-                for (; last < now; last++) {
-                    if (last < (now-1))
-                        real_printf("d- ");
-                    else
-                        real_printf("d%d|%d/%d ", cps, sum_quanta/(cps? cps:1), max_quanta);
-                    fflush(stdout);
-                }
-                max_quanta = sum_quanta = 0;
-                cps = 0;
-            } else {
-                if (quanta > max_quanta) max_quanta = quanta;
-                sum_quanta += quanta;
-                cps++;
+//#define MEAS_DATA_PUMP
+#ifdef MEAS_DATA_PUMP
+        u4_t quanta = FROM_VOID_PARAM(TaskSleepReason("wait for interrupt"));
+        static u4_t last, cps, max_quanta, sum_quanta;
+        u4_t now = timer_sec();
+        if (last != now) {
+            for (; last < now; last++) {
+                if (last < (now - 1))
+                    real_printf("d- ");
+                else
+                    real_printf("d%d|%d/%d ", cps, sum_quanta / (cps ? cps : 1), max_quanta);
+                fflush(stdout);
             }
-        #endif
+            max_quanta = sum_quanta = 0;
+            cps = 0;
+        }
+        else {
+            if (quanta > max_quanta) max_quanta = quanta;
+            sum_quanta += quanta;
+            cps++;
+        }
+#endif
 
-		snd_service();
-		
-		for (int ch=0; ch < rx_chans; ch++) {
-			rx_chan_t *rx = &rx_channels[ch];
-			if (!rx->chan_enabled) continue;
-			conn_t *c = rx->conn;
-			assert(c != NULL);
-			assert(c->type == STREAM_SOUND);
-			if (c->task) {
-				TaskWakeup(c->task);
-			}
-		}
-	}
+        snd_service();
+
+        for (int ch = 0; ch < rx_chans; ch++) {
+            rx_chan_t* rx = &rx_channels[ch];
+            if (!rx->chan_enabled) continue;
+            conn_t* c = rx->conn;
+            assert(c != NULL);
+            assert(c->type == STREAM_SOUND);
+            if (c->task) {
+                TaskWakeup(c->task);
+            }
+        }
+    }
 }
 
-void data_pump_start_stop()
-{
-	bool no_users = true;
-	for (int i = 0; i < rx_chans; i++) {
-        rx_chan_t *rx = &rx_channels[i];
-		if (rx->chan_enabled) {
-			no_users = false;
-			break;
-		}
-	}
-	
-	have_snd_users = !no_users;
+void data_pump_start_stop() {
+    bool no_users = true;
+    for (int i = 0; i < rx_chans; i++) {
+        rx_chan_t* rx = &rx_channels[i];
+        if (rx->chan_enabled) {
+            no_users = false;
+            break;
+        }
+    }
+
+    have_snd_users = !no_users;
 }
 
-void data_pump_init()
-{
-	//printf("data pump: rescale=%.6g\n", rescale);
+void data_pump_init() {
+    // printf("data pump: rescale=%.6g\n", rescale);
     fpga_start_rx();
-	CreateTaskF(data_pump, 0, DATAPUMP_PRIORITY, 0);
+    CreateTaskF(data_pump, 0, DATAPUMP_PRIORITY, 0);
 }

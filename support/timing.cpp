@@ -55,70 +55,64 @@ So total amount is (max-p)+n
 |
 |-----------------------| n
 |-----------------------------------| p     n < p case (slightly strange)
-|                       |-----------| p-n   
+|                       |-----------| p-n
 |======================>|           |================>| ans = (max-p)+n
 |
 +-----------------------------------------------------|
 
 */
 
-u4_t time_diff(u4_t next, u4_t prev)
-{
-	u4_t diff;
-	
-	if (next >= prev)
-		diff = next - prev;
-	else
-		diff = (0xffffffffU - prev) + next;	// i.e. amount outside prev - next
-	
-	return diff;
+u4_t time_diff(u4_t next, u4_t prev) {
+    u4_t diff;
+
+    if (next >= prev)
+        diff = next - prev;
+    else
+        diff = (0xffffffffU - prev) + next; // i.e. amount outside prev - next
+
+    return diff;
 }
 
 // difference of two u4_t values expressed as a signed quantity
-s64_t time_diff_s(u4_t a, u4_t b)
-{
-	s64_t diff;
-	
-	if (a >= b)
-		diff = a - b;
-	else
-		diff = -(b - a);
-	
-	return diff;
+s64_t time_diff_s(u4_t a, u4_t b) {
+    s64_t diff;
+
+    if (a >= b)
+        diff = a - b;
+    else
+        diff = -(b - a);
+
+    return diff;
 }
 
-u64_t time_diff48(u64_t next, u64_t prev)
-{
-	u64_t diff;
-	
-	if (next >= prev)
-		diff = next - prev;
-	else
-		diff = (0x0000ffffffffffffULL - prev) + next;	// i.e. amount outside prev - next
-	
-	return diff;
+u64_t time_diff48(u64_t next, u64_t prev) {
+    u64_t diff;
+
+    if (next >= prev)
+        diff = next - prev;
+    else
+        diff = (0x0000ffffffffffffULL - prev) + next; // i.e. amount outside prev - next
+
+    return diff;
 }
 
-void spin_ms(u4_t msec)
-{
-	u4_t tref = timer_ms(), diff;
-	
-	do {
-		diff = time_diff(timer_ms(), tref);
-	} while (diff < msec);
+void spin_ms(u4_t msec) {
+    u4_t tref = timer_ms(), diff;
+
+    do {
+        diff = time_diff(timer_ms(), tref);
+    } while (diff < msec);
 }
 
-void spin_us(u4_t usec)
-{
-	u4_t tref = timer_us(), diff;
-	
-	do {
-		diff = time_diff(timer_us(), tref);
-	} while (diff < usec);
+void spin_us(u4_t usec) {
+    u4_t tref = timer_us(), diff;
+
+    do {
+        diff = time_diff(timer_us(), tref);
+    } while (diff < usec);
 }
 
-void kiwi_usleep(u4_t usec)
-{
+void kiwi_usleep(u4_t usec) {
     struct timespec tv;
     memset(&tv, 0, sizeof(tv));
     tv.tv_sec = usec / 1000000;

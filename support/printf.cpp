@@ -32,113 +32,104 @@ static bool log_ordinary_printfs = false;
 
 log_save_t log_save;
 
-void kiwi_exit_dont_use(int err)
-{
+void kiwi_exit_dont_use(int err) {
     panic("don't use exit() -- use kiwi_exit() instead");
 }
 
-void kiwi_exit(int err)
-{
-	fflush(stdout);
-	spin_ms(1000);	// needed for syslog messages to be properly recorded
-	closelog();
-    #undef exit
-        exit(err);
-    #define exit ALT_EXIT
+void kiwi_exit(int err) {
+    fflush(stdout);
+    spin_ms(1000); // needed for syslog messages to be properly recorded
+    closelog();
+#undef exit
+    exit(err);
+#define exit ALT_EXIT
 }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winline-asm"
-void kiwi_backtrace(const char *id, u4_t printf_type)
-{
-	unw_cursor_t cursor;
-	unw_context_t context;
-	char symbol[256];
+void kiwi_backtrace(const char* id, u4_t printf_type) {
+    unw_cursor_t cursor;
+    unw_context_t context;
+    char symbol[256];
 
-	unw_getcontext(&context);
-	unw_init_local(&cursor, &context);
+    unw_getcontext(&context);
+    unw_init_local(&cursor, &context);
 
-	int n = 0;
-	printf("%s:\n", id);
-	while (unw_step(&cursor))
-	{
-		unw_word_t ip, sp, off;
+    int n = 0;
+    printf("%s:\n", id);
+    while (unw_step(&cursor)) {
+        unw_word_t ip, sp, off;
 
-		unw_get_reg(&cursor, UNW_REG_IP, &ip);
-		unw_get_reg(&cursor, UNW_REG_SP, &sp);
+        unw_get_reg(&cursor, UNW_REG_IP, &ip);
+        unw_get_reg(&cursor, UNW_REG_SP, &sp);
 
-		const char *name;
+        const char* name;
 
-		if (!unw_get_proc_name(&cursor, symbol, sizeof(symbol), &off))
-		{
-			int status;
-			size_t length = sizeof(symbol);
-			if ((name = abi::__cxa_demangle(symbol, symbol, &length, &status)) == 0)
-				name = "<unknown>";
-		}
+        if (!unw_get_proc_name(&cursor, symbol, sizeof(symbol), &off)) {
+            int status;
+            size_t length = sizeof(symbol);
+            if ((name = abi::__cxa_demangle(symbol, symbol, &length, &status)) == 0)
+                name = "<unknown>";
+        }
 
-		printf("#%-2d 0x%016" PRIxPTR " sp=0x%016" PRIxPTR " %s + 0x%" PRIxPTR "\n",
-			   ++n,
-			   static_cast<uintptr_t>(ip),
-			   static_cast<uintptr_t>(sp),
-			   name,
-			   static_cast<uintptr_t>(off));
-	}
+        printf("#%-2d 0x%016" PRIxPTR " sp=0x%016" PRIxPTR " %s + 0x%" PRIxPTR "\n",
+               ++n,
+               static_cast<uintptr_t>(ip),
+               static_cast<uintptr_t>(sp),
+               name,
+               static_cast<uintptr_t>(off));
+    }
 }
 #pragma clang diagnostic pop
 
-void _panic(const char *str, bool coreFile, const char *file, int line)
-{
-	char *buf;
-	
-	if (ev_dump) ev(EC_DUMP_CONT, EV_PRINTF, -1, "panic", "dump");
-	asprintf(&buf, "%s: \"%s\" (%s, line %d)", coreFile? "DUMP":"PANIC", str, file, line);
+void _panic(const char* str, bool coreFile, const char* file, int line) {
+    char* buf;
 
-	if (background_mode || log_foreground_mode) {
-		syslog(LOG_ERR, "%s\n", buf);
-	}
-	
-	printf("%s\n", buf);
-	kiwi_backtrace("panic");
-	if (coreFile) abort();
-	kiwi_exit(-1);
+    if (ev_dump) ev(EC_DUMP_CONT, EV_PRINTF, -1, "panic", "dump");
+    asprintf(&buf, "%s: \"%s\" (%s, line %d)", coreFile ? "DUMP" : "PANIC", str, file, line);
+
+    if (background_mode || log_foreground_mode) {
+        syslog(LOG_ERR, "%s\n", buf);
+    }
+
+    printf("%s\n", buf);
+    kiwi_backtrace("panic");
+    if (coreFile) abort();
+    kiwi_exit(-1);
 }
 
-void _real_panic(const char *str, bool coreFile, const char *file, int line)
-{
-	char *buf;
-	
-	if (ev_dump) ev(EC_DUMP_CONT, EV_PRINTF, -1, "panic", "dump");
-	asprintf(&buf, "%s: \"%s\" (%s, line %d)", coreFile? "DUMP":"PANIC", str, file, line);
+void _real_panic(const char* str, bool coreFile, const char* file, int line) {
+    char* buf;
 
-	if (background_mode || log_foreground_mode) {
-		syslog(LOG_ERR, "%s\n", buf);
-	}
-	
-	real_printf("%s\n", buf);
-	//kiwi_backtrace("panic");
-	if (coreFile) abort();
-	kiwi_exit(-1);
+    if (ev_dump) ev(EC_DUMP_CONT, EV_PRINTF, -1, "panic", "dump");
+    asprintf(&buf, "%s: \"%s\" (%s, line %d)", coreFile ? "DUMP" : "PANIC", str, file, line);
+
+    if (background_mode || log_foreground_mode) {
+        syslog(LOG_ERR, "%s\n", buf);
+    }
+
+    real_printf("%s\n", buf);
+    // kiwi_backtrace("panic");
+    if (coreFile) abort();
+    kiwi_exit(-1);
 }
 
-void _sys_panic(const char *str, const char *file, int line)
-{
-	char *buf;
-	
-	// errno might be overwritten if the malloc inside asprintf fails
-	asprintf(&buf, "SYS_PANIC: \"%s\" %s (%s, line %d)", str, strerror(errno), file, line);
+void _sys_panic(const char* str, const char* file, int line) {
+    char* buf;
 
-	if (background_mode || log_foreground_mode) {
-		syslog(LOG_ERR, "%s %m\n", buf);
-	}
-	
-	printf("%s %s\n", buf, strerror(errno));
-	kiwi_backtrace("sys_panic");
-	kiwi_exit(-1);
+    // errno might be overwritten if the malloc inside asprintf fails
+    asprintf(&buf, "SYS_PANIC: \"%s\" %s (%s, line %d)", str, strerror(errno), file, line);
+
+    if (background_mode || log_foreground_mode) {
+        syslog(LOG_ERR, "%s %m\n", buf);
+    }
+
+    printf("%s %s\n", buf, strerror(errno));
+    kiwi_backtrace("sys_panic");
+    kiwi_exit(-1);
 }
 
-void _ll_printf_panic()
-{
+void _ll_printf_panic() {
     real_printf("ll_printf log_save CORRUPTION\n");
     kiwi_exit(-1);
 }
@@ -146,20 +137,19 @@ void _ll_printf_panic()
 // NB: when debugging use real_printf() to avoid loops!
 static bool need_newline;
 
-void real_printf(const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	char *buf;
-	vasprintf(&buf, fmt, ap);
-	va_end(ap);
-	
-	need_newline = buf[strlen(buf)-1] != '\n';
+void real_printf(const char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    char* buf;
+    vasprintf(&buf, fmt, ap);
+    va_end(ap);
 
-    // remove our override and call the actual underlying printf
-    #undef printf
-        printf("%s", buf);
-    #define printf ALT_PRINTF
+    need_newline = buf[strlen(buf) - 1] != '\n';
+
+// remove our override and call the actual underlying printf
+#undef printf
+    printf("%s", buf);
+#define printf ALT_PRINTF
     kiwi_asfree(buf);
 }
 
@@ -168,11 +158,10 @@ static bool appending;
 static char *buf, *last_s, *start_s, *holdover;
 static int brem;
 
-void printf_init()
-{
+void printf_init() {
     // when msg generated by child task must use mmap'd buffer to communicate to parent task
-    log_save_t *log_save_p = &log_save;
-    char *p = (char*)kiwi_malloc("log_save", N_LOG_SAVE * N_LOG_MSG_LEN);
+    log_save_t* log_save_p = &log_save;
+    char* p = (char*)kiwi_malloc("log_save", N_LOG_SAVE * N_LOG_MSG_LEN);
     for (int i = 0; i < N_LOG_SAVE; i++) {
         assert(p < log_save_p->endp);
         log_save_p->arr[i] = p;
@@ -180,136 +169,141 @@ void printf_init()
     }
     log_save_p->magic = LOG_MAGIC;
     log_save_p->init = true;
-    
-    holdover = (char *) "";
 
-	lock_initS(&print_lock, "Print");
+    holdover = (char*)"";
+
+    lock_initS(&print_lock, "Print");
 }
 
-static void ll_printf(u4_t type, conn_t *conn, const char *fmt, va_list ap)
-{
-	int i, n, sl;
-	char *s, *cp;
-	#define VBUF 1024
+static void ll_printf(u4_t type, conn_t* conn, const char* fmt, va_list ap) {
+    int i, n, sl;
+    char *s, *cp;
+#define VBUF 1024
 
-	if (type & PRINTF_REAL) {
-		vasprintf(&buf, fmt, ap);
+    if (type & PRINTF_REAL) {
+        vasprintf(&buf, fmt, ap);
 
-		// remove our override and call the actual underlying printf
-		#undef printf
-			printf("%s%s", need_newline? "\n":"", buf);
-			need_newline = false;
-		#define printf ALT_PRINTF
-		
-		//evPrintf(EC_EVENT, EV_PRINTF, -1, "printf", buf);
-	
-		kiwi_asfree(buf);
-		buf = NULL;
-		return;
-	}
-	
-	if (appending) {
-		s = last_s;
-	} else {
-		brem = VBUF;
-		if ((buf = (char*) kiwi_imalloc("ll_printf", VBUF)) == NULL)
-			panic("log malloc");
-		s = buf;
-		start_s = s;
-	}
+// remove our override and call the actual underlying printf
+#undef printf
+        printf("%s%s", need_newline ? "\n" : "", buf);
+        need_newline = false;
+#define printf ALT_PRINTF
 
-	vsnprintf(s, brem, fmt, ap);
-	sl = strlen(s);		// because vsnprintf returns length disregarding limit, not the actual length
-	brem -= sl+1;
-	
-	cp = &s[sl-1];
-	if (*cp != '\n' && brem && !(type & PRINTF_MSG)) {
-		last_s = cp+1;
-		appending = true;
-		return;
-	} else {
-		appending = false;
-	}
-	
-	// for logging, don't print an empty line at all
-	if ((type & (PRINTF_REG | PRINTF_LOG)) && (!background_mode || strcmp(start_s, "\n") != 0)) {
+        // evPrintf(EC_EVENT, EV_PRINTF, -1, "printf", buf);
 
-		// remove non-ASCII since "systemctl status" gives [blob] message
-		// unlike "systemctl log" which prints correctly
-		int sl = strlen(buf);
-		for (i=0; i < sl; i++)
-			if (buf[i] > 0x7f) buf[i] = '?';
+        kiwi_asfree(buf);
+        buf = NULL;
+        return;
+    }
 
-		kstr_t *ks = NULL;
-		bool want_logged = (type & PRINTF_LOG);
-		
-		// uptime
-		u4_t up = timer_sec();
-		u4_t sec = timer_ms() % 60000; up /= 60;
-		u4_t min = up % 60; up /= 60;
-		u4_t hr  = up % 24; up /= 24;
-		u4_t days = up;
-		if (days) {
-			ks = kstr_asprintf(ks, "%dd:", days);
-		}
-        ks = kstr_asprintf(ks, "%02d:%02d:%s%.3f ", hr, min, (sec < 10000)? "0":"", (float) sec/1e3);
-	
-		// show state of all rx channels
-		rx_chan_t *rx;
-		char ch_stat[MAX_RX_CHANS + 3 + SPACE_FOR_NULL];
-		for (rx = rx_channels, i=0; rx < &rx_channels[rx_chans]; rx++, i++) {
-			ch_stat[i] = rx->busy? ((i > 9)? ('A'+i-10) : ('0'+i)) : '.';
-		}
-		ch_stat[i] = ' ';
-		ch_stat[i+1] = '\0';
-		ks = kstr_cat(ks, ch_stat);
-		
-		// show rx channel number if message is associated with a particular rx channel
+    if (appending) {
+        s = last_s;
+    }
+    else {
+        brem = VBUF;
+        if ((buf = (char*)kiwi_imalloc("ll_printf", VBUF)) == NULL)
+            panic("log malloc");
+        s = buf;
+        start_s = s;
+    }
+
+    vsnprintf(s, brem, fmt, ap);
+    sl = strlen(s); // because vsnprintf returns length disregarding limit, not the actual length
+    brem -= sl + 1;
+
+    cp = &s[sl - 1];
+    if (*cp != '\n' && brem && !(type & PRINTF_MSG)) {
+        last_s = cp + 1;
+        appending = true;
+        return;
+    }
+    else {
+        appending = false;
+    }
+
+    // for logging, don't print an empty line at all
+    if ((type & (PRINTF_REG | PRINTF_LOG)) && (!background_mode || strcmp(start_s, "\n") != 0)) {
+
+        // remove non-ASCII since "systemctl status" gives [blob] message
+        // unlike "systemctl log" which prints correctly
+        int sl = strlen(buf);
+        for (i = 0; i < sl; i++)
+            if (buf[i] > 0x7f) buf[i] = '?';
+
+        kstr_t* ks = NULL;
+        bool want_logged = (type & PRINTF_LOG);
+
+        // uptime
+        u4_t up = timer_sec();
+        u4_t sec = timer_ms() % 60000;
+        up /= 60;
+        u4_t min = up % 60;
+        up /= 60;
+        u4_t hr = up % 24;
+        up /= 24;
+        u4_t days = up;
+        if (days) {
+            ks = kstr_asprintf(ks, "%dd:", days);
+        }
+        ks = kstr_asprintf(ks, "%02d:%02d:%s%.3f ", hr, min, (sec < 10000) ? "0" : "", (float)sec / 1e3);
+
+        // show state of all rx channels
+        rx_chan_t* rx;
+        char ch_stat[MAX_RX_CHANS + 3 + SPACE_FOR_NULL];
+        for (rx = rx_channels, i = 0; rx < &rx_channels[rx_chans]; rx++, i++) {
+            ch_stat[i] = rx->busy ? ((i > 9) ? ('A' + i - 10) : ('0' + i)) : '.';
+        }
+        ch_stat[i] = ' ';
+        ch_stat[i + 1] = '\0';
+        ks = kstr_cat(ks, ch_stat);
+
+        // show rx channel number if message is associated with a particular rx channel
         int chan = -1;
         if (conn && (conn->type == STREAM_WATERFALL || conn->type == STREAM_SOUND || conn->type == STREAM_EXT))
             chan = conn->rx_channel;
         if (conn == NULL || chan != -1) {
-            for (i=0; i < rx_chans; i++) {
-                ch_stat[i] = (conn != NULL && i == chan)? ((i > 9)? ('A'+i-10) : ('0'+i)) : ' ';
+            for (i = 0; i < rx_chans; i++) {
+                ch_stat[i] = (conn != NULL && i == chan) ? ((i > 9) ? ('A' + i - 10) : ('0' + i)) : ' ';
             }
             ch_stat[i] = '\0';
             ks = kstr_cat(ks, ch_stat);
-        } else {
+        }
+        else {
             ks = kstr_asprintf(ks, "%*s", rx_chans, stprintf("[%02d]", conn->self_idx));
         }
-        
-        char *sp = kstr_sp(ks);
-		
-		bool actually_log = ((want_logged && (background_mode || log_foreground_mode)) || log_ordinary_printfs);
-		if (actually_log) {
-			syslog(LOG_INFO, "%s %s", sp, buf);
-		}
-	
-		char tb[CTIME_R_BUFSIZE];
-		utc_ctime_r(tb);
-		tb[CTIME_R_NL-5] = '\0';    // remove the year
-		
-		// remove our override and call the actual underlying printf
-		#undef printf
-            printf("%s%s %s %c %s", need_newline? "\n":"", tb, sp, want_logged? 'L':' ', buf);
-            need_newline = false;
-		#define printf ALT_PRINTF
 
-		evPrintf(EC_EVENT, EV_PRINTF, -1, "printf", buf);
+        char* sp = kstr_sp(ks);
 
-		#define DUMP_ORDINARY_PRINTFS TRUE
+        bool actually_log = ((want_logged && (background_mode || log_foreground_mode)) || log_ordinary_printfs);
+        if (actually_log) {
+            syslog(LOG_INFO, "%s %s", sp, buf);
+        }
+
+        char tb[CTIME_R_BUFSIZE];
+        utc_ctime_r(tb);
+        tb[CTIME_R_NL - 5] = '\0'; // remove the year
+
+// remove our override and call the actual underlying printf
+#undef printf
+        printf("%s%s %s %c %s", need_newline ? "\n" : "", tb, sp, want_logged ? 'L' : ' ', buf);
+        need_newline = false;
+#define printf ALT_PRINTF
+
+        evPrintf(EC_EVENT, EV_PRINTF, -1, "printf", buf);
+
+#define DUMP_ORDINARY_PRINTFS TRUE
         // FIXME: synchronization problem
-        
-        log_save_t *ls = &log_save;
+
+        log_save_t* ls = &log_save;
         if (ls->magic != LOG_MAGIC || !ls->init) {
             _ll_printf_panic();
         }
-        
+
         // Add to in-memory log used by admin page, handling printfs from child tasks via shared memory.
         // Can't use asprintf() because kiwi_ifree() can't be done by parent/child process when needed.
         // Would need a scavenging mechanism.
-        
-		if (ls && (DUMP_ORDINARY_PRINTFS || !background_mode || actually_log || log_ordinary_printfs)) {
+
+        if (ls && (DUMP_ORDINARY_PRINTFS || !background_mode || actually_log || log_ordinary_printfs)) {
 
             assert(ls->idx >= 0);
             if (ls->idx < N_LOG_SAVE) {
@@ -317,254 +311,240 @@ static void ll_printf(u4_t type, conn_t *conn, const char *fmt, va_list ap)
                 s = ls->arr[ls->idx++];
                 assert(s != NULL);
                 assert(s < ls->endp);
-                snprintf(s, N_LOG_MSG_LEN, "%s %s %c %s", tb, sp, want_logged? 'L':' ', buf);
-                strcpy(&s[N_LOG_MSG_LEN-2], "\n");      // truncate msg
-            } else {
-                ls->not_shown++;
-                
-                // scroll second half of messages by one by rotating the buffer pointers
-                char *t_arr = ls->arr[N_LOG_SAVE/2];
-                for (i = N_LOG_SAVE/2 + 1; i < N_LOG_SAVE; i++) {
-                    ls->arr[i-1] = ls->arr[i];
-                }
-                ls->arr[N_LOG_SAVE-1] = t_arr;
-
-                s = ls->arr[N_LOG_SAVE-1];
-                snprintf(s, N_LOG_MSG_LEN, "%s %s %c %s", tb, sp, want_logged? 'L':' ', buf);
-                strcpy(&s[N_LOG_MSG_LEN-2], "\n");      // truncate msg
+                snprintf(s, N_LOG_MSG_LEN, "%s %s %c %s", tb, sp, want_logged ? 'L' : ' ', buf);
+                strcpy(&s[N_LOG_MSG_LEN - 2], "\n"); // truncate msg
             }
-		}
+            else {
+                ls->not_shown++;
 
-	    kstr_free(ks);
-	}
-	
-	// attempt to selectively record message remotely
-	if (type & PRINTF_MSG) {
-	    conn_t *c;
-		for (c = conns; c < &conns[N_CONNS]; c++) {
-			if (!c->valid || (c->type != STREAM_ADMIN && c->type != STREAM_MFG) || c->mc == NULL)
-				continue;
-			break;
-		}
-		
-		// there should only be one active admin connection
-		if (c != &conns[N_CONNS]) {
-		
-		    // Transmit one line at a time. Holdover last unterminated output until next call.
-            #define N_LINES 32
-            char *r_buf;
+                // scroll second half of messages by one by rotating the buffer pointers
+                char* t_arr = ls->arr[N_LOG_SAVE / 2];
+                for (i = N_LOG_SAVE / 2 + 1; i < N_LOG_SAVE; i++) {
+                    ls->arr[i - 1] = ls->arr[i];
+                }
+                ls->arr[N_LOG_SAVE - 1] = t_arr;
+
+                s = ls->arr[N_LOG_SAVE - 1];
+                snprintf(s, N_LOG_MSG_LEN, "%s %s %c %s", tb, sp, want_logged ? 'L' : ' ', buf);
+                strcpy(&s[N_LOG_MSG_LEN - 2], "\n"); // truncate msg
+            }
+        }
+
+        kstr_free(ks);
+    }
+
+    // attempt to selectively record message remotely
+    if (type & PRINTF_MSG) {
+        conn_t* c;
+        for (c = conns; c < &conns[N_CONNS]; c++) {
+            if (!c->valid || (c->type != STREAM_ADMIN && c->type != STREAM_MFG) || c->mc == NULL)
+                continue;
+            break;
+        }
+
+        // there should only be one active admin connection
+        if (c != &conns[N_CONNS]) {
+
+// Transmit one line at a time. Holdover last unterminated output until next call.
+#define N_LINES 32
+            char* r_buf;
             str_split_t lines[N_LINES];
             n = kiwi_split(buf, &r_buf, "\r\n", lines, N_LINES);
 
             for (i = 0; i < n; i++) {
-                const char *leading_nl = "";
-                if (i == 0 && buf[0] == '\n') leading_nl = "\n";
-                else
-                if (i == 0 && buf[0] == '\r') leading_nl = "\r";
-                //real_printf("%d leading_nl='%s' <%s%s> delim='%s'\n", i, ASCII[buf[0]], leading_nl, lines[i].str, ASCII[lines[i].delim]);
-                if (i == n-1 && lines[i].str[0] != '\0' && lines[i].delim == '\0') {
+                const char* leading_nl = "";
+                if (i == 0 && buf[0] == '\n')
+                    leading_nl = "\n";
+                else if (i == 0 && buf[0] == '\r')
+                    leading_nl = "\r";
+                // real_printf("%d leading_nl='%s' <%s%s> delim='%s'\n", i, ASCII[buf[0]], leading_nl, lines[i].str, ASCII[lines[i].delim]);
+                if (i == n - 1 && lines[i].str[0] != '\0' && lines[i].delim == '\0') {
                     asprintf(&holdover, "%s", lines[i].str);
-                    //real_printf("(holdover)\n");
-                } else {
+                    // real_printf("(holdover)\n");
+                }
+                else {
                     send_msg_encoded(c, "MSG", "status_msg_text", "%s%s%s%c",
-                        (i == 0 && (type & PRINTF_FF))? "\f" : holdover, leading_nl, lines[i].str, lines[i].delim);
+                                     (i == 0 && (type & PRINTF_FF)) ? "\f" : holdover, leading_nl, lines[i].str, lines[i].delim);
                     if (holdover[0] != '\0') {
                         free(holdover);
-                        holdover = (char *) "";
+                        holdover = (char*)"";
                     }
                 }
             }
             kiwi_ifree(r_buf, "llprintf r_buf");
         }
-	}
-	
-	kiwi_ifree(buf, "ll_printf buf");
-	buf = NULL;
+    }
+
+    kiwi_ifree(buf, "ll_printf buf");
+    buf = NULL;
 }
 
-void alt_printf(const char *fmt, ...)
-{
-	va_list ap;
-	lock_holder holder(print_lock);
-	va_start(ap, fmt);
-	ll_printf(PRINTF_REG, NULL, fmt, ap);
-	va_end(ap);
+void alt_printf(const char* fmt, ...) {
+    va_list ap;
+    lock_holder holder(print_lock);
+    va_start(ap, fmt);
+    ll_printf(PRINTF_REG, NULL, fmt, ap);
+    va_end(ap);
 }
 
-void lfprintf(u4_t printf_type, const char *fmt, ...)
-{
-	va_list ap;
-	lock_holder holder(print_lock);
-	va_start(ap, fmt);
-	ll_printf(printf_type, NULL, fmt, ap);
-	va_end(ap);
+void lfprintf(u4_t printf_type, const char* fmt, ...) {
+    va_list ap;
+    lock_holder holder(print_lock);
+    va_start(ap, fmt);
+    ll_printf(printf_type, NULL, fmt, ap);
+    va_end(ap);
 }
 
-void cprintf(conn_t *c, const char *fmt, ...)
-{
-	va_list ap;
-	lock_holder holder(print_lock);
-	va_start(ap, fmt);
-	ll_printf(PRINTF_REG, c, fmt, ap);
-	va_end(ap);
+void cprintf(conn_t* c, const char* fmt, ...) {
+    va_list ap;
+    lock_holder holder(print_lock);
+    va_start(ap, fmt);
+    ll_printf(PRINTF_REG, c, fmt, ap);
+    va_end(ap);
 }
 
-void clprintf(conn_t *c, const char *fmt, ...)
-{
-	va_list ap;
-	lock_holder holder(print_lock);
-	va_start(ap, fmt);
-	ll_printf(PRINTF_LOG, c, fmt, ap);
-	va_end(ap);
+void clprintf(conn_t* c, const char* fmt, ...) {
+    va_list ap;
+    lock_holder holder(print_lock);
+    va_start(ap, fmt);
+    ll_printf(PRINTF_LOG, c, fmt, ap);
+    va_end(ap);
 }
 
-void clfprintf(conn_t *c, u4_t printf_type, const char *fmt, ...)
-{
-	va_list ap;
-	lock_holder holder(print_lock);
-	va_start(ap, fmt);
-	ll_printf(printf_type, c, fmt, ap);
-	va_end(ap);
+void clfprintf(conn_t* c, u4_t printf_type, const char* fmt, ...) {
+    va_list ap;
+    lock_holder holder(print_lock);
+    va_start(ap, fmt);
+    ll_printf(printf_type, c, fmt, ap);
+    va_end(ap);
 }
 
-void lprintf(const char *fmt, ...)
-{
-	va_list ap;
-	lock_holder holder(print_lock);
-	va_start(ap, fmt);
-	ll_printf(PRINTF_LOG, NULL, fmt, ap);
-	va_end(ap);
+void lprintf(const char* fmt, ...) {
+    va_list ap;
+    lock_holder holder(print_lock);
+    va_start(ap, fmt);
+    ll_printf(PRINTF_LOG, NULL, fmt, ap);
+    va_end(ap);
 }
 
-void rcprintf(int rx_chan, const char *fmt, ...)
-{
-	lock_holder holder(print_lock);
-	conn_t *c = rx_channels[rx_chan].conn;
+void rcprintf(int rx_chan, const char* fmt, ...) {
+    lock_holder holder(print_lock);
+    conn_t* c = rx_channels[rx_chan].conn;
 
-	va_list ap;
-	va_start(ap, fmt);
-	ll_printf(PRINTF_REG, c, fmt, ap);
-	va_end(ap);
+    va_list ap;
+    va_start(ap, fmt);
+    ll_printf(PRINTF_REG, c, fmt, ap);
+    va_end(ap);
 }
 
-void rclprintf(int rx_chan, const char *fmt, ...)
-{
-	lock_holder holder(print_lock);
-	conn_t *c = rx_channels[rx_chan].conn;
+void rclprintf(int rx_chan, const char* fmt, ...) {
+    lock_holder holder(print_lock);
+    conn_t* c = rx_channels[rx_chan].conn;
 
-	va_list ap;
-	va_start(ap, fmt);
-	ll_printf(PRINTF_LOG, c, fmt, ap);
-	va_end(ap);
+    va_list ap;
+    va_start(ap, fmt);
+    ll_printf(PRINTF_LOG, c, fmt, ap);
+    va_end(ap);
 }
 
-void rcfprintf(int rx_chan, u4_t printf_type, const char *fmt, ...)
-{
-	lock_holder holder(print_lock);
-	conn_t *c = rx_channels[rx_chan].conn;
+void rcfprintf(int rx_chan, u4_t printf_type, const char* fmt, ...) {
+    lock_holder holder(print_lock);
+    conn_t* c = rx_channels[rx_chan].conn;
 
-	va_list ap;
-	va_start(ap, fmt);
-	ll_printf(printf_type, c, fmt, ap);
-	va_end(ap);
+    va_list ap;
+    va_start(ap, fmt);
+    ll_printf(printf_type, c, fmt, ap);
+    va_end(ap);
 }
 
-void mprintf(const char *fmt, ...)
-{
-	lock_holder holder(print_lock);
+void mprintf(const char* fmt, ...) {
+    lock_holder holder(print_lock);
 
-	va_list ap;
-	va_start(ap, fmt);
-	ll_printf(PRINTF_MSG, NULL, fmt, ap);
-	va_end(ap);
+    va_list ap;
+    va_start(ap, fmt);
+    ll_printf(PRINTF_MSG, NULL, fmt, ap);
+    va_end(ap);
 }
 
-void mprintf_ff(const char *fmt, ...)
-{
-	lock_holder holder(print_lock);
+void mprintf_ff(const char* fmt, ...) {
+    lock_holder holder(print_lock);
 
-	va_list ap;
-	va_start(ap, fmt);
-	ll_printf(PRINTF_MSG|PRINTF_FF, NULL, fmt, ap);
-	va_end(ap);
+    va_list ap;
+    va_start(ap, fmt);
+    ll_printf(PRINTF_MSG | PRINTF_FF, NULL, fmt, ap);
+    va_end(ap);
 }
 
-void mlprintf(const char *fmt, ...)
-{
-	lock_holder holder(print_lock);
+void mlprintf(const char* fmt, ...) {
+    lock_holder holder(print_lock);
 
-	va_list ap;
-	va_start(ap, fmt);
-	ll_printf(PRINTF_MSG|PRINTF_LOG, NULL, fmt, ap);
-	va_end(ap);
+    va_list ap;
+    va_start(ap, fmt);
+    ll_printf(PRINTF_MSG | PRINTF_LOG, NULL, fmt, ap);
+    va_end(ap);
 }
 
-void mlprintf_ff(const char *fmt, ...)
-{
-	lock_holder holder(print_lock);
+void mlprintf_ff(const char* fmt, ...) {
+    lock_holder holder(print_lock);
 
-	va_list ap;
-	va_start(ap, fmt);
-	ll_printf(PRINTF_MSG|PRINTF_LOG|PRINTF_FF, NULL, fmt, ap);
-	va_end(ap);
+    va_list ap;
+    va_start(ap, fmt);
+    ll_printf(PRINTF_MSG | PRINTF_LOG | PRINTF_FF, NULL, fmt, ap);
+    va_end(ap);
 }
 
-#define N_DST_STATIC 4
+#define N_DST_STATIC     4
 #define N_DST_STATIC_BUF (1024 + SPACE_FOR_NULL)
 static char dst_static[N_DST_STATIC][N_DST_STATIC_BUF];
 
 // result in a static buffer for use with e.g. a short-term immediate printf argument
 // NB: not thread-safe
-char *stnprintf(int which, const char *fmt, ...)
-{
-	if (fmt == NULL) return NULL;
-	check(which < N_DST_STATIC);
-	va_list ap;
-	va_start(ap, fmt);
+char* stnprintf(int which, const char* fmt, ...) {
+    if (fmt == NULL) return NULL;
+    check(which < N_DST_STATIC);
+    va_list ap;
+    va_start(ap, fmt);
     vsnprintf(dst_static[which], N_DST_STATIC_BUF, fmt, ap);
     va_end(ap);
-	return dst_static[which];
+    return dst_static[which];
 }
 
-char *stprintf(const char *fmt, ...)
-{
-	if (fmt == NULL) return NULL;
-	va_list ap;
-	va_start(ap, fmt);
+char* stprintf(const char* fmt, ...) {
+    if (fmt == NULL) return NULL;
+    va_list ap;
+    va_start(ap, fmt);
     vsnprintf(dst_static[0], N_DST_STATIC_BUF, fmt, ap);
     va_end(ap);
-	return dst_static[0];
+    return dst_static[0];
 }
 
 // asprintf(), but return value is pointer to allocated buffer.
 // Easier to use in an arg list, but more difficult to free()
-const char *aspf(const char *fmt, ...)
-{
-	char *s;
-	va_list ap;
-	va_start(ap, fmt);
-    int vasprintf(char **strp, const char *fmt, va_list ap);    // #include def isn't found?
+const char* aspf(const char* fmt, ...) {
+    char* s;
+    va_list ap;
+    va_start(ap, fmt);
+    int vasprintf(char** strp, const char* fmt, va_list ap); // #include def isn't found?
     vasprintf(&s, fmt, ap);
     va_end(ap);
-	return (const char *) s;
+    return (const char*)s;
 }
 
 // encoded snprintf()
-int esnprintf(char *str, size_t slen, const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	vsnprintf(str, slen, fmt, ap);
-	va_end(ap);
+int esnprintf(char* str, size_t slen, const char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(str, slen, fmt, ap);
+    va_end(ap);
 
-	char *str2 = kiwi_str_encode(str);
-	int slen2 = strlen(str2);
-	
-	// Passed sizeof str[slen] is meant to be far larger than current strlen(str)
-	// so there is room to return the larger encoded result.
-	check(slen2 <= slen);
-	strcpy(str, str2);
-	kiwi_ifree(str2, "esnprintf");
+    char* str2 = kiwi_str_encode(str);
+    int slen2 = strlen(str2);
 
-	return slen2;
+    // Passed sizeof str[slen] is meant to be far larger than current strlen(str)
+    // so there is room to return the larger encoded result.
+    check(slen2 <= slen);
+    strcpy(str, str2);
+    kiwi_ifree(str2, "esnprintf");
+
+    return slen2;
 }

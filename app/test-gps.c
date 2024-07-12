@@ -3,7 +3,7 @@
 static struct gps_data_t gps_handle;
 const char sat_s[] = { 'N', 'S', 'E', 'B', 'I', 'Q', 'G' };
 
-void print_gps_data(const struct gps_data_t *data) {
+void print_gps_data(const struct gps_data_t* data) {
     if (data->set & MODE_SET) {
         printf("GPSD running\n");
     }
@@ -53,8 +53,7 @@ void print_gps_data(const struct gps_data_t *data) {
 }
 
 
-int main()
-{
+int main() {
     if (0 != gps_open("localhost", "2947", &gps_handle)) {
         printf("open gpsd failed\n");
         return 0;
@@ -66,7 +65,7 @@ int main()
         return 0;
     }
 
-    for(int i = 0; ;i++) {
+    for (int i = 0;; i++) {
         if (!gps_waiting(&gps_handle, 0))
             continue;
 

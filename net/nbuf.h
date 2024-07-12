@@ -20,7 +20,7 @@ Boston, MA  02110-1301, USA.
 #pragma once
 
 #include "types.h"
-#include "coroutines.h"     // lock_t
+#include "coroutines.h" // lock_t
 
 //#define NBUF_DEBUG
 
@@ -28,41 +28,41 @@ struct mg_connection;
 
 typedef struct nbuf_st {
 #ifdef NBUF_DEBUG
-	u4_t magic;
+    u4_t magic;
 #endif
-	struct mg_connection *mc;
-	char *buf;
-	u2_t len, ttl, id;
-	bool done, expecting_done, dequeued, isFree;
+    struct mg_connection* mc;
+    char* buf;
+    u2_t len, ttl, id;
+    bool done, expecting_done, dequeued, isFree;
 #if NBUF_DEBUG
-	u4_t magic_b;
+    u4_t magic_b;
 #endif
-	struct nbuf_st *next, *prev;
+    struct nbuf_st *next, *prev;
 #if NBUF_DEBUG
-	u4_t magic_e;
+    u4_t magic_e;
 #endif
 } nbuf_t;
 
 typedef struct {
-	struct mg_connection *mc;
-	lock_t lock;
+    struct mg_connection* mc;
+    lock_t lock;
 #if NBUF_DEBUG
-	u4_t magic_b;
+    u4_t magic_b;
 #endif
-	nbuf_t *q, *q_head;
+    nbuf_t *q, *q_head;
 #if NBUF_DEBUG
-	u4_t magic_e;
+    u4_t magic_e;
 #endif
-	u2_t cnt, ttl;
-	bool ovfl, dbug;
+    u2_t cnt, ttl;
+    bool ovfl, dbug;
 } ndesc_t;
 
-void ndesc_init(ndesc_t *nd, struct mg_connection *mc);
-void ndesc_register(ndesc_t *nd);
+void ndesc_init(ndesc_t* nd, struct mg_connection* mc);
+void ndesc_register(ndesc_t* nd);
 
 void nbuf_init();
 void nbuf_stat();
-void nbuf_allocq(ndesc_t *nd, char *s, int sl);
-nbuf_t *nbuf_dequeue(ndesc_t *nd);
-int nbuf_queued(ndesc_t *nd);
-void nbuf_cleanup(ndesc_t *nd);
+void nbuf_allocq(ndesc_t* nd, char* s, int sl);
+nbuf_t* nbuf_dequeue(ndesc_t* nd);
+int nbuf_queued(ndesc_t* nd);
+void nbuf_cleanup(ndesc_t* nd);

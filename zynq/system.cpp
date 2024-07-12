@@ -19,17 +19,14 @@ Boston, MA  02110-1301, USA.
 
 #include <stdlib.h>
 
-void system_reboot()
-{
+void system_reboot() {
     system("reboot");
 }
 
-void system_halt()
-{
+void system_halt() {
     system("halt");
 }
 
-void system_poweroff()
-{
+void system_poweroff() {
     system("poweroff");
 }

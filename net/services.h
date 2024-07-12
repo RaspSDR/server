@@ -19,14 +19,16 @@ Boston, MA  02110-1301, USA.
 
 #pragma once
 
-typedef enum { NAT_NO_DELETE, NAT_DELETE } nat_delete_e;
+typedef enum { NAT_NO_DELETE,
+               NAT_DELETE } nat_delete_e;
 void UPnP_port(nat_delete_e nat_delete);
 
-typedef enum { WAKEUP_REG, WAKEUP_REG_STATUS } wakeup_reg_e;
+typedef enum { WAKEUP_REG,
+               WAKEUP_REG_STATUS } wakeup_reg_e;
 bool wakeup_reg_kiwisdr_com(wakeup_reg_e wakeup_reg);
 
-#define FILE_DOWNLOAD_RELOAD        0
-#define FILE_DOWNLOAD_DIFF_RESTART  1
+#define FILE_DOWNLOAD_RELOAD       0
+#define FILE_DOWNLOAD_DIFF_RESTART 1
 
 void my_kiwi_register(bool reg, int root_pwd_unset = 0, int debian_pwd_default = 0);
-void file_GET(void *param);
+void file_GET(void* param);

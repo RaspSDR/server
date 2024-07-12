@@ -22,17 +22,17 @@ Boston, MA  02110-1301, USA.
 #include "sanitizer.h"
 
 #ifdef USE_ASAN
-    #warning SHMEM_DISABLE_ALL due to USE_ASAN
-    #define SHMEM_DISABLE_ALL
+#warning SHMEM_DISABLE_ALL due to USE_ASAN
+#define SHMEM_DISABLE_ALL
 #endif
 
 //#define SHMEM_DISABLE_ALL
 #ifdef SHMEM_DISABLE_ALL
-    #ifndef USE_ASAN
-        #warning dont forget to remove SHMEM_DISABLE_ALL
-    #endif
-    #define DRM_SHMEM_DISABLE
-    #define RX_SHMEM_DISABLE
+#ifndef USE_ASAN
+#warning dont forget to remove SHMEM_DISABLE_ALL
+#endif
+#define DRM_SHMEM_DISABLE
+#define RX_SHMEM_DISABLE
 #endif
 
 #define SHMEM_CONFIG_H_INCLUDED

@@ -23,41 +23,41 @@ Boston, MA  02110-1301, USA.
 
 // CAUTION: must match order in kiwi.js
 // CAUTION: add new entries at the end
-const char * const mode_lc[] = {
+const char* const mode_lc[] = {
     "am", "amn", "usb", "lsb", "cw", "cwn", "nbfm", "iq", "drm",
     "usn", "lsn", "sam", "sau", "sal", "sas", "qam", "nnfm"
 };
 
-const char * const mode_uc[] = {
+const char* const mode_uc[] = {
     "AM", "AMN", "USB", "LSB", "CW", "CWN", "NBFM", "IQ", "DRM",
     "USN", "LSN", "SAM", "SAU", "SAL", "SAS", "QAM", "NNFM"
 };
 
-#define IS_AM       0x0001
-#define IS_SSB      0x0002
-#define IS_USB      0x0004
-#define IS_LSB      0x0008
-#define IS_CW       0x0010
-#define IS_NBFM     0x0020
-#define IS_IQ       0x0040
-#define IS_DRM      0x0080
-#define IS_SAM      0x0100
-#define IS_STEREO   0x0200
-#define IS_NAR      0x0400
+#define IS_AM     0x0001
+#define IS_SSB    0x0002
+#define IS_USB    0x0004
+#define IS_LSB    0x0008
+#define IS_CW     0x0010
+#define IS_NBFM   0x0020
+#define IS_IQ     0x0040
+#define IS_DRM    0x0080
+#define IS_SAM    0x0100
+#define IS_STEREO 0x0200
+#define IS_NAR    0x0400
 
 const int mode_flags[] = {
-    IS_AM, IS_AM|IS_NAR,
-    IS_SSB|IS_USB, IS_SSB|IS_LSB,
-    IS_CW, IS_CW|IS_NAR,
+    IS_AM, IS_AM | IS_NAR,
+    IS_SSB | IS_USB, IS_SSB | IS_LSB,
+    IS_CW, IS_CW | IS_NAR,
     IS_NBFM,
-    IS_IQ|IS_STEREO, IS_DRM|IS_STEREO,
-    IS_SSB|IS_USB|IS_NAR, IS_SSB|IS_LSB|IS_NAR,
-    IS_SAM, IS_SAM, IS_SAM, IS_SAM|IS_STEREO, IS_SAM|IS_STEREO, IS_NBFM|IS_NAR
+    IS_IQ | IS_STEREO, IS_DRM | IS_STEREO,
+    IS_SSB | IS_USB | IS_NAR, IS_SSB | IS_LSB | IS_NAR,
+    IS_SAM, IS_SAM, IS_SAM, IS_SAM | IS_STEREO, IS_SAM | IS_STEREO, IS_NBFM | IS_NAR
 };
 
 const int mode_hbw[] = {
-    9800/2, 5000/2, 2400/2, 2400/2, 400/2, 60/2, 12000/2, 10000/2, 10000/2,
-    2100/2, 2100/2, 9800/2, 9800/2, 9800/2, 9800/2, 9800/2, 6000/2
+    9800 / 2, 5000 / 2, 2400 / 2, 2400 / 2, 400 / 2, 60 / 2, 12000 / 2, 10000 / 2, 10000 / 2,
+    2100 / 2, 2100 / 2, 9800 / 2, 9800 / 2, 9800 / 2, 9800 / 2, 9800 / 2, 6000 / 2
 };
 
 const int mode_offset[] = {
@@ -66,6 +66,21 @@ const int mode_offset[] = {
 };
 
 typedef enum {
-    MODE_AM, MODE_AMN, MODE_USB, MODE_LSB, MODE_CW, MODE_CWN, MODE_NBFM, MODE_IQ, MODE_DRM,
-    MODE_USN, MODE_LSN, MODE_SAM, MODE_SAU, MODE_SAL, MODE_SAS, MODE_QAM, MODE_NNFM
+    MODE_AM,
+    MODE_AMN,
+    MODE_USB,
+    MODE_LSB,
+    MODE_CW,
+    MODE_CWN,
+    MODE_NBFM,
+    MODE_IQ,
+    MODE_DRM,
+    MODE_USN,
+    MODE_LSN,
+    MODE_SAM,
+    MODE_SAU,
+    MODE_SAL,
+    MODE_SAS,
+    MODE_QAM,
+    MODE_NNFM
 } mode_e;

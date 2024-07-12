@@ -24,7 +24,6 @@
  */
 class I2CInterface {
 public:
-    
     /**
      * Determmines whether a device is connected at the specified address.
      * @return 0 if things are good, -1 if there is a problem.
@@ -37,7 +36,7 @@ public:
      */
     virtual uint8_t read(uint8_t i2c_bus_addr, uint8_t addr) = 0;
 
-    /** 
+    /**
      * Standard write operation.
      * @return Then number of bytes written
      */
@@ -47,7 +46,7 @@ public:
      * Multi-byte write operation
      * @return The number of bytes written
      */
-    virtual uint8_t write_bulk(uint8_t i2c_bus_addr, uint8_t addr, uint8_t bytes, uint8_t *data) = 0;
+    virtual uint8_t write_bulk(uint8_t i2c_bus_addr, uint8_t addr, uint8_t bytes, uint8_t* data) = 0;
 };
 
 #endif

@@ -26,34 +26,36 @@ Boston, MA  02110-1301, USA.
 // LOGGING_HOST, KIWI_UI_LIST, REPO
 // {EDATA_DEVEL, EDATA_EMBED}
 
-typedef enum { ESPEED_AUTO = 0, ESPEED_10M = 1, ESPEED_100M = 2 } espeed_e;
+typedef enum { ESPEED_AUTO = 0,
+               ESPEED_10M = 1,
+               ESPEED_100M = 2 } espeed_e;
 
-#define MAX_RX_CHANS    16      // must be pow2, see coroutines.h:CTF_CHANNEL
-#define MAX_WF_CHANS    16
-#define MAX_NRX_BUFS    16      // for RXBUF_SIZE_14CH
-#define MAX_NRX_SAMPS   226     // for nch = 3
-#define NRX_SAMPS_CHANS(nch)    200
+#define MAX_RX_CHANS         16 // must be pow2, see coroutines.h:CTF_CHANNEL
+#define MAX_WF_CHANS         16
+#define MAX_NRX_BUFS         16  // for RXBUF_SIZE_14CH
+#define MAX_NRX_SAMPS        226 // for nch = 3
+#define NRX_SAMPS_CHANS(nch) 200
 
-#define N_CONN_ADMIN        8   // simultaneous admin connections
+#define N_CONN_ADMIN 8 // simultaneous admin connections
 
-#define N_CAMP              4
-#define N_QUEUERS           8
+#define N_CAMP    4
+#define N_QUEUERS 8
 
-#define PROXY_SERVER_HOST   "proxy.rx-888.com"
-#define PROXY_SERVER_PORT   8073
+#define PROXY_SERVER_HOST "proxy.rx-888.com"
+#define PROXY_SERVER_PORT 8073
 
 extern int rx_chans, wf_chans, nrx_bufs, nrx_samps, snd_rate, rx_decim;
 
 // INET6_ADDRSTRLEN (46) plus some extra in case ipv6 scope/zone is an issue
 // can't be in net.h due to #include recursion problems
-#define NET_ADDRSTRLEN      64
-#define NET_ADDRSTRLEN_S    "64"
+#define NET_ADDRSTRLEN   64
+#define NET_ADDRSTRLEN_S "64"
 
-#define	STATS_INTERVAL_SECS			10
+#define STATS_INTERVAL_SECS 10
 
-#define PHOTO_UPLOAD_MAX_SIZE   (2*M)
-#define DX_UPLOAD_MAX_SIZE      (2*M)
+#define PHOTO_UPLOAD_MAX_SIZE (2 * M)
+#define DX_UPLOAD_MAX_SIZE    (2 * M)
 
 typedef struct {
-	const char *param, *value;
+    const char *param, *value;
 } index_html_params_t;

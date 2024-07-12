@@ -35,49 +35,49 @@ extern mem_t mem;
 
 //#define MALLOC_DEBUG
 #ifdef MALLOC_DEBUG
-	void *kiwi_malloc(const char *from, size_t size);
-	void *kiwi_calloc(const char *from, size_t nel, size_t size);
-	void *kiwi_realloc(const char *from, void *ptr, size_t size);
-	void kiwi_free(const char *from, void *ptr);
-	char *kiwi_strdup(const char *from, const char *s);
-	int kiwi_malloc_stat();
-	void mt_dump();
+void* kiwi_malloc(const char* from, size_t size);
+void* kiwi_calloc(const char* from, size_t nel, size_t size);
+void* kiwi_realloc(const char* from, void* ptr, size_t size);
+void kiwi_free(const char* from, void* ptr);
+char* kiwi_strdup(const char* from, const char* s);
+int kiwi_malloc_stat();
+void mt_dump();
 #else
-    // semantics of kiwi_malloc() is to clear mem which malloc() doesn't do
-	//#define kiwi_malloc(from, size) malloc(size)
-	void *kiwi_malloc(const char *from, size_t size);
-	#define kiwi_calloc(from, nel, size) calloc(nel, size)
-	#define kiwi_realloc(from, ptr, size) realloc(ptr, size)
-	#define kiwi_free(from, ptr) free(ptr)
-	#define kiwi_strdup(from, s) strdup(s)
-	#define kiwi_malloc_stat() 0
-	#define mt_dump() 0
+// semantics of kiwi_malloc() is to clear mem which malloc() doesn't do
+//#define kiwi_malloc(from, size) malloc(size)
+void* kiwi_malloc(const char* from, size_t size);
+#define kiwi_calloc(from, nel, size)  calloc(nel, size)
+#define kiwi_realloc(from, ptr, size) realloc(ptr, size)
+#define kiwi_free(from, ptr)          free(ptr)
+#define kiwi_strdup(from, s)          strdup(s)
+#define kiwi_malloc_stat()            0
+#define mt_dump()                     0
 #endif
 
 //#define MALLOC_INTERCEPT_PRINTF
 //#define MALLOC_INTERCEPT_DEBUG
 
 #ifdef MALLOC_INTERCEPT_PRINTF
-    void *kiwi_imalloc(const char *from, size_t size);
-    void *kiwi_icalloc(const char *from, size_t nel, size_t size);
-    void *kiwi_irealloc(const char *from, void *ptr, size_t size);
-    void kiwi_ifree(void *ptr, const char *from);
+void* kiwi_imalloc(const char* from, size_t size);
+void* kiwi_icalloc(const char* from, size_t nel, size_t size);
+void* kiwi_irealloc(const char* from, void* ptr, size_t size);
+void kiwi_ifree(void* ptr, const char* from);
 
 #elif defined(MALLOC_INTERCEPT_DEBUG)
-    #ifndef MALLOC_DEBUG
-        #error requires MALLOC_DEBUG
-    #endif
-    
-    #define kiwi_imalloc(from, size) kiwi_malloc(from, size)
-    #define kiwi_icalloc(from, nel, size) kiwi_calloc(from, nel, size)
-    #define kiwi_irealloc(from, ptr, size) kiwi_realloc(from, ptr, size)
-    #define kiwi_ifree(ptr, from) kiwi_free(from, ptr)
-#else
-    #define kiwi_imalloc(from, size) malloc(size)
-    #define kiwi_icalloc(from, nel, size) calloc(nel, size)
-    #define kiwi_irealloc(from, ptr, size) realloc(ptr, size)
-    #define kiwi_ifree(ptr, from) free(ptr)
+#ifndef MALLOC_DEBUG
+#error requires MALLOC_DEBUG
 #endif
 
-void kiwi_str_redup(char **ptr, const char *from, const char *s);
-void *kiwi_table_realloc(const char *id, void *cur_p, int cur_size, int new_size, int el_size);
+#define kiwi_imalloc(from, size)       kiwi_malloc(from, size)
+#define kiwi_icalloc(from, nel, size)  kiwi_calloc(from, nel, size)
+#define kiwi_irealloc(from, ptr, size) kiwi_realloc(from, ptr, size)
+#define kiwi_ifree(ptr, from)          kiwi_free(from, ptr)
+#else
+#define kiwi_imalloc(from, size)       malloc(size)
+#define kiwi_icalloc(from, nel, size)  calloc(nel, size)
+#define kiwi_irealloc(from, ptr, size) realloc(ptr, size)
+#define kiwi_ifree(ptr, from)          free(ptr)
+#endif
+
+void kiwi_str_redup(char** ptr, const char* from, const char* s);
+void* kiwi_table_realloc(const char* id, void* cur_p, int cur_size, int new_size, int el_size);

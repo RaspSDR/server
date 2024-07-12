@@ -26,12 +26,11 @@ Boston, MA  02110-1301, USA.
 #include "ip_blacklist.h"
 
 // updates net.ip_blacklist
-static int ip_blacklist_add(char *ips, bool *whitelist)
-{
+static int ip_blacklist_add(char* ips, bool* whitelist) {
     char ip_str[NET_ADDRSTRLEN];
     u4_t cidr;
     *whitelist = false;
-    
+
     if (ips[0] == '+') {
         ips++;
         *whitelist = true;
@@ -40,61 +39,63 @@ static int ip_blacklist_add(char *ips, bool *whitelist)
     if (n == 0 || n > 2) return -1;
     if (n == 1) cidr = 32;
     bool error;
-    u1_t a,b,c,d;
+    u1_t a, b, c, d;
     u4_t ip = inet4_d2h(ip_str, &error, &a, &b, &c, &d);
     if (error || cidr < 1 || cidr > 32) return -1;
-    u4_t nm = ~( (1 << (32-cidr)) -1 );
-    ip &= nm;       // make consistent with netmask
-    
+    u4_t nm = ~((1 << (32 - cidr)) - 1);
+    ip &= nm; // make consistent with netmask
+
     if (ip == (net.ips_kiwisdr_com.ip[0] & nm)) {
         lprintf("DANGER: blacklist entry %s would contain server ip of %s, IGNORED!!!\n", ips, net.ips_kiwisdr_com.ip_list[0]);
         return -1;
     }
-    
+
     int i = net.ip_blacklist_len;
     if (i >= N_IP_BLACKLIST) {
         lprintf("ip_blacklist_add: >= N_IP_BLACKLIST(%d)\n", N_IP_BLACKLIST);
         return -1;
     }
-    
+
     // always add to beginning of list to match iptables insert behavior
     if (net.ip_blacklist_len != 0)
         memmove(&net.ip_blacklist[1], &net.ip_blacklist[0], net.ip_blacklist_len * sizeof(ip_blacklist_t));
-    ip_blacklist_t *bl = &net.ip_blacklist[0];
+    ip_blacklist_t* bl = &net.ip_blacklist[0];
     bl->ip = ip;
-    bl->a = a; bl->b = b; bl->c = c; bl->d = d;
+    bl->a = a;
+    bl->b = b;
+    bl->c = c;
+    bl->d = d;
     bl->cidr = cidr;
     bl->nm = nm;
     bl->whitelist = *whitelist;
     bl->dropped = bl->last_dropped = 0;
-    //printf("ip_blacklist_add[%d] %s %d.%d.%d.%d 0x%08x\n", net.ip_blacklist_len, ips, bl->a, bl->b, bl->c, bl->d, bl->nm);
+    // printf("ip_blacklist_add[%d] %s %d.%d.%d.%d 0x%08x\n", net.ip_blacklist_len, ips, bl->a, bl->b, bl->c, bl->d, bl->nm);
     net.ip_blacklist_len++;
-    
+
     return 0;
 }
 
 // updates net.ip_blacklist (proxied Kiwis) and Linux iptables (non-proxied Kiwis)
 // called here and from admin "SET network_ip_blacklist="
-int ip_blacklist_add_iptables(char *ip_s)
-{
+int ip_blacklist_add_iptables(char* ip_s) {
     int rv;
-    //real_printf("    \"%s\",\n", ip_s);
+    // real_printf("    \"%s\",\n", ip_s);
 
-    #ifdef TEST_IP_BLACKLIST_USING_LOCAL_IPs
-    #else
-        bool is_loopback;
-        if (isLocal_ip(ip_s, &is_loopback) || is_loopback) {
-            lprintf("ip_blacklist_add_iptables: DANGER! local ip ignored: %s\n", ip_s);
-            return -1;
-        }
-    #endif
-    
+#ifdef TEST_IP_BLACKLIST_USING_LOCAL_IPs
+#else
+    bool is_loopback;
+    if (isLocal_ip(ip_s, &is_loopback) || is_loopback) {
+        lprintf("ip_blacklist_add_iptables: DANGER! local ip ignored: %s\n", ip_s);
+        return -1;
+    }
+#endif
+
     bool whitelist;
     if ((rv = ip_blacklist_add(ip_s, &whitelist)) != 0) return rv;
 
-    char *cmd_p;
+    char* cmd_p;
     // NB: insert (-I) NOT append (-A) because we may be incrementally adding after RETURN rule (last) exists
-    asprintf(&cmd_p, "iptables -I KIWI -s %s -j %s", ip_s, whitelist? "RETURN" : "DROP");
+    asprintf(&cmd_p, "iptables -I KIWI -s %s -j %s", ip_s, whitelist ? "RETURN" : "DROP");
     rv = non_blocking_cmd_system_child("kiwi.iptables", cmd_p, POLL_MSEC(200));
     rv = WEXITSTATUS(rv);
     lprintf("ip_blacklist_add_iptables: \"%s\" rv=%d\n", cmd_p, rv);
@@ -102,22 +103,21 @@ int ip_blacklist_add_iptables(char *ip_s)
     return rv;
 }
 
-static kstr_t* ip_blacklist_init_list(kstr_t *iptable, const char *list)
-{
-    const char *bl_s = admcfg_string(list, NULL, CFG_REQUIRED);
+static kstr_t* ip_blacklist_init_list(kstr_t* iptable, const char* list) {
+    const char* bl_s = admcfg_string(list, NULL, CFG_REQUIRED);
     if (bl_s == NULL) return iptable;
 
-    char *r_buf;
-    str_split_t ips[N_IP_BLACKLIST+1];
-    int n = kiwi_split((char *) bl_s, &r_buf, " ", ips, N_IP_BLACKLIST);
-    //printf("ip_blacklist_init n=%d bl_s=\"%s\"\n", n, bl_s);
+    char* r_buf;
+    str_split_t ips[N_IP_BLACKLIST + 1];
+    int n = kiwi_split((char*)bl_s, &r_buf, " ", ips, N_IP_BLACKLIST);
+    // printf("ip_blacklist_init n=%d bl_s=\"%s\"\n", n, bl_s);
     lprintf("ip_blacklist_init_list: %d entries: %s\n", n, list);
-    
-    for (int i=0; i < n; i++) {
+
+    for (int i = 0; i < n; i++) {
         bool whitelist;
         if (ip_blacklist_add(ips[i].str, &whitelist) != 0) continue;
 
-        iptable = kstr_asprintf(iptable, "-I KIWI -s %s -j %s\n", ips[i].str, whitelist? "RETURN" : "DROP");
+        iptable = kstr_asprintf(iptable, "-I KIWI -s %s -j %s\n", ips[i].str, whitelist ? "RETURN" : "DROP");
     }
 
     kiwi_ifree(r_buf, "ip_bl");
@@ -126,24 +126,23 @@ static kstr_t* ip_blacklist_init_list(kstr_t *iptable, const char *list)
     return iptable;
 }
 
-static void iptable_restore(kstr_t *iptable_save)
-{
+static void iptable_restore(kstr_t* iptable_save) {
     iptable_save = kstr_cat(iptable_save, "-A KIWI -j RETURN\nCOMMIT\n");
 
     // Open a pipe to the iptables-restore command
-    FILE *fp = popen("iptables-restore", "w");
+    FILE* fp = popen("iptables-restore", "w");
     if (fp == NULL) {
         perror("popen");
         return;
     }
 
-       // Write the iptables rules to the pipe
+    // Write the iptables rules to the pipe
     if (fputs(kstr_sp(iptable_save), fp) == EOF) {
         pclose(fp);
         return;
     }
 
-   // Close the pipe and check for errors
+    // Close the pipe and check for errors
     int status = pclose(fp);
     if (status != 0) {
         printf("iptables-restore exited with status %d\n", status);
@@ -153,11 +152,10 @@ static void iptable_restore(kstr_t *iptable_save)
     kstr_free(iptable_save);
 }
 
-void ip_blacklist_init()
-{
+void ip_blacklist_init() {
     net.ip_blacklist_len = 0;
     // clean out old KIWI table first (if any)
-    kstr_t * iptable_save = kstr_cat(NULL, "*filter\n:KIWI - [0:0]\n-A INPUT -j KIWI\n");
+    kstr_t* iptable_save = kstr_cat(NULL, "*filter\n:KIWI - [0:0]\n-A INPUT -j KIWI\n");
 
     iptable_save = ip_blacklist_init_list(iptable_save, "ip_blacklist");
     iptable_save = ip_blacklist_init_list(iptable_save, "ip_blacklist_local");
@@ -166,15 +164,14 @@ void ip_blacklist_init()
 }
 
 // check internal blacklist for proxied Kiwis (iptables can't be used)
-bool check_ip_blacklist(char *remote_ip, bool log)
-{
+bool check_ip_blacklist(char* remote_ip, bool log) {
     bool error;
     u4_t ip = inet4_d2h(remote_ip, &error);
     if (error) return false;
-    for (int i=0; i < net.ip_blacklist_len; i++) {
-        ip_blacklist_t *bl = &net.ip_blacklist[i];
+    for (int i = 0; i < net.ip_blacklist_len; i++) {
+        ip_blacklist_t* bl = &net.ip_blacklist[i];
         u4_t nm = bl->nm;
-        if ((ip & nm) == bl->ip) {      // netmask previously applied to bl->ip
+        if ((ip & nm) == bl->ip) { // netmask previously applied to bl->ip
             net.ip_blacklist_inuse = true;
             bl->dropped++;
             if (bl->whitelist) return false;
@@ -186,44 +183,42 @@ bool check_ip_blacklist(char *remote_ip, bool log)
     return false;
 }
 
-void ip_blacklist_dump(bool show_all)
-{
-    //if (!net.ip_blacklist_inuse) return;
-	lprintf("\n");
-	lprintf("PROXY IP BLACKLIST: %s\n", show_all? "all entries" : "only entries with drops");
-	lprintf("  dropped  ip\n");
-	
-	for (int i = 0; i < net.ip_blacklist_len; i++) {
-	    ip_blacklist_t *bl = &net.ip_blacklist[i];
-	    if (!show_all && bl->dropped == 0) continue;
-	    u1_t a, b, c, d;
-	    inet4_h2d(bl->last_dropped, &a, &b, &c, &d);
-	    lprintf("%9d  %18s %08x|%08x last=%d.%d.%d.%d|%08x %s\n",
-	        bl->dropped, stprintf("%d.%d.%d.%d/%d", bl->a, bl->b, bl->c, bl->d, bl->cidr),
-	        bl->ip, bl->nm, a, b, c, d, bl->last_dropped,
-	        bl->whitelist? " WHITELIST" : "");
-	}
-	lprintf("\n");
+void ip_blacklist_dump(bool show_all) {
+    // if (!net.ip_blacklist_inuse) return;
+    lprintf("\n");
+    lprintf("PROXY IP BLACKLIST: %s\n", show_all ? "all entries" : "only entries with drops");
+    lprintf("  dropped  ip\n");
+
+    for (int i = 0; i < net.ip_blacklist_len; i++) {
+        ip_blacklist_t* bl = &net.ip_blacklist[i];
+        if (!show_all && bl->dropped == 0) continue;
+        u1_t a, b, c, d;
+        inet4_h2d(bl->last_dropped, &a, &b, &c, &d);
+        lprintf("%9d  %18s %08x|%08x last=%d.%d.%d.%d|%08x %s\n",
+                bl->dropped, stprintf("%d.%d.%d.%d/%d", bl->a, bl->b, bl->c, bl->d, bl->cidr),
+                bl->ip, bl->nm, a, b, c, d, bl->last_dropped,
+                bl->whitelist ? " WHITELIST" : "");
+    }
+    lprintf("\n");
 }
 
-bool ip_blacklist_get(bool download_diff_restart)
-{
-	int status;
-	char *cmd_p, *reply, *dl_sp, *bl_sp;
-	jsmntok_t *jt, *end_tok;
-	const char *bl_old, *bl_new;
-	int slen, dlen, diff;
-	cfg_t bl_json = {0};
-	kstr_t *sb;
-	bool failed = true, first, ip_err;
+bool ip_blacklist_get(bool download_diff_restart) {
+    int status;
+    char *cmd_p, *reply, *dl_sp, *bl_sp;
+    jsmntok_t *jt, *end_tok;
+    const char *bl_old, *bl_new;
+    int slen, dlen, diff;
+    cfg_t bl_json = { 0 };
+    kstr_t* sb;
+    bool failed = true, first, ip_err;
     u4_t mtime;
-	
-    char *rx888_downloads = DNS_lookup_result("ip_blacklist_get", "downloads.rx-888.com", &net.ips_downloads);
-    #define BLACKLIST_FILE "webconfig/ip_blacklist3.cjson"
+
+    char* rx888_downloads = DNS_lookup_result("ip_blacklist_get", "downloads.rx-888.com", &net.ips_downloads);
+#define BLACKLIST_FILE "webconfig/ip_blacklist3.cjson"
 
     asprintf(&cmd_p, "curl -L -s -f --connect-timeout 5 \"%s/%s\" 2>&1", rx888_downloads, BLACKLIST_FILE);
-    //printf("ip_blacklist_get: <%s>\n", cmd_p);
-    
+    // printf("ip_blacklist_get: <%s>\n", cmd_p);
+
     reply = non_blocking_cmd(cmd_p, &status);
     kiwi_asfree(cmd_p);
 
@@ -234,11 +229,11 @@ bool ip_blacklist_get(bool download_diff_restart)
     }
 
     dl_sp = kstr_sp(reply);
-    //real_printf("ip_blacklist_get: returned <%s>\n", dl_sp);
+    // real_printf("ip_blacklist_get: returned <%s>\n", dl_sp);
 
     SHA256_CTX ctx;
     sha256_init(&ctx);
-    sha256_update(&ctx, (BYTE *) dl_sp, strlen(dl_sp));
+    sha256_update(&ctx, (BYTE*)dl_sp, strlen(dl_sp));
     BYTE hash[SHA256_BLOCK_SIZE];
     sha256_final(&ctx, hash);
     mg_bin2str(net.ip_blacklist_hash, hash, N_IP_BLACKLIST_HASH_BYTES);
@@ -249,58 +244,59 @@ bool ip_blacklist_get(bool download_diff_restart)
         goto fail;
     }
 
-	end_tok = &(bl_json.tokens[bl_json.ntok]);
-	jt = bl_json.tokens;
-	if (jt == NULL || !JSMN_IS_ARRAY(jt)) {
+    end_tok = &(bl_json.tokens[bl_json.ntok]);
+    jt = bl_json.tokens;
+    if (jt == NULL || !JSMN_IS_ARRAY(jt)) {
         lprintf("ip_blacklist_get: JSON token error for %s/%s\n", rx888_downloads, BLACKLIST_FILE);
         goto fail;
-	}
+    }
 
     // existing stored blacklist string
     bl_old = admcfg_string("ip_blacklist", NULL, CFG_REQUIRED);
     slen = strlen(bl_old);
-    
+
     // new blacklist string extracted from file json
     bl_sp = NULL;
     ip_err = false;
     first = true;
-	for (jt = bl_json.tokens + 1; jt != end_tok && !ip_err; jt++) {
-		const char *ip_s;
-		if (_cfg_type_json(&bl_json, JSMN_STRING, jt, &ip_s)) {
-		    if (!first)
-		        bl_sp = kstr_cat(bl_sp, (char *) " ");
-		    first = false;
-		    bl_sp = kstr_cat(bl_sp, (char *) ip_s);
-            inet4_d2h((char *) ip_s, &ip_err);
+    for (jt = bl_json.tokens + 1; jt != end_tok && !ip_err; jt++) {
+        const char* ip_s;
+        if (_cfg_type_json(&bl_json, JSMN_STRING, jt, &ip_s)) {
+            if (!first)
+                bl_sp = kstr_cat(bl_sp, (char*)" ");
+            first = false;
+            bl_sp = kstr_cat(bl_sp, (char*)ip_s);
+            inet4_d2h((char*)ip_s, &ip_err);
             json_string_free(&bl_json, ip_s);
         }
-	}
-	bl_new = kstr_sp(bl_sp);
+    }
+    bl_new = kstr_sp(bl_sp);
     dlen = strlen(bl_new);
-    
+
     if (ip_err) {
         lprintf("ip_blacklist_get: ip address parse fail for %s/%s\n", rx888_downloads, BLACKLIST_FILE);
         admcfg_string_free(bl_old);
         kstr_free(bl_sp);
         goto fail;
     }
-    
+
     diff = strcmp(bl_old, bl_new);
     lprintf("ip_blacklist_get: stored=%d downloaded=%d diff=%s download_diff_restart=%d\n",
-        slen, dlen, diff? "YES" : "NO", download_diff_restart);
+            slen, dlen, diff ? "YES" : "NO", download_diff_restart);
     admcfg_string_free(bl_old);
 
     if (download_diff_restart) {
-        //printf("ip_blacklist_get: check only\n");
+        // printf("ip_blacklist_get: check only\n");
         if (diff) {
             lprintf("ip_blacklist_get: new blacklist available, need RESTART\n");
-            return true;    // restart
-            
+            return true; // restart
+
             // After the restart the !download_diff_restart path below will be taken,
             // the blacklist in the admcfg updated and loaded. The restart is required
             // because the blacklist can only be loaded at the beginning of the server run.
         }
-    } else {
+    }
+    else {
         if (diff) {
             // update stored blacklist
             mtime = utc_time();
@@ -312,15 +308,14 @@ bool ip_blacklist_get(bool download_diff_restart)
             // reload iptables
             lprintf("ip_blacklist_get: using DOWNLOADED blacklist from %s/%s\n", rx888_downloads, BLACKLIST_FILE);
             net.ip_blacklist_len = 0;
-            kstr_t *iptable_save = kstr_cat(NULL, "*filter\n:KIWI - [0:0]\n-A INPUT -j KIWI\n");
+            kstr_t* iptable_save = kstr_cat(NULL, "*filter\n:KIWI - [0:0]\n-A INPUT -j KIWI\n");
             for (jt = bl_json.tokens + 1; jt != end_tok; jt++) {
-                const char *ip_s;
+                const char* ip_s;
                 if (_cfg_type_json(&bl_json, JSMN_STRING, jt, &ip_s)) {
                     bool whitelist;
-                    if (ip_blacklist_add((char*)ip_s, &whitelist) == 0) 
-                    {
-                        iptable_save = kstr_asprintf(iptable_save, "-I KIWI -s %s -j %s\n", 
-                            (char*)ip_s, whitelist? "RETURN" : "DROP");
+                    if (ip_blacklist_add((char*)ip_s, &whitelist) == 0) {
+                        iptable_save = kstr_asprintf(iptable_save, "-I KIWI -s %s -j %s\n",
+                                                     (char*)ip_s, whitelist ? "RETURN" : "DROP");
                     }
                     json_string_free(&bl_json, ip_s);
                 }
@@ -328,14 +323,15 @@ bool ip_blacklist_get(bool download_diff_restart)
 
             iptable_save = ip_blacklist_init_list(iptable_save, "ip_blacklist_local");
             iptable_restore(iptable_save);
-        } else {
+        }
+        else {
             lprintf("ip_blacklist_get: using STORED blacklist\n");
             failed = false;
             goto use_stored;
         }
     }
 
-	kiwi.allow_admin_conns = true;
+    kiwi.allow_admin_conns = true;
     kstr_free(reply);
     kstr_free(bl_sp);
     json_release(&bl_json);
@@ -347,13 +343,13 @@ fail:
     kstr_free(reply);
     json_release(&bl_json);
 
-    if (failed) 
+    if (failed)
         lprintf("ip_blacklist_get: FAILED to download blacklist from %s/%s\n", rx888_downloads, BLACKLIST_FILE);
     if (!download_diff_restart) {
         lprintf("ip_blacklist_get: using previously stored blacklist\n");
         ip_blacklist_init();
     }
-    
-	kiwi.allow_admin_conns = true;
-	return false;
+
+    kiwi.allow_admin_conns = true;
+    return false;
 }

@@ -31,8 +31,8 @@ static bool init;
 static const uint8_t buss_id = 0;
 static const uint8_t chip_addr = 0x60;
 
-static I2CInterface *i2c;
-static Si5351 *si5351;
+static I2CInterface* i2c;
+static Si5351* si5351;
 
 static int ad8370_fd;
 
@@ -40,14 +40,12 @@ static sem_t wf_sem;
 static std::atomic<int> wf_using[4];
 static int wf_channels;
 
-void peri_init()
-{
+void peri_init() {
     if (init)
         return;
 
     scall("/dev/zynqsdr", ad8370_fd = open("/dev/zynqsdr", O_RDWR | O_SYNC));
-    if (ad8370_fd <= 0)
-    {
+    if (ad8370_fd <= 0) {
         sys_panic("Failed to open kernel driver");
     }
 
@@ -55,31 +53,26 @@ void peri_init()
     si5351 = new Si5351(chip_addr, i2c);
 
     int int_clk;
-    if (clk.ext_ADC_clk)
-    {
+    if (clk.ext_ADC_clk) {
         int_clk = 0;
     }
-    else
-    {
+    else {
         int_clk = 1;
     }
 
     ioctl(ad8370_fd, CLK_SET, &int_clk);
 
     bool i2c_found = si5351->init(SI5351_CRYSTAL_LOAD_0PF, clk.clock_ref, 0);
-    if (!i2c_found)
-    {
+    if (!i2c_found) {
         sys_panic("i2c si5351 is not found\n\n");
         return;
     }
-    else
-    {
+    else {
         int ret = si5351->set_freq((uint64_t)(ADC_CLOCK_NOM * 100), SI5351_CLK0);
         printf("i2c si5351 initialized, error=%d\n", ret);
     }
 
-    if (clk.gpsdo_ext_clk > 0)
-    {
+    if (clk.gpsdo_ext_clk > 0) {
         si5351->set_freq((uint64_t)clk.gpsdo_ext_clk * 100, SI5351_CLK2);
     }
 
@@ -95,57 +88,47 @@ void peri_init()
     init = TRUE;
 }
 
-void rf_attn_set(float f)
-{
+void rf_attn_set(float f) {
     if (f > 0)
         return;
 
     int gain = (int)(-f * 2);
 
     printf("Set PE4312 with %d/0x%x\n", gain, gain);
-    if (ioctl(ad8370_fd, AD8370_SET, &gain) < 0)
-    {
+    if (ioctl(ad8370_fd, AD8370_SET, &gain) < 0) {
         printf("AD8370 set RF failed: %s\n", strerror(errno));
     }
 
     return;
 }
 
-void rf_enable_airband(bool enabled)
-{
+void rf_enable_airband(bool enabled) {
     int data = (int)enabled;
-    if (ioctl(ad8370_fd, MODE_SET, &data) < 0)
-    {
+    if (ioctl(ad8370_fd, MODE_SET, &data) < 0) {
         printf("AD8370 set mode failed\n");
     }
 
     return;
 }
 
-void peri_free()
-{
+void peri_free() {
     assert(init);
     close(ad8370_fd);
     si5351->set_freq((uint64_t)(0 * 100), SI5351_CLK0);
 }
 
 static std::atomic<int> write_enabled(0);
-void sd_enable(bool write)
-{
-    if (write)
-    {
+void sd_enable(bool write) {
+    if (write) {
         int v = std::atomic_fetch_add(&write_enabled, 1);
 
-        if (v == 0)
-        {
+        if (v == 0) {
             system("mount -o rw,remount /media/mmcblk0p1");
         }
     }
-    else
-    {
+    else {
         int v = std::atomic_fetch_add(&write_enabled, -1);
-        if (v == 1)
-        {
+        if (v == 1) {
             system("mount -o ro,remount /media/mmcblk0p1");
         }
     }
@@ -153,22 +136,19 @@ void sd_enable(bool write)
 
 static arm_pid_instance_f32 PID;
 static const float32_t Kp = 1.4f;  // Proportional gain
-static const float32_t Ki = 0.15f;  // Integral gain
+static const float32_t Ki = 0.15f; // Integral gain
 static const float32_t Kd = 0.01f; // Derivative gain
 
 static int last = 100;
 
-void clock_correction(float error)
-{
-    if (last < 3)
-    {
+void clock_correction(float error) {
+    if (last < 3) {
         last++;
         return;
     }
     last = 0;
 
-    if (PID.Kp == 0.0f)
-    {
+    if (PID.Kp == 0.0f) {
         // initialize
         PID.Kp = Kp;
         PID.Ki = Ki;
@@ -180,15 +160,14 @@ void clock_correction(float error)
 
     si5351->set_correction((int)control_output, SI5351_PLL_INPUT_XO);
 
-    //printf("Set correction to %d\n", (int)control_output);
+    // printf("Set correction to %d\n", (int)control_output);
 }
 
 ////////////////////////////////
 // FPGA DNA
 ////////////////////////////////
 
-u64_t fpga_dna()
-{
+u64_t fpga_dna() {
     int rc;
     uint64_t signature = 0;
     rc = ioctl(ad8370_fd, GET_DNA, &signature);
@@ -198,67 +177,58 @@ u64_t fpga_dna()
     return signature;
 }
 
-void fpga_start_rx()
-{
+void fpga_start_rx() {
     uint32_t decim = uint32_t(ADC_CLOCK_NOM / 12000 / 256);
     int rc = ioctl(ad8370_fd, RX_START, &decim);
     if (rc)
         sys_panic("Start RX failed");
 }
 
-void fpga_rxfreq(int rx_chan, uint64_t freq)
-{
+void fpga_rxfreq(int rx_chan, uint64_t freq) {
     int rc;
-    struct rx_param_op param = {(__u8)rx_chan, freq};
+    struct rx_param_op param = { (__u8)rx_chan, freq };
     rc = ioctl(ad8370_fd, RX_PARAM, &param);
     if (rc)
         sys_panic("Set RX freq failed");
 }
 
-void fpga_read_rx(void *buf, uint32_t size)
-{
+void fpga_read_rx(void* buf, uint32_t size) {
     int rc;
-    struct rx_read_op read_op = {(__u32)buf, size};
+    struct rx_read_op read_op = { (__u32)buf, size };
 
-    while (true)
-    {
+    while (true) {
         // printf("In: 0x%x %d\t", read_op.address, read_op.length);
         rc = ioctl(ad8370_fd, RX_READ, &read_op);
         if (rc)
             break;
         // printf("OUT: 0x%x %d -> %d\n", read_op.address, read_op.length, read_op.readed);
 
-        if (read_op.readed != read_op.length)
-        {
+        if (read_op.readed != read_op.length) {
             read_op.address += read_op.readed;
             read_op.length -= read_op.readed;
             TaskSleepMsec(10);
         }
-        else
-        {
+        else {
             break;
         }
     }
 
-    if (rc < 0)
-    {
+    if (rc < 0) {
         sys_panic("Read RX failed");
     }
 }
 
-void fpga_start_pps()
-{
+void fpga_start_pps() {
     uint32_t start = 1;
     int rc = ioctl(ad8370_fd, PPS_START, &start);
     if (rc)
         sys_panic("Start PPS failed");
 }
 
-uint64_t fpga_read_pps()
-{
+uint64_t fpga_read_pps() {
     uint32_t pps;
     int rc;
-    
+
     rc = ioctl(ad8370_fd, PPS_READ, &pps);
     if (rc && errno == EBUSY) {
         return 0;
@@ -270,8 +240,7 @@ uint64_t fpga_read_pps()
     return pps;
 }
 
-int fpga_set_antenna(int mask)
-{
+int fpga_set_antenna(int mask) {
     uint32_t gpio;
     int rc = ioctl(ad8370_fd, SET_GPIO_MASK, &gpio);
     if (rc)
@@ -288,8 +257,7 @@ int fpga_set_antenna(int mask)
     return 0;
 }
 
-static int fpga_set_bit(bool enabled, int bit)
-{
+static int fpga_set_bit(bool enabled, int bit) {
     uint32_t gpio;
     int rc = ioctl(ad8370_fd, SET_GPIO_MASK, &gpio);
     if (rc)
@@ -308,23 +276,19 @@ static int fpga_set_bit(bool enabled, int bit)
     return 0;
 }
 
-int fpga_set_pga(bool enabled)
-{
+int fpga_set_pga(bool enabled) {
     return fpga_set_bit(enabled, GPIO_PGA);
 }
 
-int fpga_set_dither(bool enabled)
-{
+int fpga_set_dither(bool enabled) {
     return fpga_set_bit(enabled, GPIO_DITHER);
 }
 
-int fpga_set_led(bool enabled)
-{
+int fpga_set_led(bool enabled) {
     return fpga_set_bit(enabled, GPIO_LED);
 }
 
-uint32_t fpga_signature()
-{
+uint32_t fpga_signature() {
     int rc;
     uint32_t signature = 0;
     rc = ioctl(ad8370_fd, GET_SIGNATURE, &signature);
@@ -334,18 +298,15 @@ uint32_t fpga_signature()
     return signature;
 }
 
-void fpga_setovmask(uint32_t mask)
-{
-    ///TODO
+void fpga_setovmask(uint32_t mask) {
+    /// TODO
 }
 
-void fpga_setadclvl(uint32_t val)
-{
-    ///TODO
+void fpga_setadclvl(uint32_t val) {
+    /// TODO
 }
 
-int fpga_reset_wf(int wf_chan, bool cont)
-{
+int fpga_reset_wf(int wf_chan, bool cont) {
     int rc;
     int data = wf_chan;
 
@@ -362,10 +323,9 @@ int fpga_reset_wf(int wf_chan, bool cont)
     return rc;
 }
 
-int fpga_wf_param(int wf_chan, int decimate, uint64_t freq)
-{
+int fpga_wf_param(int wf_chan, int decimate, uint64_t freq) {
     int rc;
-    wf_param_op param = {(__u16)wf_chan, (__u16)decimate, freq};
+    wf_param_op param = { (__u16)wf_chan, (__u16)decimate, freq };
     rc = ioctl(ad8370_fd, WF_PARAM, &param);
     if (rc)
         sys_panic("WF Parameter failed");
@@ -373,71 +333,60 @@ int fpga_wf_param(int wf_chan, int decimate, uint64_t freq)
     return rc;
 }
 
-int fpga_get_wf(int rx_chan)
-{
-  int ret = -1;
+int fpga_get_wf(int rx_chan) {
+    int ret = -1;
 
-  while (ret)
-  {
-    ret = sem_wait(&wf_sem);
-  }
-
-  for (int i = 0; i < wf_channels; i++)
-  {
-    int empty = 0;
-    bool exchanged = wf_using[i].compare_exchange_strong(empty, rx_chan+10);
-
-    if (exchanged)
-    {
-      return i;
+    while (ret) {
+        ret = sem_wait(&wf_sem);
     }
-  }
 
-  panic("Run out of wf channels");
+    for (int i = 0; i < wf_channels; i++) {
+        int empty = 0;
+        bool exchanged = wf_using[i].compare_exchange_strong(empty, rx_chan + 10);
 
-  return -1;
+        if (exchanged) {
+            return i;
+        }
+    }
+
+    panic("Run out of wf channels");
+
+    return -1;
 }
 
-void fpga_free_wf(int wf_chan, int rx_chan)
-{
-    if (rx_chan > 0)
-    {
-      rx_chan += 10;
+void fpga_free_wf(int wf_chan, int rx_chan) {
+    if (rx_chan > 0) {
+        rx_chan += 10;
 
-      bool exchanged = wf_using[wf_chan].compare_exchange_strong(rx_chan, 0);
-      assert(exchanged);
+        bool exchanged = wf_using[wf_chan].compare_exchange_strong(rx_chan, 0);
+        assert(exchanged);
     }
-    else
-    {
-      wf_using[wf_chan].store(0);
+    else {
+        wf_using[wf_chan].store(0);
     }
 
     int ret = sem_post(&wf_sem);
     if (ret) panic("sem_post failed");
 }
 
-void fpga_read_wf(int wf_chan, void *buf, uint32_t size)
-{
+void fpga_read_wf(int wf_chan, void* buf, uint32_t size) {
     int rc;
-    struct wf_read_op read_op = {(__u16)wf_chan, (__u32)buf, (__u32)size};
-    while (true)
-    {
-        //printf("In: 0x%x %d\t", read_op.address, read_op.length);
+    struct wf_read_op read_op = { (__u16)wf_chan, (__u32)buf, (__u32)size };
+    while (true) {
+        // printf("In: 0x%x %d\t", read_op.address, read_op.length);
         rc = ioctl(ad8370_fd, WF_READ, &read_op);
 
         if (rc)
             break;
-        //printf("OUT: 0x%x %d -> %d\n", read_op.address, read_op.length, read_op.readed);
+        // printf("OUT: 0x%x %d -> %d\n", read_op.address, read_op.length, read_op.readed);
 
-        if (read_op.readed != read_op.length)
-        {
+        if (read_op.readed != read_op.length) {
             read_op.address += read_op.readed;
             read_op.length -= read_op.readed;
             TaskSleepMsec(1);
             continue;
         }
-        else
-        {
+        else {
             break;
         }
     }

@@ -19,4 +19,4 @@ Boston, MA  02110-1301, USA.
 
 #pragma once
 
-void led_task(void *param);
+void led_task(void* param);

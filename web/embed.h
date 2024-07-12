@@ -20,8 +20,8 @@ Boston, MA  02110-1301, USA.
 #pragma once
 
 typedef struct {
-    const char *name;
+    const char* name;
     int count;
-    const unsigned char *data;
+    const unsigned char* data;
     size_t size;
 } embedded_files_t;

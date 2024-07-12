@@ -26,14 +26,14 @@ Boston, MA  02110-1301, USA.
 
 extern double adc_clock_hz;
 
-#define ADC_CLOCK_HF (122.88*MHz)
-#define ADC_CLOCK_VHF (98.304*MHz)
+#define ADC_CLOCK_HF  (122.88 * MHz)
+#define ADC_CLOCK_VHF (98.304 * MHz)
 
 // ADC clk generated from FPGA via Si5351
-#define ADC_CLOCK_NOM	    adc_clock_hz		// 66.6666 MHz 15.0 ns
-#define ADC_CLOCK_TYP	    adc_clock_hz		// typical 20 degC value
-#define ADC_CLOCK_PPM_TYP   100                 // max auto adjustment we allow
-#define ADC_CLOCK_PPM_LIMIT 100                 // max manual adjustment we allow
+#define ADC_CLOCK_NOM       adc_clock_hz // 66.6666 MHz 15.0 ns
+#define ADC_CLOCK_TYP       adc_clock_hz // typical 20 degC value
+#define ADC_CLOCK_PPM_TYP   100          // max auto adjustment we allow
+#define ADC_CLOCK_PPM_LIMIT 100          // max manual adjustment we allow
 
 // works with float or int args
 // if using an int for clk_hz make it u64_t or constant ULL to prevent overflow
@@ -52,15 +52,15 @@ typedef struct {
     int do_corrections;
     bool is_corr;
     bool ext_ADC_clk;
-    int adc_clk_corrections;        // manual and GPS corrections
+    int adc_clk_corrections; // manual and GPS corrections
     int last_adc_clk_corrections;
-    int adc_gps_clk_corrections;    // GPS-derived corrections
+    int adc_gps_clk_corrections; // GPS-derived corrections
     int temp_correct_offset;
     double adc_clock_base, gps_secs;
-    uint32_t gpsdo_ext_clk;                // ext clock output
-    uint32_t clock_ref;                 // reference clock freq
+    uint32_t gpsdo_ext_clk; // ext clock output
+    uint32_t clock_ref;     // reference clock freq
     int manual_adj;
-    u64_t ticks;                    // ticks value captured at the corresponding gps_secs
+    u64_t ticks; // ticks value captured at the corresponding gps_secs
 } clk_t;
 
 extern clk_t clk;
@@ -68,6 +68,6 @@ extern clk_t clk;
 double adc_clock_system();
 void clock_manual_adj(int manual_adj);
 void clock_init();
-void clock_conn_init(conn_t *conn);
+void clock_conn_init(conn_t* conn);
 void clock_correction(double t_rx, u64_t ticks);
 void tod_correction(u4_t week, int sat);

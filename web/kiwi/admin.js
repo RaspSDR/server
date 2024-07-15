@@ -2356,7 +2356,7 @@ function console_html()
             
             w3_button('w3-yellow|margin-left:16px', 'disk free', 'console_cmd_cb', 'console_input_cb|df -H /media/mmcblk0p1'),
 
-            w3_button('w3-aqua|margin-left:16px', 'nano j', 'console_cmd_cb', 'console_input_cb|nano j'),
+            w3_button('w3-aqua|margin-left:16px', 'enable hotspot', 'console_cmd_cb', 'console_input_cb|/root/wifi/hotspot.sh'),
 
             w3_button('w3-blue|margin-left:16px', 'ping DNS', 'console_cmd_cb',
                'console_input_cb|ping -c3 1.1.1.1; ping -c3 8.8.8.8'),

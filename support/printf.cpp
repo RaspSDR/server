@@ -57,6 +57,7 @@ void kiwi_backtrace(const char* id, u4_t printf_type) {
 
     int n = 0;
     printf("%s:\n", id);
+    unw_word_t last_ip = 0;
     while (unw_step(&cursor)) {
         unw_word_t ip, sp, off;
 
@@ -72,6 +73,10 @@ void kiwi_backtrace(const char* id, u4_t printf_type) {
                 name = "<unknown>";
         }
 
+        if (last_ip == ip)
+            break;
+
+        last_ip = ip;
         printf("#%-2d 0x%016" PRIxPTR " sp=0x%016" PRIxPTR " %s + 0x%" PRIxPTR "\n",
                ++n,
                static_cast<uintptr_t>(ip),

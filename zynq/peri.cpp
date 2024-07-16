@@ -242,7 +242,7 @@ uint64_t fpga_read_pps() {
 
 int fpga_set_antenna(int mask) {
     uint32_t gpio;
-    int rc = ioctl(ad8370_fd, SET_GPIO_MASK, &gpio);
+    int rc = ioctl(ad8370_fd, GET_GPIO_MASK, &gpio);
     if (rc)
         sys_panic("Get GPIO failed");
 
@@ -259,7 +259,7 @@ int fpga_set_antenna(int mask) {
 
 static int fpga_set_bit(bool enabled, int bit) {
     uint32_t gpio;
-    int rc = ioctl(ad8370_fd, SET_GPIO_MASK, &gpio);
+    int rc = ioctl(ad8370_fd, GET_GPIO_MASK, &gpio);
     if (rc)
         sys_panic("Get GPIO failed");
 

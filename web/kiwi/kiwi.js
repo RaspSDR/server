@@ -1395,6 +1395,7 @@ function kiwi_output_msg(id, id_scroll, p)
       // that would otherwise result in spurious blank lines
       s = s.replace(/\r\n/g, '\n');
       s = s.replace(/\r\n/g, '\n');
+      s = s.replace(/\r/g, '\n');
    }
    if (dbg) console.log('OUTPUT '+ kiwi_JSON(s).replace(/\\u001b/g, '\\e'));
    
@@ -1429,18 +1430,6 @@ function kiwi_output_msg(id, id_scroll, p)
          }
 		} else
 		
-		if (c == '\r') {
-         //if (dbg) console.log('\\r inline, isAltBuf='+ p.isAltBuf);
-         if (p.isAltBuf) {
-            p.c = 1; dirty();
-         }
-         if (p.inline_returns) {
-            p.return_pending = true;
-         }
-         snew_dump('rtn');
-         result = '\\r col = 1 ('+ p.r +',1)';
-      } else
-      
       // scroll text up
 		if (c == '\n' && p.isAltBuf) {
 		   if (p.margin_set) {
@@ -2056,7 +2045,7 @@ function kiwi_output_msg(id, id_scroll, p)
                   if (dbg) console.log('> ESC '+ kiwi_JSON(p.esc.s) +' $IGNORED ==========================================================================================');
             } else
             if (result === 2) {
-                  if (1 || dbg) console.log('> ESC '+ kiwi_JSON(p.esc.s) +' $UNKNOWN ======================================================================================');
+                  if (dbg) console.log('> ESC '+ kiwi_JSON(p.esc.s) +' $UNKNOWN ======================================================================================');
             } else
             if (isString(result)) {
                if (dbg) console.log('> ESC '+ (p.isAltBuf? 'ALT' : 'REG') +' '+ kiwi_JSON(p.esc.s) +' '+ result);

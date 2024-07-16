@@ -23,8 +23,10 @@ const char* Week[] = {
 static struct gps_data_t gps_handle;
 
 static void gps_task(void* param);
+static void pps_task(void* param);
 
 void gps_main(int argc, char* argv[]) {
+    struct fixsource_t source;
     gps.start = timer_ms();
     gps.last_samp_hour = -1;
     gps.last_samp = -1;
@@ -32,20 +34,30 @@ void gps_main(int argc, char* argv[]) {
     memset(Sats, 0xff, sizeof(Sats));
     lock_init(&gps_lock);
 
-    if (0 != gps_open("localhost", "2947", &gps_handle)) {
+    gpsd_source_spec(NULL, &source);
+
+    if (0 != gps_open(source.server, source.port, &gps_handle)) {
         printf("open gpsd failed\n");
         return;
     }
 
-#if 0
+#if 1
     // enable satellite for gps
     // Construct the command
     // Content is coming from gpsctl -D 4 command
-    const char *command = "?DEVICE={\"path\":\"/dev/ttyPS1\",\"hexdata\":\"245043415330332c312c312c312c312c312c312c312c312c302c302c2c2c312c312c2c2c2c312a33330d0a\"}\n";
-    
+    const char* command = "?DEVICE={\"path\":\"/dev/ttyPS1\",\"hexdata\":\"245043415330332c352c352c352c352c302c302c352c312c302c302c2c2c312c312c2c2c2c312a33370d0a\"}\n";
+
     // Send the command to GPSD
-    if (write(gps_handle.gps_fd, command, strlen(command))) {
-        fprintf(stderr, "Enable satellite on gps failed\n");
+    int command_len = strlen(command) + 1;
+    if (write(gps_handle.gps_fd, command, command_len) != command_len) {
+        panic("Enable satellite on gps failed\n");
+    }
+
+    gps_close(&gps_handle);
+
+    if (0 != gps_open(source.server, source.port, &gps_handle)) {
+        printf("open gpsd failed\n");
+        return;
     }
 #endif
 
@@ -57,6 +69,7 @@ void gps_main(int argc, char* argv[]) {
 
     // create a task to pull gps
     CreateTaskF(gps_task, 0, GPS_PRIORITY, CTF_NO_LOG);
+    CreateTaskF(pps_task, 0, GPS_PRIORITY, CTF_NO_LOG);
 }
 
 /* convert calendar day/time to time -------------------------------------------
@@ -150,18 +163,26 @@ static void update_gps_info_before(int samp_hour, int samp_min) {
     }
 }
 
-static void gps_task(void* param) {
-    double t_rx = 0;
+static double t_rx = 0;
+
+static void pps_task(void* param) {
     fpga_start_pps();
+
     for (;;) {
         // fetch pps data
         u64_t ticks;
         ticks = fpga_read_pps();
 
-        if (ticks)
+        if (ticks && t_rx)
             clock_correction(t_rx, ticks);
 
-        if (!gps_waiting(&gps_handle, 1000000))
+        TaskSleepSec(1);
+    }
+}
+
+static void gps_task(void* param) {
+    for (;;) {
+        if (!gps_waiting(&gps_handle, 5000))
             continue;
 
         gps_read(&gps_handle, NULL, 0);

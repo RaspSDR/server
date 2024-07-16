@@ -58,6 +58,7 @@ typedef enum { Navstar,
                QZSS,
                GLONASS } sat_e;
 const char sat_s[] = { 'N', 'S', 'E', 'B', 'I', 'Q', 'G' };
+const int sat_base[] = { 0, 0, 0, 400, 0, 102, 64 };
 
 typedef struct {
     int prn;

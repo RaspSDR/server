@@ -25,14 +25,8 @@ static struct gps_data_t gps_handle;
 static void gps_task(void* param);
 static void pps_task(void* param);
 
-void gps_main(int argc, char* argv[]) {
+static void gps_connect() {
     struct fixsource_t source;
-    gps.start = timer_ms();
-    gps.last_samp_hour = -1;
-    gps.last_samp = -1;
-
-    memset(Sats, 0xff, sizeof(Sats));
-    lock_init(&gps_lock);
 
     gpsd_source_spec(NULL, &source);
 
@@ -41,7 +35,7 @@ void gps_main(int argc, char* argv[]) {
         return;
     }
 
-#if 1
+#if 0
     // enable satellite for gps
     // Construct the command
     // Content is coming from gpsctl -D 4 command
@@ -52,20 +46,23 @@ void gps_main(int argc, char* argv[]) {
     if (write(gps_handle.gps_fd, command, command_len) != command_len) {
         panic("Enable satellite on gps failed\n");
     }
-
-    gps_close(&gps_handle);
-
-    if (0 != gps_open(source.server, source.port, &gps_handle)) {
-        printf("open gpsd failed\n");
-        return;
-    }
 #endif
 
-    // Set non-blocking mode
-    if (gps_stream(&gps_handle, WATCH_ENABLE | WATCH_JSON, NULL) != 0) {
-        printf("Error: Unable to enable GPS streaming\n");
-        return;
-    }
+    source.device = "/dev/ttyPS1";
+
+    int flags = WATCH_ENABLE;
+    if (source.device != NULL)
+        flags |= WATCH_DEVICE;
+    (void)gps_stream(&gps_handle, flags, source.device);
+}
+
+void gps_main(int argc, char* argv[]) {
+    gps.start = timer_ms();
+    gps.last_samp_hour = -1;
+    gps.last_samp = -1;
+
+    memset(Sats, 0xff, sizeof(Sats));
+    lock_init(&gps_lock);
 
     // create a task to pull gps
     CreateTaskF(gps_task, 0, GPS_PRIORITY, CTF_NO_LOG);
@@ -180,132 +177,138 @@ static void pps_task(void* param) {
     }
 }
 
+static void gps_callback(struct gps_data_t* gpsdata);
+
 static void gps_task(void* param) {
-    for (;;) {
-        if (!gps_waiting(&gps_handle, 5000))
-            continue;
-
-        gps_read(&gps_handle, NULL, 0);
-
-        // print_gps_data(&gps_handle);
-        if (MODE_SET != (MODE_SET & gps_handle.set)) {
-            // did not even get mode, nothing to see here
-            gps.acquiring = false;
-            continue;
-        }
-        else {
-            gps.acquiring = true;
-        }
-
-        lock_enter(&gps_lock);
-        // Check if the receiver has obtained a position fix
-        if ((gps_handle.fix.mode > MODE_NO_FIX) && (gps.ttff == 0)) {
-            gps.ttff = (timer_ms() - gps.start) / 1000;
-        }
-
-        if (TIME_SET == (TIME_SET & gps_handle.set)) {
-            double d = gps_handle.fix.time.tv_sec;
-            if (d != 0) {
-                gps.StatDay = d / (60 * 60 * 24);
-                if (gps.StatDay < 0 || gps.StatDay >= 7) {
-                    gps.StatDay = -1;
-                }
-                gps.StatDaySec = d - (60 * 60 * 24) * gps.StatDay;
-                gps.StatWeekSec = d;
-
-                update_gps_info_before(((int)d / 60 / 60) % 24, ((int)d / 60) % 60);
-
-                t_rx = d;
-            }
-
-            gps.tLS_valid = true;
-            gps.delta_tLS = gps_handle.leap_seconds;
-        }
-
-        if (LATLON_SET == (LATLON_SET & gps_handle.set)) {
-            gps.sgnLat = gps_handle.fix.latitude;
-            gps.StatLat = fabs(gps_handle.fix.latitude);
-            gps.StatNS = gps_handle.fix.latitude < 0 ? 'S' : 'N';
-
-            gps.sgnLon = gps_handle.fix.longitude;
-            gps.StatLon = fabs(gps_handle.fix.longitude);
-            gps.StatEW = gps_handle.fix.longitude < 0 ? 'W' : 'E';
-        }
-
-        if (ALTITUDE_SET == (ALTITUDE_SET & gps_handle.set)) {
-            gps.StatAlt = gps_handle.fix.altitude;
-        }
-
-        if (gps.sgnLon != 0) {
-            double x, y;
-            LLH2XYZ(gps.sgnLat, gps.sgnLon, gps.StatAlt, &x, &y);
-
-            gps_pos_t* pos = &gps.POS_data[gps.POS_seq_w];
-
-            pos->lat = gps.sgnLat;
-            pos->lon = gps.sgnLon;
-            pos->x = x;
-            pos->y = y;
-
-            gps.POS_seq_w = (gps.POS_seq_w + 1) % GPS_POS_SAMPS;
-            if (gps.POS_len < GPS_POS_SAMPS) gps.POS_len++;
-        }
-
-        if (gps_handle.set & SATELLITE_SET) {
-            gps.FFTch = gps_handle.satellites_visible;
-            gps.tracking = gps_handle.satellites_visible;
-            gps.good = gps_handle.satellites_visible;
-            gps.fixes = gps_handle.satellites_used;
-            memset(gps.shadow_map, 0, sizeof(gps.shadow_map));
-            memset(gps.ch, 0, sizeof(gps.ch));
-            int i;
-            for (i = 0; i < gps_handle.satellites_visible && i < GPS_MAX_CHANS; i++) {
-                int sat = find_sat((sat_e)gps_handle.skyview[i].gnssid, gps_handle.skyview[i].PRN);
-                gps.ch[i].snr = gps_handle.skyview[i].ss;
-                gps.ch[i].sat = sat;
-                gps.ch[i].el = gps_handle.skyview[i].elevation;
-                gps.ch[i].az = gps_handle.skyview[i].azimuth;
-
-                gps.ch[i].has_soln = gps_handle.skyview[i].used;
-
-                // already have az/el for this sat in this sample period?
-                if (gps.el[gps.last_samp][sat])
-                    continue;
-
-                const int el = std::round(gps.ch[i].el);
-                const int az = std::round(gps.ch[i].az);
-
-                // printf("%s NEW EL/AZ=%2d %3d\n", PRN(sat), el, az);
-                if (az < 0 || az >= 360 || el <= 0 || el > 90)
-                    continue;
-
-                gps.shadow_map[az] |= (1 << int(std::round(el / 90.0 * 31.0)));
-
-                // special treatment for QZS_3
-                SATELLITE* s = &Sats[sat];
-                if (s->type == QZSS && s->prn == 199) {
-                    gps.qzs_3.az = az;
-                    gps.qzs_3.el = el;
-                }
-
-                gps.el[gps.last_samp][sat] = el;
-                gps.az[gps.last_samp][sat] = az;
-            }
-            for (; i < GPS_MAX_CHANS; i++) {
-                gps.ch[i].sat = -1;
-            }
-        }
-
-        gps.fixes++;
-        gps.fixes_min_incr++;
-        gps.fixes_hour_incr++;
-
-        // at startup immediately indicate first solution
-        if (gps.fixes_min == 0) gps.fixes_min++;
-
-        // at startup incrementally update until first hour sample period has ended
-        if (gps.fixes_hour_samples <= 1) gps.fixes_hour++;
-
-        lock_leave(&gps_lock);
+    const int GPS_TIMEOUT = 5000000; /* microseconds */
+    gps_connect();
+    while (gps_mainloop(&gps_handle, GPS_TIMEOUT, gps_callback) < 0) {
+        /* avoid busy-calling gps_mainloop() */
+        TaskSleepSec(GPS_TIMEOUT / 1000000);
+        printf("Reconnect GPS\n");
+        gps_connect();
     }
+}
+
+static void gps_callback(struct gps_data_t* gpsdata) {
+    // print_gps_data(&gps_handle);
+    if (MODE_SET != (MODE_SET & gps_handle.set)) {
+        // did not even get mode, nothing to see here
+        gps.acquiring = false;
+        return;
+    }
+    else {
+        gps.acquiring = true;
+    }
+
+    lock_enter(&gps_lock);
+    // Check if the receiver has obtained a position fix
+    if ((gps_handle.fix.mode > MODE_NO_FIX) && (gps.ttff == 0)) {
+        gps.ttff = (timer_ms() - gps.start) / 1000;
+    }
+
+    if (TIME_SET == (TIME_SET & gps_handle.set)) {
+        double d = gps_handle.fix.time.tv_sec;
+        if (d != 0) {
+            gps.StatDay = d / (60 * 60 * 24);
+            if (gps.StatDay < 0 || gps.StatDay >= 7) {
+                gps.StatDay = -1;
+            }
+            gps.StatDaySec = d - (60 * 60 * 24) * gps.StatDay;
+            gps.StatWeekSec = d;
+
+            update_gps_info_before(((int)d / 60 / 60) % 24, ((int)d / 60) % 60);
+
+            t_rx = d;
+        }
+
+        gps.tLS_valid = true;
+        gps.delta_tLS = gps_handle.leap_seconds;
+    }
+
+    if (LATLON_SET == (LATLON_SET & gps_handle.set)) {
+        gps.sgnLat = gps_handle.fix.latitude;
+        gps.StatLat = fabs(gps_handle.fix.latitude);
+        gps.StatNS = gps_handle.fix.latitude < 0 ? 'S' : 'N';
+
+        gps.sgnLon = gps_handle.fix.longitude;
+        gps.StatLon = fabs(gps_handle.fix.longitude);
+        gps.StatEW = gps_handle.fix.longitude < 0 ? 'W' : 'E';
+    }
+
+    if (ALTITUDE_SET == (ALTITUDE_SET & gps_handle.set)) {
+        gps.StatAlt = gps_handle.fix.altitude;
+    }
+
+    if (gps.sgnLon != 0) {
+        double x, y;
+        LLH2XYZ(gps.sgnLat, gps.sgnLon, gps.StatAlt, &x, &y);
+
+        gps_pos_t* pos = &gps.POS_data[gps.POS_seq_w];
+
+        pos->lat = gps.sgnLat;
+        pos->lon = gps.sgnLon;
+        pos->x = x;
+        pos->y = y;
+
+        gps.POS_seq_w = (gps.POS_seq_w + 1) % GPS_POS_SAMPS;
+        if (gps.POS_len < GPS_POS_SAMPS) gps.POS_len++;
+    }
+
+    if (gps_handle.set & SATELLITE_SET) {
+        gps.FFTch = gps_handle.satellites_visible;
+        gps.tracking = gps_handle.satellites_visible;
+        gps.good = gps_handle.satellites_visible;
+        gps.fixes = gps_handle.satellites_used;
+        memset(gps.shadow_map, 0, sizeof(gps.shadow_map));
+        memset(gps.ch, 0, sizeof(gps.ch));
+        int i;
+        for (i = 0; i < gps_handle.satellites_visible && i < GPS_MAX_CHANS; i++) {
+            int sat = find_sat((sat_e)gps_handle.skyview[i].gnssid, gps_handle.skyview[i].PRN);
+            gps.ch[i].snr = gps_handle.skyview[i].ss;
+            gps.ch[i].sat = sat;
+            gps.ch[i].el = gps_handle.skyview[i].elevation;
+            gps.ch[i].az = gps_handle.skyview[i].azimuth;
+
+            gps.ch[i].has_soln = gps_handle.skyview[i].used;
+
+            // already have az/el for this sat in this sample period?
+            if (gps.el[gps.last_samp][sat])
+                continue;
+
+            const int el = std::round(gps.ch[i].el);
+            const int az = std::round(gps.ch[i].az);
+
+            // printf("%s NEW EL/AZ=%2d %3d\n", PRN(sat), el, az);
+            if (az < 0 || az >= 360 || el <= 0 || el > 90)
+                continue;
+
+            gps.shadow_map[az] |= (1 << int(std::round(el / 90.0 * 31.0)));
+
+            // special treatment for QZS_3
+            SATELLITE* s = &Sats[sat];
+            if (s->type == QZSS && s->prn == 199) {
+                gps.qzs_3.az = az;
+                gps.qzs_3.el = el;
+            }
+
+            gps.el[gps.last_samp][sat] = el;
+            gps.az[gps.last_samp][sat] = az;
+        }
+        for (; i < GPS_MAX_CHANS; i++) {
+            gps.ch[i].sat = -1;
+        }
+    }
+
+    gps.fixes++;
+    gps.fixes_min_incr++;
+    gps.fixes_hour_incr++;
+
+    // at startup immediately indicate first solution
+    if (gps.fixes_min == 0) gps.fixes_min++;
+
+    // at startup incrementally update until first hour sample period has ended
+    if (gps.fixes_hour_samples <= 1) gps.fixes_hour++;
+
+    lock_leave(&gps_lock);
 }

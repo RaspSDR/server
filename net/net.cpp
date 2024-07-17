@@ -512,7 +512,7 @@ isLocal_t isLocal_if_ip(conn_t* conn, char* remote_ip_s, const char* log_prefix)
     return isLocal;
 }
 
-u4_t inet4_d2h(char* inet4_str, bool* error, u1_t* ap, u1_t* bp, u1_t* cp, u1_t* dp) {
+u4_t inet4_d2h(const char* inet4_str, bool* error, u1_t* ap, u1_t* bp, u1_t* cp, u1_t* dp) {
     if (error != NULL) *error = false;
     int n;
     u4_t a, b, c, d;
@@ -650,34 +650,19 @@ bool ip_match(const char* ip, ip_lookup_t* ips) {
 }
 
 int DNS_lookup(const char* domain_name, ip_lookup_t* r_ips, int n_ips, const char* ip_backup) {
-    int i, n, status;
-    char* cmd_p;
-    char** ip_list = r_ips->ip_list;
+    int i, n;
+    char host[NI_MAXHOST];
+    struct addrinfo hints, *res, *p;
 
     assert(n_ips <= N_IPS);
-    asprintf(&cmd_p, "dig +short +noedns +time=3 +tries=3 %s A %s AAAA", domain_name, domain_name);
-    kstr_t* reply = non_blocking_cmd(cmd_p, &status);
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
 
-    if (reply != NULL && status >= 0 && WEXITSTATUS(status) == 0) {
-        char* r_buf;
-        str_split_t ips[N_IPS];
-        n = kiwi_split(kstr_sp(reply), &r_buf, "\n", ips, n_ips - 1);
-
-        for (i = 0; i < n; i++) {
-            ip_list[i] = strndup(ips[i].str, NET_ADDRSTRLEN);
-            int slen = strlen(ip_list[i]);
-            if (ip_list[i][slen - 1] == '\n') ip_list[i][slen - 1] = '\0'; // remove trailing \n
-            // printf("LOOKUP: \"%s\" %s\n", domain_name, ip_list[i]);
-            r_ips->ip[i] = inet4_d2h(ip_list[i], NULL);
-        }
-
-        kiwi_ifree(r_buf, "DNS_lookup");
-        r_ips->valid = true;
-    }
-    else {
+    if (getaddrinfo(domain_name, NULL, &hints, &res) != 0) {
         if (ip_backup != NULL) {
-            ip_list[0] = (char*)ip_backup;
-            r_ips->ip[0] = inet4_d2h(ip_list[0], NULL);
+            r_ips->ip_list[0] = strdup(ip_backup);
+            r_ips->ip[0] = inet4_d2h(ip_backup, NULL);
             n = 1;
             r_ips->valid = r_ips->backup = true;
             lprintf("WARNING: lookup for \"%s\" failed, using backup IPv4 address %s\n", domain_name, ip_backup);
@@ -686,9 +671,18 @@ int DNS_lookup(const char* domain_name, ip_lookup_t* r_ips, int n_ips, const cha
             n = 0;
         }
     }
-    kiwi_asfree(cmd_p);
-    kstr_free(reply);
-    ip_list[n] = NULL;
+    else {
+        for (p = res, n = 0; p != NULL && n < n_ips; p = p->ai_next) {
+            if (getnameinfo(p->ai_addr, p->ai_addrlen, host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST) == 0) {
+                r_ips->ip_list[n] = strdup(host);
+                r_ips->ip[n] = inet4_d2h(host, NULL);
+                n++;
+            }
+        }
+        freeaddrinfo(res);
+        r_ips->valid = true;
+    }
+
     r_ips->n_ips = n;
     return n;
 }

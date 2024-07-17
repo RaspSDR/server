@@ -127,32 +127,21 @@ char* rx_server_ajax(struct mg_connection* mc, char* ip_forwarded) {
                                vname, sizeof(vname), fname, sizeof(fname), &data, &data_len);
 
             if (data_len < PHOTO_UPLOAD_MAX_SIZE) {
-                FILE* fp;
-                scallz("fopen photo", (fp = fopen(DIR_CFG "/photo.upload.tmp", "w")));
-                scall("fwrite photo", (n = fwrite(data, 1, data_len, fp)));
-                fclose(fp);
-
-                // do some server-side checking
-                char* reply;
-                int status;
-                reply = non_blocking_cmd("file " DIR_CFG "/photo.upload.tmp", &status);
-                if (reply != NULL) {
-                    if (strstr(kstr_sp(reply), "image data") == 0)
-                        rc = 2;
-                    kstr_free(reply);
+                if (data[0] == 0xff && data[1] == 0xd8 &&
+                    data[data_len - 2] == 0xff && data[data_len - 1] == 0xd9) {
+                    FILE* fp;
+                    scallz("fopen photo", (fp = fopen(DIR_CFG "/photo.upload", "w")));
+                    scall("fwrite photo", (n = fwrite(data, 1, data_len, fp)));
+                    fclose(fp);
                 }
                 else {
-                    rc = 3;
+                    rc = 2;
                 }
             }
             else {
                 rc = 4;
             }
         }
-
-        // only clobber the old file if the checks pass
-        if (rc == 0)
-            system("mv " DIR_CFG "/photo.upload.tmp " DIR_CFG "/photo.upload");
 
         printf("AJAX_PHOTO: data=%p data_len=%d \"%s\" rc=%d\n", data, data_len, fname, rc);
         asprintf(&sb, "{\"r\":%d}", rc);

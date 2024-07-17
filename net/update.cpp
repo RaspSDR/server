@@ -89,7 +89,7 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
 
     if (report) report_progress(conn, "Download FPGA firmware");
 
-    status = blocking_system("curl -s -o /media/mmcblk0p1/update/sdr_receiver_kiwi.bit http://downloads.rx-888.com/web-888/%s/sdr_receiver_kiwi.bit", channel);
+    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr_fpga.bit http://downloads.rx-888.com/web-888/%s/websdr_fpga.bit", channel);
     if (status != 0) {
         lprintf("UPDATE: fetch bistream status=0x%08x\n", status);
         goto exit;
@@ -97,7 +97,7 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
 
     if (report) report_progress(conn, "Download Web-888 Server");
 
-    status = blocking_system("curl -s -o /media/mmcblk0p1/update/kiwi.bin http://downloads.rx-888.com/web-888/%s/kiwi.bin", channel);
+    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr.bin http://downloads.rx-888.com/web-888/%s/websdr.bin", channel);
     if (status != 0) {
         lprintf("UPDATE: fetch binary status=0x%08x\n", status);
         goto exit;
@@ -121,10 +121,10 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
 
     if (report) report_progress(conn, "Install update to SD card");
 
-    system("rm /media/mmcblk0p1/kiwi.bin.old");
-    system("rm /media/mmcblk0p1/sdr_receiver_kiwi.bit.old");
-    system("mv /media/mmcblk0p1/kiwi.bin /media/mmcblk0p1/kiwi.bin.old; mv /media/mmcblk0p1/update/kiwi.bin /media/mmcblk0p1/kiwi.bin");
-    system("mv /media/mmcblk0p1/sdr_receiver_kiwi.bit /media/mmcblk0p1/sdr_receiver_kiwi.bit.old; mv /media/mmcblk0p1/update/sdr_receiver_kiwi.bit /media/mmcblk0p1/sdr_receiver_kiwi.bit");
+    system("rm /media/mmcblk0p1/websdr.bin.old");
+    system("rm /media/mmcblk0p1/websdr_fpga.bit.old");
+    system("mv /media/mmcblk0p1/websdr.bin /media/mmcblk0p1/websdr.bin.old; mv /media/mmcblk0p1/update/websdr.bin /media/mmcblk0p1/websdr.bin");
+    system("mv /media/mmcblk0p1/websdr_fpga.bit /media/mmcblk0p1/websdr_fpga.bit.old; mv /media/mmcblk0p1/update/websdr_fpga.bit /media/mmcblk0p1/websdr_fpga.bit");
 
     status = EXIT_SUCCESS;
 

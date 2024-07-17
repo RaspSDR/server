@@ -144,12 +144,12 @@ file(GLOB_RECURSE KIWI_SRCS
     "${UPSTREAM_DIR}/pkgs/sha256/*.cpp"
 )
 
-add_executable(kiwi.bin ${KIWI_SRCS} ${EXT_SRCS}
+add_executable(websdr.bin ${KIWI_SRCS} ${EXT_SRCS}
     ${CMAKE_BINARY_DIR}/edata_always.cpp ${CMAKE_BINARY_DIR}/edata_always2.cpp ${CMAKE_BINARY_DIR}/edata_embed.cpp
 )
-#add_dependencies(kiwi.bin kiwi_gen_h)
+#add_dependencies(websdr.bin kiwi_gen_h)
 
-target_include_directories(kiwi.bin PUBLIC
+target_include_directories(websdr.bin PUBLIC
     "."
     ${PLATFORM_INC}
     "gps"
@@ -185,13 +185,13 @@ target_include_directories(kiwi.bin PUBLIC
     "${UPSTREAM_DIR}/pkgs/utf8/"
 )
 
-target_include_directories(kiwi.bin PUBLIC ${FFTW3_INCLUDE_DIRS})
+target_include_directories(websdr.bin PUBLIC ${FFTW3_INCLUDE_DIRS})
 
-target_link_directories(kiwi.bin PUBLIC
+target_link_directories(websdr.bin PUBLIC
     ${GLFW3_LIBRARY_DIRS}
 )
 
-target_link_libraries(kiwi.bin PRIVATE
+target_link_libraries(websdr.bin PRIVATE
     libfftw3f.a libfftw3f_threads.a
     ${ZLIB_LIBRARIES}
     ${GPS_LIBRARIES}
@@ -210,7 +210,7 @@ endif()
 
 set(DIR_DATA /tmp/kiwi.data)
 
-target_compile_definitions(kiwi.bin PUBLIC
+target_compile_definitions(websdr.bin PUBLIC
     VERSION_MAJ=${CURRENT_YEAR} VERSION_MIN=${CURRENT_MONTH_DAY}
     KIWI KIWISDR
     DIR_CFG="/root/config"
@@ -232,7 +232,7 @@ target_compile_definitions(kiwi.bin PUBLIC
     HAVE_LIBFDK_AAC HAVE_USAC
 )
 
-target_compile_options(kiwi.bin PUBLIC ${PLATOFRM_FLAGS})
+target_compile_options(websdr.bin PUBLIC ${PLATOFRM_FLAGS})
 
 # ----------------------- Build FILES embeded
 file(GLOB_RECURSE FILES_EMBED_JS RELATIVE ${UPSTREAM_DIR}/web
@@ -423,5 +423,5 @@ add_custom_command(
 )
 add_custom_target(copy_libfdk_target DEPENDS ${PROJECT_BINARY_DIR}/libfdk-aac.so)
 
-add_dependencies(kiwi.bin copy_config_target)
-add_dependencies(kiwi.bin copy_libfdk_target)
+add_dependencies(websdr.bin copy_config_target)
+add_dependencies(websdr.bin copy_libfdk_target)

@@ -44,7 +44,7 @@ Boston, MA  02110-1301, USA.
 #include <ctype.h>
 
 #define CFG_PRE        DIR_CFG "/" CFG_PREFIX
-#define CFG_FN         CFG_PRE "kiwi.json"
+#define CFG_FN         CFG_PRE "websdr.json"
 #define ADM_FN         CFG_PRE "admin.json"
 #define DX_FN          CFG_PRE "dx.json"
 #define DX_CFG_FN      CFG_PRE "dx_config.json"

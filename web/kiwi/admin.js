@@ -1704,7 +1704,6 @@ var pin = {
 var _gps = {
    leaflet: true,
 
-   RSSI:0, AZEL:1, POS:2,
    legend_sep: w3_inline('', pin.green, 'Navstar/QZSS only', pin.yellow, 'Galileo only', pin.red, 'all sats'),
    legend_all: w3_inline('', pin.green, 'all sats (Navstar/QZSS/Galileo)')
 };
@@ -1715,15 +1714,9 @@ function gps_html()
 {
 	var s =
 	w3_div('id-gps w3-hide|line-height:1.5',
-	   w3_inline('w3-valign w3-halign-space-between w3-margin-T-16/',
-
-         w3_div('w3-valign w3-hcenter w3-text-teal',
-            w3_div('w3-margin-right', '<b>Select<br>Graph</b>') +
-            w3_radio_button('w3-margin-R-4', 'RSSI', 'adm.rssi_azel_iq', adm.rssi_azel_iq == _gps.RSSI, 'gps_graph_cb'),
-            w3_radio_button('w3-margin-R-4', 'Az/El', 'adm.rssi_azel_iq', adm.rssi_azel_iq == _gps.AZEL, 'gps_graph_cb'),
-            w3_radio_button('w3-margin-R-4', 'Pos', 'adm.rssi_azel_iq', adm.rssi_azel_iq == _gps.POS, 'gps_graph_cb'),
-         )
-      ) +
+		w3_div('w3-container w3-section w3-card-8 w3-round-xlarge w3-pale-blue',
+			w3_table('id-gps-info w3-table-6-8')
+		) +
 
 	   w3_div('w3-valign',
          w3_div('id-gps-channels w3-container w3-section w3-card-8 w3-round-xlarge w3-pale-blue|width:100%',
@@ -1734,10 +1727,6 @@ function gps_html()
                '<canvas id="id-gps-azel-canvas" width="400" height="400"></canvas>'
             )
          )
-		) +
-
-		w3_div('w3-container w3-section w3-card-8 w3-round-xlarge w3-pale-blue',
-			w3_table('id-gps-info w3-table-6-8')
 		)
 	);
 	return s;
@@ -1750,25 +1739,17 @@ function gps_acq_cb(path, val, first)
    w3_bool_set_cfg_cb(path, val);
 }
 
-function gps_graph_cb(id, idx, first)
+function gps_graph_cb()
 {
-   idx = +idx;
-   //console.log('gps_graph_cb idx='+ idx);
-   admin_int_cb(id, idx, first);
-
-   w3_show_hide('id-gps-pos-scale', idx == _gps.POS);
-   
+ 
    var el_ch = w3_el('id-gps-channels');
-   if (idx == _gps.AZEL) {
-      el_ch.style.width = '65%';
-      w3_el('id-gps-azel-container').style.width = '35%';
-   } else {
-      el_ch.style.width = '100%';
-   }
-   w3_show_hide('id-gps-azel-container', idx == _gps.AZEL);
+   el_ch.style.width = '65%';
+   w3_el('id-gps-azel-container').style.width = '35%';
+
+   w3_show_hide('id-gps-azel-container', true);
    
    gps_update_admin_cb();     // redraw immediately to keep display from glitching
-   if (idx == _gps.AZEL) ext_send("SET gps_az_el_history");
+   ext_send("SET gps_az_el_history");
 }
 
 function gps_E1B_offset_cb(path, idx, first)
@@ -1799,7 +1780,7 @@ function gps_focus(id)
 	// only get updates while the gps tab is selected
 	ext_send("SET gps_update");
 	gps_interval = setInterval(function() {ext_send("SET gps_update");}, 1000);
-	gps_graph_cb('adm.rssi_azel_iq', adm.rssi_azel_iq, true);
+   gps_graph_cb();
 }
 
 function gps_blur(id)
@@ -1866,7 +1847,38 @@ var sub_colors = [ 'w3-red', 'w3-green', 'w3-blue', 'w3-yellow', 'w3-orange' ];
 
 var gps_canvas;
 var gps_last_good_el = [];
-var gps_rssi_azel_iq_s = [ 'RSSI', 'Az/el', 'Position solution map'];
+
+function prn_name(input) {
+   // Define the offsets based on the first character
+   const offsets = {
+       'N': 0,
+       'B': 400,
+       'G': 64,
+       'Q': 192,
+   };
+
+   // Extract the first character
+   const firstChar = input.charAt(0);
+   if (!isNaN(firstChar)) return input;
+
+   // Extract the numeric part
+   const numberPart = parseInt(input.substring(1), 10);
+
+   // Get the offset for the first character
+   const offset = offsets[firstChar];
+
+   // Calculate the new number part
+   const newNumber = numberPart - offset;
+
+   // Format the new number to be 2 digits
+   if (newNumber < 10)
+      formattedNumber = ('0' + newNumber).slice(-2);
+   else
+      formattedNumber = ('' + newNumber).slice(-2);
+
+   // Combine the first character with the new number part
+   return firstChar + formattedNumber;
+}
 
 function gps_update_admin_cb()
 {
@@ -1876,13 +1888,9 @@ function gps_update_admin_cb()
 	
 	s =
 		w3_table_row('',
-			w3_table_heads('w3-right-align', 'chan', '&nbsp;PRN', 'SNR', 'eph age', 'hold', 'wdog'),
-			w3_table_heads('w3-center', 'status', 'subframe'),
-			w3_table_heads('w3-right-align', 'ov', 'az', 'el'),
-			(adm.rssi_azel_iq == _gps.RSSI)? null : w3_table_heads('w3-right-align', 'RSSI'),
-         (adm.rssi_azel_iq == _gps.AZEL)? null : 
-            w3_table_heads('w3-center|width:35%', gps_rssi_azel_iq_s[adm.rssi_azel_iq]
-            )
+			w3_table_heads('w3-right-align', 'chan', '&nbsp;PRN', 'eph age'),
+			w3_table_heads('w3-right-align', 'az', 'el'),
+			w3_table_heads('w3-right-align', 'RSSI')
 		);
 	
       for (var cn=0; cn < gps.ch.length; cn++) {
@@ -1917,70 +1925,27 @@ function gps_update_admin_cb()
 		var cells =
 			w3_table_cells('w3-right-align', cn+1) +
 			w3_table_cells('w3-right-align',
-				prn? (prn_pre + prn):'',
-				ch.snr? ch.snr:''
-				//ch.rssi? ch.gain:'',
+				prn? prn_name(prn_pre + prn):'',
 			) +
 			w3_table_cells('w3-right-align'+ (ch.old? ' w3-text-red w3-bold':''), ch.age) +
-			w3_table_cells('w3-right-align',
-				ch.hold? ch.hold:'',
-				ch.rssi? ch.wdog:''
-			) +
-			w3_table_cells('w3-center',
-				'<span class="w3-tag '+ (ch.alert? ((ch.alert == 1)? 'w3-red':'w3-green') : (ch.unlock? 'w3-yellow':'w3-white')) +'">' +
-				   unlock +'</span>' +
-				'<span class="w3-tag '+ (ch.parity? 'w3-yellow':'w3-white') +'">P</span>' +
-				'<span class="w3-tag '+ (ch.soln? ch_soln_color : 'w3-white') +'">S</span>'
-			);
-	
-		var sub = '';
-		var has_subframes = false;
-		for (var i = SUBFRAMES-1; i >= 0; i--) {
-			var sub_color;
-			if (ch.sub_renew & (1<<i)) {
-				sub_color = 'w3-grey';
-			} else {
-			   var subframe = ch.sub & (1<<i);
-				sub_color = subframe? sub_colors[i]:'w3-white';
-				if (subframe) has_subframes = true;
-			}
-			sub += '<span class="w3-tag '+ sub_color +'">'+ (i+1) +'</span>';
-		}
-		cells +=
-			w3_table_cells('w3-center', sub);
-	
-      cells +=
+
          w3_table_cells('w3-right-align',
-            ch.novfl? ch.novfl:'',
             ch.el? ch.az:'',
-            ch.el? ch.el:'',
-            (adm.rssi_azel_iq == _gps.RSSI)? null : (ch.rssi? ch.rssi : '')
+            ch.el? ch.el:''
          );
 
-	   if (adm.rssi_azel_iq == _gps.RSSI) {
-         var pct = ((ch.rssi / max_rssi) * 100).toFixed(0);
-         var color = has_subframes? 'w3-light-green' : 'w3-red';
-         cells +=
-            w3_table_cells('',
-               w3_div('w3-progress-container w3-round-xlarge w3-white',
-                  w3_div('w3-progressbar w3-round-xlarge '+ color +'|width:'+ pct +'%',
-                     w3_div('w3-container w3-text-white', ch.rssi)
-                  )
+      var pct = ((ch.rssi / max_rssi) * 100).toFixed(0);
+      var color = 'w3-light-green';
+      cells +=
+         w3_table_cells('',
+            w3_div('w3-progress-container w3-round-xlarge w3-white',
+               w3_div('w3-progressbar w3-round-xlarge '+ color +'|width:'+ pct +'%',
+                  w3_div('w3-container w3-text-white', ch.rssi)
                )
-            );
-      } else
-	   if (adm.rssi_azel_iq != _gps.RSSI || adm.rssi_azel_iq != _gps.AZEL) {
-         if (cn == 0) {
-            cells +=
-               w3_table_cells('|vertical-align:top;position:relative;|rowspan='+ gps.ch.length,
-                  w3_div('w3-hcenter',
-                     '<canvas id="id-gps-canvas" width="400" height="400" style="position:absolute; z-index:2; pointer-events:none"></canvas>'
-                  )
-               );
-         }
-      }
+            )
+         );
 
-		w3_el('id-gps-ch-'+ cn).innerHTML = cells;
+      w3_el('id-gps-ch-'+ cn).innerHTML = cells;
 	}
 
 	s =
@@ -2009,89 +1974,6 @@ function gps_update_admin_cb()
 			)
 		);
 	w3_el("id-gps-info").innerHTML = s;
-
-   gps_canvas = w3_el('id-gps-canvas');
-   if (gps_canvas == null) return;
-   gps_canvas.ctx = gps_canvas.getContext("2d");
-   var ctx = gps_canvas.ctx;
-   
-   if (adm.rssi_azel_iq == _gps.RSSI) return;
-
-   ////////////////////////////////
-   // POS
-   ////////////////////////////////
-
-   if (adm.rssi_azel_iq == _gps.POS) {
-      var axis = 400;
-      ctx.fillStyle = 'hsl(0, 0%, 90%)';
-      ctx.fillRect(0,0, axis, axis);
-      
-      if (!_gps.POS_data) return;
-      ctx.fillStyle = 'black';
-      var fs = 0.001000;
-      var scale = (axis/2) / fs;
-      var len = _gps.POS_data.POS.length;
-      var clamp = 0;
-
-      //ctx.globalAlpha = 0.5;
-      ctx.globalAlpha = 1;
-      var x0min, x0max, y0min, y0max;
-      x0min = y0min = Number.MAX_VALUE;
-      x0max = y0max = Number.MIN_VALUE;
-      for (var i=0; i < len; i += 2) {
-         if (!adm.plot_E1B && i >= len/2) break;
-         ctx.fillStyle = "DeepSkyBlue";
-         var lat = _gps.POS_data.POS[i];
-         if (lat == 0) continue;
-         var lon = _gps.POS_data.POS[i+1];
-         lat -= _gps.POS_data.ref_lat;
-         lon -= _gps.POS_data.ref_lon;
-         var x = Math.round(lon*scale + axis/2);
-         var y = Math.round(-lat*scale + axis/2);
-         if (x < 0 || x >= axis) {
-            x = (x < 0)? 0 : axis-1;
-            clamp++;
-         }
-         if (y < 0 || y >= axis) {
-            y = (y < 0)? 0 : axis-1;
-            clamp++;
-         }
-         var bs = 8;
-         ctx.fillRect(x-2,y-2, 5,5);
-         if (x+bs > x0max) x0max = x+bs; else if (x-bs < x0min) x0min = x-bs;
-         if (y+bs > y0max) y0max = y+bs; else if (y-bs < y0min) y0min = y-bs;
-      }
-      //ctx.globalAlpha = 1.0;
-      
-      // bboxes
-      if (x0max >= axis) x0max = axis-1;
-      if (x0min < 0) x0min = 0;
-      if (y0max >= axis) y0max = axis-1;
-      if (y0min < 0) y0min = 0;
-      line_stroke(ctx, 0, 1, 'DeepSkyBlue', x0min,y0min, x0max,y0min);
-      line_stroke(ctx, 0, 1, 'DeepSkyBlue', x0min,y0max, x0max,y0max);
-      line_stroke(ctx, 1, 1, 'DeepSkyBlue', x0min,y0min, x0min,y0max);
-      line_stroke(ctx, 1, 1, 'DeepSkyBlue', x0max,y0min, x0max,y0max);
-      
-      // text
-      var x = 16;
-      var xi = 12;
-      var y = axis - 16*2;
-      var yi = 18;
-      var yf = 4;
-      var fontsize = 15;
-      ctx.font = fontsize +'px Courier';
-
-      ctx.fillStyle = "DeepSkyBlue";
-      ctx.fillRect(x-2,y-2-yf, 5,5);
-      x += xi;
-      ctx.fillStyle = 'black';
-      ctx.fillText('All sats span: ' +
-         _gps.POS_data.yspan.toFixed(0).fieldWidth(4) +'m Ylat '+ _gps.POS_data.xspan.toFixed(0).fieldWidth(4) +'m Xlon', x,y);
-
-      //if (clamp) console.log('gps POS clamp='+ clamp);
-      return;
-   }
 }
 
 function gps_update_azel()
@@ -2101,8 +1983,6 @@ function gps_update_azel()
    ////////////////////////////////
 
    //console.log('gps_update_azel');
-
-   if (adm.rssi_azel_iq != _gps.AZEL || gps_el == null) return;
 
    var gps_azel_canvas = w3_el('id-gps-azel-canvas');
    if (gps_azel_canvas == null) return;
@@ -2207,7 +2087,7 @@ function gps_update_azel()
          var y = Math.round(r * Math.cos(az_rad));
 
          if (off == -1) {
-            var prn = gps_prn[sat];
+            var prn = prn_name(gps_prn[sat]);
             var tw = ctx.measureText(prn).width;
             var tof = 8;
             var ty = 5;
@@ -3099,8 +2979,10 @@ function admin_msg(param)
    switch (param[0]) {
 
 		case "gps_update_cb":
-			//console.log('gps_update_cb='+ param[1]);
-         gps = kiwi_JSON_parse('gps_update_cb', decodeURIComponent(param[1]));
+			// workaround for size limit
+         s = param[1].split(',');
+         for (i = 0; i < s.length; i++) s[i] = decodeURIComponent(s[i]);
+         gps = kiwi_JSON_parse('gps_update_cb', s.join(','));
          w3_call('gps_update_admin_cb');
 			break;
 
@@ -3358,7 +3240,6 @@ function admin_int_cb(path, val, first)
 	} else {
       // if first time don't save, otherwise always save
       var save = isArg(first)? (first? false : true) : true;
-      //if (path.includes('rssi_azel_iq')) { console.log('admin_int_cb '+ path +' save='+ save); kiwi_trace(); }
 	   ext_set_cfg_param(path, val, save);
 	}
    w3_set_value(path, val);   // remove any fractional part from field

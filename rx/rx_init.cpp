@@ -513,7 +513,6 @@ void update_vars_from_config(bool called_at_init) {
     admcfg_default_int("options", 0, &update_admcfg);
 
     admcfg_default_bool("GPS_tstamp", true, &update_admcfg);
-    admcfg_default_int("rssi_azel_iq", 0, &update_admcfg);
 
 #ifdef CRYPT_PW
 

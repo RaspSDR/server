@@ -934,7 +934,7 @@ void c2s_admin(void* param) {
                     }
                     sb = kstr_asprintf(sb, "%s{\"ch\":%d,\"prn_s\":\"%c\",\"prn\":%d,\"snr\":%d,\"rssi\":%d,\"gain\":%d,\"age\":\"%s\",\"old\":%d,\"hold\":%d,\"wdog\":%d"
                                            ",\"unlock\":%d,\"parity\":%d,\"alert\":%d,\"sub\":%d,\"sub_renew\":%d,\"soln\":%d,\"ACF\":%d,\"novfl\":%d,\"az\":%d,\"el\":%d}",
-                                       i ? ", " : "", i, prn_s, prn, c->snr, c->rssi, c->gain, c->age, c->too_old ? 1 : 0, c->hold, c->wdog,
+                                       i ? ", " : "", i, prn_s, prn, c->snr, c->snr, c->gain, c->age, c->too_old ? 1 : 0, c->hold, c->wdog,
                                        c->ca_unlocked, c->parity, c->alert, c->sub, c->sub_renew, c->has_soln, c->ACF_mode, c->novfl, c->az, c->el);
 
                     c->parity = 0;

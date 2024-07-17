@@ -46,7 +46,7 @@ int ant_switch_queryantennas()
         for(int i = 0; i < kiwi.ant_switch_nch; i++)
         {
             if (antenna_current & (1 << i))
-                return i;
+                return i + 1;
         }
     }
 

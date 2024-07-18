@@ -366,7 +366,7 @@ void DRM_main()
             #else
                 // Needs to be done as separate Linux process per channel because DRM_loop() is
                 // long-running and there would be no time-slicing otherwise, i.e. no NextTask() equivalent.
-                shmem_ipc_setup(stprintf("kiwi.drm-%02d", i), SIG_IPC_DRM + i, DRM_loop);
+                shmem_ipc_setup(stprintf("websdr.drm-%02d", i), SIG_IPC_DRM + i, DRM_loop);
             #endif
 
             d->tsamp = 0;

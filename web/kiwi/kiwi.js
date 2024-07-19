@@ -2454,11 +2454,11 @@ function config_str_update(rx_chans, gps_chans, vmaj, vmin)
 
 var config_net = {};
 
-function config_cb(rx_chans, gps_chans, serno, pub, port_ext, pvt, port_int, nm, mac, vmaj, vmin, dmaj, dmin)
+function config_cb(rx_chans, gps_chans, serno, pub, port_ext, pvt, port_int, nm, mac, vmaj, vmin, dmaj, dmin, dna)
 {
 	var s;
 	config_str_update(rx_chans, gps_chans, vmaj, vmin);
-	w3_innerHTML('id-msg-debian', 'Alpine '+ dmaj +'.'+ dmin);
+	w3_innerHTML('id-msg-debian', 'Alpine '+ dmaj +'.'+ dmin + ' DNA: ' + dna);
 	kiwi.debian_maj = dmaj;
 	kiwi.debian_min = dmin;
 
@@ -3064,7 +3064,7 @@ function kiwi_msg(param, ws)
 		case "config_cb":    // in response to "SET GET_CONFIG"
 			//console.log('config_cb='+ param[1]);
 			var o = kiwi_JSON_parse('config_cb', param[1]);
-			if (o) config_cb(o.r, o.g, o.s, o.pu, o.pe, o.pv, o.pi, o.n, o.m, o.v1, o.v2, o.d1, o.d2);
+			if (o) config_cb(o.r, o.g, o.s, o.pu, o.pe, o.pv, o.pi, o.n, o.m, o.v1, o.v2, o.d1, o.d2, o.dna);
 			break;
 
 		case "update_cb":

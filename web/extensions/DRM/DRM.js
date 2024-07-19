@@ -1812,7 +1812,7 @@ function DRM_help(show)
             
                'Custom passbands set before invoking the DRM extension will be respected. <br>' +
                'For example the passband field of a DX label that has mode DRM, or a passband specification in ' +
-               'the URL e.g. "my_kiwi.com:8073/?pb=0,5k&ext=drm" ' +
+               'the URL e.g. "mweb-888.local:8073/?pb=0,5k&ext=drm" ' +
                '<hr>' +
 
                'DRM code from <b>Dream 2.2.1</b> <br>' +

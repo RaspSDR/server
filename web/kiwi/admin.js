@@ -210,7 +210,7 @@ function control_html()
 			),
 			w3_div('',
 				w3_input_get('', 'Time limit exemption password', 'adm.tlimit_exempt_pwd', 'w3_string_set_cfg_cb'),
-				w3_div('w3-text-black', 'Password users can give to override time limits. <br> To specify in URL: my_kiwi:8073/?pwd=<i>password</i>')
+				w3_div('w3-text-black', 'Password users can give to override time limits. <br> To specify in URL: web-888.local:8073/?pwd=<i>password</i>')
 			)
 		) +
 
@@ -436,19 +436,19 @@ function connect_html()
    var s2 =
 		'<hr>' +
       w3_div('w3-container w3-text-teal|width:80%',
-         w3_input_get('', 'Next Kiwi URL redirect', 'adm.url_redirect', 'w3_url_set_cfg_cb'),
+         w3_input_get('', 'Next SDR URL redirect', 'adm.url_redirect', 'w3_url_set_cfg_cb'),
          w3_div('w3-text-black',
-            'Use this setting to get multiple Kiwis to respond to a single URL.<br>' +
-            'When all the channels of this Kiwi are busy further connection attempts ' +
+            'Use this setting to get multiple SDRs to respond to a single URL.<br>' +
+            'When all the channels of this SDR are busy further connection attempts ' +
             'will be redirected to the above URL.<br>' +
             'Example: Your SDR is known as "mysdr.com:8073". ' +
-            'Configure another Kiwi to use port 8074 and be known as "mysdr.com:8074".<br>' +
-            'On the port 8073 Kiwi set the above field to "http://mysdr.com:8074".<br>' +
-            'On the port 8074 Kiwi leave the above field blank.<br>' +
-            'Configure the port 8074 Kiwi as normal (i.e. router port open, dynamic DNS, proxy etc.)<br><br>' +
-            '<b>CAUTION:</b> Do not create a cycle by redirecting Kiwis like: A -> B -> A &nbsp;' +
+            'Configure another SDR to use port 8074 and be known as "mysdr.com:8074".<br>' +
+            'On the port 8073 SDR set the above field to "http://mysdr.com:8074".<br>' +
+            'On the port 8074 SDR leave the above field blank.<br>' +
+            'Configure the port 8074 SDR as normal (i.e. router port open, dynamic DNS, proxy etc.)<br><br>' +
+            '<b>CAUTION:</b> Do not create a cycle by redirecting SDRs like: A -> B -> A &nbsp;' +
             'Always create a chain that stops redirecting at the end: A -> B <br>' +
-            'This prevents the browser from going into a loop when all channels on all Kiwis are full.'
+            'This prevents the browser from going into a loop when all channels on all SDRs are full.'
          )
 		);
 
@@ -1071,15 +1071,6 @@ function network_html()
                w3_label('id-net-check-port-ip-q w3-show-inline-block w3-margin-LR-16 w3-text-teal') +
                w3_div('id-net-check-port-ip-s w3-show-inline-block w3-text-black w3-background-pale-aqua')
             )
-         ),
-         w3_div('w3-center w3-text-teal',
-            w3_switch_label('w3-center', 'Register this Kiwi on my.rx-888.com<br>on each reboot?',
-               'Yes', 'No', 'adm.my_kiwi', adm.my_kiwi, 'network_my_kiwi_cb'),
-            w3_text('w3-block w3-center w3-text-black',
-               'Registering on <a href="http://my.rx-888.com" target="_blank">my.rx-888.com</a> allows the local ip address of Kiwis <br>' +
-               'to be easily discovered. Set to "no" if you don\'t want your SDR <br>' +
-               'sending information to rx-888.com. Defaults to "yes".'
-            )
          )
       );
 
@@ -1147,15 +1138,6 @@ function network_html()
       '<hr>';
 
 	return w3_div('id-network w3-hide', s1 + s2 + s3);
-}
-
-function network_my_kiwi_cb(path, idx, first)
-{
-	idx = +idx;
-	var enabled = (idx == 0);
-	//console.log('network_my_kiwi_cb: first='+ first +' enabled='+ enabled);
-	if (!first) ext_send('SET my_kiwi='+ (enabled? 1:0));
-	admin_bool_cb(path, enabled, first);
 }
 
 function network_ssl_container_init()

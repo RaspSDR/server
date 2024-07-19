@@ -430,7 +430,7 @@ function FT8_help(show)
          
          'URL parameters:<br>' +
          'The first parameters can select one of the entries in the <i>freq</i> menu<br>' +
-         'e.g. <i>my_kiwi:8073/?ext=ft8,10136</i>' +
+         'e.g. <i>web-888.local:8073/?ext=ft8,10136</i>' +
          '';
       confirmation_show_content(s, 610, 300);
    }

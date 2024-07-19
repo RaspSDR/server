@@ -201,26 +201,6 @@ static void set_pwd_task(void* param) {
     scall("P close PIPE_W", close(si[PIPE_W]));
 }
 
-void my_kiwi_register(bool reg, int root_pwd_unset, int debian_pwd_default) {
-    char *cmd_p, *cmd_p2;
-    int status;
-
-    cmd_p2 = (char*)"";
-    if (root_pwd_unset || debian_pwd_default)
-        cmd_p2 = kstr_asprintf(cmd_p2, "&r=%d&d=%d", root_pwd_unset, debian_pwd_default);
-
-    char* kiwisdr_com = DNS_lookup_result("register", "www.rx-888.com", &net.ips_kiwisdr_com);
-    asprintf(&cmd_p, "curl --max-time 30 --retry 2 --silent --show-error --location "
-                     "\"http://%s/api/update?reg=%d&pub=%s&pvt=%s&port=%d&serno=%d&dna=%08x%08x&deb=%d.%d&ver=%d.%d%s\"",
-             kiwisdr_com, reg ? 1 : 0, net.ip_pub, net.ip_pvt, net.use_ssl ? net.port_http_local : net.port, net.serno,
-             PRINTF_U64_ARG(net.dna), debian_maj, debian_min, version_maj, version_min, kstr_sp(cmd_p2));
-
-    kstr_free(non_blocking_cmd(cmd_p, &status));
-    kiwi_asfree(cmd_p);
-    kstr_free(cmd_p2);
-    lprintf("MY_KIWI: %sregister\n", reg ? "" : "un");
-}
-
 static void misc_NET(void* param) {
     char *cmd_p, *cmd_p2;
     int status;
@@ -348,16 +328,6 @@ static void misc_NET(void* param) {
         }
 
         kiwi_asfree(cmd_p2);
-    }
-
-    // register for my.rx-888.com
-    // this must be at the end of the routine since it waits an arbitrary amount of time
-
-    NET_WAIT_COND("my_kiwi", "misc_NET", net.pvt_valid && net.pub_valid);
-
-    bool my_kiwi = admcfg_bool("my_kiwi", NULL, CFG_REQUIRED);
-    if (my_kiwi) {
-        my_kiwi_register(true, root_pwd_unset, debian_pwd_default);
     }
 }
 

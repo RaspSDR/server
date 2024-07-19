@@ -480,7 +480,6 @@ void update_vars_from_config(bool called_at_init) {
     admcfg_default_string("ip_blacklist_local", "", &update_admcfg);
     admcfg_default_int("ip_blacklist_mtime", 0, &update_admcfg);
     admcfg_default_bool("no_dup_ip", false, &update_admcfg);
-    admcfg_default_bool("my_kiwi", true, &update_admcfg);
     admcfg_default_bool("onetime_password_check", false, &update_admcfg);
     admcfg_default_bool("dx_labels_converted", false, &update_admcfg);
     admcfg_default_string("proxy_server", PROXY_SERVER_HOST, &update_admcfg);

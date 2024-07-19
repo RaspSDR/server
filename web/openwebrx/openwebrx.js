@@ -9109,8 +9109,8 @@ function dx_help(show)
 
                'For example, to select only the EiBi ALE and FAX categories: <i>dx=none,ale,fax</i> <br>' +
                'To select all except the CW and Time categories: <i>dx=cw,time</i> <br>' +
-               'To just select the EiBi database: <i>dx</i> (e.g. <i>my_kiwi:8073/?dx</i>)<br>' +
-               'To also bring up the EiBi control panel: <i>dx=op</i> (e.g. <i>my_kiwi:8073/?dx=op</i>)<br>' +
+               'To just select the EiBi database: <i>dx</i> (e.g. <i>web-888.local:8073/?dx</i>)<br>' +
+               'To also bring up the EiBi control panel: <i>dx=op</i> (e.g. <i>web-888.local:8073/?dx=op</i>)<br>' +
                'Keywords are case-insensitive and can be abbreviated. For example: <br>' +
                '<i>dx=n,bc,f:0</i> (show only broadcast stations without time/day filtering) <br>' +
                'To select the stored label database: <i>dx=0</i> or <i>dx=sto</i><br>' +

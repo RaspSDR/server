@@ -506,7 +506,7 @@ char* rx_server_ajax(struct mg_connection* mc, char* ip_forwarded) {
     //	Returns simple S-meter value
     case AJAX_S_METER: {
         if (mc->query_string == NULL) {
-            asprintf(&sb, "/s_meter: missing freq, try my_kiwi:8073/s-meter/?(freq in kHz)\n");
+            asprintf(&sb, "/s_meter: missing freq, try web-888.local:8073/s-meter/?(freq in kHz)\n");
             printf("%s", sb);
             break;
         }

@@ -35,21 +35,6 @@ static void gps_connect() {
         return;
     }
 
-#if 0
-    // enable satellite for gps
-    // Construct the command
-    // Content is coming from gpsctl -D 4 command
-    const char* command = "?DEVICE={\"path\":\"/dev/ttyPS1\",\"hexdata\":\"245043415330332c352c352c352c352c302c302c352c312c302c302c2c2c312c312c2c2c2c312a33370d0a\"}\n";
-
-    // Send the command to GPSD
-    int command_len = strlen(command) + 1;
-    if (write(gps_handle.gps_fd, command, command_len) != command_len) {
-        panic("Enable satellite on gps failed\n");
-    }
-#endif
-
-    source.device = "/dev/ttyPS1";
-
     int flags = WATCH_ENABLE;
     if (source.device != NULL)
         flags |= WATCH_DEVICE;

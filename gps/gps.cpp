@@ -28,6 +28,8 @@ static void pps_task(void* param);
 static void gps_connect() {
     struct fixsource_t source;
 
+    blocking_system("/etc/init.d/gpsd restart");
+
     gpsd_source_spec(NULL, &source);
 
     if (0 != gps_open(source.server, source.port, &gps_handle)) {

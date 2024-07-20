@@ -78,6 +78,7 @@ static void report_progress(conn_t* conn, const char* msg) {
 }
 
 static int update_build(conn_t* conn, bool report, const char* channel, bool force_build) {
+    bool no_fpga = false;
     sd_enable(true);
 
     // Fetch the binary
@@ -89,10 +90,14 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
 
     if (report) report_progress(conn, "Download FPGA firmware");
 
-    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr_fpga.bit http://downloads.rx-888.com/web-888/%s/websdr_fpga.bit", channel);
+    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr_hf.bit http://downloads.rx-888.com/web-888/%s/websdr_hf.bit", channel);
     if (status != 0) {
-        lprintf("UPDATE: fetch bistream status=0x%08x\n", status);
-        goto exit;
+        no_fpga = true;
+    }
+
+    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr_vhf.bit http://downloads.rx-888.com/web-888/%s/websdr_vhf.bit", channel);
+    if (status != 0) {
+        no_fpga = true;
     }
 
     if (report) report_progress(conn, "Download Web-888 Server");
@@ -122,9 +127,15 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
     if (report) report_progress(conn, "Install update to SD card");
 
     system("rm /media/mmcblk0p1/websdr.bin.old");
-    system("rm /media/mmcblk0p1/websdr_fpga.bit.old");
     system("mv /media/mmcblk0p1/websdr.bin /media/mmcblk0p1/websdr.bin.old; mv /media/mmcblk0p1/update/websdr.bin /media/mmcblk0p1/websdr.bin");
-    system("mv /media/mmcblk0p1/websdr_fpga.bit /media/mmcblk0p1/websdr_fpga.bit.old; mv /media/mmcblk0p1/update/websdr_fpga.bit /media/mmcblk0p1/websdr_fpga.bit");
+
+    if (!no_fpga) {
+        system("rm /media/mmcblk0p1/websdr_hf.bit.old");
+        system("mv /media/mmcblk0p1/websdr_hf.bit /media/mmcblk0p1/websdr_hf.bit.old; mv /media/mmcblk0p1/update/websdr_hf.bit /media/mmcblk0p1/websdr_hf.bit");
+
+        system("rm /media/mmcblk0p1/websdr_vhf.bit.old");
+        system("mv /media/mmcblk0p1/websdr_vhf.bit /media/mmcblk0p1/websdr_vhf.bit.old; mv /media/mmcblk0p1/update/websdr_vhf.bit /media/mmcblk0p1/websdr_vhf.bit");
+    }
 
     status = EXIT_SUCCESS;
 

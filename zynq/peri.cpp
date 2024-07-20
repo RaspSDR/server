@@ -44,6 +44,12 @@ void peri_init() {
     if (init)
         return;
 
+    // load fpga bitstream
+    int status = blocking_system("cat /media/mmcblk0p1/websdr_%s.bit > /dev/xdevcfg", kiwi.airband ? "vhf" : "hf");
+    if (status != 0) {
+        panic("Fail to load bitstram file");
+    }
+
     scall("/dev/zynqsdr", ad8370_fd = open("/dev/zynqsdr", O_RDWR | O_SYNC));
     if (ad8370_fd <= 0) {
         sys_panic("Failed to open kernel driver");
@@ -178,7 +184,7 @@ u64_t fpga_dna() {
 }
 
 void fpga_start_rx() {
-    uint32_t decim = uint32_t(ADC_CLOCK_NOM / 12000 / 256);
+    uint32_t decim = 30;
     int rc = ioctl(ad8370_fd, RX_START, &decim);
     if (rc)
         sys_panic("Start RX failed");

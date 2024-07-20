@@ -172,7 +172,6 @@ static void gps_task(void* param) {
     while (gps_mainloop(&gps_handle, GPS_TIMEOUT, gps_callback) < 0) {
         /* avoid busy-calling gps_mainloop() */
         TaskSleepSec(GPS_TIMEOUT / 1000000);
-        printf("Reconnect GPS\n");
         gps_connect();
     }
 }

@@ -1,0 +1,6 @@
+[submodule "pkgs/utf8"]
+        path = pkgs/utf8
+        url = https://github.com/sheredom/utf8.h
+[submodule "pkgs/jsmn"]
+        path = pkgs/jsmn
+        url = https://github.com/zserge/jsmn

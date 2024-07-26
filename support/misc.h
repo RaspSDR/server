@@ -27,8 +27,6 @@ Boston, MA  02110-1301, USA.
 #include <stdarg.h>
 #include <stdlib.h>
 
-void misc_init();
-
 int qsort_floatcomp(const void* elem1, const void* elem2);
 int qsort_doublecomp(const void* elem1, const void* elem2);
 int qsort_intcomp(const void* elem1, const void* elem2);

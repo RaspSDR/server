@@ -46,13 +46,6 @@ Boston, MA  02110-1301, USA.
 #include <sched.h>
 #include <sys/stat.h>
 
-
-void misc_init() {
-    // printf("sed -z -f " DIR_CFG "/rsyslog.sed -i /etc/rsyslog.conf\n");
-    system("sed -f " DIR_CFG "/rsyslog.sed -i /etc/rsyslog.conf");
-}
-
-
 // used by qsort
 // NB: assumes first element in struct is sort field
 int qsort_floatcomp(const void* elem1, const void* elem2) {

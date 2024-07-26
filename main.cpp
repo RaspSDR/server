@@ -208,7 +208,6 @@ int main(int argc, char* argv[]) {
     debug_printfs |= kiwi_file_exists(DIR_CFG "/opt.debug") ? 1 : 0;
 
     TaskInit();
-    misc_init();
     cfg_reload();
 
     bool update_admcfg = false;

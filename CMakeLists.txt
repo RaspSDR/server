@@ -28,7 +28,7 @@ set(CMAKE_C_FLAGS_RELEASE "-g -O3")
 if(ZYNQ)
     set(PLATFORM zynq)
     set(PLATFORM_INC ${PLATFORM})
-    set(PLATOFRM_FLAGS -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard)
+    set(PLATOFRM_FLAGS -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard -ffast-math -fsingle-precision-constant -mvectorize-with-neon-quad)
     FILE(GLOB PLATFORM_SRCS
         "${PLATFORM}/*.cpp"
     )

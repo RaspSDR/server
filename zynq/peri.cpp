@@ -184,7 +184,7 @@ u64_t fpga_dna() {
 }
 
 void fpga_start_rx() {
-    uint32_t decim = 30;
+    uint32_t decim = uint32_t(ADC_CLOCK_NOM / 12000 / 256);
     int rc = ioctl(ad8370_fd, RX_START, &decim);
     if (rc)
         sys_panic("Start RX failed");

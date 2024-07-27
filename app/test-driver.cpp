@@ -49,7 +49,7 @@ int main() {
 
     // start rx
     int decim = 122880000 / 12000 / 256;
-    ioctl(ad8370_fd, RX_START, &decim);
+    ioctl(ad8370_fd, RX_START, decim);
     clock_gettime(CLOCK_REALTIME, &start_spec);
 
     rc = printf("RX_START[%d] error %d\n", decim, rc);

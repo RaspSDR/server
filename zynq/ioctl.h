@@ -13,10 +13,10 @@
 #define CLK_SET _IOW('Z', 2, __u32)
 
 // get FPGA DNA
-#define GET_DNA _IOR('Z', 4, __u64)
+#define GET_DNA _IOR('Z', 3, __u64)
 
 // start RX, u16 is decimate
-#define RX_START _IOW('Z', 5, __u32)
+#define RX_START _IOW('Z', 4, __u32)
 
 // set RX_parameter
 struct rx_param_op {

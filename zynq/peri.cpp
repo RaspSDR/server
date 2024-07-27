@@ -66,7 +66,7 @@ void peri_init() {
         int_clk = 1;
     }
 
-    ioctl(ad8370_fd, CLK_SET, &int_clk);
+    ioctl(ad8370_fd, CLK_SET, int_clk);
 
     bool i2c_found = si5351->init(SI5351_CRYSTAL_LOAD_0PF, clk.clock_ref, 0);
     if (!i2c_found) {
@@ -101,7 +101,7 @@ void rf_attn_set(float f) {
     int gain = (int)(-f * 2);
 
     printf("Set PE4312 with %d/0x%x\n", gain, gain);
-    if (ioctl(ad8370_fd, AD8370_SET, &gain) < 0) {
+    if (ioctl(ad8370_fd, AD8370_SET, gain) < 0) {
         printf("AD8370 set RF failed: %s\n", strerror(errno));
     }
 
@@ -109,8 +109,7 @@ void rf_attn_set(float f) {
 }
 
 void rf_enable_airband(bool enabled) {
-    int data = (int)enabled;
-    if (ioctl(ad8370_fd, MODE_SET, &data) < 0) {
+    if (ioctl(ad8370_fd, MODE_SET, (int)enabled) < 0) {
         printf("AD8370 set mode failed\n");
     }
 
@@ -185,7 +184,7 @@ u64_t fpga_dna() {
 
 void fpga_start_rx() {
     uint32_t decim = uint32_t(ADC_CLOCK_NOM / 12000 / 256);
-    int rc = ioctl(ad8370_fd, RX_START, &decim);
+    int rc = ioctl(ad8370_fd, RX_START, decim);
     if (rc)
         sys_panic("Start RX failed");
 }
@@ -225,8 +224,7 @@ void fpga_read_rx(void* buf, uint32_t size) {
 }
 
 void fpga_start_pps() {
-    uint32_t start = 1;
-    int rc = ioctl(ad8370_fd, PPS_START, &start);
+    int rc = ioctl(ad8370_fd, PPS_START, 1);
     if (rc)
         sys_panic("Start PPS failed");
 }
@@ -255,7 +253,7 @@ int fpga_set_antenna(int mask) {
     gpio &= ~GPIO_ANNENNA_MASK;
     gpio |= (mask & GPIO_ANNENNA_MASK);
 
-    rc = ioctl(ad8370_fd, SET_GPIO_MASK, &gpio);
+    rc = ioctl(ad8370_fd, SET_GPIO_MASK, gpio);
     if (rc)
         sys_panic("Set GPIO failed");
 
@@ -274,7 +272,7 @@ static int fpga_set_bit(bool enabled, int bit) {
     else
         gpio &= ~bit;
 
-    rc = ioctl(ad8370_fd, SET_GPIO_MASK, &gpio);
+    rc = ioctl(ad8370_fd, SET_GPIO_MASK, gpio);
     if (rc)
         sys_panic("Set GPIO failed");
 
@@ -320,7 +318,7 @@ int fpga_reset_wf(int wf_chan, bool cont) {
         data |= WF_READ_CONTINUES;
     }
 
-    rc = ioctl(ad8370_fd, WF_START, &wf_chan);
+    rc = ioctl(ad8370_fd, WF_START, wf_chan);
     if (rc)
         sys_panic("WF Start failed");
 

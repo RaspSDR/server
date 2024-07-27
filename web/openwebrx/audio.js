@@ -238,7 +238,7 @@ function audio_init(is_local, less_buffering, compression)
    console.log('--------------------------');
    if (audio.d) console.log('AUDIO audio_init CALLED audio_init_disconnect='+ audio_init_disconnect +' is_local='+ is_local +' less_buffering='+ less_buffering +' compression='+ compression);
 
-   less_buffering = false;    // DEPRECATED
+   less_buffering = true;
    
    if (audio.d) console.log('AUDIO audio_init LAST audio_last_is_local='+ audio_last_is_local +' audio_last_compression='+ audio_last_compression);
    if (is_local == null) is_local = audio_last_is_local;
@@ -309,12 +309,12 @@ function audio_init(is_local, less_buffering, compression)
    if (a != null) {
       var a2 = a.split(',');
       abuf = parseFloat(a2[0]);
-      if (!isNaN(abuf) && abuf >= 0.25 && abuf <= 5.0) {
+      if (!isNaN(abuf) && abuf >= 0.15 && abuf <= 5.0) {
          console.log('AUDIO override abuf='+ a);
          var max = abuf * 3;
          if (a2.length >= 2) {
             var m = parseFloat(a2[1]);
-            if (!isNaN(m) && m >= 0.25 && m <= 5.0 && m > abuf) {
+            if (!isNaN(m) && m >= 0.15 && m <= 5.0 && m > abuf) {
                max = m;
             }
          } else {
@@ -346,14 +346,14 @@ function audio_init(is_local, less_buffering, compression)
    
       if (buffering_scheme == 2) {
          audio_buffer_size = audio.buffer_size;
-         audio_buffer_min_length_sec = 0.37;    // min_nbuf = 2 @ 44.1 kHz
+         audio_buffer_min_length_sec = 0.25;    // min_nbuf = 2 @ 44.1 kHz
          audio_buffer_max_length_sec = 2.00;
          scheme_s = 'less buf, local';
       } else
       
       if (buffering_scheme == 1) {
          audio_buffer_size = audio.buffer_size;
-         audio_buffer_min_length_sec = 0.74;    // min_nbuf = 4 @ 44.1 kHz
+         audio_buffer_min_length_sec = 0.35;    // min_nbuf = 4 @ 44.1 kHz
          audio_buffer_max_length_sec = 3.00;
          scheme_s = 'less buf, remote';
       } else

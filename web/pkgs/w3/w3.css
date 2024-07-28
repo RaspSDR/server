@@ -675,7 +675,7 @@ ul.w3-ul li:last-child {
 }
 
 .w3-label {
-    color: #009688
+    color: #0868cf
 }
 
 .w3-input:not(:valid) ~ .w3-validate {
@@ -687,16 +687,16 @@ ul.w3-ul li:last-child {
     width: 100%;
     color: #000;
     border: 1px solid transparent;
-    border-bottom: 1px solid #009688
+    border-bottom: 1px solid #0868cf
 }
 
 .w3-select select:focus {
     color: #000;
-    border: 1px solid #009688
+    border: 1px solid #0868cf
 }
 
 .w3-select option[disabled] {
-    color: #009688
+    color: #0868cf
 }
 
 .w3-dropdown-click, .w3-dropdown-hover {
@@ -785,7 +785,7 @@ input[type=checkbox].w3-check, input[type=radio].w3-radio {
 }
 
 input[type=checkbox].w3-check:checked + .w3-validate, input[type=radio].w3-radio:checked + .w3-validate {
-    color: #009688
+    color: #0868cf
 }
 
 input[type=checkbox].w3-check:disabled + .w3-validate, input[type=radio].w3-radio:disabled + .w3-validate {
@@ -1576,7 +1576,7 @@ input[type=checkbox].w3-check:disabled + .w3-validate, input[type=radio].w3-radi
     width: auto;
     background-color: #fff;
     padding: 8px 12px;
-    border-left: 4px solid #4CAF50;
+    border-left: 4px solid #0533bd;
     word-wrap: break-word
 }
 
@@ -1934,12 +1934,12 @@ input[type=checkbox].w3-check:disabled + .w3-validate, input[type=radio].w3-radi
 
 .w3-green, .w3-hover-green:hover {
     color: #fff !important;
-    background-color: #4CAF50 !important
+    background-color: #0533bd !important
 }
 
 .w3-light-green, .w3-hover-light-green:hover {
     color: #000 !important;
-    background-color: #8bc34a !important
+    background-color: #4a7ec3 !important
 }
 
 .w3-indigo, .w3-hover-indigo:hover {
@@ -1994,7 +1994,7 @@ input[type=checkbox].w3-check:disabled + .w3-validate, input[type=radio].w3-radi
 
 .w3-teal, .w3-hover-teal:hover {
     color: #fff !important;
-    background-color: #009688 !important
+    background-color: #0868cf !important
 }
 
 .w3-yellow, .w3-hover-yellow:hover {
@@ -2077,11 +2077,11 @@ input[type=checkbox].w3-check:disabled + .w3-validate, input[type=radio].w3-radi
 }
 
 .w3-text-green, .w3-hover-text-green:hover {
-    color: #4CAF50 !important
+    color: #0533bd !important
 }
 
 .w3-text-light-green, .w3-hover-text-light-green:hover {
-    color: #8bc34a !important
+    color: #4a7ec3 !important
 }
 
 .w3-text-indigo, .w3-hover-text-indigo:hover {
@@ -2125,7 +2125,7 @@ input[type=checkbox].w3-check:disabled + .w3-validate, input[type=radio].w3-radi
 }
 
 .w3-text-teal, .w3-hover-text-teal:hover {
-    color: #009688 !important
+    color: #0868cf !important
 }
 
 .w3-text-yellow, .w3-hover-text-yellow:hover {
@@ -2184,11 +2184,11 @@ input[type=checkbox].w3-check:disabled + .w3-validate, input[type=radio].w3-radi
 }
 
 .w3-border-green, .w3-hover-border-green:hover {
-    border-color: #4CAF50 !important
+    border-color: #0533bd !important
 }
 
 .w3-border-light-green, .w3-hover-border-light-green:hover {
-    border-color: #8bc34a !important
+    border-color: #4a7ec3 !important
 }
 
 .w3-border-indigo, .w3-hover-border-indigo:hover {
@@ -2232,7 +2232,7 @@ input[type=checkbox].w3-check:disabled + .w3-validate, input[type=radio].w3-radi
 }
 
 .w3-border-teal, .w3-hover-border-teal:hover {
-    border-color: #009688 !important
+    border-color: #0868cf !important
 }
 
 .w3-border-yellow, .w3-hover-border-yellow:hover {

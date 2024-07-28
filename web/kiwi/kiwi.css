@@ -223,7 +223,7 @@ x2
 .id-fw-nav > .w3int-cur-sel, .id-fw-nav > .w3int-cur-sel:hover
 {
     color: white;
-    background-color: #4CAF50;  /* select green */
+    background-color: #0533bd;  /* select blue */
     font-weight: bold;
 }
 

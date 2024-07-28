@@ -1149,7 +1149,7 @@ function w3_isVisible(el_id)
 // our standard for confirming (highlighting) a control action (e.g.button push)
 var w3_highlight_time = 250;
 var w3_highlight_color = 'w3-selection-green';
-var w3_selection_green = '#4CAF50';
+var w3_selection_green = '#0533bd';
 
 function w3_highlight(el_id)
 {

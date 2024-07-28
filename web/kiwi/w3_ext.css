@@ -108,8 +108,8 @@
 .w3-ext-btn:active
 {
     color: white;
-    background-color: #4CAF50 !important;   /* = w3-selection-green */
-    /* border-color: #4CAF50 !important;       /* = w3-selection-green */
+    background-color: #0533bd !important;   /* = w3-selection-green */
+    /* border-color: #0533bd !important;       /* = w3-selection-green */
 }
 
 .w3-ext-btn.w3-ext-btn-noactive:active
@@ -1285,7 +1285,7 @@ input[type=range]::-moz-range-thumb {
 .w3-selection-green
 {
     color: white;
-    background-color: #4CAF50;
+    background-color: #0533bd;
 }
 
 .w3-text-outline {

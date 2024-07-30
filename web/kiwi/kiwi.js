@@ -382,7 +382,7 @@ function kiwi_valpwd1_cb(badp, p)
 	   kiwi_show_msg('Admin connection not allowed from this ip address.');
 	} else
 	if (badp == kiwi.BADP_NO_ADMIN_PWD_SET) {
-	   kiwi_show_msg('No admin password set. Can only connect from same local network as Kiwi.<br>Client ip = '+ client_public_ip);
+	   kiwi_show_msg('No admin password set. Can only connect from same local network as Web-888.<br>Client ip = '+ client_public_ip);
 	} else
 	if (badp == kiwi.BADP_NO_MULTIPLE_CONNS) {
 	   kiwi_show_msg('Multiple connections from the same ip address not allowed.<br>Client ip = '+ client_public_ip);

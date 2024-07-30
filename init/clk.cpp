@@ -26,6 +26,7 @@ Boston, MA  02110-1301, USA.
 #include "web.h"
 #include "misc.h"
 #include "peri.h"
+#include "eeprom.h"
 
 #include <time.h>
 
@@ -59,7 +60,7 @@ void clock_init() {
     if (clk.ext_ADC_clk)
         clk.clock_ref = 10 * MHz;
     else
-        clk.clock_ref = 27 * MHz;
+        clk.clock_ref = eeprom_refclock();
 
     clk.adc_clock_base = ADC_CLOCK_TYP;
     printf("ADC_CLOCK: %.6f MHz %s\n",

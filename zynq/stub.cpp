@@ -17,3 +17,19 @@ int eeprom_check() {
 
     return serialno;
 }
+
+uint32_t eeprom_refclock() {
+    int status;
+    uint32_t refclock = 27000000; // default to 27M
+
+    // read from enviroment block
+    kstr_t* reply = non_blocking_cmd("fw_printenv refclock --noheader", &status);
+    if (status == 0) {
+        refclock = atoi(kstr_sp(reply));
+    }
+
+    kstr_free(reply);
+
+    return refclock;
+
+}

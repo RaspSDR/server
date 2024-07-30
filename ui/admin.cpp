@@ -488,39 +488,13 @@ void c2s_admin(void* param) {
             char *user_m = NULL, *host_m = NULL;
             n = sscanf(cmd, "SET rev_register user=%256ms host=%256ms", &user_m, &host_m);
             if (n == 2) {
-                // FIXME: validate unencoded user & host for allowed characters
-                system("killall -q frpc; sleep 1");
                 const char* proxy_server = admcfg_string("proxy_server", NULL, CFG_REQUIRED);
 
-                char* reply;
-                asprintf(&cmd_p, "curl -L -s --ipv4 --connect-timeout 15 \"%s/?u=%s&h=%s\"", proxy_server, user_m, host_m);
-                reply = non_blocking_cmd(cmd_p, &status);
-                printf("proxy register: %s\n", cmd_p);
-                kiwi_asfree(cmd_p);
-                if (reply == NULL || status < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-                    printf("proxy register: ERROR %p 0x%x\n", reply, status);
-                    status = 900;
-                }
-                else {
-                    char* rp = kstr_sp(reply);
-                    printf("proxy register: reply: %s\n", rp);
-                    status = 901;
-                    n = sscanf(rp, "status=%d", &status);
-                    printf("proxy register: n=%d status=%d\n", n, status);
-                }
-                kstr_free(reply);
-
                 send_msg(conn, SM_NO_DEBUG, "ADM rev_status=%d", status);
-                net.proxy_status = status;
-                if (status < 0 || status > 99) {
-                    kiwi_asfree(user_m);
-                    kiwi_asfree(host_m);
-                    admcfg_string_free(proxy_server);
-                    continue;
-                }
+                net.proxy_status = 0;
 
                 asprintf(&cmd_p, "sed -e s/SERVER/%s/ -e s/USER/%s/ -e s/HOST/%s/ -e s/PORT/%d/ %s >%s",
-                         proxy_server, user_m, host_m, net.port_ext, DIR_CFG "/frpc.template.ini", DIR_CFG "/frpc.ini");
+                         proxy_server, user_m, host_m, net.port_ext, DIR_CFG "/frpc.template.ini", DIR_CFG "/frpc.toml");
                 printf("proxy register: %s\n", cmd_p);
                 system(cmd_p);
                 kiwi_asfree(cmd_p);
@@ -528,7 +502,12 @@ void c2s_admin(void* param) {
                 kiwi_asfree(host_m);
                 admcfg_string_free(proxy_server);
 
-                system("frpc -c " DIR_CFG "/frpc.ini &");
+                // copy config file to sd card
+                sd_enable(true);
+                system("cp -u /root/config/* /media/mmcblk0p1/config/");
+                sd_enable(false);
+                
+                system("/etc/init.d/frpc restart");
 
                 continue;
             }

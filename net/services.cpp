@@ -218,18 +218,6 @@ static void misc_NET(void* param) {
             system("sleep 1; " BUILD_DIR "/gen/noip2 -k -c " DIR_CFG "/noip2.conf");
     }
 
-    // reverse proxy
-    system("killall -q frpc");
-    int dom_sel = cfg_int("sdr_hu_dom_sel", NULL, CFG_REQUIRED);
-    bool proxy = (dom_sel == DOM_SEL_REV);
-    lprintf("PROXY: %s dom_sel_menu=%d\n", proxy ? "YES" : "NO", dom_sel);
-
-    if (proxy) {
-        lprintf("PROXY: starting frpc\n");
-        rev_enable_start = true;
-        system("sleep 1; frpc -c " DIR_CFG "/frpc.ini &");
-    }
-
     // find and remove known viruses, mostly as a result of Debian root/debian accounts
     // without passwords on networks with ssh open to the Internet
     u4_t vr = 0, vc = 0;

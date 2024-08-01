@@ -246,7 +246,7 @@ uint8_t Si5351::set_freq(uint64_t freq, enum si5351_clock clk) {
             pll_freq = multisynth_calc(freq, 0, &ms_reg);
 
             // Set PLL
-            set_pll(pll_freq, pll_assignment[clk]);
+            int_mode = set_pll(pll_freq, pll_assignment[clk]);
 
             // Recalculate params for other synths on same PLL
             for (i = 0; i < 6; i++) {
@@ -264,11 +264,9 @@ uint8_t Si5351::set_freq(uint64_t freq, enum si5351_clock clk) {
                         // If freq > 150 MHz, we need to use DIVBY4 and integer mode
                         if (temp_freq >= SI5351_MULTISYNTH_DIVBY4_FREQ * SI5351_FREQ_MULT) {
                             div_by_4 = 1;
-                            int_mode = 1;
                         }
                         else {
                             div_by_4 = 0;
-                            int_mode = 0;
                         }
 
                         // Set multisynth registers
@@ -474,8 +472,10 @@ uint8_t Si5351::set_freq_manual(uint64_t freq, uint64_t pll_freq, enum si5351_cl
  * pll_freq - Desired PLL frequency in Hz * 100
  * target_pll - Which PLL to set
  *     (use the si5351_pll enum)
+ * 
+ * Returns true if the PLL is in INT mode
  */
-void Si5351::set_pll(uint64_t pll_freq, enum si5351_pll target_pll) {
+bool Si5351::set_pll(uint64_t pll_freq, enum si5351_pll target_pll) {
     struct Si5351RegSet pll_reg;
 
     if (target_pll == SI5351_PLLA) {
@@ -533,6 +533,8 @@ void Si5351::set_pll(uint64_t pll_freq, enum si5351_pll target_pll) {
     }
 
     delete[] params;
+
+    return pll_reg.int_mode;
 }
 
 /*
@@ -553,7 +555,6 @@ void Si5351::set_ms(enum si5351_clock clk, struct Si5351RegSet ms_reg, uint8_t i
     uint8_t i = 0;
     uint8_t temp;
     uint8_t reg_val;
-
 
     if ((uint8_t)clk <= (uint8_t)SI5351_CLK5) {
         // Registers 42-43 for CLK0
@@ -834,8 +835,8 @@ void Si5351::set_ms_source(enum si5351_clock clk, enum si5351_pll pll) {
  * Set the indicated multisynth into integer mode.
  */
 void Si5351::set_int(enum si5351_clock clk, uint8_t enable) {
-    uint8_t reg_val;
-    reg_val = si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk);
+    uint8_t reg_val, original;
+    original = reg_val = si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk);
 
     if (enable == 1) {
         reg_val |= (SI5351_CLK_INTEGER_MODE);
@@ -844,7 +845,8 @@ void Si5351::set_int(enum si5351_clock clk, uint8_t enable) {
         reg_val &= ~(SI5351_CLK_INTEGER_MODE);
     }
 
-    si5351_write(SI5351_CLK0_CTRL + (uint8_t)clk, reg_val);
+    if (original != reg_val)
+        si5351_write(SI5351_CLK0_CTRL + (uint8_t)clk, reg_val);
 
     // Integer mode indication
     /*
@@ -1296,6 +1298,8 @@ uint64_t Si5351::pll_calc(enum si5351_pll pll, uint64_t freq, struct Si5351RegSe
     reg->p1 = p1;
     reg->p2 = p2;
     reg->p3 = p3;
+
+    reg->int_mode = (p2 == 0 && ((a + b / c) % 2  == 0));
 
     if (vcxo) {
         return (uint64_t)(128 * a * 1000000ULL + b);

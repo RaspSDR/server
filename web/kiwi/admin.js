@@ -395,8 +395,8 @@ function connect_html()
 		w3_div('w3-valign',
 			'<header class="w3-container w3-yellow"><h5>' +
 			'If you are not able to make an incoming connection from the Internet to your SDR because ' +
-			'of problems <br> with your router or Internet Service Provider (ISP) then please consider using the KiwiSDR ' +
-			'<a href='+ dq('http://'+ admin.proxy_host) +' target="_blank">reverse proxy service</a>.' +
+			'of problems <br> with your router or Internet Service Provider (ISP) then please consider using' +
+         '<a href="http://www.rx-888.com/web/manual" target="_blank">reverse proxy service</a>' +
 			'</h5></header>'
 		) +
 		
@@ -503,7 +503,7 @@ function connect_html()
          w3_div('w3-container w3-valign',
             '<header class="w3-container w3-yellow"><h6>' +
             'Please read these instructions before use: ' +
-            '<a href='+ dq('http://'+ admin.proxy_host) +' target="_blank">reverse proxy service</a>' +
+            '<a href="http://www.rx-888.com/web/manual" target="_blank">reverse proxy service</a>' +
             '</h6></header>'
          ),
 

@@ -150,25 +150,38 @@ static const float32_t Kd = 0.01f; // Derivative gain
 static int last = 100;
 
 void clock_correction(float error) {
+
+    bool err;
+    bool gps_corr = admcfg_bool("gps_corr", &err, CFG_OPTIONAL);
+    if (err) gps_corr = false;
+
+    if (!gps_corr) {
+        clock_reset_correction();
+        return;
+    }
+
     if (last < 3) {
         last++;
         return;
     }
     last = 0;
 
-    if (PID.Kp == 0.0f) {
-        // initialize
-        PID.Kp = Kp;
-        PID.Ki = Ki;
-        PID.Kd = Kd;
-        arm_pid_init_f32(&PID, 1); // Initialize the PID instance with reset state
-    }
-
     float32_t control_output = arm_pid_f32(&PID, error);
 
     si5351->set_correction((int)control_output, SI5351_PLL_INPUT_XO);
 
     // printf("Set correction to %d\n", (int)control_output);
+}
+
+void clock_reset_correction() {
+    // initialize
+    PID.Kp = Kp;
+    PID.Ki = Ki;
+    PID.Kd = Kd;
+    arm_pid_init_f32(&PID, 1); // Initialize the PID instance with reset state
+
+    if (si5351->get_correction(SI5351_PLL_INPUT_XO))
+        si5351->set_correction(0, SI5351_PLL_INPUT_XO);
 }
 
 ////////////////////////////////

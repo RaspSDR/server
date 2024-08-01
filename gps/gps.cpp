@@ -151,6 +151,7 @@ static double t_rx = 0;
 
 static void pps_task(void* param) {
     fpga_start_pps();
+    clock_reset_correction();
 
     for (;;) {
         // fetch pps data

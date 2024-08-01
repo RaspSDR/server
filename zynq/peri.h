@@ -23,6 +23,7 @@ void rf_attn_set(float attn_dB);
 
 void sd_enable(bool write);
 void clock_correction(float freq_error);
+void clock_reset_correction();
 
 extern u64_t fpga_dna();
 

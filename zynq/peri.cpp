@@ -80,6 +80,7 @@ void peri_init() {
     }
 
     if (clk.gpsdo_ext_clk > 0) {
+        si5351->set_ms_source(SI5351_CLK2, SI5351_PLLA);
         si5351->set_freq((uint64_t)clk.gpsdo_ext_clk * 100, SI5351_CLK2);
         si5351->drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA);
     }

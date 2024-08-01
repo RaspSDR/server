@@ -75,11 +75,13 @@ void peri_init() {
     }
     else {
         int ret = si5351->set_freq((uint64_t)(ADC_CLOCK_NOM * 100), SI5351_CLK0);
+        si5351->drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);
         printf("i2c si5351 initialized, error=%d\n", ret);
     }
 
     if (clk.gpsdo_ext_clk > 0) {
         si5351->set_freq((uint64_t)clk.gpsdo_ext_clk * 100, SI5351_CLK2);
+        si5351->drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA);
     }
 
     // set airband mode

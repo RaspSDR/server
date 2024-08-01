@@ -506,7 +506,7 @@ void c2s_admin(void* param) {
                 sd_enable(true);
                 system("cp -u /root/config/* /media/mmcblk0p1/config/");
                 sd_enable(false);
-                
+
                 system("/etc/init.d/frpc restart");
 
                 continue;

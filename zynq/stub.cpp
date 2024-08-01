@@ -31,5 +31,4 @@ uint32_t eeprom_refclock() {
     kstr_free(reply);
 
     return refclock;
-
 }

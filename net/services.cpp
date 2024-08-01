@@ -541,19 +541,6 @@ static void pvt_NET(void* param) {
     int i, n, retry;
     char* reply;
 
-    // make sure /etc/resolv.conf exists
-    off_t fsize = kiwi_file_size("/etc/resolv.conf");
-    if (fsize <= 0) {
-        lprintf("### /etc/resolv.conf missing or zero length, setting to default nameserver 1.1.1.1\n");
-        system("echo nameserver 1.1.1.1 >/etc/resolv.conf");
-    }
-    else
-
-        // make sure well-known DNS server 1.1.1.1 is available as backup
-        if (system("grep '1.1.1.1' /etc/resolv.conf >/dev/null 2>&1")) {
-            system("echo nameserver 1.1.1.1 >>/etc/resolv.conf");
-        }
-
     DNS_lookup("www.rx-888.com", &net.ips_kiwisdr_com, N_IPS, NULL);
     DNS_lookup("downloads.rx-888.com", &net.ips_downloads, N_IPS, NULL);
 

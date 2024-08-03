@@ -206,18 +206,6 @@ static void misc_NET(void* param) {
     int status;
     int err;
 
-    // DUC
-    system("killall -q noip2");
-    if (admcfg_bool("duc_enable", NULL, CFG_REQUIRED) == true) {
-        lprintf("starting noip.com DUC\n");
-        DUC_enable_start = true;
-
-        if (background_mode)
-            system("sleep 1; /usr/local/bin/noip2 -k -c " DIR_CFG "/noip2.conf");
-        else
-            system("sleep 1; " BUILD_DIR "/gen/noip2 -k -c " DIR_CFG "/noip2.conf");
-    }
-
     // find and remove known viruses, mostly as a result of Debian root/debian accounts
     // without passwords on networks with ssh open to the Internet
     u4_t vr = 0, vc = 0;

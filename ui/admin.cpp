@@ -441,11 +441,8 @@ void c2s_admin(void* param) {
             char* args_m = NULL;
             n = sscanf(cmd, "SET DUC_start args=%256ms", &args_m);
             if (n == 1) {
-                system("killall -q noip2; sleep 1");
-
                 kiwi_str_decode_inplace(args_m);
-                asprintf(&cmd_p, "%s/noip2 -C -c " DIR_CFG "/noip2.conf -k %s -I eth0 2>&1",
-                         background_mode ? "/usr/local/bin" : (BUILD_DIR "/gen"), args_m);
+                asprintf(&cmd_p, "/usr/bin/noip2 -C -c " DIR_CFG "/noip2.conf -k %s -I eth0 2>&1", args_m);
                 kiwi_asfree(args_m);
                 printf("DUC: %s\n", cmd_p);
                 char* reply;
@@ -467,10 +464,7 @@ void c2s_admin(void* param) {
                 if (status != 0) continue;
                 DUC_enable_start = true;
 
-                if (background_mode)
-                    system("/usr/local/bin/noip2 -k -c " DIR_CFG "/noip2.conf");
-                else
-                    system(BUILD_DIR "/gen/noip2 -k -c " DIR_CFG "/noip2.conf");
+                system("/etc/init.d/noip2 restart");
 
                 continue;
             }

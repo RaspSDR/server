@@ -303,7 +303,7 @@ foreach(file ${FILES_EMBED_FILES})
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/htdoc/${FOLDER}")
 
     LIST(APPEND FILES_EMBED_FILES_OUTPUT ${PROJECT_BINARY_DIR}/htdoc/${target_path})
-    if(${file} MATCHES "\\.css$")
+    if(${file} MATCHES "\\.css$" AND NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         add_custom_command(
             OUTPUT ${PROJECT_BINARY_DIR}/htdoc/${target_path}
             DEPENDS ${UPSTREAM_DIR}/web/${file}
@@ -312,7 +312,7 @@ foreach(file ${FILES_EMBED_FILES})
                 -o ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
             COMMENT "Minify CSS ${file} to ${target_path}"
         )
-    elseif(${file} MATCHES "\\.js$")
+    elseif(${file} MATCHES "\\.js$" AND NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         add_custom_command(
             OUTPUT ${PROJECT_BINARY_DIR}/htdoc/${target_path}
             DEPENDS ${UPSTREAM_DIR}/web/${file}
@@ -321,7 +321,7 @@ foreach(file ${FILES_EMBED_FILES})
                 -o ${PROJECT_BINARY_DIR}/htdoc/${target_path} # Destination path in build directory
             COMMENT "Minify JS ${file} to ${target_path}"
         )
-    elseif(${file} MATCHES "\\.html$")
+    elseif(${file} MATCHES "\\.html$" AND NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         add_custom_command(
             OUTPUT ${PROJECT_BINARY_DIR}/htdoc/${target_path}
             DEPENDS ${UPSTREAM_DIR}/web/${file}

@@ -287,7 +287,6 @@ static const char* edata_with_file_ext(char** o_uri, bool free_o_uri, bool* free
                                        bool cache_check, size_t* size, time_t* mtime, bool* is_min, bool* is_gzip, bool* is_file) {
     const char* edata_data = NULL;
     // the ".html" is here so a URL of "mykiwi:8073/admin" will match admin.html file
-    const char* zip_suffix[] = { ".gz", "", ".html.gz", ".html" };
     const char* no_zip_suffix[] = { "", ".html" };
     char *uri, *uri2;
     const char* no_prefix[] = { "", NULL };
@@ -340,8 +339,8 @@ static const char* edata_with_file_ext(char** o_uri, bool free_o_uri, bool* free
     else
 #endif
     {
-        suffix = zip_suffix;
-        suffix_len = ARRAY_LEN(zip_suffix);
+        suffix = no_zip_suffix;
+        suffix_len = ARRAY_LEN(no_zip_suffix);
     }
 
     for (int cm = (check_min_first ? check_for_minified : 0); cm >= 0 && cm <= 1; cm = cm + (check_min_first ? -1 : 1)) {

@@ -1816,12 +1816,13 @@ bool rx_common_cmd(int stream_type, conn_t* conn, char* cmd) {
                                kiwi.spectral_inversion_lockout ? 1 : 0);
 
             char utc_s[32], local_s[32];
+            char buf[CTIME_R_BUFSIZE];
             time_t utc = utc_time();
-            strncpy(utc_s, &utc_ctime_static()[11], 5);
+            strncpy(utc_s, &utc_ctime_r(buf)[11], 5);
             utc_s[5] = '\0';
             if (utc_offset != -1 && dst_offset != -1) {
                 time_t local = utc + utc_offset + dst_offset;
-                strncpy(local_s, &var_ctime_static(&local)[11], 5);
+                strncpy(local_s, &var_ctime_r(&local, buf)[11], 5);
                 local_s[5] = '\0';
             }
             else {

@@ -812,7 +812,8 @@ static void debug_dump_handler(int arg) {
 static void dump_info_handler(int arg) {
     printf("SIGHUP: info.json requested\n");
     char* sb;
-    sb = kstr_asprintf(NULL, "echo '{ \"utc\": \"%s\"", utc_ctime_static());
+    char buf[CTIME_R_BUFSIZE];
+    sb = kstr_asprintf(NULL, "echo '{ \"utc\": \"%s\"", utc_ctime_r(buf));
 
     sb = kstr_asprintf(sb, ", \"gps\": { \"lat\": %.6f, \"lon\": %.6f", gps.sgnLat, gps.sgnLon);
 

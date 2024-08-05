@@ -90,6 +90,7 @@ static const char* edata(const char* uri, bool cache_check, size_t* size, time_t
     const char* data = NULL;
     bool absPath = (uri[0] == '/') || (strncmp(uri, "htdoc/", 6) == 0);
     const char *type, *subtype, *reason;
+    char ctimebuf[CTIME_R_BUFSIZE];
 
     type = cache_check ? "cache check" : "fetch file";
     *is_file = false;
@@ -134,7 +135,7 @@ static const char* edata(const char* uri, bool cache_check, size_t* size, time_t
     }
 
     if (data)
-        web_printf_all("%-16s %s, %s, %s: mtime=[%s] %s\n", "EDATA", type, subtype, reason, var_ctime_static(mtime), uri);
+        web_printf_all("%-16s %s, %s, %s: mtime=[%s] %s\n", "EDATA", type, subtype, reason, var_ctime_r(mtime, ctimebuf), uri);
 
 #ifdef EDATA_EMBED
     // only root-referenced files are opened from filesystem when in embedded (production) mode
@@ -263,7 +264,7 @@ static const char* edata(const char* uri, bool cache_check, size_t* size, time_t
                     reason = "not .js file, using file";
                 }
             }
-        web_printf_all("%-16s %s, %s: mtime=[%s] %s %s\n", "EDATA", type, reason, var_ctime_static(mtime), uri, uri2);
+        web_printf_all("%-16s %s, %s: mtime=[%s] %s %s\n", "EDATA", type, reason, var_ctime_r(mtime, ctimebuf), uri, uri2);
         *is_file = nofile ? false : true;
     }
 
@@ -604,6 +605,7 @@ int web_request(struct mg_connection* mc, enum mg_event evt) {
     const char* edata_data;
     bool isPort80 = (net.port != 80 && mc->local_port == 80);
     char* ip_unforwarded = ip_remote(mc);
+    char ctimebuf[CTIME_R_BUFSIZE];
 
     // if (web_caching_debug == 0) web_caching_debug = bg? 3:1;
 
@@ -723,7 +725,7 @@ int web_request(struct mg_connection* mc, enum mg_event evt) {
         web_printf_all("%-16s %s:%05d %s (etag_match=%c not_mod_since=%c) mtime=[%s]", "MG_CACHE_RESULT",
                        ip_forwarded, mc->remote_port,
                        mc->cache_info.cached ? "### CLIENT_CACHED ###" : "NOT_CACHED", mc->cache_info.etag_match ? 'T' : 'F', mc->cache_info.not_mod_since ? 'T' : 'F',
-                       var_ctime_static(&mc->cache_info.st.st_mtime));
+                       var_ctime_r(&mc->cache_info.st.st_mtime, ctimebuf));
 
         if (!mc->cache_info.if_mod_since) {
             float diff = ((float)time_diff_s(mc->cache_info.st.st_mtime, mc->cache_info.client_mtime)) / 60.0;
@@ -739,7 +741,7 @@ int web_request(struct mg_connection* mc, enum mg_event evt) {
             web_printf_all("[%+.1f%c]", diff, suffix);
         }
 
-        web_printf_all(" client=[%s]\n", var_ctime_static(&mc->cache_info.client_mtime));
+        web_printf_all(" client=[%s]\n", var_ctime_r(&mc->cache_info.client_mtime, ctimebuf));
         return MG_TRUE;
     }
 
@@ -1011,7 +1013,7 @@ int web_request(struct mg_connection* mc, enum mg_event evt) {
     suffix = strrchr(uri, '.'); // NB: can't use previous suffix -- uri may have changed recently in some cases
 
     bool dirty = false; // must never return a 304 if a %[] substitution was made!
-    if (!isAJAX && suffix && (strcmp(suffix, ".html") == 0 || strcmp(suffix, ".css") == 0)) {
+    if (!isAJAX && suffix && (strcmp(suffix, ".html") == 0)) {
         int nsize = edata_size;
         html_data = (char*)kiwi_imalloc("html_data", nsize);
         free_html_data = true;
@@ -1103,7 +1105,7 @@ int web_request(struct mg_connection* mc, enum mg_event evt) {
     if (!(isAJAX && evt == MG_CACHE_INFO)) { // don't print for isAJAX + MG_CACHE_INFO nop case
         web_printf_all("%-16s %s:%05d size=%6d dirty=%d mtime=[%s] %s %s %s%s\n", (evt == MG_CACHE_INFO) ? "MG_CACHE_INFO" : "MG_REQUEST",
                        ip_forwarded, mc->remote_port,
-                       mc->cache_info.st.st_size, dirty, var_ctime_static(&mtime), isAJAX ? mc->uri : uri, mg_get_mime_type(isAJAX ? mc->uri : uri, "text/plain"),
+                       mc->cache_info.st.st_size, dirty, var_ctime_r(&mtime, ctimebuf), isAJAX ? mc->uri : uri, mg_get_mime_type(isAJAX ? mc->uri : uri, "text/plain"),
                        (mc->query_string != NULL) ? "qs:" : "", (mc->query_string != NULL) ? mc->query_string : "");
     }
 
@@ -1162,9 +1164,9 @@ int web_request(struct mg_connection* mc, enum mg_event evt) {
             if (mc->cache_info.if_none_match && !mc->cache_info.etag_match)
                 web_printf_sent("%s %s ", mc->cache_info.etag_server, mc->cache_info.etag_client);
             if (mc->cache_info.if_mod_since && !mc->cache_info.not_mod_since) {
-                // two web_printf_all() due to var_ctime_static()
-                web_printf_sent("%s ", var_ctime_static(&mc->cache_info.server_mtime));
-                web_printf_sent("%s ", var_ctime_static(&mc->cache_info.client_mtime));
+                // two web_printf_all() due to var_ctime_r()
+                web_printf_sent("%s ", var_ctime_r(&mc->cache_info.server_mtime, ctimebuf));
+                web_printf_sent("%s ", var_ctime_r(&mc->cache_info.client_mtime, ctimebuf));
             }
         }
         web_printf_sent("%15s %s\n", ip_forwarded, isAJAX ? mc->uri : uri);

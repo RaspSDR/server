@@ -741,11 +741,12 @@ static bool dx_download_file(const char* host, const char* src, const char* dst)
 }
 
 void dx_last_community_download(bool capture_time) {
+    char buf[CTIME_R_BUFSIZE];
     if (capture_time) dx.last_community_download = utc_time();
 
     if (admcfg_bool("dx_comm_auto_download", NULL, CFG_OPTIONAL)) {
         snd_send_msg_encoded(SM_RX_CHAN_ALL, false, "MSG", "last_community_download", "Downloads enabled. Last checked: %s",
-                             var_ctime_static(&dx.last_community_download));
+                             var_ctime_r(&dx.last_community_download, buf));
     }
     else {
         snd_send_msg_encoded(SM_RX_CHAN_ALL, false, "MSG", "last_community_download", "Downloads disabled.");

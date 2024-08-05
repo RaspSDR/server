@@ -672,6 +672,7 @@ char* rx_server_ajax(struct mg_connection* mc, char* ip_forwarded) {
         bool has_masked = (dx.masked_len > 0);
         bool has_limits = (has_tlimit || has_masked);
         bool have_DRM_ext = (DRM_enable && (snd_rate == SND_RATE_4CH));
+        char buf[CTIME_R_BUFSIZE];
         dx_db_t* dx_db = &dx.dx_db[DB_STORED];
 
         asprintf(&sb,
@@ -738,7 +739,7 @@ char* rx_server_ajax(struct mg_connection* mc, char* ip_forwarded) {
                  clk.ext_ADC_clk ? 1 : 0, clk.do_corrections,
                  timer_sec(),
                  1, 1,
-                 utc_ctime_static(),
+                 utc_ctime_r(buf),
                  net.ip_blacklist_hash,
                  dx_db->actual_len, dx_db->file_hash, dx_db->file_size);
 

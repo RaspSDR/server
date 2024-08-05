@@ -3369,13 +3369,14 @@ static int is_not_modified(struct connection *conn,
   mc->cache_info.if_mod_since = (ims != NULL);
   web_printf_all("%-16s not_mod_since=%c", "MG_CACHE_INFO", mc->cache_info.if_mod_since? 'T':'F');
   if (ims != NULL) {
+    char buf[CTIME_R_BUFSIZE];
     time_t client_mtime = parse_date_string(ims);
 	mc->cache_info.not_mod_since = (stp->st_mtime <= client_mtime);
 	mc->cache_info.server_mtime = stp->st_mtime;
 	mc->cache_info.client_mtime = client_mtime;
-	// two web_printf_all() due to var_ctime_static()
-	web_printf_all("%c (server=%lx[%s] <= ", mc->cache_info.not_mod_since? 'T':'F', stp->st_mtime, var_ctime_static((time_t *) &stp->st_mtime));
-	web_printf_all("client=%lx[-1 day],%lx[%s])", client_mtime - 86400, client_mtime, var_ctime_static(&client_mtime));
+	// two web_printf_all() due to single bufer for ctime
+	web_printf_all("%c (server=%lx[%s] <= ", mc->cache_info.not_mod_since? 'T':'F', stp->st_mtime, var_ctime_r((time_t *) &stp->st_mtime, buf));
+	web_printf_all("client=%lx[-1 day],%lx[%s])", client_mtime - 86400, client_mtime, var_ctime_r(&client_mtime, buf));
   }
   web_printf_all("\n");
   

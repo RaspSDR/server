@@ -630,9 +630,10 @@ void wspr_data(int rx_chan, int instance, int nsamps, TYPECPX *samps)
 	}
 	
     if (w->tsync == FALSE) {		// sync to even minute boundary
+        char buf[CTIME_R_BUFSIZE];
         if (!(min&1) && (sec == 0)) {
             w->ping_pong ^= 1;
-            wspr_aprintf("DATA SYNC ping_pong %d, %s\n", w->ping_pong, utc_ctime_static());
+            wspr_aprintf("DATA SYNC ping_pong %d, %s\n", w->ping_pong, utc_ctime_r(buf));
             w->decim = w->didx = w->group = 0;
             w->fi = 0;
             if (w->status != DECODING)

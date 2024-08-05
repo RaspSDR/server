@@ -25,8 +25,6 @@ bool /* returning_local_time */ local_hour_min_sec(int* hour, int* min DEF_NULL,
 
 void time_hour_min_sec(time_t t, int* hour, int* min DEF_NULL, int* sec DEF_NULL);
 void utc_year_month_day(int* year, int* month DEF_NULL, int* day DEF_NULL, int* dow DEF_NULL, int* doy DEF_NULL);
-char* var_ctime_static(time_t* t);
-char* utc_ctime_static();
-void var_ctime_r(time_t* t, char* tb);
-void utc_ctime_r(char* tb);
+char* var_ctime_r(time_t* t, char* tb);
+char* utc_ctime_r(char* tb);
 int utc_time_since_2018();

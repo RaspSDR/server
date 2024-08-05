@@ -160,28 +160,19 @@ void utc_year_month_day(int* year, int* month, int* day, int* dow, int* doy) {
     if (doy) *doy = tm.tm_yday;
 }
 
-char* var_ctime_static(time_t* t) {
-    char* tb = asctime(gmtime(t));
-    tb[CTIME_R_NL] = '\0'; // replace ending \n with \0
-    return tb;
-}
-
-char* utc_ctime_static() {
-    time_t t = utc_time();
-    char* tb = asctime(gmtime(&t));
-    tb[CTIME_R_NL] = '\0'; // replace ending \n with \0
-    return tb;
-}
-
-void var_ctime_r(time_t* t, char* tb) {
+char* var_ctime_r(time_t* t, char* tb) {
     asctime_r(gmtime(t), tb);
     tb[CTIME_R_NL] = '\0'; // replace ending \n with \0
+
+    return tb;
 }
 
-void utc_ctime_r(char* tb) {
+char* utc_ctime_r(char* tb) {
     time_t t = utc_time();
     asctime_r(gmtime(&t), tb);
     tb[CTIME_R_NL] = '\0'; // replace ending \n with \0
+
+    return tb;
 }
 
 int utc_time_since_2018() {

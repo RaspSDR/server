@@ -458,13 +458,13 @@ function connect_html()
          w3_div('w3-container w3-valign',
             '<header class="w3-container w3-yellow"><h6>' +
             'Please read these instructions before use: ' +
-            '<a href="http://rx-888.com/web-888/quickstart" target="_blank">dynamic DNS update client (DUC)</a>' +
+            '<a href="http://rx-888.com/web/guide/admin/connect.html" target="_blank">dynamic DNS update client (DUC)</a>' +
             '</h6></header>'
          ),
 
 			w3_col_percent('w3-text-teal/w3-container',
 			   w3_div('w3-text-teal w3-bold', 'Dynamic DNS update client (DUC) configuration'), 50,
-				w3_div('w3-text-teal w3-bold w3-center w3-light-grey', 'Account at noip.com'), 50
+				w3_div('w3-text-teal w3-bold w3-center w3-light-grey', 'DDNS Key at noip.com'), 50
 			),
 			
 			w3_col_percent('w3-text-teal/w3-container',
@@ -739,7 +739,7 @@ function connect_DUC_start_cb(id, idx)
 {
 	// decode stored json values because we recode below to encode spaces of composite string
 	var s = '-u '+ sq(decodeURIComponent(adm.duc_user)) +' -p '+ sq(decodeURIComponent(adm.duc_pass)) +
-	   ' -H '+ sq(decodeURIComponent(adm.duc_host)) +' -U '+ duc_update_v[adm.duc_update];
+	   ' -U '+ duc_update_v[adm.duc_update];
 	console.log('start DUC: '+ s);
 	w3_innerHTML('id-net-duc-status', w3_icon('', 'fa-refresh fa-spin', 24) + '&nbsp; Getting status from DUC server...');
 	ext_send('SET DUC_start args='+ encodeURIComponent(s));

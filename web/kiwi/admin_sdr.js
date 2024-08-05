@@ -971,7 +971,7 @@ function kiwi_reg_html()
 		w3_div('',
          w3_div('w3-margin-T-10 w3-valign',
             '<header class="w3-container w3-yellow"><h5>' +
-            'More information on <a href="http://rx-888.com/web-888/index.html#id-config-kiwi-reg" target="_blank">rx-888.com</a><br><br>' +
+            'More information on <a href="http://rx-888.com/web/guide/admin/public.html" target="_blank">rx-888.com</a><br><br>' +
 
             'To list your SDR on <a href="http://rx.rx-888.com/" target="_blank">rx.rx-888.com</a> ' +
             'edit the fields below and set the "<i>Register</i>" switch to <b>Yes</b>. ' +
@@ -1306,7 +1306,7 @@ function dx_html()
       w3_inline('w3-margin-T-16 w3-halign-space-between/',
          w3_inline('/w3-margin-between-16 w3-valign',
             w3_button(dx.button_section, '-', 'dx_expand_cb', 0),
-            w3_link(dx.link1, 'http://rx-888.com/web-888/index.html#id-config-DX-list', 'Stored DX labels'),
+            w3_link(dx.link1, 'http://rx-888.com/web/guide/admin/dx.html#stored-dx-labels', 'Stored DX labels'),
             w3_text('id-dx-list-saved w3-margin-left w3-padding-medium w3-text-black w3-hide', 'Changes saved')
          ),
          w3_inline('/w3-margin-between-16 w3-valign',
@@ -1342,7 +1342,7 @@ function dx_html()
       w3_inline('w3-margin-T-24 w3-halign-space-between/',
          w3_inline('/w3-margin-between-16 w3-valign',
             w3_button(dx.button_section, '+', 'dx_expand_cb', 1),
-            w3_link(dx.link2, 'http://rx-888.com/web-888/index.html#id-config-DX-type', 'DX type menu'),
+            w3_link(dx.link2, 'web/guide/admin/dx.html#dx-type-menu', 'DX type menu'),
             w3_text('w3-margin-left w3-text-black',
                'Defines content of <b>Type</b> menu in <i>DX labels</i> section above.<br>' +
                'Follow link at left for important info before making changes.'),
@@ -1361,7 +1361,7 @@ function dx_html()
       w3_inline('w3-margin-T-24 w3-halign-space-between/',
          w3_inline('/w3-margin-between-16 w3-valign',
             w3_button(dx.button_section, '+', 'dx_expand_cb', 2),
-            w3_link(dx.link2, 'http://rx-888.com/web-888/index.html#id-config-band-bars', 'Band bars'),
+            w3_link(dx.link2, 'web/guide/admin/dx.html#band-bars', 'Band bars'),
             w3_text('w3-margin-left w3-text-black',
                'Defines content of band bars and <b>select band</b> menu on user page.<br>' +
                'Follow link at left for important info before making changes.'),
@@ -1380,7 +1380,7 @@ function dx_html()
       w3_inline('w3-margin-TB-24 w3-halign-space-between/',
          w3_inline('/w3-margin-between-16 w3-valign',
             w3_button(dx.button_section, '+', 'dx_expand_cb', 3),
-            w3_link(dx.link2, 'http://rx-888.com/web-888/index.html#id-config-band-svc', 'Band service menu'),
+            w3_link(dx.link2, 'web/guide/admin/dx.html#band-service-menu', 'Band service menu'),
             w3_text('w3-margin-left w3-text-black',
                'Defines content of <b>Service</b> menu in <i>Band bars</i> section above.<br>' +
                'Follow link at left for important info before making changes.'),

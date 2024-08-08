@@ -472,7 +472,7 @@ uint8_t Si5351::set_freq_manual(uint64_t freq, uint64_t pll_freq, enum si5351_cl
  * pll_freq - Desired PLL frequency in Hz * 100
  * target_pll - Which PLL to set
  *     (use the si5351_pll enum)
- * 
+ *
  * Returns true if the PLL is in INT mode
  */
 bool Si5351::set_pll(uint64_t pll_freq, enum si5351_pll target_pll) {
@@ -1299,7 +1299,7 @@ uint64_t Si5351::pll_calc(enum si5351_pll pll, uint64_t freq, struct Si5351RegSe
     reg->p2 = p2;
     reg->p3 = p3;
 
-    reg->int_mode = (p2 == 0 && ((a + b / c) % 2  == 0));
+    reg->int_mode = (p2 == 0 && ((a + b / c) % 2 == 0));
 
     if (vcxo) {
         return (uint64_t)(128 * a * 1000000ULL + b);

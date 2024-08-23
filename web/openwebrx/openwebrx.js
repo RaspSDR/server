@@ -701,7 +701,7 @@ function init_rx_photo()
    el.src = kiwi_decodeURIComponent('RX_PHOTO_FILE', cfg.index_html_params.RX_PHOTO_FILE);
    el.alt = el.title = kiwi_decodeURIComponent('RX_PHOTO_DESC', cfg.index_html_params.RX_PHOTO_DESC);
 
-   if (el.src.endsWith('kiwi/pcb.png')) {
+   if (el.src.endsWith('kiwi/pcb.jpg')) {
       var st1 = w3_el('id-rx-photo-title');
       var st2 = w3_el('id-rx-photo-desc');
       st1.style.background = st2.style.background = 'darkViolet';

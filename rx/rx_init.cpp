@@ -429,7 +429,7 @@ void update_vars_from_config(bool called_at_init) {
 
     char* rx_title = (char*)cfg_string("index_html_params.RX_TITLE", NULL, CFG_REQUIRED);
     // shrinking, so same memory space
-    nsm = kiwi_str_replace(rx_title, " at <a href='http://rx-888.com' target='_blank' onclick='dont_toggle_rx_photo()'>CALLSIGN</a>", "");
+    nsm = kiwi_str_replace(rx_title, " at <a href='https://www.rx-888.com' target='_blank' onclick='dont_toggle_rx_photo()'>CALLSIGN</a>", "");
     if (nsm) {
         cfg_set_string("index_html_params.RX_TITLE", nsm);
         update_cfg = true;

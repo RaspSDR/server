@@ -90,26 +90,26 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
 
     if (report) report_progress(conn, "Download FPGA firmware");
 
-    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr_hf.bit http://downloads.rx-888.com/web-888/%s/websdr_hf.bit", channel);
+    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr_hf.bit https://downloads.rx-888.com/web-888/%s/websdr_hf.bit", channel);
     if (status != 0) {
         no_fpga = true;
     }
 
-    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr_vhf.bit http://downloads.rx-888.com/web-888/%s/websdr_vhf.bit", channel);
+    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr_vhf.bit https://downloads.rx-888.com/web-888/%s/websdr_vhf.bit", channel);
     if (status != 0) {
         no_fpga = true;
     }
 
     if (report) report_progress(conn, "Download Web-888 Server");
 
-    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr.bin http://downloads.rx-888.com/web-888/%s/websdr.bin", channel);
+    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr.bin https://downloads.rx-888.com/web-888/%s/websdr.bin", channel);
     if (status != 0) {
         lprintf("UPDATE: fetch binary status=0x%08x\n", status);
         goto exit;
     }
 
     if (report) report_progress(conn, "Download checksum file");
-    status = blocking_system("curl -s -o /media/mmcblk0p1/update/checksum http://downloads.rx-888.com/web-888/%s/checksum", channel);
+    status = blocking_system("curl -s -o /media/mmcblk0p1/update/checksum https://downloads.rx-888.com/web-888/%s/checksum", channel);
     if (status != 0) {
         lprintf("UPDATE: fetch checksum status=0x%08x\n", status);
         goto exit;
@@ -147,7 +147,7 @@ exit:
 
 static int fetch_makefile(const char* channel) {
     // fetch the version info from server
-    int status = blocking_system("curl -s -o /root/config/web-888.latest http://downloads.rx-888.com/web-888/%s/version.txt", channel);
+    int status = blocking_system("curl -s -o /root/config/web-888.latest https://downloads.rx-888.com/web-888/%s/version.txt", channel);
     if (status != 0)
         printf("UPDATE: fetch origin status=0x%08x\n", status);
 

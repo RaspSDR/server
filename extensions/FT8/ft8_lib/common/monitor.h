@@ -38,6 +38,7 @@ typedef struct
 
     float *timedata;
     fftwf_complex *freqdata;
+    fftwf_plan fft_plan; ///< FFT plan
 } monitor_t;
 
 void monitor_init(monitor_t* me, const monitor_config_t* cfg);

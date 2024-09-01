@@ -277,7 +277,7 @@ void update_vars_from_config(bool called_at_init) {
     cfg_default_bool("index_html_params.RX_PHOTO_LEFT_MARGIN", true, &update_cfg);
 
     cfg_default_bool("ext_ADC_clk", false, &update_cfg);
-    cfg_default_int("ext_ADC_freq", (int)round(ADC_CLOCK_TYP), &update_cfg);
+    cfg_default_int("ext_ADC_freq", 0, &update_cfg);
     cfg_default_int("ADC_clk2_corr", ADC_CLK_CORR_CONTINUOUS, &update_cfg);
 
     cfg_default_string("tdoa_id", "", &update_cfg);

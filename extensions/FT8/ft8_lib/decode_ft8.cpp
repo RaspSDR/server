@@ -311,7 +311,7 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
             ft8->decoded_hashtable[idx_hash] = &ft8->decoded[idx_hash];
             ++num_decoded;
 
-            char text[FTX_MAX_MESSAGE_LENGTH * 2 + 1];
+            char text[FTX_MAX_MESSAGE_LENGTH];
             int hash_idx = -1;
             bool need_free = false, uploaded = false;
             char *f[4];

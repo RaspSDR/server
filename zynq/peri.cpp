@@ -210,7 +210,7 @@ void fpga_rxfreq(int rx_chan, uint64_t freq) {
     struct rx_param_op param = { (__u8)rx_chan, freq };
     rc = ioctl(ad8370_fd, RX_PARAM, &param);
     if (rc)
-        sys_panic("Set RX freq failed");
+        lprintf("Set RX freq failed");
 }
 
 void fpga_read_rx(void* buf, uint32_t size) {
@@ -235,7 +235,7 @@ void fpga_read_rx(void* buf, uint32_t size) {
     }
 
     if (rc < 0) {
-        sys_panic("Read RX failed");
+        lprintf("Read RX failed");
     }
 }
 
@@ -255,7 +255,7 @@ uint64_t fpga_read_pps() {
     }
 
     if (rc)
-        sys_panic("read PPS failed");
+        lprintf("read PPS failed");
 
     return pps;
 }
@@ -264,14 +264,14 @@ int fpga_set_antenna(int mask) {
     uint32_t gpio;
     int rc = ioctl(ad8370_fd, GET_GPIO_MASK, &gpio);
     if (rc)
-        sys_panic("Get GPIO failed");
+        lprintf("Get GPIO failed");
 
     gpio &= ~GPIO_ANNENNA_MASK;
     gpio |= (mask & GPIO_ANNENNA_MASK);
 
     rc = ioctl(ad8370_fd, SET_GPIO_MASK, gpio);
     if (rc)
-        sys_panic("Set GPIO failed");
+        lprintf("Set GPIO failed");
 
 
     return 0;
@@ -281,7 +281,7 @@ static int fpga_set_bit(bool enabled, int bit) {
     uint32_t gpio;
     int rc = ioctl(ad8370_fd, GET_GPIO_MASK, &gpio);
     if (rc)
-        sys_panic("Get GPIO failed");
+        lprintf("Get GPIO failed");
 
     if (enabled)
         gpio |= bit;
@@ -290,7 +290,7 @@ static int fpga_set_bit(bool enabled, int bit) {
 
     rc = ioctl(ad8370_fd, SET_GPIO_MASK, gpio);
     if (rc)
-        sys_panic("Set GPIO failed");
+        lprintf("Set GPIO failed");
 
 
     return 0;
@@ -336,7 +336,7 @@ int fpga_reset_wf(int wf_chan, bool cont) {
 
     rc = ioctl(ad8370_fd, WF_START, wf_chan);
     if (rc)
-        sys_panic("WF Start failed");
+        lprintf("WF Start failed");
 
     // printf("WF %d started[%d]\n", wf_chan, cont);
 
@@ -348,7 +348,7 @@ int fpga_wf_param(int wf_chan, int decimate, uint64_t freq) {
     wf_param_op param = { (__u16)wf_chan, (__u16)decimate, freq };
     rc = ioctl(ad8370_fd, WF_PARAM, &param);
     if (rc)
-        sys_panic("WF Parameter failed");
+        lprintf("WF Parameter failed");
 
     return rc;
 }
@@ -412,5 +412,5 @@ void fpga_read_wf(int wf_chan, void* buf, uint32_t size) {
     }
 
     if (rc)
-        sys_panic("Read WF failed");
+        lprintf("Read WF failed");
 }

@@ -274,8 +274,19 @@ void rx_sound_cmd(conn_t* conn, double frate, int n, char* cmd) {
             // cprintf(conn, "SET rf_attn=%.1f\n", rf_attn_dB);
 
             // update s->rf_attn_dB here so we don't send UI update to ourselves
-            kiwi.rf_attn_dB = s->rf_attn_dB = rf_attn_dB;
-            rf_attn_set(rf_attn_dB);
+
+            bool deny = false;
+            ext_auth_e auth = ext_auth(rx_chan);
+            if (auth != AUTH_LOCAL) deny = true;
+
+            if (!deny) {
+                // update s->rf_attn_dB here so we don't send UI update to ourselves
+                kiwi.rf_attn_dB = s->rf_attn_dB = rf_attn_dB;
+                rf_attn_set(rf_attn_dB);
+            } else {
+                cprintf(conn, "rf_attn DENY\n");
+            }
+
             did_cmd = true;
         }
         break;

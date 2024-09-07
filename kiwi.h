@@ -65,6 +65,7 @@ typedef struct {
 
     int ant_switch_nch;
     bool wf_share;
+    bool narrowband;
 } kiwi_t;
 
 extern kiwi_t kiwi;

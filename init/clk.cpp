@@ -48,7 +48,14 @@ double adc_clock_hz;
 void clock_init() {
     bool err; // NB: all CFG_OPTIONAL because don't get defaulted early enough
 
-    adc_clock_hz = kiwi.airband ? ADC_CLOCK_VHF : ADC_CLOCK_HF;
+    if (kiwi.airband) {
+        adc_clock_hz = ADC_CLOCK_VHF;
+    } else {
+        adc_clock_hz =  ADC_CLOCK_HF;
+        bool narrowband = admcfg_bool("narrowband", &err, CFG_OPTIONAL);
+        if (narrowband)
+            adc_clock_hz /= 2;
+    }
 
     clk.do_corrections = cfg_int("ADC_clk2_corr", &err, CFG_OPTIONAL);
     if (err) clk.do_corrections = ADC_CLK_CORR_CONTINUOUS;

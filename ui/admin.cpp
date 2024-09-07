@@ -393,6 +393,18 @@ void c2s_admin(void* param) {
                 continue;
             }
 
+            int narrowband;
+            i = sscanf(cmd, "SET narrowband=%d", &narrowband);
+            if (i == 1) {
+                // clprintf(conn, "ADMIN: wideband=%d\n", wf_share);
+
+                if (kiwi.narrowband != narrowband) {
+                    kiwi.narrowband = narrowband;
+                }
+
+                continue;
+            }
+
             int chan;
             i = sscanf(cmd, "SET user_kick=%d", &chan);
             if (i == 1) {
@@ -658,13 +670,15 @@ void c2s_admin(void* param) {
                 fprintf(fp, "    address %s\n", static_ip_m);
                 fprintf(fp, "    netmask %s\n", static_nm_m);
                 fprintf(fp, "    gateway %s\n", static_gw_m);
-                fprintf(fp, "iface usb0 inet static\n");
+                fprintf(fp, "iface wlan0 inet static\n");
                 fprintf(fp, "    address 192.168.7.2\n");
                 fprintf(fp, "    netmask 255.255.255.252\n");
                 fprintf(fp, "    network 192.168.7.0\n");
                 fprintf(fp, "    gateway 192.168.7.1\n");
                 fclose(fp);
                 system("cp /tmp/interfaces.kiwi /etc/network/interfaces");
+                system("rm /etc/network/interfaces.bak");
+                system("lbu commit -d");
 
                 kiwi_asfree(static_ip_m);
                 kiwi_asfree(static_nm_m);
@@ -720,6 +734,8 @@ void c2s_admin(void* param) {
             if (i == 0) {
                 clprintf(conn, "eth0: USE DHCP\n");
                 system("rm /etc/network/interfaces");
+                system("touch /etc/network/interfaces");
+                system("lbu commit -d");
                 continue;
             }
 

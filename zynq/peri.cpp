@@ -45,7 +45,7 @@ void peri_init() {
         return;
 
     // load fpga bitstream
-    int status = blocking_system("cat /media/mmcblk0p1/websdr_%s.bit > /dev/xdevcfg", kiwi.airband ? "vhf" : "hf");
+    int status = blocking_system("cat /media/mmcblk0p1/websdr_hf.bit > /dev/xdevcfg");
     if (status != 0) {
         panic("Fail to load bitstram file");
     }

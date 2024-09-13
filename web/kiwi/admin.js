@@ -148,7 +148,7 @@ function control_html()
             w3_inline('w3-halign-space-around/',
                w3_switch_label('w3-center', 'Enable user<br>connections?', 'Yes', 'No', 'adm.server_enabled', adm.server_enabled, 'server_enabled_cb'),
 
-               w3_switch_label('w3-center w3-restart', 'Switch between<br>HF or Air Band', 'Air', 'HF', 'adm.airband', adm.airband, 'airband_switch_cb'),
+               w3_switch_label('w3-center w3-reboot', 'Switch between<br>HF or Air Band', 'Air', 'HF', 'adm.airband', adm.airband, 'airband_switch_cb'),
          
                w3_divs('w3-center/w3-margin-T-8',
                   w3_div('', '<b>Close all active<br>user connections</b>'),

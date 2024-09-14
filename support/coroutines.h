@@ -111,7 +111,7 @@ typedef enum {
     CALLED_FROM_LOCK,
 } ipoll_from_e;
 
-void TaskRemove(int id);
+C_LINKAGE(void TaskRemove(int id));
 void TaskMinRun(u4_t minrun_us);
 u4_t TaskFlags();
 void TaskSetFlags(u4_t flags);

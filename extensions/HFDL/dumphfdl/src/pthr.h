@@ -5,7 +5,7 @@
 #endif
 
 #ifdef KIWI
-    #include <glib.h>
+    #include "glib.h"
     gpointer hfdl_g_async_queue_pop(const char *id, GAsyncQueue *q);
 #else
     #define hfdl_g_async_queue_pop(id, q) \
@@ -25,6 +25,7 @@ extern "C" {
 #endif
 
 typedef struct {
+    int thread_id;
 } pthr_t;
 
 

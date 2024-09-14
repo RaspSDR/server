@@ -9,7 +9,7 @@
 #include "ac_cache.h"
 #include "ac_data.h"
 #include "kiwi-hfdl.h"
-#include <glib.h>           // GAsyncQueue, g_async_queue_*
+#include "glib.h"           // GAsyncQueue, g_async_queue_*
 
 enum ac_data_details {
 	AC_DETAILS_NORMAL = 0,
@@ -38,7 +38,8 @@ struct dumphfdl_config {
 #define STATION_ID_LEN_MAX 255
 
 // version.c
-#ifdef HFDL_KIWI
+#ifdef KIWI
+    #define DUMPHFDL_VERSION "1.1.0"
 #else
     extern char const * const DUMPHFDL_VERSION;
 #endif

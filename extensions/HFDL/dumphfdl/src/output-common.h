@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "pthr.h"                    // pthr_t
-#include <glib.h>                       // GAsyncQueue
+#include "glib.h"                       // GAsyncQueue
 #include <libacars/libacars.h>          // la_proto_node
 #include <libacars/list.h>              // la_list
 #include "kvargs.h"                     // kvargs

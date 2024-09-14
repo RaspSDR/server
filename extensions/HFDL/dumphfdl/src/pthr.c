@@ -39,7 +39,8 @@ int pthr_mutex_unlock(pthr_mutex_t *mutex)
 
 int pthr_mutex_destroy(pthr_mutex_t *mutex)
 {
-    ((lock_t *) mutex->lock)->init = false;
+    //TODO:
+    (void) mutex;
     return 0;
 }
 
@@ -91,10 +92,10 @@ int pthr_cond_broadcast(pthr_cond_t *cond)
 
 int pthr_cond_destroy(pthr_cond_t *cond)
 {
+    //TODO:
     (void) cond;
     return 0;
 }
-
 
 typedef struct {
     int rx_chan;
@@ -127,7 +128,7 @@ int pthr_create(const char *id,
     args->id = id;
     args->func = (funcP_t) start_routine;
     args->arg = arg;
-    CreateTaskSF((funcP_t) pthr_bootstrap, id, args, EXT_PRIORITY, 0, 0);
+    thread->thread_id = CreateTaskSF((funcP_t) pthr_bootstrap, id, args, EXT_PRIORITY, 0, 0);
     return 0;
 }
 
@@ -139,8 +140,7 @@ int pthr_detach(pthr_t thread)
 
 int pthr_join(pthr_t thread, void **retval)
 {
-    (void) thread;
-    (void) retval;
+    TaskRemove(thread.thread_id);
     return 0;
 }
 

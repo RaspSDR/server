@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>                 // memcpy
-#include <glib.h>                   // GAsyncQueue, g_async_queue_*
+#include "glib.h"                   // GAsyncQueue, g_async_queue_*
 #include <libacars/libacars.h>      // la_proto_tree_destroy()
 #include <libacars/list.h>          // la_list_*
 #include <libacars/reassembly.h>    // la_reasm_ctx, la_reasm_ctx_new()

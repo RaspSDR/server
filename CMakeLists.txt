@@ -45,6 +45,11 @@ pkg_check_modules(ZLIB REQUIRED zlib)
 pkg_check_modules(FDKAAC REQUIRED fdk-aac)
 pkg_check_modules(GPS REQUIRED libgps)
 pkg_check_modules(UNWIND REQUIRED libunwind)
+pkg_check_modules(SQLite3 REQUIRED sqlite3)
+
+set(CONFIG_LIBRARIES "/usr/lib/libconfig++.a")
+set(ACARS_LIBRARIES "/usr/local/lib/libacars-2.a")
+set(LIQUIDDSP_LIBRARIES "/usr/local/lib/libliquid.a")
 
 find_program(CCACHE_FOUND ccache)
 
@@ -68,6 +73,7 @@ SET(EXTENSIONS
     FSK
     FT8
     IBP_scan
+    HFDL
     iframe
     IQ_display
     Loran_C
@@ -86,15 +92,17 @@ SET(GEN_EXT_MAIN "// auto-generated file -- do not edit by hand\n")
 STRING(APPEND GEN_EXT_MAIN "void extint_init() {\n")
 
 if(${CMAKE_C_COMPILER} MATCHES "clang")
-    set(EXT_DEFINITIONS USE_CONSOLEIO USE_KIWI)
+    set(EXT_DEFINITIONS USE_CONSOLEIO USE_KIWI HFDL)
 else()
-    set(EXT_DEFINITIONS USE_CONSOLEIO USE_KIWI __UINT64_FMTx__="lld")
+    set(EXT_DEFINITIONS USE_CONSOLEIO USE_KIWI __UINT64_FMTx__="lld" HFDL)
 endif()
 
 set(EXT_INCLUDES
     "${UPSTREAM_DIR}/extensions/FT8/ft8_lib"
     "${UPSTREAM_DIR}/extensions/DRM/dream/datadecoding"
     "${UPSTREAM_DIR}/extensions/DRM/dream/SDC"
+    "/usr/local/include/"
+    "/usr/local/include/libacars-2/"
 )
 
 FOREACH(ext_name ${EXTENSIONS})
@@ -197,6 +205,10 @@ target_link_libraries(websdr.bin PRIVATE
     ${GPS_LIBRARIES}
     ${FDKAAC_LIBRARIES}
     ${UNWIND_LIBRARIES}
+    ${ACARS_LIBRARIES}
+    ${CONFIG_LIBRARIES}
+    ${LIQUIDDSP_LIBRARIES}
+    ${SQLite3_LIBRARIES}
 )
 
 cmake_host_system_information(RESULT _host_name QUERY HOSTNAME)
@@ -285,6 +297,7 @@ file(GLOB FILES_EMBED_MISC RELATIVE ${UPSTREAM_DIR}/web
     ${UPSTREAM_DIR}/web/extensions/FAX/FAX_freq_menus.cjson
     ${UPSTREAM_DIR}/web/extensions/FSK/FSK_freq_menus.cjson
     ${UPSTREAM_DIR}/web/extensions/NAVTEX/NAVTEX_freq_menus.cjson
+    ${UPSTREAM_DIR}/web/extensions/HFDL/systable.backup.cjson
 )
 
 set(FILES_EMBED_FILES ${FILES_EMBED_JS} ${FILES_EMBED_CSS} ${FILES_EMBED_HTML} ${FILES_EMBED_MISC})

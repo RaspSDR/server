@@ -21,12 +21,15 @@ Boston, MA  02110-1301, USA.
 
 void system_reboot() {
     system("reboot");
+    exit(0);
 }
 
 void system_halt() {
     system("halt");
+    exit(0);
 }
 
 void system_poweroff() {
     system("poweroff");
+    exit(0);
 }

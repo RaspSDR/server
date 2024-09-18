@@ -201,6 +201,13 @@ static void _update_task(void* param) {
         update_install = (admcfg_bool("update_install", NULL, CFG_REQUIRED) == true);
     }
 
+    {
+        if (kiwi_file_exists("/root/config/force_update")) {
+            ver_changed = true;
+            update_install = true;
+        }
+    }
+
     if (force_check) {
         update_in_progress = false;
         if (ver_changed)

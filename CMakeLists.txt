@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 3.13)
 project(RaspSDR)
 
+include(ExternalProject)
+
 set(UPSTREAM_DIR ${CMAKE_SOURCE_DIR})
 
 find_program(MINIFY_COMMAND NAMES minify)
 
 option(ZYNQ "Build for Zynq7000 serial based WebSDR" ON)
 option(RPI "Build for RPI serial based WebSDR" OFF)
+option(ENABLE_HDFL "Enable HFDL" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
    set(CMAKE_BUILD_TYPE Release)
@@ -48,8 +51,6 @@ pkg_check_modules(UNWIND REQUIRED libunwind)
 pkg_check_modules(SQLite3 REQUIRED sqlite3)
 
 set(CONFIG_LIBRARIES "/usr/lib/libconfig++.a")
-set(ACARS_LIBRARIES "/usr/local/lib/libacars-2.a")
-set(LIQUIDDSP_LIBRARIES "/usr/local/lib/libliquid.a")
 
 find_program(CCACHE_FOUND ccache)
 
@@ -57,6 +58,38 @@ if(CCACHE_FOUND)
     MESSAGE("CCache is Enabled")
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
 endif(CCACHE_FOUND)
+
+if(ENABLE_HDFL)
+    ## HFDL external depedency
+
+    ExternalProject_Add(
+        liquid-dsp
+        GIT_REPOSITORY https://github.com/jgaeddert/liquid-dsp.git
+        GIT_TAG        v1.6.0
+        #PATCH_COMMAND  git apply ${CMAKE_SOURCE_DIR}/extensions/HFDL/patches/liquid.patch
+        CONFIGURE_COMMAND cd <SOURCE_DIR> && ./bootstrap.sh && ./configure --prefix=${CMAKE_BINARY_DIR}/liquid-dsp
+        BUILD_COMMAND make -j 8 -C <SOURCE_DIR>
+        INSTALL_COMMAND make install -C <SOURCE_DIR>
+    )
+
+    set(LIQUID_DSP_INCLUDE_DIR ${CMAKE_BINARY_DIR}/liquid-dsp/include)
+    set(LIQUID_DSP_LIB_DIR ${CMAKE_BINARY_DIR}/liquid-dsp/lib)
+
+    ExternalProject_Add(
+        libacars
+        GIT_REPOSITORY https://github.com/szpajder/libacars
+        GIT_TAG        v2.2.0
+        #PATCH_COMMAND  git apply ${CMAKE_SOURCE_DIR}/extensions/HFDL/patches/libacars.patch
+        CMAKE_ARGS
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/libacars
+            -DBUILD_SHARED_LIBS=OFF  # Ensure static library is built
+    )
+
+    set(LIBACARS_INCLUDE_DIR ${CMAKE_BINARY_DIR}/libacars/include)
+    set(LIBACARS_LIB_DIR ${CMAKE_BINARY_DIR}/libacars/lib)
+
+endif(ENABLE_HDFL)
+###########################################################
 
 SET(EXT_SRCS ${PROJECT_BINARY_DIR}/extint.cpp ${UPSTREAM_DIR}/extensions/ext.cpp)
 
@@ -73,7 +106,6 @@ SET(EXTENSIONS
     FSK
     FT8
     IBP_scan
-    HFDL
     iframe
     IQ_display
     Loran_C
@@ -88,6 +120,10 @@ SET(EXTENSIONS
     wspr
 )
 
+if(ENABLE_HDFL)
+    list(APPEND EXTENSIONS HFDL)
+endif(ENABLE_HDFL)
+
 SET(GEN_EXT_MAIN "// auto-generated file -- do not edit by hand\n")
 STRING(APPEND GEN_EXT_MAIN "void extint_init() {\n")
 
@@ -101,8 +137,8 @@ set(EXT_INCLUDES
     "${UPSTREAM_DIR}/extensions/FT8/ft8_lib"
     "${UPSTREAM_DIR}/extensions/DRM/dream/datadecoding"
     "${UPSTREAM_DIR}/extensions/DRM/dream/SDC"
-    "/usr/local/include/"
-    "/usr/local/include/libacars-2/"
+    ${LIQUID_DSP_INCLUDE_DIR}
+    ${LIBACARS_INCLUDE_DIR}
 )
 
 FOREACH(ext_name ${EXTENSIONS})
@@ -205,11 +241,18 @@ target_link_libraries(websdr.bin PRIVATE
     ${GPS_LIBRARIES}
     ${FDKAAC_LIBRARIES}
     ${UNWIND_LIBRARIES}
-    ${ACARS_LIBRARIES}
     ${CONFIG_LIBRARIES}
-    ${LIQUIDDSP_LIBRARIES}
-    ${SQLite3_LIBRARIES}
 )
+
+if(ENABLE_HDFL)
+    target_link_libraries(websdr.bin PRIVATE
+        ${LIQUID_DSP_LIB_DIR}/libliquid.a
+        ${LIBACARS_LIB_DIR}/libacars-2.a
+        /usr/lib/libsqlite3.a
+    )
+    add_dependencies(websdr.bin liquid-dsp libacars)
+
+endif(ENABLE_HDFL)
 
 cmake_host_system_information(RESULT _host_name QUERY HOSTNAME)
 string(TIMESTAMP CURRENT_YEAR "%Y")

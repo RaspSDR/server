@@ -367,7 +367,7 @@ void web_server_init(ws_init_t type) {
 
         if (mg_set_option(server, "listening_port", s_port) != NULL) {
             lprintf("network port(s) %s in use\n", s_port);
-            lprintf("app already running in background?\ntry \"make stop\" (or \"m stop\") first\n");
+            lprintf("app already running in background?\ntry \"/etc/init.d/sdrd stop\"first\n");
             kiwi_exit(-1);
         }
         kiwi_asfree(s_port);

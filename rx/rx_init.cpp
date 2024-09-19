@@ -137,9 +137,6 @@ TYPEREAL DC_offset_I, DC_offset_Q;
 #define WATERFALL_CALIBRATION_DEFAULT -13
 #define SMETER_CALIBRATION_DEFAULT    -13
 
-#define N_MTU 3
-static int mtu_v[N_MTU] = { 1500, 1440, 1400 };
-
 static int snr_interval[] = { 0, 1, 4, 6, 24 };
 
 void update_freqs(bool* update_cfg) {
@@ -355,18 +352,6 @@ void update_vars_from_config(bool called_at_init) {
     }
     cfg_default_int("init.floor_dB", 0, &update_cfg);
     cfg_default_int("init.ceil_dB", 5, &update_cfg);
-
-    int _dom_sel = cfg_default_int("sdr_hu_dom_sel", DOM_SEL_NAM, &update_cfg);
-
-#if 0
-        // try and get this Kiwi working with the proxy
-        //printf("serno=%d dom_sel=%d\n", serial_number, _dom_sel);
-	    if (serial_number == 1006 && _dom_sel == DOM_SEL_NAM) {
-            cfg_set_int("sdr_hu_dom_sel", DOM_SEL_REV);
-            update_cfg = true;
-            lprintf("######## FORCE DOM_SEL_REV serno=%d ########\n", serial_number);
-	    }
-#endif
 
     // remove old kiwisdr.example.com default
     cfg_default_string("server_url", "", &update_cfg);

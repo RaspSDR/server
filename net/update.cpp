@@ -111,7 +111,7 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
     }
 
     if (report) report_progress(conn, "Checksum the downloaded files");
-    status = system("cd /media/mmcblk0p1/update; sed -i '/web-888-alpine/d' /media/mmcblk0p1/update/checksum; sha256sum -c /media/mmcblk0p1/update/checksum");
+    status = system("cd /media/mmcblk0p1/update; sed -i '/web-888-alpine/d /_vhf/d' /media/mmcblk0p1/update/checksum; sha256sum -c /media/mmcblk0p1/update/checksum");
     if (status != 0) {
         lprintf("UPDATE: checksum failed status=0x%08x\n", status);
         if (report) report_progress(conn, "Checksum failed");

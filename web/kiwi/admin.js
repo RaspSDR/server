@@ -148,7 +148,7 @@ function control_html()
             w3_inline('w3-halign-space-around/',
                w3_switch_label('w3-center', 'Enable user<br>connections?', 'Yes', 'No', 'adm.server_enabled', adm.server_enabled, 'server_enabled_cb'),
 
-               w3_switch_label('w3-center w3-reboot', 'Switch between<br>HF or Air Band', 'Air', 'HF', 'adm.airband', adm.airband, 'airband_switch_cb'),
+               w3_switch_label('w3-center w3-restart', 'Switch between<br>HF or Air Band', 'Air', 'HF', 'adm.airband', adm.airband, 'airband_switch_cb'),
          
                w3_divs('w3-center/w3-margin-T-8',
                   w3_div('', '<b>Close all active<br>user connections</b>'),
@@ -274,10 +274,6 @@ function wf_share_enabled_cb(path, idx, first)
 	var enabled = (idx == 0);
 	//console.log('server_enabled_cb: first='+ first +' enabled='+ enabled);
 
-	if (!first) {
-		ext_send('SET wf_share='+ (enabled? 1:0));
-	}
-	
 	admin_bool_cb(path, enabled, first);
 }
 
@@ -286,10 +282,6 @@ function wf_narrowband_enabled_cb(path, idx, first)
    idx = +idx;
 	var enabled = (idx == 0);
 	//console.log('server_enabled_cb: first='+ first +' enabled='+ enabled);
-
-	if (!first) {
-		ext_send('SET narrowband='+ (enabled? 1:0));
-	}
 	
 	admin_bool_cb(path, enabled, first);
 }

@@ -52,8 +52,7 @@ void clock_init() {
         adc_clock_hz = ADC_CLOCK_VHF;
     } else {
         adc_clock_hz =  ADC_CLOCK_HF;
-        bool narrowband = admcfg_bool("narrowband", &err, CFG_OPTIONAL);
-        if (narrowband)
+        if (kiwi.narrowband)
             adc_clock_hz /= 2;
     }
 

@@ -213,6 +213,7 @@ int main(int argc, char* argv[]) {
     bool update_admcfg = false;
     kiwi.airband = admcfg_default_bool("airband", false, &update_admcfg);
     kiwi.wf_share = admcfg_default_bool("wf_share", false, &update_admcfg);
+    kiwi.narrowband = admcfg_default_bool("narrowband", false, &update_admcfg);
 
     if (update_admcfg) admcfg_save_json(cfg_adm.json); // during init doesn't conflict with admin cfg
 

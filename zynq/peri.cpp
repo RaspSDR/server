@@ -50,11 +50,6 @@ void peri_init() {
         panic("Fail to load bitstram file");
     }
 
-    scall("/dev/zynqsdr", ad8370_fd = open("/dev/zynqsdr", O_RDWR | O_SYNC));
-    if (ad8370_fd <= 0) {
-        sys_panic("Failed to open kernel driver");
-    }
-
     i2c = new LinuxInterface(buss_id, chip_addr);
     si5351 = new Si5351(chip_addr, i2c);
 
@@ -65,8 +60,6 @@ void peri_init() {
     else {
         int_clk = 1;
     }
-
-    ioctl(ad8370_fd, CLK_SET, int_clk);
 
     bool i2c_found = si5351->init(SI5351_CRYSTAL_LOAD_0PF, clk.clock_ref, 0);
     if (!i2c_found) {
@@ -84,6 +77,13 @@ void peri_init() {
         si5351->set_freq((uint64_t)clk.gpsdo_ext_clk * 100, SI5351_CLK2);
         si5351->drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA);
     }
+
+    scall("/dev/zynqsdr", ad8370_fd = open("/dev/zynqsdr", O_RDWR | O_SYNC));
+    if (ad8370_fd <= 0) {
+        sys_panic("Failed to open kernel driver");
+    }
+
+    ioctl(ad8370_fd, CLK_SET, int_clk);
 
     // set airband mode
     rf_enable_airband(kiwi.airband);

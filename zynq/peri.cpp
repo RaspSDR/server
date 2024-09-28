@@ -44,12 +44,6 @@ void peri_init() {
     if (init)
         return;
 
-    // load fpga bitstream
-    int status = blocking_system("cat /media/mmcblk0p1/websdr_hf.bit > /dev/xdevcfg");
-    if (status != 0) {
-        panic("Fail to load bitstram file");
-    }
-
     i2c = new LinuxInterface(buss_id, chip_addr);
     si5351 = new Si5351(chip_addr, i2c);
 
@@ -77,6 +71,16 @@ void peri_init() {
         si5351->set_freq((uint64_t)clk.gpsdo_ext_clk * 100, SI5351_CLK2);
         si5351->drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA);
     }
+
+    sleep(1);
+
+    // load fpga bitstream
+    int status = blocking_system("cat /media/mmcblk0p1/websdr_hf.bit > /dev/xdevcfg");
+    if (status != 0) {
+        panic("Fail to load bitstram file");
+    }
+
+    sleep(1);
 
     scall("/dev/zynqsdr", ad8370_fd = open("/dev/zynqsdr", O_RDWR | O_SYNC));
     if (ad8370_fd <= 0) {

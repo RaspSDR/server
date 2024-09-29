@@ -352,6 +352,7 @@ void update_vars_from_config(bool called_at_init) {
     }
     cfg_default_int("init.floor_dB", 0, &update_cfg);
     cfg_default_int("init.ceil_dB", 5, &update_cfg);
+    cfg_default_int("sdr_hu_dom_sel", DOM_SEL_NAM, &update_cfg);
 
     // remove old kiwisdr.example.com default
     cfg_default_string("server_url", "", &update_cfg);

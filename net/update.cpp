@@ -95,6 +95,11 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
         no_fpga = true;
     }
 
+    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr_vhf.bit https://downloads.rx-888.com/web-888/%s/websdr_vhf.bit", channel);
+    if (status != 0) {
+        no_fpga = true;
+    }
+
     if (report) report_progress(conn, "Download Web-888 Server");
 
     status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr.bin https://downloads.rx-888.com/web-888/%s/websdr.bin", channel);
@@ -127,6 +132,9 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
     if (!no_fpga) {
         system("rm /media/mmcblk0p1/websdr_hf.bit.old");
         system("mv /media/mmcblk0p1/websdr_hf.bit /media/mmcblk0p1/websdr_hf.bit.old; mv /media/mmcblk0p1/update/websdr_hf.bit /media/mmcblk0p1/websdr_hf.bit");
+
+        system("rm /media/mmcblk0p1/websdr_vhf.bit.old");
+        system("mv /media/mmcblk0p1/websdr_vhf.bit /media/mmcblk0p1/websdr_vhf.bit.old; mv /media/mmcblk0p1/update/websdr_vhf.bit /media/mmcblk0p1/websdr_vhf.bit");
     }
 
     status = EXIT_SUCCESS;

@@ -40,6 +40,7 @@ Boston, MA  02110-1301, USA.
 #include "wdsp.h"
 #include "security.h"
 #include "options.h"
+#include "peri.h"
 
 #ifdef DRM
 #include "DRM.h"
@@ -361,6 +362,12 @@ void update_vars_from_config(bool called_at_init) {
         cfg_set_string("server_url", "");
         update_cfg = true;
     }
+
+    // configure adc
+    int adc_pga = cfg_default_int("adc_pga", 0, &update_cfg);
+    fpga_set_pga(adc_pga);
+    int adc_dither = cfg_default_int("adc_dither", 0, &update_cfg);
+    fpga_set_dither(adc_dither);
 
 // not sure I want to do this yet..
 #if 0

@@ -619,17 +619,16 @@ function overload_mute_cb(path, val, complete, first)
 
 function config_adc_dither_cb(path, idx)
 {
-   var enabled = (idx == 0);
-
-   ext_send("SET dither="+ enabled);
-   admin_int_cb(path, enabled);
+   var val = +idx? 0:1;    // idx: 0 = 'yes', 1 = 'no'
+   ext_send("SET dither="+ val);
+   admin_int_cb(path, val);
 }
 
 function config_adc_pga_cb(path, idx)
 {
-   var enabled = (idx == 0);
-   ext_send("SET pga="+ enabled);
-   admin_int_cb(path, enabled);
+   var val = +idx? 0:1;    // idx: 0 = 'yes', 1 = 'no'
+   ext_send("SET pga="+ val);
+   admin_int_cb(path, val);
 }
 
 function config_ext_clk_sel_cb(path, idx)

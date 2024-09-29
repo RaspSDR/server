@@ -108,7 +108,7 @@ static void get_TZ(void* param) {
 #define TIMEZONE_DB_COM
 #ifdef TIMEZONE_DB_COM
 #define TZ_SERVER "timezonedb.com"
-        asprintf(&cmd_p, "curl -L -sk --ipv4 \"https://api.timezonedb.com/v2.1/get-time-zone?key=HIHUSGTXYI55&format=json&by=position&lat=%f&lng=%f\" 2>&1",
+        asprintf(&cmd_p, "curl -L -sk --ipv4 \"https://api.timezonedb.com/v2.1/get-time-zone?key=3ZGBZUJH8PXH&format=json&by=position&lat=%f&lng=%f\" 2>&1",
                  lat, lon);
 #else
 #define TZ_SERVER "googleapis.com"

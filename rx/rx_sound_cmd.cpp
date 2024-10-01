@@ -283,7 +283,8 @@ void rx_sound_cmd(conn_t* conn, double frate, int n, char* cmd) {
                 // update s->rf_attn_dB here so we don't send UI update to ourselves
                 kiwi.rf_attn_dB = s->rf_attn_dB = rf_attn_dB;
                 rf_attn_set(rf_attn_dB);
-            } else {
+            }
+            else {
                 cprintf(conn, "rf_attn DENY\n");
             }
 

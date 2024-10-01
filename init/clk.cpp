@@ -50,8 +50,9 @@ void clock_init() {
 
     if (kiwi.airband) {
         adc_clock_hz = ADC_CLOCK_VHF;
-    } else {
-        adc_clock_hz =  ADC_CLOCK_HF;
+    }
+    else {
+        adc_clock_hz = ADC_CLOCK_HF;
         if (kiwi.narrowband)
             adc_clock_hz /= 2;
     }

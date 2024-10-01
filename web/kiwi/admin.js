@@ -898,9 +898,6 @@ function update_html()
          w3_half('w3-container w3-tspace-16', 'w3-text-teal',
             w3_div('',
                w3_select('/w3-label-inline/w3-width-auto', 'After a restart', '', 'adm.restart_update', adm.restart_update, restart_update_u, 'admin_select_cb')
-            ),
-            w3_div('',
-               w3_select('/w3-label-inline/w3-width-auto', 'After an update', '', 'adm.update_restart', adm.update_restart, update_restart_u, 'admin_select_cb')
             )
          )
 		) +
@@ -928,7 +925,6 @@ function update_html()
 }
 
 var restart_update_u = { 0: 'install updates', 1: 'delay updates until overnight' };
-var update_restart_u = { 0: 'restart server', 1: 'reboot Web-888' };
 
 function update_check_now_cb(id, idx)
 {
@@ -942,10 +938,7 @@ function update_build_now_cb(id, idx)
 	ext_send('SET force_check=1 force_build=1');
 	w3_el('id-msg-update').innerHTML = w3_icon('', 'fa-refresh fa-spin', 24) + 'Updating';
 
-	if (adm.update_restart == 0)
-	   w3_show_block('id-build-restart');
-	else
-	   w3_show_block('id-build-reboot');
+   w3_show_block('id-build-reboot');
 }
 
 ////////////////////////////////

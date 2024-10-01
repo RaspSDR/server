@@ -252,13 +252,9 @@ static void _update_task(void* param) {
 
         lprintf("UPDATE: build took %d secs\n", timer_sec() - build_time);
         lprintf("UPDATE: switching to new version %d.%d\n", pending_maj, pending_min);
-        if (admcfg_int("update_restart", NULL, CFG_REQUIRED) == 0) {
-            kiwi_exit(0);
-        }
-        else {
+
             lprintf("UPDATE: rebooting Beagle..\n");
             system("sleep 3; reboot");
-        }
     }
     else {
         lprintf("UPDATE: version %d.%d is current\n", version_maj, version_min);

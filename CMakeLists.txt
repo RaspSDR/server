@@ -197,7 +197,7 @@ target_include_directories(websdr.bin PUBLIC
     "."
     ${PLATFORM_INC}
     "gps"
-    ${PROJECT_BINARY_DIR}/gen
+    ${PROJECT_BINARY_DIR}
     "${UPSTREAM_DIR}/"
     "${UPSTREAM_DIR}/support"
     "${UPSTREAM_DIR}/init"
@@ -481,3 +481,81 @@ add_custom_target(copy_libfdk_target DEPENDS ${PROJECT_BINARY_DIR}/libfdk-aac.so
 
 add_dependencies(websdr.bin copy_config_target)
 add_dependencies(websdr.bin copy_libfdk_target)
+
+# Function to download the file only if it's outdated or doesn't exist
+function(download_if_needed url local_file)
+    # Check if the local file exists
+    if(EXISTS "${local_file}")
+        # Get the local file's modification time
+        file(TIMESTAMP "${local_file}" LOCAL_TIMESTAMP)
+    else()
+        # If it doesn't exist, set LOCAL_TIMESTAMP to a very old time
+        set(LOCAL_TIMESTAMP 0)
+    endif()
+
+    # Fetch the remote file's modification time
+    file(DOWNLOAD "${url}" "${local_file}.tmp" STATUS status)
+    if(NOT status EQUAL 0)
+        message(FATAL_ERROR "Failed to download file: ${status}")
+    endif()
+
+    file(TIMESTAMP "${local_file}.tmp" REMOTE_TIMESTAMP)
+
+    # Compare timestamps
+    if(REMOTE_TIMESTAMP GREATER LOCAL_TIMESTAMP)
+        # Only rename if the remote file is newer
+        file(RENAME "${local_file}.tmp" "${local_file}")
+        message(STATUS "Downloaded new version of the file: ${local_file}")
+    else()
+        # Clean up the temporary file
+        file(REMOVE "${local_file}.tmp")
+        message(STATUS "Local file is up to date: ${local_file}")
+    endif()
+endfunction()
+
+download_if_needed("http://www.eibispace.de/dx/sked-a24.csv" ${PROJECT_BINARY_DIR}/sked-current.csv)
+
+add_executable(eibi_proc ${UPSTREAM_DIR}/pkgs/EiBi/eibi_proc.cpp)
+target_include_directories(eibi_proc PUBLIC
+    "."
+    ${PLATFORM_INC}
+    "${UPSTREAM_DIR}/"
+    "${UPSTREAM_DIR}/support"
+    "${UPSTREAM_DIR}/init"
+    "${UPSTREAM_DIR}/rx"
+    "${UPSTREAM_DIR}/web"
+    "${UPSTREAM_DIR}/dev"
+    "${UPSTREAM_DIR}/rx/CuteSDR"
+    "${UPSTREAM_DIR}/rx/csdr"
+    "${UPSTREAM_DIR}/rx/Teensy"
+    "${UPSTREAM_DIR}/rx/kiwi"
+    "${UPSTREAM_DIR}/rx/wdsp"
+    "${UPSTREAM_DIR}/rx/CMSIS"
+    "${UPSTREAM_DIR}/rx/fldigi/rsid"
+    "${UPSTREAM_DIR}/rx/fldigi"
+    "${UPSTREAM_DIR}/net"
+
+    "${UPSTREAM_DIR}/extensions"
+    "${UPSTREAM_DIR}/extensions/noise_blank"
+    "${UPSTREAM_DIR}/extensions/wspr"
+    "${UPSTREAM_DIR}/extensions/DRM"
+    "${UPSTREAM_DIR}/extensions/FT8"
+    "${UPSTREAM_DIR}/extensions/noise_filter"
+    "${UPSTREAM_DIR}/extensions/DRM/dream"
+    "${UPSTREAM_DIR}/extensions/DRM/dream/resample"
+
+    "${UPSTREAM_DIR}/pkgs/jsmn"
+    "${UPSTREAM_DIR}/pkgs/mongoose"
+    "${UPSTREAM_DIR}/pkgs/sha256"
+    "${UPSTREAM_DIR}/pkgs/utf8/"
+)
+
+add_custom_command(
+    COMMAND ${PROJECT_BINARY_DIR}/eibi_proc ${PROJECT_BINARY_DIR}/sked-current.csv ${PROJECT_BINARY_DIR}/EiBi.h
+    WORKING_DIRECTORY ${UPSTREAM_DIR}
+    OUTPUT ${PROJECT_BINARY_DIR}/EiBi.h
+    DEPENDS ${PROJECT_BINARY_DIR}/sked-current.csv eibi_proc
+    COMMENT "Add files into cpp"
+)
+add_custom_target(eibi_gen_target DEPENDS ${PROJECT_BINARY_DIR}/EiBi.h)
+add_dependencies(websdr.bin eibi_gen_target)

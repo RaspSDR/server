@@ -59,9 +59,7 @@ Boston, MA  02110-1301, USA.
 #include <sys/wait.h>
 #include <signal.h>
 
-#ifdef HOST
 #include <sys/prctl.h>
-#endif
 #include <pty.h>
 
 typedef struct {
@@ -124,10 +122,8 @@ static void tunnel(void* param) {
     scall("fork", (child_pid = fork()));
 
     if (child_pid == 0) {
-#ifdef HOST
         // terminate when parent exits
         scall("PR_SET_PDEATHSIG", prctl(PR_SET_PDEATHSIG, SIGTERM));
-#endif
 
         scall("dupSI", dup2(si[PIPE_R], STDIN_FILENO));
         scall("closeSI", close(si[PIPE_W]));
@@ -175,10 +171,8 @@ static void console_task(void* param) {
     scall("forkpty", (c->console_child_pid = forkpty(&c->master_pty_fd, NULL, NULL, NULL)));
 
     if (c->console_child_pid == 0) { // child
-#ifdef HOST
         // terminate when parent exits
         scall("PR_SET_PDEATHSIG", prctl(PR_SET_PDEATHSIG, SIGTERM));
-#endif
 
         execve(args[0], args, NULL);
         child_exit(EXIT_SUCCESS);

@@ -128,13 +128,7 @@ char* kiwi_crypt_generate(const char* key, int seq) {
     printf("kiwi_crypt_generate: salt=<%s>\n", salt);
     char *salt_s, *encr = NULL;
     asprintf(&salt_s, "$%s$%s$", HASH_FUNC_SHA_512, salt);
-#ifdef HOST
-#ifdef USE_CRYPT
     encr = crypt(key, salt_s);
-#else
-    panic("compiled without -lcrypt");
-#endif
-#endif
     free(salt_s);
 
     if (encr == NULL || strlen(encr) != N_ENCRYPTED) {
@@ -154,13 +148,7 @@ bool kiwi_crypt_validate(const char* key, char* salt, char* hash_o) {
 
     char *salt_s, *encrypted = NULL;
     asprintf(&salt_s, "$%s$%s$", HASH_FUNC_SHA_512, salt);
-#ifdef HOST
-#ifdef USE_CRYPT
     encrypted = crypt(key, salt_s);
-#else
-    panic("compiled without -lcrypt");
-#endif
-#endif
     free(salt_s);
 
     if (encrypted == NULL || strlen(encrypted) != N_ENCRYPTED) {

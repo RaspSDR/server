@@ -71,12 +71,12 @@ static print_max_min_int_t *print_max_min_init(void **state)
 
 void print_max_min_stream_f(void **state, int flags, const char *name, int index=0, int nargs=0, ...)
 {
-	va_list ap;
-	va_start(ap, nargs);
 	print_max_min_int_t *p = print_max_min_init(state);
 	bool dump = (flags & P_MAX_MIN_DUMP);
 	bool update = false;
 
+	va_list ap;
+	va_start(ap, nargs);
 	if (!dump) for (int i=0; i < nargs; i++) {
 		double arg_f = va_arg(ap, double);
 		if (arg_f > p->max_f) {
@@ -90,13 +90,12 @@ void print_max_min_stream_f(void **state, int flags, const char *name, int index
 			update = true;
 		}
 	}
-	
+	va_end(ap);
+
 	if (dump || ((flags & P_MAX_MIN_RANGE) && update)) {
 		//printf("min/max %s: %e(%d)..%e(%d)\n", name, p->min_f, p->min_idx, p->max_f, p->max_idx);
 		printf("min/max %s: %f(%d)..%f(%d)\n", name, p->min_f, p->min_idx, p->max_f, p->max_idx);
 	}
-
-	va_end(ap);
 }
 #endif
 
@@ -131,17 +130,9 @@ void print_max_min_stream_f(void **state, int flags, const char *name, int index
 #endif
 
 #ifdef KIWI
-    #ifdef HOST
-        #define cprintf(cond_d, cond_c, color, fmt, ...) \
-            kiwi_snprintf_buf(log_buf, "%s" fmt "%s\n", (dsp >= cond_c)? color : "", ## __VA_ARGS__, (dsp >= cond_c)? NORM : ""); \
-            cprintf_msg(cond_d);
-    #else
-        #define cprintf(cond_d, cond_c, color, fmt, ...) \
-            if (dsp >= cond_d) { \
-                bool use_color = (dsp >= cond_c); \
-                printf("%s" fmt "%s\n", use_color? color : "", ## __VA_ARGS__, (dsp >= cond_c)? NORM : ""); \
-            }
-    #endif
+    #define cprintf(cond_d, cond_c, color, fmt, ...) \
+        kiwi_snprintf_buf(log_buf, "%s" fmt "%s\n", (dsp >= cond_c)? color : "", ## __VA_ARGS__, (dsp >= cond_c)? NORM : ""); \
+        cprintf_msg(cond_d);
 #else
     // standalone
     #if 0
@@ -671,9 +662,7 @@ namespace ale {
                     show_locked? locked_msg : log_buf);
 	    
             #ifdef KIWI
-                #ifdef HOST
-                    ext_send_msg_encoded(rx_chan, false, "EXT", "chars", buf);
-                #endif
+                ext_send_msg_encoded(rx_chan, false, "EXT", "chars", buf);
             #else
                 printf(">>>>  %s", buf);
             #endif
@@ -700,9 +689,7 @@ namespace ale {
                 state_s[state], dpf_buf);
 	    
         #ifdef KIWI
-            #ifdef HOST
-                ext_send_msg_encoded(rx_chan, false, "EXT", "chars", buf);
-            #endif
+            ext_send_msg_encoded(rx_chan, false, "EXT", "chars", buf);
         #else
             int sl = strlen(buf);
             if (buf[sl-1] == '\n') buf[sl-1] = '\0';

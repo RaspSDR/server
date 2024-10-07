@@ -9047,7 +9047,7 @@ function dx_help(show)
                '<br><br>' +
                
                'Information about using the controls for editing the stored labels can be found ' +
-               '<a href="http://rx-888.com/web-888/index.html#id-user-marker" target="_blank">here</a>.' +
+               '<a href="http://www.rx-888.com/web/" target="_blank">here</a>.' +
                '<br><br>' +
                
                'Because there are so many EiBi labels (about 6000) they are organized into 12 categories with visibility ' +
@@ -10270,7 +10270,7 @@ function panels_setup()
 
 	w3_el("id-readme-inner").innerHTML =
 		'<span style="font-size: 15pt; font-weight: bold;">Welcome!</span>' +
-		'&nbsp;&nbsp;&nbsp;Project website: <a href="http://www.rx-888.com/web-888" target="_blank">www.rx-888.com/web-888</a>&nbsp;&nbsp;&nbsp;&nbsp;Here are some tips:' +
+		'&nbsp;&nbsp;&nbsp;Project website: <a href="http://www.rx-888.com/web" target="_blank">www.rx-888.com/web</a>&nbsp;&nbsp;&nbsp;&nbsp;Here are some tips:' +
 		'<ul style="padding-left: 12px;">' +
 		'<li> Windows: Firefox, Chrome & Edge work; IE does not work. </li>' +
 		'<li> Mac & Linux: Safari, Firefox, Chrome & Opera should work fine. </li>' +

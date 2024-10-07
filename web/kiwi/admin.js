@@ -466,7 +466,7 @@ function connect_html()
          w3_div('w3-container w3-valign',
             '<header class="w3-container w3-yellow"><h6>' +
             'Please read these instructions before use: ' +
-            '<a href="http://rx-888.com/web/guide/admin/connect.html" target="_blank">dynamic DNS update client (DUC)</a>' +
+            '<a href="http://www.rx-888.com/web/guide/admin/connect.html" target="_blank">dynamic DNS update client (DUC)</a>' +
             '</h6></header>'
          ),
 

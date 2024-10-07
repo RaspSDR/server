@@ -973,9 +973,9 @@ function kiwi_reg_html()
 		w3_div('',
          w3_div('w3-margin-T-10 w3-valign',
             '<header class="w3-container w3-yellow"><h5>' +
-            'More information on <a href="http://rx-888.com/web/guide/admin/public.html" target="_blank">rx-888.com</a><br><br>' +
+            'More information on <a href="http://www.rx-888.com/web/guide/admin/public.html" target="_blank">rx-888.com</a><br><br>' +
 
-            'To list your SDR on <a href="http://rx.rx-888.com/" target="_blank">rx.rx-888.com</a> ' +
+            'To list your SDR on <a href="http://www.rx-888.com/web/rx" target="_blank">www.rx-888.com/web/rx</a> ' +
             'edit the fields below and set the "<i>Register</i>" switch to <b>Yes</b>. ' +
             'Look for a successful status result within a few minutes.<br>' +
             
@@ -987,7 +987,7 @@ function kiwi_reg_html()
 		'<hr>' +
 
 		w3_divs('w3-margin-bottom w3-container w3-center',
-         w3_switch_label('w3-label-inline w3-label-left w3-center', 'Register on <a href="http://rx.rx-888.com" target="_blank">rx.rx-888.com</a>?',
+         w3_switch_label('w3-label-inline w3-label-left w3-center', 'Register on <a href="http://www.rx-888.com/web/rx" target="_blank">www.rx-888.com/web/rx</a>?',
             'Yes', 'No', 'adm.kiwisdr_com_register', adm.kiwisdr_com_register, 'kiwisdr_com_register_cb'),
          w3_div('id-kiwisdr_com-reg-status-container',
             w3_div('w3-container',
@@ -1308,7 +1308,7 @@ function dx_html()
       w3_inline('w3-margin-T-16 w3-halign-space-between/',
          w3_inline('/w3-margin-between-16 w3-valign',
             w3_button(dx.button_section, '-', 'dx_expand_cb', 0),
-            w3_link(dx.link1, 'http://rx-888.com/web/guide/admin/dx.html#stored-dx-labels', 'Stored DX labels'),
+            w3_link(dx.link1, 'http://www.rx-888.com/web/guide/admin/dx.html#stored-dx-labels', 'Stored DX labels'),
             w3_text('id-dx-list-saved w3-margin-left w3-padding-medium w3-text-black w3-hide', 'Changes saved')
          ),
          w3_inline('/w3-margin-between-16 w3-valign',

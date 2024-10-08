@@ -277,7 +277,10 @@ void rx_sound_cmd(conn_t* conn, double frate, int n, char* cmd) {
 
             bool deny = false;
             ext_auth_e auth = ext_auth(rx_chan);
-            if (auth != AUTH_LOCAL) deny = true;
+            int allow = cfg_int("rf_attn_allow", NULL, CFG_REQUIRED);
+            if (allow == RF_ATTN_ALLOW_LOCAL_ONLY && auth != AUTH_LOCAL) deny = true;
+            if (allow == RF_ATTN_ALLOW_LOCAL_OR_PASSWORD_ONLY && auth == AUTH_USER) deny = true;
+            clprintf(conn, "rf_attn SET %.1f auth|allow|deny=%d|%d|%d\n", rf_attn_dB, auth, allow, deny);
 
             if (!deny) {
                 // update s->rf_attn_dB here so we don't send UI update to ourselves

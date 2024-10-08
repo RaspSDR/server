@@ -50,6 +50,8 @@ var admin_sdr = {
    
    cfg_fields: [ 'min', 'max', 'chan' ],
    
+   rf_attn_allow_s: [ 'everyone', 'local connections only', 'local connections or password only' ],
+
    _last_: 0
 };
 
@@ -218,7 +220,18 @@ function config_html()
 				w3_div('w3-text-black',
 					'Attach an optional USB/serial adapter to the Kiwi <br> for CAT interface reporting of frequency tuning.'
 				)
-			)
+			),
+
+         w3_divs('/w3-center w3-tspace-8',
+            w3_select_get_param('w3-width-auto', 'Allow RF attenuator switching by:', '',
+               'cfg.rf_attn_allow', admin_sdr.rf_attn_allow_s, 'admin_select_cb', 0
+            ),
+            w3_div('w3-text-black',
+               'Determines who can adjust the RF attenuator control. <br>' +
+               'Password is the time limit exemption password on the <br>' +
+               'admin page control tab, not the user login password. <br>'
+            )
+         )
 		);
 
    // FIXME: this should really be in a tab defined by admin.js

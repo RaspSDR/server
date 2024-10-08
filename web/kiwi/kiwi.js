@@ -117,7 +117,11 @@ var kiwi = {
    bands: null,
    bands_community: null,
    
+   RF_ATTN_ALLOW_EVERYONE: 0,
+   RF_ATTN_ALLOW_LOCAL_ONLY: 1,
+   RF_ATTN_ALLOW_LOCAL_OR_PASSWORD_ONLY: 2,
    rf_attn: 0,
+   rf_attn_disabled: false,
    
    freq_memory: [],
    freq_memory_menu_shown: 0,

@@ -43,11 +43,7 @@ Boston, MA  02110-1301, USA.
 #define kdebug(x) check(x)
 //#define kdebug(x) assert(x)
 
-#if defined(HOST)
 #define KSTRINGS 1024
-#else
-#define KSTRINGS 0xfffe
-#endif
 
 typedef struct kstring_st {
 #define KS_LAST (KSTRINGS + 1)

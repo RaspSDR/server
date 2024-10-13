@@ -87,6 +87,7 @@ void peri_init() {
         sys_panic("Failed to open kernel driver");
     }
 
+    fcntl(ad8370_fd, F_SETFD, FD_CLOEXEC);
     ioctl(ad8370_fd, CLK_SET, int_clk);
 
     // set airband mode

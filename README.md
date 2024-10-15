@@ -36,6 +36,12 @@ The instruction is only tested on Debian. It may work on Ubuntu as well but not 
 # sudo chroot alpine-root /sbin/apk.static --repository http://dl-cdn.alpinelinux.org/alpine/v3.20/main --update-cache --allow-untrusted --initdb add alpine-base
 ```
 
+Configure apk repo, add main and community channels.
+```
+# echo http://dl-cdn.alpinelinux.org/alpine/v3.20/main > alpine-root/etc/apk/repositories
+# echo http://dl-cdn.alpinelinux.org/alpine/v3.20/community >> alpine-root/etc/apk/repositories
+```
+
 3. Get into the virtual enviroment, *This command will be used next time after you exist from the virtual enviroment*
 ```
 sudo chroot alpine-root /bin/sh --login
@@ -47,11 +53,12 @@ run the following commands to install the build tools
 # apk add openssh-server wpa_supplicant wireless-regdb git dhcpcd dnsmasq u-boot-tools hostapd iptables avahi dbus chrony gpsd curl htop frp jq libunwind zlib noip2 noip2-openrc netpbm musl-dev linux-headers g++ gcc cmake make minify fftw-dev fdk-aac-dev pkgconf perl gpsd-dev libunwind-dev zlib-dev sqlite-dev sqlite-static
 ```
 
-4. Inside the virtual enviroment, it is like a normal linux. You can use git to enlist the code, and use cmake to build the binary.
+4. Inside the virtual enviroment, it is like a normal linux. You can use git to enlist the code, update submodules and use cmake to build the binary.
 ```
 # cd /root
 # git clone https://github.com/raspsdr/server
 # cd server
+# git submodule update --init
 # mkdir build
 # cd build
 # cmake ..

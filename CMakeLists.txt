@@ -31,7 +31,7 @@ set(CMAKE_C_FLAGS_RELEASE "-g -O3")
 if(ZYNQ)
     set(PLATFORM zynq)
     set(PLATFORM_INC ${PLATFORM})
-    set(PLATOFRM_FLAGS -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard -ffast-math -fsingle-precision-constant -mvectorize-with-neon-quad)
+    set(PLATFORM_FLAGS -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard -ffast-math -fsingle-precision-constant -mvectorize-with-neon-quad)
     FILE(GLOB PLATFORM_SRCS
         "${PLATFORM}/*.cpp"
     )
@@ -287,7 +287,7 @@ target_compile_definitions(websdr.bin PUBLIC
     HAVE_LIBFDK_AAC HAVE_USAC
 )
 
-target_compile_options(websdr.bin PUBLIC ${PLATOFRM_FLAGS})
+target_compile_options(websdr.bin PUBLIC ${PLATFORM_FLAGS})
 
 # ----------------------- Build FILES embeded
 file(GLOB_RECURSE FILES_EMBED_JS RELATIVE ${UPSTREAM_DIR}/web

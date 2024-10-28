@@ -1505,7 +1505,7 @@ static void _cfg_write_file(void* param) {
 
     // copy config file to sd card
     sd_enable(true);
-    system("cp -u /root/config/* /media/mmcblk0p1/config/");
+    system("cp -f /root/config/* /media/mmcblk0p1/config/");
     sd_enable(false);
 }
 

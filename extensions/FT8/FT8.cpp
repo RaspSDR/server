@@ -330,14 +330,14 @@ bool ft8_update_vars_from_config(bool called_at_init_or_restart)
 
 // order matches ft8.autorun_u in FT8.js
 // only add new entries to the end so as not to disturb existing values stored in config
-#define FT4_BAND_IDX 11
+#define FT4_BAND_IDX 13
 static double ft8_cfs[] = {     // usb carrier/dial freq
-    /* FT8 */ 1840, 3573, 5357, 7074,   10136, 14074, 18100, 21074, 24915, 28074, 50313,
+    /* FT8 */ 1840, 3573, 5357, 7074,   10136, 14074, 18100, 21074, 24915, 28074, 50313, 40680, 60074,
     /* FT4 */       3575.5,     7047.5, 10140, 14080, 18104, 21140, 24919, 28180, 50318,
 };
 
 static const char* ft8_name[] = {
-    "160m", "80m", "60m", "40m", "30m", "20m", "17m", "15m", "12m", "10m", "6m",
+    "160m", "80m", "60m", "40m", "30m", "20m", "17m", "15m", "12m", "10m", "6m", "8m*", "5m*",
             "80m",        "40m", "30m", "20m", "17m", "15m", "12m", "10m", "6m"
 };
 

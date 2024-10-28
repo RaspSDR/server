@@ -337,7 +337,7 @@ static double ft8_cfs[] = {     // usb carrier/dial freq
 };
 
 static const char* ft8_name[] = {
-    "180m", "80m", "60m", "40m", "30m", "20m", "17m", "15m", "12m", "10m", "6m",
+    "160m", "80m", "60m", "40m", "30m", "20m", "17m", "15m", "12m", "10m", "6m",
             "80m",        "40m", "30m", "20m", "17m", "15m", "12m", "10m", "6m"
 };
 

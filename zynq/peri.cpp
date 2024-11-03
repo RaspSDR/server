@@ -72,8 +72,10 @@ void peri_init() {
         si5351->drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA);
     }
 
+    bool use_13ch = (kiwi.airband) || (ADC_CLOCK_NOM < 100.0 * MHz);
+
     // load fpga bitstream
-    int status = blocking_system("cat /media/mmcblk0p1/websdr_hf.bit > /dev/xdevcfg");
+    int status = blocking_system("cat /media/mmcblk0p1/websdr_%s.bit > /dev/xdevcfg", use_13ch?"vhf":"hf");
     if (status != 0) {
         panic("Fail to load bitstram file");
     }

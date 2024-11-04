@@ -43,8 +43,8 @@ Boston, MA  02110-1301, USA.
 typedef enum { PLATFORM_ZYNQ7010 = 0 } platform_e;
 const char* const platform_s[] = { "zynq7010" };
 
-#define RF_ATTN_ALLOW_EVERYONE 0
-#define RF_ATTN_ALLOW_LOCAL_ONLY 1
+#define RF_ATTN_ALLOW_EVERYONE               0
+#define RF_ATTN_ALLOW_LOCAL_ONLY             1
 #define RF_ATTN_ALLOW_LOCAL_OR_PASSWORD_ONLY 2
 
 typedef struct {

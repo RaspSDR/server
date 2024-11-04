@@ -75,7 +75,7 @@ void peri_init() {
     bool use_13ch = (kiwi.airband) || (ADC_CLOCK_NOM < 100.0 * MHz);
 
     // load fpga bitstream
-    int status = blocking_system("cat /media/mmcblk0p1/websdr_%s.bit > /dev/xdevcfg", use_13ch?"vhf":"hf");
+    int status = blocking_system("cat /media/mmcblk0p1/websdr_%s.bit > /dev/xdevcfg", use_13ch ? "vhf" : "hf");
     if (status != 0) {
         panic("Fail to load bitstram file");
     }
@@ -116,7 +116,7 @@ void rf_attn_set(float f) {
 
 void rf_enable_airband(bool enabled) {
     if (ioctl(ad8370_fd, MODE_SET, (int)enabled) < 0) {
-        printf("AD8370 set mode failed\n");
+        printf("AD8370 set mode failed %s\n", strerror(errno));
     }
 
     return;

@@ -424,7 +424,7 @@ void c2s_admin(void* param) {
             n = sscanf(cmd, "SET DUC_start args=%256ms", &args_m);
             if (n == 1) {
                 kiwi_str_decode_inplace(args_m);
-                asprintf(&cmd_p, "/usr/bin/noip2 -C -c " DIR_CFG "/noip2.conf -k %s -I eth0 2>&1", args_m);
+                asprintf(&cmd_p, "/usr/bin/noip2 -C -c " DIR_CFG "/noip2.conf %s -I eth0 2>&1", args_m);
                 kiwi_asfree(args_m);
                 printf("DUC: %s\n", cmd_p);
                 char* reply;

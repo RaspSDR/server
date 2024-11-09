@@ -24,6 +24,7 @@ Boston, MA  02110-1301, USA.
 #include "sha256.h"
 #include "net.h"
 #include "ip_blacklist.h"
+#include "services.h"
 
 // updates net.ip_blacklist
 static int ip_blacklist_add(char* ips, bool* whitelist) {
@@ -209,22 +210,19 @@ bool ip_blacklist_get(bool download_diff_restart) {
     const char *bl_old, *bl_new;
     int slen, dlen, diff;
     cfg_t bl_json = { 0 };
-    kstr_t* sb;
     bool failed = true, first, ip_err;
     u4_t mtime;
 
-    char* rx888_downloads = DNS_lookup_result("ip_blacklist_get", "downloads.rx-888.com", &net.ips_downloads);
 #define BLACKLIST_FILE "webconfig/ip_blacklist3.cjson"
 
-    asprintf(&cmd_p, "curl -L -s -f --connect-timeout 5 \"%s/%s\" 2>&1", rx888_downloads, BLACKLIST_FILE);
+    asprintf(&cmd_p, "https://downloads.rx-888.com/%s", BLACKLIST_FILE);
     // printf("ip_blacklist_get: <%s>\n", cmd_p);
 
-    reply = non_blocking_cmd(cmd_p, &status);
+    reply = curl_get(cmd_p, 5, &status);
     kiwi_asfree(cmd_p);
 
-    int exit_status = WEXITSTATUS(status);
-    if (WIFEXITED(status) && exit_status != 0) {
-        lprintf("ip_blacklist_get: failed for %s/%s exit_status=%d\n", rx888_downloads, BLACKLIST_FILE, exit_status);
+    if (status != 0 || reply == NULL) {
+        lprintf("ip_blacklist_get: failed for %s\n", BLACKLIST_FILE);
         goto fail;
     }
 
@@ -240,14 +238,14 @@ bool ip_blacklist_get(bool download_diff_restart) {
     lprintf("ip_blacklist_get: ip_blacklist_hash = %s\n", net.ip_blacklist_hash);
 
     if (json_init(&bl_json, dl_sp, "bl_json") == false) {
-        lprintf("ip_blacklist_get: JSON parse failed for %s/%s\n", rx888_downloads, BLACKLIST_FILE);
+        lprintf("ip_blacklist_get: JSON parse failed for %s/%s\n", BLACKLIST_FILE);
         goto fail;
     }
 
     end_tok = &(bl_json.tokens[bl_json.ntok]);
     jt = bl_json.tokens;
     if (jt == NULL || !JSMN_IS_ARRAY(jt)) {
-        lprintf("ip_blacklist_get: JSON token error for %s/%s\n", rx888_downloads, BLACKLIST_FILE);
+        lprintf("ip_blacklist_get: JSON token error for %s\n", BLACKLIST_FILE);
         goto fail;
     }
 
@@ -274,7 +272,7 @@ bool ip_blacklist_get(bool download_diff_restart) {
     dlen = strlen(bl_new);
 
     if (ip_err) {
-        lprintf("ip_blacklist_get: ip address parse fail for %s/%s\n", rx888_downloads, BLACKLIST_FILE);
+        lprintf("ip_blacklist_get: ip address parse fail for %s\n", BLACKLIST_FILE);
         admcfg_string_free(bl_old);
         kstr_free(bl_sp);
         goto fail;
@@ -306,7 +304,7 @@ bool ip_blacklist_get(bool download_diff_restart) {
             printf("ip_blacklist_get: CFG SAVE DONE\n");
 
             // reload iptables
-            lprintf("ip_blacklist_get: using DOWNLOADED blacklist from %s/%s\n", rx888_downloads, BLACKLIST_FILE);
+            lprintf("ip_blacklist_get: using DOWNLOADED blacklist from %s\n", BLACKLIST_FILE);
             net.ip_blacklist_len = 0;
             kstr_t* iptable_save = kstr_cat(NULL, "*filter\n:KIWI - [0:0]\n-A INPUT -j KIWI\n");
             for (jt = bl_json.tokens + 1; jt != end_tok; jt++) {
@@ -344,7 +342,7 @@ fail:
     json_release(&bl_json);
 
     if (failed)
-        lprintf("ip_blacklist_get: FAILED to download blacklist from %s/%s\n", rx888_downloads, BLACKLIST_FILE);
+        lprintf("ip_blacklist_get: FAILED to download blacklist from %s\n", BLACKLIST_FILE);
     if (!download_diff_restart) {
         lprintf("ip_blacklist_get: using previously stored blacklist\n");
         ip_blacklist_init();

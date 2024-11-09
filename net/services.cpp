@@ -55,12 +55,16 @@ Boston, MA  02110-1301, USA.
 #include <ifaddrs.h>
 #include <errno.h>
 
+#include <curl/curl.h>
+
+static void init_curl(void);
+
 int utc_offset = -1, dst_offset = -1;
 char *tzone_id = (char*)"null", *tzone_name = (char*)"null";
 
 static void get_TZ(void* param) {
     int n, status;
-    char *cmd_p, *reply, *lat_lon;
+    char *url_p, *reply, *lat_lon;
     cfg_t cfg_tz;
 
     TaskSleepSec(5); // under normal conditions ipinfo takes a few seconds to complete
@@ -108,20 +112,19 @@ static void get_TZ(void* param) {
 #define TIMEZONE_DB_COM
 #ifdef TIMEZONE_DB_COM
 #define TZ_SERVER "timezonedb.com"
-        asprintf(&cmd_p, "curl -L -sk --ipv4 \"https://api.timezonedb.com/v2.1/get-time-zone?key=3ZGBZUJH8PXH&format=json&by=position&lat=%f&lng=%f\" 2>&1",
+        asprintf(&url_p, "https://api.timezonedb.com/v2.1/get-time-zone?key=3ZGBZUJH8PXH&format=json&by=position&lat=%f&lng=%f",
                  lat, lon);
 #else
 #define TZ_SERVER "googleapis.com"
         time_t utc_sec = utc_time();
-        asprintf(&cmd_p, "curl -L -s --ipv4 \"https://maps.googleapis.com/maps/api/timezone/json?key=&location=%f,%f&timestamp=%lu&sensor=false\" 2>&1",
+        asprintf(&url_p, "https://maps.googleapis.com/maps/api/timezone/json?key=&location=%f,%f&timestamp=%lu&sensor=false",
                  lat, lon, utc_sec);
 #endif
 
         // printf("TIMEZONE: using %s\n", TZ_SERVER);
-        reply = non_blocking_cmd(cmd_p, &status);
-        kiwi_asfree(cmd_p);
+        reply = curl_get(url_p, 5, &status);
         if (reply == NULL || status < 0 || WEXITSTATUS(status) != 0) {
-            lprintf("TIMEZONE: %s curl error\n", TZ_SERVER);
+            lprintf("TIMEZONE: %s get url error\n", TZ_SERVER);
             kstr_free(reply);
             goto retry;
         }
@@ -247,7 +250,7 @@ static void misc_NET(void* param) {
     printf("vr=0x%x vc=0x%x\n", vr, vc);
 
     // apply passwords to password-less root/debian accounts
-    int root_pwd_unset = 0, debian_pwd_default = 0;
+    int root_pwd_unset = 0;
     bool error;
     bool passwords_checked = admcfg_bool("passwords_checked", &error, CFG_OPTIONAL);
     if (error) passwords_checked = false;
@@ -312,7 +315,7 @@ static bool ipinfo_json(int https, const char* url, const char* path, const char
     char* s;
 
     int stat;
-    char *cmd_p, *reply;
+    char *url_p, *reply;
 
 //#define TEST_NO_IPINFO_SERVERS
 #ifdef TEST_NO_IPINFO_SERVERS
@@ -322,15 +325,14 @@ static bool ipinfo_json(int https, const char* url, const char* path, const char
     }
 #endif
 
-    asprintf(&cmd_p, "curl -L -s --ipv4 --connect-timeout 5 \"http%s://%s/%s\"  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)' 2>&1", https ? "s" : "", url, path);
+    asprintf(&url_p, "http%s://%s/%s", https ? "s" : "", url, path);
     // printf("IPINFO: <%s>\n", cmd_p);
 
-    reply = non_blocking_cmd(cmd_p, &stat);
-    kiwi_asfree(cmd_p);
+    reply = curl_get(url_p, 5, &stat);
+    kiwi_asfree(url_p);
 
-    int estat = WEXITSTATUS(stat);
-    if (stat < 0 || estat != 0) {
-        lprintf("IPINFO: failed for %s stat=%d %s\n", url, estat, (estat == 28) ? "TIMEOUT" : "");
+    if (stat < 0 || reply == NULL) {
+        lprintf("IPINFO: failed for %s \n", url);
         kstr_free(reply);
         return false;
     }
@@ -526,7 +528,7 @@ void UPnP_port(nat_delete_e nat_delete) {
 }
 
 static void pvt_NET(void* param) {
-    int i, n, retry;
+    int n, retry;
     char* reply;
 
     DNS_lookup("www.rx-888.com", &net.ips_kiwisdr_com, N_IPS, NULL);
@@ -663,16 +665,16 @@ static void git_commits(void *param)
 //#define RETRYTIME_KIWISDR_COM		1
 #define RETRYTIME_KIWISDR_COM_FAIL 2
 
-static int _reg_public(void* param) {
-    nbcmd_args_t* args = (nbcmd_args_t*)param;
-    char* sp = kstr_sp(args->kstr);
+static int _reg_public(kstr_t* kstr) {
+    char* sp = kstr_sp(kstr);
     if (sp == NULL) {
         printf("_reg_public: sp == NULL?\n");
         return 0; // we've seen this happen
     }
     printf("_reg_public <%s>\n", sp);
 
-    int n, status = 0, kod = 0, serno = 0;
+    int n, status = 0, kod = 0;
+    unsigned int serno = 0;
     n = sscanf(sp, "status %d %d %d", &status, &kod, &serno);
     if (n == 3 && status == 22 && serno == net.serno) {
         printf("_reg_public status=%d kod=%d serno=%d/%d\n", status, kod, serno, net.serno);
@@ -737,9 +739,8 @@ static void reg_public(void* param) {
         int dom_stat = (dom_sel == DOM_SEL_REV) ? net.proxy_status : (DUC_enable_start ? net.DUC_status : -1);
 
         // done here because updating timer_sec() is sent
-        asprintf(&cmd_p, "curl --max-time 30 --retry 2 --silent --show-error --location "
-                         "\"https://%s/api/update?url=http://%s:%d&mac=%s&email=%s&add_nat=%d&ver=%d.%d&deb=%d.%d"
-                         "&dom=%d&dom_stat=%d&serno=%d&dna=%08x%08x&reg=%d&pvt=%s&pub=%s&up=%d\" 2>&1",
+        asprintf(&cmd_p, "https://%s/api/update?url=http://%s:%d&mac=%s&email=%s&add_nat=%d&ver=%d.%d&deb=%d.%d"
+                         "&dom=%d&dom_stat=%d&serno=%d&dna=%08x%08x&reg=%d&pvt=%s&pub=%s&up=%d",
                  kiwisdr_com, server_url, server_port, net.mac,
                  email, add_nat, version_maj, version_min, debian_maj, debian_min,
                  dom_sel, dom_stat, net.serno, PRINTF_U64_ARG(net.dna), kiwisdr_com_reg ? 1 : 0,
@@ -761,18 +762,19 @@ static void reg_public(void* param) {
                 printf("%s\n", cmd_p);
 
             retrytime_mins = RETRYTIME_KIWISDR_COM;
-            int status = non_blocking_cmd_func_forall("kiwi.register", cmd_p, _reg_public, retrytime_mins, POLL_MSEC(1000));
-            if (WIFEXITED(status)) {
-                int exit_status = WEXITSTATUS(status);
-                reg_kiwisdr_com_status = exit_status ? exit_status : 1; // for now just indicate that it completed
+            int status;
+            kstr_t *reply = curl_get(cmd_p, 15, &status);
+            if (status == 0 && reply != NULL) {
+                reg_kiwisdr_com_status = _reg_public(reply); // for now just indicate that it completed
+                kstr_free(reply);
                 if (kiwi_reg_debug) {
                     printf("reg_kiwisdr_com reg_kiwisdr_com_status=0x%x\n", reg_kiwisdr_com_status);
                 }
-                if (exit_status == 42) {
+                if (reg_kiwisdr_com_status == 42) {
                     system("touch " DIR_CFG "/opt.debug");
                     kiwi_restart();
                 }
-                if (exit_status == 43) {
+                if (reg_kiwisdr_com_status == 43) {
                     system("reboot");
                     while (true)
                         kiwi_usleep(100000);
@@ -832,6 +834,8 @@ void file_GET(void* param) {
 }
 
 void services_start() {
+    init_curl();
+
     net.serno = serial_number;
 
     // Because these run early on child_task() doesn't have to be used to avoid excessive task pauses.
@@ -849,4 +853,113 @@ void services_start() {
 
     reg_kiwisdr_com_tid = CreateTask(reg_public, 0, SERVICES_PRIORITY);
     CreateTask(file_GET, FILE_DOWNLOAD_RELOAD, SERVICES_PRIORITY);
+}
+
+void init_curl()
+{
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+}
+
+// Custom write callback function to handle data and write it to a buffer
+static size_t WriteToBuffer(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t totalSize = size * nmemb;
+    kstr_t **buffer = static_cast<kstr_t**>(userp);
+    ((char*)contents)[totalSize] = '\0';
+    *buffer = kstr_cat(*buffer, static_cast<char*>(contents));
+
+    return totalSize;
+}
+
+kstr_t* curl_get(const char* url, long timeout_s, int *status)
+{
+    CURL *curl;
+    CURLcode res;
+    int rc = 0;
+    kstr_t *ret = NULL;
+
+    curl = curl_easy_init();
+
+    if (!curl) {
+        *status = -1;
+        return ret;
+    }
+
+    // Set the URL for the operation
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteToBuffer);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ret);
+
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+
+    // Enforce IPv4 usage
+    curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+
+    // Set timeout to 5 seconds
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout_s);
+
+    // Perform the request
+    res = curl_easy_perform(curl);
+
+    // Check for errors
+    if (res != CURLE_OK) {
+        printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        rc = -1;
+        if (ret != NULL) {
+            kstr_free(ret);
+            ret = NULL;
+        }
+    }
+
+    curl_easy_cleanup(curl);
+
+    *status = rc;
+    return ret;
+}
+
+int curl_get_file(const char* url, const char* output_filename, long timeout_s)
+{
+    CURL *curl;
+    CURLcode res;
+    int rc = 0;
+
+    // Open the file to save the output
+    FILE *fp = fopen(output_filename, "wb");
+    if (fp == NULL) {
+        return -1;
+    }
+    
+    curl = curl_easy_init();
+
+    if (!curl) {
+        fclose(fp);
+        return -1;
+    }
+
+    // Set the URL for the operation
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+
+    // Set the write function and file pointer as the destination for the data
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+
+    // Enforce IPv4 usage
+    curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+
+    // Set timeout to 5 seconds
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout_s);
+
+    // Perform the request
+    res = curl_easy_perform(curl);
+
+    // Check for errors
+    if (res != CURLE_OK) {
+        printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        rc = -1;
+    }
+
+    fclose(fp);
+    curl_easy_cleanup(curl);
+    return rc;
 }

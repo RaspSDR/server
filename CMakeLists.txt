@@ -49,6 +49,7 @@ pkg_check_modules(FDKAAC REQUIRED fdk-aac)
 pkg_check_modules(GPS REQUIRED libgps)
 pkg_check_modules(UNWIND REQUIRED libunwind)
 pkg_check_modules(SQLite3 REQUIRED sqlite3)
+pkg_check_modules(CURL REQUIRED libcurl)
 
 set(CONFIG_LIBRARIES "/usr/lib/libconfig++.a")
 
@@ -242,6 +243,7 @@ target_link_libraries(websdr.bin PRIVATE
     ${FDKAAC_LIBRARIES}
     ${UNWIND_LIBRARIES}
     ${CONFIG_LIBRARIES}
+    ${CURL_LIBRARIES}
 )
 
 if(ENABLE_HDFL)

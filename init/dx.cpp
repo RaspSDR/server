@@ -35,6 +35,7 @@ Boston, MA  02110-1301, USA.
 #include "rx_util.h"
 #include "coroutines.h"
 #include "sha256.h"
+#include "services.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -705,8 +706,8 @@ static bool dx_download_file(const char* host, const char* src, const char* dst)
     char *cmd, *tmp;
     lprintf("DX: checking %s against %s/%s\n", dst, host, src);
     asprintf(&tmp, "%s.tmp", dst);
-    asprintf(&cmd, "curl --max-time 10 --retry 2 --silent --show-error --output %s https://%s/%s 2>&1", tmp, host, src);
-    int status = system(cmd);
+    asprintf(&cmd, "https://%s/%s", host, src);
+    int status = curl_get_file(cmd, tmp, 15);
     if (status) {
         lprintf("DX: <%s>\n", cmd);
         lprintf("DX: ERROR status=%d\n", status);

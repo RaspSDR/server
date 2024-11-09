@@ -37,6 +37,8 @@ Boston, MA  02110-1301, USA.
 #include <unistd.h>
 #include <sys/stat.h>
 
+#include <string>
+
 static bool update_pending = false, update_task_running = false, update_in_progress = false;
 static int pending_maj = -1, pending_min = -1;
 
@@ -79,6 +81,7 @@ static void report_progress(conn_t* conn, const char* msg) {
 
 static int update_build(conn_t* conn, bool report, const char* channel, bool force_build) {
     bool no_fpga = false;
+    std::string url_base = "https://downloads.rx-888.com/web-888/" + std::string(channel) + "/";
     sd_enable(true);
 
     // Fetch the binary
@@ -90,21 +93,21 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
 
     if (report) report_progress(conn, "Download FPGA firmware");
 
-    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr_hf.bit https://downloads.rx-888.com/web-888/%s/websdr_hf.bit", channel);
+    status = curl_get_file((url_base + "websdr_hf.bit").c_str(), "/media/mmcblk0p1/update/websdr_hf.bit", 15);
     if (status != 0) {
         no_fpga = true;
     }
 
     if (report) report_progress(conn, "Download Web-888 Server");
 
-    status = blocking_system("curl -s -o /media/mmcblk0p1/update/websdr.bin https://downloads.rx-888.com/web-888/%s/websdr.bin", channel);
+    status = blocking_system((url_base + "websdr.bin").c_str(), "/media/mmcblk0p1/update/websdr.bin", 15);
     if (status != 0) {
         lprintf("UPDATE: fetch binary status=0x%08x\n", status);
         goto exit;
     }
 
     if (report) report_progress(conn, "Download checksum file");
-    status = blocking_system("curl -s -o /media/mmcblk0p1/update/checksum https://downloads.rx-888.com/web-888/%s/checksum", channel);
+    status = blocking_system((url_base + "checksum").c_str(), "/media/mmcblk0p1/update/checksum", 15);
     if (status != 0) {
         lprintf("UPDATE: fetch checksum status=0x%08x\n", status);
         goto exit;
@@ -137,15 +140,6 @@ exit:
     return status;
 }
 
-static int fetch_makefile(const char* channel) {
-    // fetch the version info from server
-    int status = blocking_system("curl -s -o /root/config/web-888.latest https://downloads.rx-888.com/web-888/%s/version.txt", channel);
-    if (status != 0)
-        printf("UPDATE: fetch origin status=0x%08x\n", status);
-
-    return status;
-}
-
 static void _update_task(void* param) {
     conn_t* conn = (conn_t*)FROM_VOID_PARAM(param);
     bool force_check = (conn && conn->update_check == FORCE_CHECK);
@@ -153,6 +147,7 @@ static void _update_task(void* param) {
     bool report = (force_check || force_build);
     bool ver_changed, update_install;
     int status;
+    kstr_t* ver = NULL;
     fail_reason = FAIL_NONE;
 
     update_in_progress = true;
@@ -184,9 +179,10 @@ static void _update_task(void* param) {
     // get the latest version infor from www.rx-888.com
     // Run fetch in a Linux child process otherwise this thread will block and cause trouble
     // if the check is invoked from the admin page while there are active user connections.
-    status = fetch_makefile(ch ? "alpha" : "stable");
+    
+    ver = curl_get(ch ? "https://downloads.rx-888.com/web-888/alpha/version.txt" : "https://downloads.rx-888.com/web-888/stable/version.txt", 5, &status);
 
-    if (status) {
+    if (ver == NULL || status != 0) {
         lprintf("UPDATE: failed to get latest version information from server\n");
         fail_reason = FAIL_MAKEFILE;
         if (report) report_result(conn);
@@ -194,11 +190,11 @@ static void _update_task(void* param) {
     }
 
     {
-        kstr_t* ver = read_file_string_reply("/root/config/web-888.latest");
         int n = sscanf(kstr_sp(ver), "%d.%d", &pending_maj, &pending_min);
 
         ver_changed = (n == 2 && (pending_maj > version_maj || (pending_maj == version_maj && pending_min > version_min)));
         update_install = (admcfg_bool("update_install", NULL, CFG_REQUIRED) == true);
+        kstr_free(ver);
     }
 
     {

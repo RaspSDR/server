@@ -880,15 +880,11 @@ const char* rx_enum2mode(int e) {
 }
 
 static bool geoloc_json(conn_t* conn, const char* geo_host_ip_s, const char* country_s, const char* region_s) {
-    char* cmd_p;
-
-    asprintf(&cmd_p, "curl -L -s --ipv4 \"%s\" 2>&1", geo_host_ip_s);
     // cprintf(conn, "GEOLOC: <%s>\n", cmd_p);
 
     // NB: don't use non_blocking_cmd() here to prevent audio gliches
     int status;
-    kstr_t* str = non_blocking_cmd(kstr_sp(cmd_p), &status);
-    kiwi_asfree(cmd_p);
+    kstr_t* str = curl_get(geo_host_ip_s, 15, &status);
     if (status) {
         clprintf(conn, "GEOLOC: curl(%d) failed for %s\n", status, geo_host_ip_s);
         return false;

@@ -31,3 +31,6 @@ bool wakeup_reg_kiwisdr_com(wakeup_reg_e wakeup_reg);
 #define FILE_DOWNLOAD_DIFF_RESTART 1
 
 void file_GET(void* param);
+
+kstr_t* curl_get(const char* url, long timeout_s, int *status);
+int curl_get_file(const char* url, const char* filename, long timeout_s);

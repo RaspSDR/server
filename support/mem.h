@@ -51,7 +51,7 @@ void* kiwi_malloc(const char* from, size_t size);
 #define kiwi_free(from, ptr)          free(ptr)
 #define kiwi_strdup(from, s)          strdup(s)
 #define kiwi_malloc_stat()            0
-#define mt_dump()                     0
+#define mt_dump()                     {}
 #endif
 
 //#define MALLOC_INTERCEPT_PRINTF

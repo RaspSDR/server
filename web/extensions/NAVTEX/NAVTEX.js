@@ -114,7 +114,7 @@ function navtex_recv(data)
 
 			case "ready":
 				var f = 'extensions/FSK/';
-            kiwi_load_js(['pkgs_maps/pkgs_maps.js', 'pkgs_maps/pkgs_maps.css',
+            kiwi_load_js([
                f+'JNX.js', f+'BiQuadraticFilter.js', f+'CCIR476.js', f+'DSC.js', f+'Selcall.js'],
                'navtex_controls_setup');
 				break;
@@ -266,8 +266,8 @@ function navtex_controls_setup()
          w3_text('w3-text-aqua w3-bold', 'Display options'),
          w3_select('w3-margin-T-4 w3-width-auto '+ nt.sfmt, '', 'show', 'nt.show', nt.show, nt.show_s, 'navtex_show_cb'),
          
-         w3_checkbox('w3-margin-T-10//'+ cbox, 'Show day/night', 'nt.day_night_visible', true, 'navtex_day_night_visible_cb'),
-         w3_checkbox(cbox, 'Show graticule', 'nt.graticule_visible', true, 'navtex_graticule_visible_cb'),
+         //w3_checkbox('w3-margin-T-10//'+ cbox, 'Show day/night', 'nt.day_night_visible', true, 'navtex_day_night_visible_cb'),
+         //w3_checkbox(cbox, 'Show graticule', 'nt.graticule_visible', true, 'navtex_graticule_visible_cb'),
 
          w3_inline('w3-margin-T-10 w3-valign/', 
             w3_checkbox('//'+ cbox, 'Show locations', 'nt.locations_visible', true, 'navtex_locations_visible_cb'),
@@ -376,7 +376,7 @@ function navtex_controls_setup()
    ext_set_data_height(nt.dataH);
 	ext_set_controls_width_height(nt.ctrlW, nt.ctrlH);
 	
-	nt.kmap = kiwi_map_init('navtex', [12.5, 112.5], 5, 17);
+	// nt.kmap = kiwi_map_init('navtex', [12.5, 112.5], 5, 17);
 
 	w3_do_when_rendered('id-navtex-menus',
 	   function() {
@@ -782,14 +782,17 @@ function navtex_location_update(loc_name, lat, lon, url, color)
    if (!nt.locations[loc_name]) {
       console.log('LOC-NEW '+ loc_name +' '+ lat.toFixed(2) +' '+ lon.toFixed(2));
 
-      var marker = kiwi_map_add_marker_div(nt.kmap, kmap.NO_ADD_TO_MAP,
-         [lat, lon], '', [12, 12], [0, 0], 1.0);
-      var loc_o = { loc_name: loc_name, mkr: marker, upd: Date.now(), pos: [] };
+      //var loc_o = { loc_name: loc_name, mkr: marker, upd: Date.now(), pos: [] };
+      var loc_o = { loc_name: loc_name, mkr: {}, upd: Date.now(), pos: [] };
       if (nt.test_location && loc_name.startsWith('ABC'))
          loc_o.upd -= (nt.too_old_min+10)*60*1000;
       loc_o.pos.push([lat, lon]);
       nt.locations[loc_name] = loc_o;
-      
+
+      /*
+      var marker = kiwi_map_add_marker_div(nt.kmap, kmap.NO_ADD_TO_MAP,
+         [lat, lon], '', [12, 12], [0, 0], 1.0);
+
       kiwi_style_marker(nt.kmap, kmap.ADD_TO_MAP, marker, loc_name,
          'id-navtex-location id-navtex-location-'+ loc_name + (nt.locations_visible? '' : ' w3-hide'),
          kmap.DIR_RIGHT,
@@ -834,7 +837,7 @@ function navtex_location_update(loc_name, lat, lon, url, color)
             );
          }
       );
-
+      */
       dup = false;
    } else {
       var loc_o = nt.locations[loc_name];

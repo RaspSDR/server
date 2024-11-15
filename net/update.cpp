@@ -98,6 +98,11 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
         no_fpga = true;
     }
 
+    status = curl_get_file((url_base + "websdr_vhf.bit").c_str(), "/media/mmcblk0p1/update/websdr_vhf.bit", 15);
+    if (status != 0) {
+        no_fpga = true;
+    }
+
     if (report) report_progress(conn, "Download Web-888 Server");
 
     status = blocking_system((url_base + "websdr.bin").c_str(), "/media/mmcblk0p1/update/websdr.bin", 15);
@@ -114,7 +119,7 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
     }
 
     if (report) report_progress(conn, "Checksum the downloaded files");
-    status = system("cd /media/mmcblk0p1/update; sed '/web-888-alpine/d;/websdr_vhf/d' /media/mmcblk0p1/update/checksum | sha256sum -c -");
+    status = system("cd /media/mmcblk0p1/update; sed '/web-888-alpine/d' /media/mmcblk0p1/update/checksum | sha256sum -c -");
     if (status != 0) {
         lprintf("UPDATE: checksum failed status=0x%08x\n", status);
         if (report) report_progress(conn, "Checksum failed");
@@ -130,6 +135,9 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
     if (!no_fpga) {
         system("rm /media/mmcblk0p1/websdr_hf.bit.old");
         system("mv /media/mmcblk0p1/websdr_hf.bit /media/mmcblk0p1/websdr_hf.bit.old; mv /media/mmcblk0p1/update/websdr_hf.bit /media/mmcblk0p1/websdr_hf.bit");
+
+        system("rm /media/mmcblk0p1/websdr_vhf.bit.old");
+        system("mv /media/mmcblk0p1/websdr_vhf.bit /media/mmcblk0p1/websdr_vhf.bit.old; mv /media/mmcblk0p1/update/websdr_vhf.bit /media/mmcblk0p1/websdr_vhf.bit");
     }
 
     status = EXIT_SUCCESS;

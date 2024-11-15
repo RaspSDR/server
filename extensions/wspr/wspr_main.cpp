@@ -1057,7 +1057,9 @@ void wspr_autorun(int instance, bool initial)
 
     asprintf(&w->arun_stat_cmd, WSPR_STAT, wspr_c.rcall, wspr_c.rgrid, w->arun_cf_MHz, w->arun_cf_MHz);
     //printf("AUTORUN INIT %s\n", w->arun_stat_cmd);
-    non_blocking_cmd_system_child("kiwi.wsprnet.org", w->arun_stat_cmd, POLL_MSEC(200));
+    int status;
+    kstr_t *reply = curl_get(w->arun_stat_cmd, 15, &status);
+    kstr_free(reply);
     w->arun_last_status_sent = timer_sec();
 }
 

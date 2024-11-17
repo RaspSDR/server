@@ -1947,7 +1947,7 @@ function enc(s) { return s.replace(/./gi, function(c) { return String.fromCharCo
 var sendmail = function (to, subject) {
 	var s = "mailto:"+ enc(decodeURIComponent(to)) + (isDefined(subject)? ('?subject='+subject):'');
 	//console.log(s);
-	window.location.href = s;
+   window.open(s, '_blank');
 }
 
 function line_stroke(ctx, vert, linew, color, x1,y1,x2,y2)

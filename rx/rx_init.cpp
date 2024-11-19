@@ -477,6 +477,9 @@ void update_vars_from_config(bool called_at_init) {
     admin_keepalive = admcfg_default_bool("admin_keepalive", true, &update_admcfg);
     log_local_ip = admcfg_default_bool("log_local_ip", true, &update_admcfg);
     admcfg_default_bool("dx_comm_auto_download", true, &update_admcfg);
+    admcfg_default_int("wifi_mode", 0, &update_admcfg);
+    admcfg_default_string("wifi_ssid", "web-888", &update_admcfg);
+    admcfg_default_string("wifi_password", "88888888", &update_admcfg);
 
     // decouple rx.kiwisdr.com and sdr.hu registration
     bool sdr_hu_register = admcfg_bool("sdr_hu_register", NULL, CFG_REQUIRED);

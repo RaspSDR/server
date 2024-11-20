@@ -1015,9 +1015,15 @@ function network_html()
 				),
 				w3_switch_label('w3-center', 'Auto add NAT rule<br>on firewall / router?', 'Yes', 'No', 'adm.auto_add_nat', adm.auto_add_nat, 'network_auto_nat_cb'),
             w3_switch_label_get_param('w3-center', 'IP address<br>(only static IPv4 for now)',
-               'DHCP', 'Static', 'adm.ip_address.use_static', 0, false, 'network_use_static_cb')
+               'DHCP', 'Static', 'adm.ip_address.use_static', 0, false, 'network_use_static_cb'),
+            w3_switch_label_get_param('id-wifi-mode w3-center w3-restart', 'USB WIFI Dongle Mode',
+               'AP', 'Client', 'adm.wifi_mode', 0, 1, 'admin_int_cb'),
+
+            w3_divs('w3-valign w3-flex-col w3-restart/w3-tspace-6',
+               w3_input_get('', 'SSID', 'adm.wifi_ssid', 'w3_string_set_cfg_cb'),
+               w3_input_get('w3-encrypted', 'Wifi Password', 'adm.wifi_password', 'w3_string_set_cfg_cb')
+            )
 			),
-			
 			w3_div('id-net-ssl-container w3-restart w3-hide',
             w3_inline('w3-halign-space-between w3-margin-bottom w3-text-teal/',
                w3_input_get('', 'Local port (HTTP)', 'adm.port_http_local', 'admin_int_cb')

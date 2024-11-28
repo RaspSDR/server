@@ -276,6 +276,7 @@ target_compile_definitions(websdr.bin PUBLIC
     DIR_DATA=STRINGIFY\(${DIR_DATA}\)
     BUILD_DIR="${PROJECT_BINARY_DIR}"
     COMPILE_HOST="${_host_name}"
+    MONGOOSE_USE_EXTRA_HTTP_HEADERS="Access-Control-Allow-Origin: *"
     EDATA_EMBED
 
     # for CMSIS

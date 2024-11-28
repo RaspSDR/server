@@ -3071,6 +3071,7 @@ static void base64_encode(const unsigned char *src, int src_len, char *dst) {
 static void send_websocket_handshake(struct mg_connection *conn,
                                      const char *key) {
   static const char *magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+  bool term_cr_nl = (MONGOOSE_USE_EXTRA_HTTP_HEADERS[0] != '\0');
   char buf[500], sha[20], b64_sha[sizeof(sha) * 2];
   SHA1_CTX sha_ctx;
 
@@ -3079,11 +3080,12 @@ static void send_websocket_handshake(struct mg_connection *conn,
   SHA1Update(&sha_ctx, (unsigned char *) buf, strlen(buf));
   SHA1Final((unsigned char *) sha, &sha_ctx);
   base64_encode((unsigned char *) sha, sizeof(sha), b64_sha);
-  mg_snprintf(buf, sizeof(buf), "%s%s%s",
+  mg_snprintf(buf, sizeof(buf), "%s%s\r\n%s%s\r\n",
               "HTTP/1.1 101 Switching Protocols\r\n"
               "Upgrade: websocket\r\n"
               "Connection: Upgrade\r\n"
-              "Sec-WebSocket-Accept: ", b64_sha, "\r\n\r\n");
+              "Sec-WebSocket-Accept: ", b64_sha,
+              MONGOOSE_USE_EXTRA_HTTP_HEADERS, term_cr_nl? "\r\n" : "");
 
   mg_write(conn, buf, strlen(buf));
 }

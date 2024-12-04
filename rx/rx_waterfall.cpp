@@ -70,16 +70,12 @@ Boston, MA  02110-1301, USA.
 #define WF_NSPEEDS 5
 static const int wf_fps[] = { WF_SPEED_OFF, WF_SPEED_1FPS, WF_SPEED_SLOW, WF_SPEED_MED, WF_SPEED_FAST };
 
-#define MAX_ZOOM (kiwi.wf_share ? 9 : 13)
+#define MAX_ZOOM (kiwi.wf_share ? 9 : 14)
 
 static const char* interp_s[] = { "max", "min", "last", "drop", "cma" };
 
 static wf_shmem_t wf_shmem;
 wf_shmem_t* wf_shmem_p = &wf_shmem;
-
-struct iq_t {
-    s2_t i, q;
-} __attribute__((packed));
 
 // FIXME: doesn't work yet because currently no way to use SPI from LINUX_CHILD_PROCESS()
 //#define WF_IPC_SAMPLE_WF
@@ -891,43 +887,53 @@ static void sample_wf(int rx_chan) {
         }
     }
 
-    int start;
     float* window = WF_SHMEM->window_function[wf->window_func];
-    iq_t sample_data[WF_C_NSAMPS];
+
+    int start, count;
 
     {
         int wf_chan = -1;
 
-        pthread_cleanup_push(cleanup_wf, &wf_chan);
         if (kiwi.wf_share) {
+            pthread_cleanup_push(cleanup_wf, &wf_chan);
             wf_chan = fpga_get_wf(rx_chan);
-            fpga_wf_param(wf_chan, wf->decim, wf->i_offset);
-        }
-        else
-            wf_chan = rx_chan;
+            pthread_cleanup_pop(0);
 
-        if (!wf->overlapped_sampling || kiwi.wf_share) {
-            fpga_reset_wf(wf_chan, false);
-        }
-
-        fpga_read_wf(wf_chan, sample_data, sizeof(iq_t) * WF_C_NSAMPS);
-
-        if (kiwi.wf_share)
-            fpga_free_wf(wf_chan, rx_chan);
-        else {
-            if (wf->overlapped_sampling) {
+            if (!wf->overlapped_sampling) {
+                fpga_wf_param(wf_chan, wf->decim, wf->i_offset);
                 fpga_reset_wf(wf_chan, false);
             }
-        }
 
-        pthread_cleanup_pop(0);
+            fpga_read_wf(wf_chan, fft->sample_data, sizeof(iq_t) * WF_C_NSAMPS);
+            fpga_free_wf(wf_chan, rx_chan);
+            start = 0;
+        }
+        else if (wf->overlapped_sampling)
+        {
+            wf_chan = rx_chan;
+
+            int n = WF_C_NSAMPS * ((desired / 2.0) / (wf->samp_wait_us/1000.0)) ; // how many samples we should receive
+            for (int i = 0; i + n < WF_C_NSAMPS; i++)
+                fft->sample_data[0 + i] = fft->sample_data[n + i];
+            fpga_read_wf(wf_chan, &fft->sample_data[WF_C_NSAMPS - n], sizeof(iq_t) * n);
+            start = WF_C_NSAMPS - n;
+        }
+        else {
+            wf_chan = rx_chan;
+
+            fpga_wf_param(wf_chan, wf->decim, wf->i_offset);
+            fpga_reset_wf(wf_chan, false);
+
+            fpga_read_wf(wf_chan, fft->sample_data, sizeof(iq_t) * WF_C_NSAMPS);
+            start = 0;
+        }
     }
 
     for (int i = 0; i < WF_C_NSAMPS; i++) {
         s4_t ii, qq;
 
-        ii = (s4_t)(s2_t)sample_data[i].i;
-        qq = (s4_t)(s2_t)sample_data[i].q;
+        ii = (s4_t)(s2_t)fft->sample_data[i].i;
+        qq = (s4_t)(s2_t)fft->sample_data[i].q;
 
         float fi = ((float)ii) * window[i];
         float fq = ((float)qq) * window[i];

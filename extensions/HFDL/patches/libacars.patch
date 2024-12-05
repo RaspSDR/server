@@ -7,8 +7,8 @@ index 01d2c71..ee1d958 100644
  	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
  )
 +install(TARGETS acars_static
-+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}                                             
-+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}                                             
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 +        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 +)
 +

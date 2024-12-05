@@ -86,7 +86,7 @@ if(ENABLE_HDFL)
             -DBUILD_SHARED_LIBS=OFF  # Ensure static library is built
     )
 
-    set(LIBACARS_INCLUDE_DIR ${CMAKE_BINARY_DIR}/libacars/include)
+    set(LIBACARS_INCLUDE_DIR ${CMAKE_BINARY_DIR}/libacars/include/libacars-2/)
     set(LIBACARS_LIB_DIR ${CMAKE_BINARY_DIR}/libacars/lib)
 
 endif(ENABLE_HDFL)

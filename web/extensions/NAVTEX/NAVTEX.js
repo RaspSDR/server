@@ -114,8 +114,7 @@ function navtex_recv(data)
 
 			case "ready":
 				var f = 'extensions/FSK/';
-            kiwi_load_js(['pkgs_maps/pkgs_maps.js', 'pkgs_maps/pkgs_maps.css',
-               f+'JNX.js', f+'BiQuadraticFilter.js', f+'CCIR476.js', f+'DSC.js', f+'Selcall.js'],
+            kiwi_load_js([f+'JNX.js', f+'BiQuadraticFilter.js', f+'CCIR476.js', f+'DSC.js', f+'Selcall.js'],
                'navtex_controls_setup');
 				break;
 

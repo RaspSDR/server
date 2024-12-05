@@ -96,7 +96,7 @@ function hfdl_recv(data)
 		switch (param[0]) {
 
 			case "ready":
-				kiwi_load_js_dir('pkgs_maps/', ['pkgs_maps.js', 'pkgs_maps.css'], 'hfdl_controls_setup');
+            hfdl_controls_setup();
 				break;
 
 			case "lowres_latlon":

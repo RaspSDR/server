@@ -323,10 +323,10 @@ void HFDL_main()
     printf("HFDL: mmap %s\n", fn);
     scall("hfdl open", (fd = open(fn, O_RDONLY)));
     off_t fsize = kiwi_file_size(fn);
+    printf("HFDL: size=%lld\n", fsize);
     file = (char *) mmap(NULL, fsize, PROT_READ, MAP_PRIVATE, fd, 0);
     if (file == MAP_FAILED) sys_panic("HFDL mmap");
     close(fd);
-    printf("HFDL: size=%ld\n", fsize);
     int words = fsize/2;
     hfdl.s2p_start = (s2_t *) file;
     hfdl.s2p_end = hfdl.s2p_start + words;

@@ -400,7 +400,7 @@ void ALE_2G_main()
     if (ale_2g.file_off == 0) ale_2g.file_off = 16;
 
     off = FLIP16(off) + ale_2g.file_off;
-    printf("ALE_2G: size=%ld file_off=%d off=%d(0x%x) first_word=0x%04x\n",
+    printf("ALE_2G: size=%lld file_off=%d off=%d(0x%x) first_word=0x%04x\n",
         fsize, ale_2g.file_off, off, off, FLIP16(*(ale_2g.s2p_start + off/2)));
     off /= 2;
     ale_2g.s2p_start += off;

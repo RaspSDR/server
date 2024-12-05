@@ -137,7 +137,7 @@ void NAVTEX_main()
     navtex.s2p_start = (s2_t *) file;
     u4_t off = *(navtex.s2p_start + 3);
     off = FLIP16(off);
-    printf("NAVTEX: size=%ld\n", fsize);
+    printf("NAVTEX: size=%lld\n", fsize);
     off /= 2;
     navtex.s2p_start += off;
     words -= off;

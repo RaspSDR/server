@@ -137,7 +137,7 @@ void FSK_main()
     fsk.s2p_start = (s2_t *) file;
     u4_t off = *(fsk.s2p_start + 3);
     off = FLIP16(off);
-    printf("FSK: size=%ld\n", fsize);
+    printf("FSK: size=%lld\n", fsize);
     off /= 2;
     fsk.s2p_start += off;
     words -= off;

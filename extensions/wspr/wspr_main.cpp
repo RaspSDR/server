@@ -1214,7 +1214,7 @@ void wspr_main()
     wspr_c.s2p_start = (s2_t *) file;
     u4_t off = *(wspr_c.s2p_start + 3);
     off = FLIP16(off);
-    printf("WSPR: off=%d size=%ld\n", off, fsize);
+    printf("WSPR: off=%d size=%lld\n", off, fsize);
     off /= 2;
     wspr_c.s2p_start += off;
     words -= off;

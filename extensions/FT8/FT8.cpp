@@ -504,7 +504,7 @@ void FT8_main()
     ft8_conf.s2p_start = (s2_t *) file;
     u4_t off = *(ft8_conf.s2p_start + 3);
     off = FLIP16(off);
-    printf("FT8: off=%d size=%ld\n", off, fsize);
+    printf("FT8: off=%d size=%lld\n", off, fsize);
     off /= 2;
     ft8_conf.s2p_start += off;
     words -= off;

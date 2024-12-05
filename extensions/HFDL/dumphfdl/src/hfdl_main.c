@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #include <stdint.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>             // strtol, strtof
 #define _GNU_SOURCE             // getopt_long

@@ -288,6 +288,7 @@ target_compile_definitions(websdr.bin PUBLIC
     HAVE_STRING_H STDC_HEADERS HAVE_INTTYPES_H HAVE_SYS_STAT_H
     HAVE_SYS_TYPES_H HAVE_UNISTD_H HAVE_LIBZ
     HAVE_LIBFDK_AAC HAVE_USAC
+    HFDL
 )
 
 target_compile_options(websdr.bin PUBLIC ${PLATFORM_FLAGS})

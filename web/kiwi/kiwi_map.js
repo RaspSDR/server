@@ -200,7 +200,7 @@ function kiwi_map_init(ext_name, init_latlon, init_zoom, mapZoom_nom, move_cb, z
    scale.addTo(map);
    scale.setPosition('bottomleft');
 
-   var day_night = new Terminator();
+   var day_night = new L.terminator();
    day_night.setStyle({ fillOpacity: 0.35 });
    day_night.addTo(map);
    kmap.day_night_interval = setInterval(function() {
@@ -210,11 +210,6 @@ function kiwi_map_init(ext_name, init_latlon, init_zoom, mapZoom_nom, move_cb, z
    }, 60000);
    day_night._path.style.cursor = 'grab';
 
-   var graticule = L.latlngGraticule();
-   graticule.addTo(map);
-
-   kmap.map_layers = [ graticule ];
-   kmap.graticule = graticule;
    kmap.day_night = day_night;
    kmap.init_latlon = init_latlon;
    kmap.init_zoom = init_zoom;

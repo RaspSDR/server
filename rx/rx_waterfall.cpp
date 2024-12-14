@@ -899,13 +899,14 @@ static void sample_wf(int rx_chan) {
         int wf_chan = -1;
 
         pthread_cleanup_push(cleanup_wf, &wf_chan);
-        if (kiwi.wf_share)
+        if (kiwi.wf_share) {
             wf_chan = fpga_get_wf(rx_chan);
+            fpga_wf_param(wf_chan, wf->decim, wf->i_offset);
+        }
         else
             wf_chan = rx_chan;
 
-        if (!wf->overlapped_sampling) {
-            fpga_wf_param(wf_chan, wf->decim, wf->i_offset);
+        if (!wf->overlapped_sampling || kiwi.wf_share) {
             fpga_reset_wf(wf_chan, false);
         }
 
@@ -913,6 +914,11 @@ static void sample_wf(int rx_chan) {
 
         if (kiwi.wf_share)
             fpga_free_wf(wf_chan, rx_chan);
+        else {
+            if (wf->overlapped_sampling) {
+                fpga_reset_wf(wf_chan, false);
+            }
+        }
 
         pthread_cleanup_pop(0);
     }

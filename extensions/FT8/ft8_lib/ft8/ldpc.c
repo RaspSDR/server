@@ -21,10 +21,26 @@ static int ldpc_check(uint8_t codeword[]);
 static float fast_tanh(float x);
 static float fast_atanh(float x);
 
-// codeword is 174 log-likelihoods.
-// plain is a return value, 174 ints, to be 0 or 1.
-// max_iters is how hard to try.
-// ok == 87 means success.
+
+/**
+ * @brief LDPC decoder for FT8.
+ *
+ * Given a 174-bit codeword as an array of log-likelihood of zero,
+ * return a 174-bit corrected codeword, or zero-length array.
+ * The last 87 bits are the (systematic) plain-text.
+ *
+ * This is an implementation of the sum-product algorithm
+ * from Sarah Johnson's Iterative Error Correction book.
+ *
+ * codeword[i] = log ( P(x=0) / P(x=1) )
+ *
+ * @param[in] codeword 174-bit array of log-likelihood of zero
+ * @param[in] max_iters maximum number of iterations
+ * @param[out] plain 174-bit array of (hard) decoded bits
+ * @param[out] ok number of LDPC errors in the decoded message
+ *
+ * @return ok number of LDPC errors in the decoded message
+ */
 void ldpc_decode(float codeword[], int max_iters, uint8_t plain[], int* ok)
 {
     float m[FTX_LDPC_M][FTX_LDPC_N]; // ~60 kB
@@ -47,11 +63,14 @@ void ldpc_decode(float codeword[], int max_iters, uint8_t plain[], int* ok)
             for (int ii1 = 0; ii1 < kFTX_LDPC_Num_rows[j]; ii1++)
             {
                 int i1 = kFTX_LDPC_Nm[j][ii1] - 1;
+                if(i1 < 0)
+                    continue;
+
                 float a = 1.0f;
                 for (int ii2 = 0; ii2 < kFTX_LDPC_Num_rows[j]; ii2++)
                 {
                     int i2 = kFTX_LDPC_Nm[j][ii2] - 1;
-                    if (i2 != i1)
+                    if (i2 >= 0 && i2 != i1)
                     {
                         a *= fast_tanh(-m[j][i2] / 2.0f);
                     }
@@ -127,6 +146,23 @@ static int ldpc_check(uint8_t codeword[])
     return errors;
 }
 
+/**
+ * @brief Belief Propagation (BP) decoding of LDPC code in FT8.
+ *
+ * @param[in] codeword 174-bit array of log-likelihood of zero
+ * @param[in] max_iters maximum number of BP iterations
+ * @param[out] plain 174-bit array of (hard) decoded bits
+ * @param[out] ok number of LDPC errors in the decoded message
+ *
+ * This function implements the sum-product algorithm for decoding
+ * the LDPC code in FT8. It will run for up to max_iters iterations,
+ * and will return the number of LDPC errors in the decoded message.
+ * If the number of errors is zero, the decoded message is correct.
+ * If the number of errors is non-zero, the decoded message is not
+ * guaranteed to be correct.
+ *
+ * @return ok number of LDPC errors in the decoded message
+ */
 void bp_decode(float codeword[], int max_iters, uint8_t plain[], int* ok)
 {
     float tov[FTX_LDPC_N][3];
@@ -210,6 +246,38 @@ void bp_decode(float codeword[], int max_iters, uint8_t plain[], int* ok)
     }
 
     *ok = min_errors;
+}
+
+/**
+ * @brief Encodes a 91-bit message into a 174-bit LDPC codeword.
+ *
+ * This function mimics the encoding process from WSJT-X's encode174_91.f90.
+ * It takes a 91-bit plain-text message and produces a 174-bit codeword
+ * by appending 83 bits of redundancy, computed using a systematic generator matrix.
+ *
+ * @param[in] plain An array of 91 bits representing the plain-text message.
+ * @param[out] codeword An array of 174 bits representing the encoded LDPC codeword.
+ */
+
+void ldpc_encode(uint8_t plain[FTX_LDPC_K], uint8_t codeword[FTX_LDPC_N])
+{
+// plain is 91 bits of plain-text.
+// returns a 174-bit codeword.
+// mimics wsjt-x's encode174_91.f90.
+
+  // the systematic 91 bits.
+  for(int i = 0; i < FTX_LDPC_K; i++){
+    codeword[i] = plain[i];
+  }
+
+  // the 174-91 bits of redundancy.
+  for(int i = 0; i + FTX_LDPC_K < FTX_LDPC_N; i++){
+    int sum = 0;
+    for(int j = 0; j < FTX_LDPC_K; j++){
+      sum += gen_sys[i+FTX_LDPC_K][j] * plain[j];
+      codeword[i+FTX_LDPC_K] = sum % 2;
+    }
+  }
 }
 
 // Ideas for approximating tanh/atanh:

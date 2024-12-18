@@ -36,8 +36,8 @@
     #define CALLSIGN_AGE_MAX 3
 #endif
 
-#define kMin_score 10 // Minimum sync score threshold for candidates
-#define kMax_candidates 140
+#define kMin_score 0 // Minimum sync score threshold for candidates
+#define kMax_candidates 250
 #define kLDPC_iterations 25
 
 #define kMax_decoded_messages 140

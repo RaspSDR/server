@@ -1,5 +1,5 @@
-#ifndef _INCLUDE_LDPC_H_
-#define _INCLUDE_LDPC_H_
+#ifndef _INCLUDE_OSD_H_
+#define _INCLUDE_OSD_H_
 
 #include <stdint.h>
 
@@ -18,4 +18,4 @@ int osd_decode(float codeword[], int max_depth, uint8_t plain[], int* ok);
 }
 #endif
 
-#endif // _INCLUDE_LDPC_H_
+#endif // _INCLUDE_OSD_H_

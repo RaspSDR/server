@@ -54,26 +54,37 @@ typedef struct {
 } __attribute__((packed)) callsign_hashtable_t;
 
 typedef struct {
+    monitor_t mon;
+    struct tm tm_slot_start;
+
+    u4_t decode_time;
+
+} frame_ft8_t;
+
+#define FRAME_SIZE 2
+
+typedef struct {
     u4_t magic;
     int rx_chan;
     bool init;
     bool debug;
-    
-    u4_t decode_time;
     int freqHz;
+   
     ftx_protocol_t protocol;
     char protocol_s[4];
     int have_call_and_grid;
-    
-    monitor_t mon;
+
     float slot_period;
-    struct tm tm_slot_start;
     int num_samples;
     TYPEREAL *samples;
     bool tsync;
     int in_pos;
     int frame_pos;
     u4_t slot;
+
+    frame_ft8_t frames[FRAME_SIZE];
+    int frame_idx_fill;
+    int frame_idx_decode;
 
     callsign_hashtable_t *callsign_hashtable;
     int callsign_hashtable_size;
@@ -85,6 +96,7 @@ typedef struct {
     ftx_message_t* decoded_hashtable[kMax_decoded_messages];
     uint64_t padding2;
 
+    tid_t compute_task;
 } decode_ft8_t;
 
 // #define CHECK_PADDING(ft8) do { if (ft8->padding0 != 0xdeadbeec || ft8->padding1 != 0xdeadbeed || ft8->padding2 != 0xdeadbeee) { panic("FT8 padding error"); } } while (0)
@@ -215,9 +227,10 @@ ftx_callsign_hash_interface_t hash_if = {
     .save_hash = hashtable_add
 };
 
-static void decode(int rx_chan, const monitor_t* mon, int freqHz)
+static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
 {
     decode_ft8_t *ft8 = &decode_ft8[rx_chan];
+    const monitor_t* mon = &frame->mon;
 
     CHECK_PADDING(ft8);
 
@@ -245,7 +258,6 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
 
     for (int idx = 0; idx < num_candidates; ++idx)
     {
-        NextTask("candidate");
         const ftx_candidate_t* cand = &ft8->candidate_list[idx];
 
         float freq_hz = (mon->min_bin + cand->freq_offset + (float)cand->freq_sub / wf->freq_osr) / mon->symbol_period;
@@ -377,7 +389,7 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
                                             #endif
                                                     {
                                                         km = PSKReporter_spot(rx_chan, call, passband_freq, snr_i, ft8->protocol,
-                                                            grid, ft8->decode_time, ft8->slot);
+                                                            grid, frame->decode_time, ft8->slot);
                                                     }
                                             ht->uploaded = 1;
                                             uploaded = true;
@@ -409,12 +421,12 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
             time_sec += ft8_conf.dT_adj;
             
             LOG(LOG_INFO, "%02d%02d%02d %+05.1f %+4.2f %4.0f %5d  %s\n",
-                ft8->tm_slot_start.tm_hour, ft8->tm_slot_start.tm_min, ft8->tm_slot_start.tm_sec,
+                frame->tm_slot_start.tm_hour, frame->tm_slot_start.tm_min, frame->tm_slot_start.tm_sec,
                 snr, time_sec, freq_hz, km, text);
             
             char *ks = NULL;
             ks = kstr_asprintf(ks, "%02d:%02d:%02d %+05.1f %+4.2f %4.0f",
-                ft8->tm_slot_start.tm_hour, ft8->tm_slot_start.tm_min, ft8->tm_slot_start.tm_sec,
+                frame->tm_slot_start.tm_hour, frame->tm_slot_start.tm_min, frame->tm_slot_start.tm_sec,
                 snr, time_sec, freq_hz);
             ks = kstr_asprintf(ks, (km > 0)? " %5d" : "      ", km);
             ks = kstr_asprintf(ks, (age != 0)? "  %02d" : "    ", age);
@@ -479,7 +491,7 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
             kstr_free(ks);
             if (need_free) for (n = 0; n < 4; n++) free(f[n]);     // NB: free(NULL) is okay
         }
-        }
+    }
     }
     CHECK_PADDING(ft8);
 
@@ -487,7 +499,7 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
     if (num_decoded > 0) {
         char *ks = NULL;
         ks = kstr_asprintf(ks, "%02d:%02d:%02d %s decoded %d, ",
-            ft8->tm_slot_start.tm_hour, ft8->tm_slot_start.tm_min, ft8->tm_slot_start.tm_sec,
+            frame->tm_slot_start.tm_hour, frame->tm_slot_start.tm_min, frame->tm_slot_start.tm_sec,
             ft8->protocol_s, num_decoded);
         if (num_spots != 0) {
             ks = kstr_asprintf(ks, "new spots %d, ", num_spots);
@@ -515,8 +527,38 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
         kstr_free(ks);
     }
 
-    if (ft8->tm_slot_start.tm_sec == 0) {
+    if (frame->tm_slot_start.tm_sec == 0) {
         hashtable_cleanup(rx_chan, CALLSIGN_AGE_MAX);
+    }
+}
+
+void decode_ft8_compute(void *arg) {
+    decode_ft8_t *ft8 = (decode_ft8_t *)arg;
+    TaskSetUserParam(TO_VOID_PARAM(ft8->rx_chan));
+
+    while (ft8->init) {
+        TaskSleep();
+
+        CHECK_PADDING(ft8);
+
+        if (ft8->init && ft8->frame_idx_decode != ft8->frame_idx_fill)
+        {
+            frame_ft8_t *frame = &ft8->frames[ft8->frame_idx_decode];
+
+            LOG(LOG_DEBUG, "FT8 Waterfall accumulated %d symbols\n", frame->mon.wf.num_blocks);
+            LOG(LOG_INFO, "FT8 Max magnitude: %.1f dB\n", frame->mon.max_mag);
+
+            decode(ft8->rx_chan, frame, ft8->freqHz);
+
+            CHECK_PADDING(ft8);
+
+            // Reset internal variables for the next time slot
+            monitor_reset(&frame->mon);
+
+            CHECK_PADDING(ft8);
+
+            ft8->frame_idx_decode = (ft8->frame_idx_decode + 1) % FRAME_SIZE;
+        }
     }
 }
 
@@ -527,6 +569,8 @@ void decode_ft8_setup(int rx_chan, int debug)
     ft8->debug = debug;
     int have_call_and_grid = PSKReporter_setup(rx_chan);
     if (have_call_and_grid != 0) ft8->have_call_and_grid = have_call_and_grid;
+
+    ft8->compute_task = CreateTask(decode_ft8_compute, TO_VOID_PARAM(ft8), LOWEST_PRIORITY);
 }
 
 void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, u1_t *start_test)
@@ -534,6 +578,8 @@ void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, 
     decode_ft8_t *ft8 = &decode_ft8[rx_chan];
     ft8->freqHz = freqHz;
     if (!ft8->init) return;
+
+    frame_ft8_t *frame = &ft8->frames[ft8->frame_idx_fill];
 
     if (!ft8->tsync) {
         const float time_shift = 0.8;
@@ -547,12 +593,12 @@ void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, 
         }
 
         time_t time_slot_start = (time_t) (time_sec - time_within_slot);
-        gmtime_r(&time_slot_start, &ft8->tm_slot_start);
-        LOG(LOG_INFO, "FT8 Time within slot %02d:%02d:%02d %.3f s\n", ft8->tm_slot_start.tm_hour,
-            ft8->tm_slot_start.tm_min, ft8->tm_slot_start.tm_sec, time_within_slot);
+        gmtime_r(&time_slot_start, &frame->tm_slot_start);
+        LOG(LOG_INFO, "FT8 Time within slot %02d:%02d:%02d %.3f s\n", frame->tm_slot_start.tm_hour,
+            frame->tm_slot_start.tm_min, frame->tm_slot_start.tm_sec, time_within_slot);
         ft8->in_pos = ft8->frame_pos = 0;
         *start_test = 1;
-        ft8->decode_time = spec.tv_sec;
+        frame->decode_time = spec.tv_sec;
         ft8->slot++;
         ft8->tsync = true;
     }
@@ -564,33 +610,22 @@ void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, 
         ft8->in_pos++;
     }
     
-    int block_size = ft8->mon.block_size;
+    int block_size = frame->mon.block_size;
     if (ft8->in_pos < ft8->frame_pos + block_size)
         return;      // not yet a full block
 
     while (ft8->in_pos >= ft8->frame_pos + block_size && ft8->frame_pos < ft8->num_samples) {
-        monitor_process(&ft8->mon, ft8->samples + ft8->frame_pos);
+        monitor_process(&frame->mon, ft8->samples + ft8->frame_pos);
         ft8->frame_pos += block_size;
     }
     if (ft8->frame_pos < ft8->num_samples)
         return;
     
     *start_test = 0;
-    LOG(LOG_DEBUG, "FT8 Waterfall accumulated %d symbols\n", ft8->mon.wf.num_blocks);
-    LOG(LOG_INFO, "FT8 Max magnitude: %.1f dB\n", ft8->mon.max_mag);
 
-    CHECK_PADDING(ft8);
+    ft8->frame_idx_fill = (ft8->frame_idx_fill + 1) % FRAME_SIZE;
 
-    // Decode accumulated data (containing slightly less than a full time slot)
-    NextTask("decode");
-    decode(rx_chan, &ft8->mon, freqHz);
-
-    CHECK_PADDING(ft8);
-
-    // Reset internal variables for the next time slot
-    monitor_reset(&ft8->mon);
-
-    CHECK_PADDING(ft8);
+    TaskWakeup(ft8->compute_task);
 
     ft8->tsync = false;
 }
@@ -625,8 +660,13 @@ void decode_ft8_init(int rx_chan, int proto)
     };
 
     hashtable_init(rx_chan);
-    monitor_init(&ft8->mon, &mon_cfg);
-    LOG(LOG_DEBUG, "FT8 Waterfall allocated %d symbols\n", ft8->mon.wf.max_blocks);
+
+    for(int i = 0 ; i < FRAME_SIZE; i++)
+        monitor_init(&ft8->frames[i].mon, &mon_cfg);
+    
+    ft8->frame_idx_decode = ft8->frame_idx_fill = 0;
+
+    LOG(LOG_DEBUG, "FT8 Waterfall allocated %d symbols\n", ft8->frames[0].mon.wf.max_blocks);
     ft8->tsync = false;
     PSKReporter_reset(rx_chan);
     ft8->init = true;
@@ -638,9 +678,14 @@ void decode_ft8_free(int rx_chan)
     ft8->init = false;
     free(ft8->samples);
     ft8->samples = NULL;
+
+    TaskRemove(ft8->compute_task);
+
     free(ft8->callsign_hashtable);
     ft8->callsign_hashtable = NULL;
-    monitor_free(&ft8->mon);
+
+    for(int i = 0 ; i < FRAME_SIZE; i++)
+        monitor_free(&ft8->frames[i].mon);
 }
 
 void decode_ft8_protocol(int rx_chan, int freqHz, int proto)

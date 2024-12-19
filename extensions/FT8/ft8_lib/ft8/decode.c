@@ -1,4 +1,5 @@
 #include "decode.h"
+#include "encode.h"
 #include "constants.h"
 #include "crc_ft8.h"
 #include "ldpc.h"
@@ -325,6 +326,52 @@ static void ftx_normalize_logl(float* log174)
     }
 }
 
+int ftx_substract(const ftx_waterfall_t* wf, const ftx_candidate_t* candidate, uint8_t *tones, uint8_t n_tones) {
+    int noise = 0;
+    int num_average = 0;
+    int n_items = (wf->protocol == FTX_PROTOCOL_FT8) ? 8 : 4;
+
+    const WF_ELEM_T* mag_cand = get_cand_mag(wf, candidate);
+    for (int i = 0; i < n_tones; i++) {
+
+        int block_abs = candidate->time_offset + i; // relative to the captured signal
+        // Check for time boundaries
+        if (block_abs < 0)
+            continue;
+        if (block_abs >= wf->num_blocks)
+            break;
+
+        // Get the pointer to symbol 'block' of the candidate
+        const WF_ELEM_T* wf_el = mag_cand + (i * wf->block_stride);
+
+        int noise_val = 255;
+        for (int s = 0; s < n_items; s++) {
+            if (wf_el[s] < noise_val)
+                noise_val = wf_el[s];
+        }
+        noise += noise_val;
+        num_average++;
+    }
+
+    noise /= num_average;
+
+    for (int i = 0; i < n_tones; i++) {
+
+        int block_abs = candidate->time_offset + i; // relative to the captured signal
+        // Check for time boundaries
+        if (block_abs < 0)
+            continue;
+        if (block_abs >= wf->num_blocks)
+            break;
+
+        // Get the pointer to symbol 'block' of the candidate
+        WF_ELEM_T* wf_el = (WF_ELEM_T*)mag_cand + (i * wf->block_stride);
+
+        if (wf_el[tones[i]] > noise)
+            wf_el[tones[i]] = noise;
+    }
+}
+
 bool ftx_decode_candidate(const ftx_waterfall_t* wf, const ftx_candidate_t* cand, int max_iterations, ftx_message_t* message, ftx_decode_status_t* status)
 {
     float log174[FTX_LDPC_N]; // message bits encoded as likelihood
@@ -343,16 +390,18 @@ bool ftx_decode_candidate(const ftx_waterfall_t* wf, const ftx_candidate_t* cand
     bp_decode(log174, max_iterations, plain174, &status->ldpc_errors);
     // ldpc_decode(log174, max_iterations, plain174, &status->ldpc_errors);
 
-    if (status->ldpc_errors > 0) {
-
-        if (status->ldpc_errors < 15) {
+    if (status->ldpc_errors > 0)
+    {
+        if (status->ldpc_errors <= 25)
+        {
             int got_depth = -1;
-            if (!osd_decode(log174, 0, plain174, &got_depth))
+            if (!osd_decode(log174, 6, plain174, &got_depth))
             {
                 return false;
             }
         }
-        else {
+        else
+        {
             return false;
         }
     }
@@ -384,6 +433,9 @@ bool ftx_decode_candidate(const ftx_waterfall_t* wf, const ftx_candidate_t* cand
         {
             message->payload[i] = a91[i] ^ kFT4_XOR_sequence[i];
         }
+        uint8_t tones[FT4_NN];
+        ft4_encode(message->payload, tones);
+        ftx_substract(wf, cand, tones, FT4_NN);
     }
     else
     {
@@ -391,6 +443,9 @@ bool ftx_decode_candidate(const ftx_waterfall_t* wf, const ftx_candidate_t* cand
         {
             message->payload[i] = a91[i];
         }
+        uint8_t tones[FT8_NN];
+        ft8_encode(message->payload, tones);
+        ftx_substract(wf, cand, tones, FT8_NN);
     }
 
     // LOG(LOG_DEBUG, "Decoded message (CRC %04x), trying to unpack...\n", status->crc_extracted);

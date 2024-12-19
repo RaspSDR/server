@@ -231,7 +231,7 @@ matmul(uint8_t a[FTX_LDPC_K][FTX_LDPC_K], uint8_t b[FTX_LDPC_K], uint8_t c[FTX_L
         int sum = 0;
         for (int j = 0; j < FTX_LDPC_K; j++)
         {
-            sum += a[i][j] * b[j];
+            sum += a[i][j] & b[j]; // one bit multiply
         }
         c[i] = sum % 2;
     }
@@ -297,17 +297,21 @@ int osd_decode(float codeword[FTX_LDPC_N], int depth, uint8_t out[FTX_LDPC_K], i
 
     // generator matrix, reordered strongest codeword bit first.
     uint8_t b[FTX_LDPC_N][FTX_LDPC_K * 2];
+    memset(b, 0, sizeof(b));
     for (int i = 0; i < FTX_LDPC_N; i++)
     {
         uint8_t ii = which[i];
-        for (int j = 0; j < FTX_LDPC_K; j++)
+        if (ii < FTX_LDPC_K)
         {
-            b[i][j] = gen_sys[ii][j];
+                b[i][ii] = 1;
         }
-
-        for (int j = FTX_LDPC_K; j < FTX_LDPC_K * 2; j++)
+        else
         {
-            b[i][j] = 0;
+            uint8_t kk = ii - FTX_LDPC_K;
+            for (int j = 0; j < FTX_LDPC_K; j++)
+            {
+                b[i][j] = gen_sys[kk][j];
+            }
         }
     }
 
@@ -349,7 +353,6 @@ int osd_decode(float codeword[FTX_LDPC_N], int depth, uint8_t out[FTX_LDPC_K], i
         return 1;
     }
 
-#if 0
     uint8_t best_plain[FTX_LDPC_K];
     float best_score = 0;
     int got_a_best = 0;
@@ -383,8 +386,6 @@ int osd_decode(float codeword[FTX_LDPC_N], int depth, uint8_t out[FTX_LDPC_K], i
         return 1;
     }
     else
-#endif
-
     {
         return 0;
     }

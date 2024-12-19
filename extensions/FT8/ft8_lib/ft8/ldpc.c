@@ -258,26 +258,28 @@ void bp_decode(float codeword[], int max_iters, uint8_t plain[], int* ok)
  * @param[in] plain An array of 91 bits representing the plain-text message.
  * @param[out] codeword An array of 174 bits representing the encoded LDPC codeword.
  */
-
 void ldpc_encode(uint8_t plain[FTX_LDPC_K], uint8_t codeword[FTX_LDPC_N])
 {
-// plain is 91 bits of plain-text.
-// returns a 174-bit codeword.
-// mimics wsjt-x's encode174_91.f90.
+    // plain is 91 bits of plain-text.
+    // returns a 174-bit codeword.
+    // mimics wsjt-x's encode174_91.f90.
 
-  // the systematic 91 bits.
-  for(int i = 0; i < FTX_LDPC_K; i++){
-    codeword[i] = plain[i];
-  }
-
-  // the 174-91 bits of redundancy.
-  for(int i = 0; i + FTX_LDPC_K < FTX_LDPC_N; i++){
-    int sum = 0;
-    for(int j = 0; j < FTX_LDPC_K; j++){
-      sum += gen_sys[i+FTX_LDPC_K][j] * plain[j];
-      codeword[i+FTX_LDPC_K] = sum % 2;
+    // the systematic 91 bits.
+    for (int i = 0; i < FTX_LDPC_K; i++)
+    {
+        codeword[i] = plain[i];
     }
-  }
+
+    // the 174-91 bits of redundancy.
+    for (int i = 0; i < FTX_LDPC_M; i++)
+    {
+        int sum = 0;
+        for (int j = 0; j < FTX_LDPC_K; j++)
+        {
+            sum += gen_sys[i][j] & plain[j];
+            codeword[i + FTX_LDPC_K] = sum % 2;
+        }
+    }
 }
 
 // Ideas for approximating tanh/atanh:

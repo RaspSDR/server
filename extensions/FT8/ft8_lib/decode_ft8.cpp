@@ -36,14 +36,14 @@
     #define CALLSIGN_AGE_MAX 3
 #endif
 
-#define kMin_score 0 // Minimum sync score threshold for candidates
-#define kMax_candidates 250
+#define kMin_score 5 // Minimum sync score threshold for candidates
+#define kMax_candidates 140
 #define kLDPC_iterations 25
 
 #define kMax_decoded_messages 140
 
 const int kFreq_osr = 2; // Frequency oversampling rate (bin subdivision)
-const int kTime_osr = 2; // Time oversampling rate (symbol subdivision)
+const int kTime_osr = 4; // Time oversampling rate (symbol subdivision)
 
 typedef struct {
     // NB: callsign is NOT null terminated (to save a byte). Must use strncpy() / strncmp()
@@ -222,8 +222,6 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
     CHECK_PADDING(ft8);
 
     const ftx_waterfall_t* wf = &mon->wf;
-    // Find top candidates by Costas sync score and localize them in time and frequency
-    int num_candidates = ftx_find_candidates(wf, kMax_candidates, ft8->candidate_list, kMin_score);
 
     CHECK_PADDING(ft8);
 
@@ -239,6 +237,11 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
     // Go over candidates and attempt to decode messages
     bool need_header = true;
     int limiter = 0;
+
+    for(int pass = 0; pass < 2; ++pass)
+    {
+    // Find top candidates by Costas sync score and localize them in time and frequency
+    int num_candidates = ftx_find_candidates(wf, kMax_candidates, ft8->candidate_list, kMin_score);
 
     for (int idx = 0; idx < num_candidates; ++idx)
     {
@@ -475,6 +478,7 @@ static void decode(int rx_chan, const monitor_t* mon, int freqHz)
 
             kstr_free(ks);
             if (need_free) for (n = 0; n < 4; n++) free(f[n]);     // NB: free(NULL) is okay
+        }
         }
     }
     CHECK_PADDING(ft8);

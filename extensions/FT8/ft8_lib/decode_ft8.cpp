@@ -569,8 +569,6 @@ void decode_ft8_setup(int rx_chan, int debug)
     ft8->debug = debug;
     int have_call_and_grid = PSKReporter_setup(rx_chan);
     if (have_call_and_grid != 0) ft8->have_call_and_grid = have_call_and_grid;
-
-    ft8->compute_task = CreateTask(decode_ft8_compute, TO_VOID_PARAM(ft8), LOWEST_PRIORITY);
 }
 
 void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, u1_t *start_test)
@@ -670,6 +668,9 @@ void decode_ft8_init(int rx_chan, int proto)
     ft8->tsync = false;
     PSKReporter_reset(rx_chan);
     ft8->init = true;
+
+    ft8->compute_task = CreateTask(decode_ft8_compute, TO_VOID_PARAM(ft8), LOWEST_PRIORITY);
+    LOG(LOG_DEBUG, "Compute task id: %d\n", ft8->compute_task);
 }
 
 void decode_ft8_free(int rx_chan)

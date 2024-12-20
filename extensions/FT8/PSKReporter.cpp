@@ -309,7 +309,7 @@ int PSKReporter_distance(const char *grid)
     return pr->grid_ok? grid_to_distance_km(&pr->r_loc, (char *) grid) : 0;
 }
 
-int PSKReporter_spot(int rx_chan, const char *call, u4_t passband_freq, s1_t snr, ftx_protocol_t protocol, const char *grid, u4_t slot_time, u4_t slot)
+int PSKReporter_spot(int rx_chan, const char *call, u4_t passband_freq, s1_t snr, const char* mode, const char *grid, u4_t slot_time, u4_t slot)
 {
     pr_conf_t *pr = &pr_conf;
     int km = PSKReporter_distance(grid);
@@ -318,7 +318,6 @@ int PSKReporter_spot(int rx_chan, const char *call, u4_t passband_freq, s1_t snr
         lock_holder holder(pr_lock);
         conn_t *conn = rx_channels[rx_chan].conn;
         u4_t freq = conn->freqHz + ft8_conf.freq_offset_Hz + passband_freq;
-        const char *mode = (protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4";
         time_t time = (time_t) slot_time;
         char buf[CTIME_R_BUFSIZE];
         rcprintf(rx_chan, "PSKReporter spot %s %9.3f %8s %s %+3d %5dkm %s\n", mode, (double) freq / 1e3, call, grid, snr, km, var_ctime_r(&time, buf));

@@ -389,7 +389,7 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
                                                 if (!ft8_conf.test)
                                             #endif
                                                     {
-                                                        km = PSKReporter_spot(rx_chan, call, passband_freq, snr_i, ft8->protocol,
+                                                        km = PSKReporter_spot(rx_chan, call, passband_freq, snr_i, (ft8->protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4",
                                                             grid, frame->decode_time, ft8->slot);
                                                     }
                                             ht->uploaded = 1;

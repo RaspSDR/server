@@ -1,6 +1,6 @@
 #include "encode.h"
 #include "constants.h"
-#include "crc_ft8.h"
+#include "crc.h"
 
 #include <stdio.h>
 

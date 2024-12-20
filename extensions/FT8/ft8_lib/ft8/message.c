@@ -9,7 +9,7 @@
 #include <string.h>
 
 #define LOG_LEVEL LOG_WARN
-#include "debug_ft8.h"
+#include "debug.h"
 
 static int debug[MAX_RX_CHANS];
 

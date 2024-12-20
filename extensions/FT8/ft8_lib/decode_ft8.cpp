@@ -16,15 +16,15 @@
 #include <stdbool.h>
 #include <time.h>
 
-#include <ft8/decode.h>
-#include <ft8/encode.h>
-#include <ft8/message.h>
+#include "ft8/decode.h"
+#include "ft8/encode.h"
+#include "ft8/message.h"
 
-#include <common/common.h>
-#include <common/monitor.h>
+#include "common/common.h"
+#include "common/monitor.h"
 
 #define LOG_LEVEL LOG_WARN
-#include <ft8/debug_ft8.h>
+#include "ft8/debug.h"
 
 #ifdef PR_USE_CALLSIGN_HASHTABLE
     #define CALLSIGN_HASHTABLE_MAX 1024
@@ -36,7 +36,7 @@
     #define CALLSIGN_AGE_MAX 3
 #endif
 
-#define kMin_score 5 // Minimum sync score threshold for candidates
+#define kMin_score 10 // Minimum sync score threshold for candidates
 #define kMax_candidates 140
 #define kLDPC_iterations 25
 
@@ -254,7 +254,7 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
     for(int pass = 0; pass < 2; ++pass)
     {
     // Find top candidates by Costas sync score and localize them in time and frequency
-    int num_candidates = ftx_find_candidates(wf, kMax_candidates, ft8->candidate_list, kMin_score);
+    int num_candidates = ftx_find_candidates(wf, kMax_candidates / (pass + 1), ft8->candidate_list, kMin_score);
 
     for (int idx = 0; idx < num_candidates; ++idx)
     {
@@ -284,7 +284,7 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
             {
                 LOG(LOG_DEBUG, "LDPC decode: %d errors\n", status.ldpc_errors);
             }
-            else if (status.crc_calculated != status.crc_extracted)
+            else if (!status.crc_valid)
             {
                 LOG(LOG_DEBUG, "CRC mismatch!\n");
             }
@@ -321,11 +321,6 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
 
         if (found_empty_slot)
         {
-            // Fill the empty hashtable slot
-            memcpy(&ft8->decoded[idx_hash], &message, sizeof(message));
-            ft8->decoded_hashtable[idx_hash] = &ft8->decoded[idx_hash];
-            ++num_decoded;
-
             char text[FTX_MAX_MESSAGE_LENGTH];
             int hash_idx = -1;
             bool need_free = false, uploaded = false;
@@ -335,9 +330,15 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
             if (unpack_status != FTX_MESSAGE_RC_OK && unpack_status != FTX_MESSAGE_RC_PSKR_OK && unpack_status != FTX_MESSAGE_RC_ERROR_TYPE)
             {
                 snprintf(text, sizeof(text), "Error [%d] while unpacking!", (int)unpack_status);
+                continue;
             }
 
-            float snr = cand->score * 0.5f + ft8_conf.SNR_adj;
+            // Fill the empty hashtable slot
+            memcpy(&ft8->decoded[idx_hash], &message, sizeof(message));
+            ft8->decoded_hashtable[idx_hash] = &ft8->decoded[idx_hash];
+            ++num_decoded;
+
+            float snr = message.snr * 0.5f + ft8_conf.SNR_adj;
             bool pskr_ok = false;
             int age = 0;
             if (unpack_status == FTX_MESSAGE_RC_PSKR_OK) {

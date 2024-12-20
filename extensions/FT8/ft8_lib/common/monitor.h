@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#include <ft8/decode.h>
+#include "../ft8/decode.h"
 #include <fftw3.h>
 
 /// Configuration options for FT4/FT8 monitor

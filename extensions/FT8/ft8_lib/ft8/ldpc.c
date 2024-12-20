@@ -189,6 +189,7 @@ void bp_decode(float codeword[], int max_iters, uint8_t plain[], int* ok)
         if (plain_sum == 0)
         {
             // message converged to all-zeros, which is prohibited
+            min_errors = FTX_LDPC_M;
             break;
         }
 

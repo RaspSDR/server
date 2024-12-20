@@ -2,7 +2,7 @@
 #include <common/common.h>
 
 #define LOG_LEVEL LOG_WARN
-#include <ft8/debug_ft8.h>
+#include "ft8/debug.h"
 
 #include <math.h>
 #include <string.h>

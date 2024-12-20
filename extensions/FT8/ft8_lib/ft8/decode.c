@@ -1,15 +1,15 @@
 #include "decode.h"
 #include "encode.h"
 #include "constants.h"
-#include "crc_ft8.h"
+#include "crc.h"
 #include "ldpc.h"
 #include "osd.h"
 
 #include <stdbool.h>
 #include <math.h>
 
-// #define LOG_LEVEL LOG_DEBUG
-// #include "debug.h"
+//#define LOG_LEVEL LOG_DEBUG
+#include "debug.h"
 
 // Lookup table for y = 10*log10(1 + 10^(x/10)), where
 //   y - increase in signal level dB when adding a weaker independent signal
@@ -326,50 +326,85 @@ static void ftx_normalize_logl(float* log174)
     }
 }
 
-int ftx_substract(const ftx_waterfall_t* wf, const ftx_candidate_t* candidate, uint8_t *tones, uint8_t n_tones) {
-    int noise = 0;
-    int num_average = 0;
+/**
+ * @brief Subtract the estimated noise from the signal, given a candidate and a sequence of tones
+ *
+ * This function takes a candidate and a sequence of tones, and subtracts the estimated noise from the signal.
+ * The noise is estimated as the minimum signal power of all tones except the one of the candidate.
+ * The signal power is then subtracted from the signal.
+ *
+ * @param wf Waterfall data
+ * @param candidate Candidate to subtract
+ * @param tones Sequence of tones
+ * @param n_tones Length of sequence of tones
+ */
+float ftx_substract(const ftx_waterfall_t* wf, const ftx_candidate_t* candidate, uint8_t* tones, uint8_t n_tones)
+{
     int n_items = (wf->protocol == FTX_PROTOCOL_FT8) ? 8 : 4;
 
-    const WF_ELEM_T* mag_cand = get_cand_mag(wf, candidate);
-    for (int i = 0; i < n_tones; i++) {
+    ftx_candidate_t can = *candidate;
+    float snr_all = 0;
 
-        int block_abs = candidate->time_offset + i; // relative to the captured signal
-        // Check for time boundaries
-        if (block_abs < 0)
-            continue;
-        if (block_abs >= wf->num_blocks)
-            break;
+    for (int freq_sub = 0; freq_sub < wf->freq_osr; freq_sub++)
+    {
+        can.freq_sub = freq_sub;
 
-        // Get the pointer to symbol 'block' of the candidate
-        const WF_ELEM_T* wf_el = mag_cand + (i * wf->block_stride);
+        const WF_ELEM_T* mag_cand = get_cand_mag(wf, &can);
+        float noise = 0;
+        float signal = 0;
+        int num_average = 0;
 
-        int noise_val = 255;
-        for (int s = 0; s < n_items; s++) {
-            if (wf_el[s] < noise_val)
-                noise_val = wf_el[s];
+        for (int i = 0; i < n_tones; i++)
+        {
+
+            int block_abs = candidate->time_offset + i; // relative to the captured signal
+            // Check for time boundaries
+            if (block_abs < 0)
+                continue;
+            if (block_abs >= wf->num_blocks)
+                break;
+
+            // Get the pointer to symbol 'block' of the candidate
+            const WF_ELEM_T* wf_el = mag_cand + (i * wf->block_stride);
+
+            float noise_val = 100000.0;
+            for (int s = 0; s < n_items; s++)
+            {
+                if (s == tones[i])
+                    continue;
+                if (WF_ELEM_MAG(wf_el[s]) < noise_val)
+                    noise_val = WF_ELEM_MAG(wf_el[s]);
+            }
+            noise += noise_val;
+            signal += WF_ELEM_MAG(wf_el[tones[i]]);
+            num_average++;
         }
-        noise += noise_val;
-        num_average++;
+
+        noise /= num_average;
+        signal /= num_average;
+        float snr = signal - noise;
+
+        for (int i = 0; i < n_tones; i++)
+        {
+
+            int block_abs = candidate->time_offset + i; // relative to the captured signal
+            // Check for time boundaries
+            if (block_abs < 0)
+                continue;
+            if (block_abs >= wf->num_blocks)
+                break;
+
+            // Get the pointer to symbol 'block' of the candidate
+            WF_ELEM_T* wf_el = (WF_ELEM_T*)mag_cand + (i * wf->block_stride);
+
+            SUB_WF_ELEM_MAG(wf_el[tones[i]], snr);
+        }
+
+        snr_all += snr;
+        LOG(LOG_INFO, "Freq: %d Noise: %f, Signal: %f, SNR: %f score: %d\n", candidate->freq_offset, noise, signal, snr, candidate->score);
     }
 
-    noise /= num_average;
-
-    for (int i = 0; i < n_tones; i++) {
-
-        int block_abs = candidate->time_offset + i; // relative to the captured signal
-        // Check for time boundaries
-        if (block_abs < 0)
-            continue;
-        if (block_abs >= wf->num_blocks)
-            break;
-
-        // Get the pointer to symbol 'block' of the candidate
-        WF_ELEM_T* wf_el = (WF_ELEM_T*)mag_cand + (i * wf->block_stride);
-
-        if (wf_el[tones[i]] > noise)
-            wf_el[tones[i]] = noise;
-    }
+    return snr_all / wf->freq_osr;
 }
 
 bool ftx_decode_candidate(const ftx_waterfall_t* wf, const ftx_candidate_t* cand, int max_iterations, ftx_message_t* message, ftx_decode_status_t* status)
@@ -406,24 +441,18 @@ bool ftx_decode_candidate(const ftx_waterfall_t* wf, const ftx_candidate_t* cand
         }
     }
 
-    // Extract payload + CRC (first FTX_LDPC_K bits) packed into a byte array
-    uint8_t a91[FTX_LDPC_K_BYTES];
-    pack_bits(plain174, FTX_LDPC_K, a91);
-
-    // Extract CRC and check it
-    status->crc_extracted = ftx_extract_crc(a91);
-    // [1]: 'The CRC is calculated on the source-encoded message, zero-extended from 77 to 82 bits.'
-    a91[9] &= 0xF8;
-    a91[10] &= 0x00;
-    status->crc_calculated = ftx_compute_crc(a91, 96 - 14);
-
-    if (status->crc_extracted != status->crc_calculated)
+    status->crc_valid = ftx_check_crc(plain174);
+    if (!status->crc_valid)
     {
         return false;
     }
 
+    // Extract payload + CRC (first FTX_LDPC_K bits) packed into a byte array
+    uint8_t a91[FTX_LDPC_K_BYTES];
+    pack_bits(plain174, FTX_LDPC_K, a91);
+
     // Reuse CRC value as a hash for the message (TODO: 14 bits only, should perhaps use full 16 or 32 bits?)
-    message->hash = status->crc_calculated;
+    message->hash = ftx_extract_crc(a91);
 
     if (wf->protocol == FTX_PROTOCOL_FT4)
     {
@@ -435,7 +464,7 @@ bool ftx_decode_candidate(const ftx_waterfall_t* wf, const ftx_candidate_t* cand
         }
         uint8_t tones[FT4_NN];
         ft4_encode(message->payload, tones);
-        ftx_substract(wf, cand, tones, FT4_NN);
+        message->snr = ftx_substract(wf, cand, tones, FT4_NN);
     }
     else
     {
@@ -445,10 +474,10 @@ bool ftx_decode_candidate(const ftx_waterfall_t* wf, const ftx_candidate_t* cand
         }
         uint8_t tones[FT8_NN];
         ft8_encode(message->payload, tones);
-        ftx_substract(wf, cand, tones, FT8_NN);
+        message->snr = ftx_substract(wf, cand, tones, FT8_NN);
     }
 
-    // LOG(LOG_DEBUG, "Decoded message (CRC %04x), trying to unpack...\n", status->crc_extracted);
+    // LOG(LOG_DEBUG, "Decoded message, trying to unpack...\n");
     return true;
 }
 

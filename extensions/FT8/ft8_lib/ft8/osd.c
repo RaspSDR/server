@@ -1,6 +1,7 @@
 #include "constants.h"
 #include "osd.h"
 #include "ldpc.h"
+#include "crc.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -105,76 +106,6 @@ osd_score(uint8_t xplain[FTX_LDPC_K], float ll174[FTX_LDPC_N])
     return score;
 }
 
-void ft8_crc(uint8_t msg1[], int msglen, uint8_t out[14])
-{
-    // the old FT8 polynomial for 12-bit CRC, 0xc06.
-    // int div[] = { 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0 };
-
-    // the new FT8 polynomial for 14-bit CRC, 0x2757,
-    // with leading 1 bit.
-    uint8_t div[] = { 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1 };
-
-    // append 14 zeros.
-    uint8_t msg[128];
-    for (int i = 0; i < msglen + 14; i++)
-    {
-        if (i < msglen)
-        {
-            msg[i] = msg1[i];
-        }
-        else
-        {
-            msg[i] = 0;
-        }
-    }
-
-    for (int i = 0; i < msglen; i++)
-    {
-        if (msg[i])
-        {
-            for (int j = 0; j < 15; j++)
-            {
-                msg[i + j] = (msg[i + j] + div[j]) % 2;
-            }
-        }
-    }
-
-    for (int i = 0; i < 14; i++)
-    {
-        out[i] = msg[msglen + i];
-    }
-}
-
-static int
-check_crc(const uint8_t a91[91])
-{
-    uint8_t aa[91];
-    for (int i = 0; i < 91; i++)
-    {
-        if (i < 77)
-        {
-            aa[i] = a91[i];
-        }
-        else
-        {
-            aa[i] = 0;
-        }
-    }
-    uint8_t out1[14];
-
-    // why 82? why not 77?
-    ft8_crc(aa, 82, out1);
-
-    for (int i = 0; i < 14; i++)
-    {
-        if (out1[i] != a91[91 - 14 + i])
-        {
-            return 0;
-        }
-    }
-    return 1;
-}
-
 /**
  * @brief Checks the plausibility of a decoded message.
  *
@@ -205,7 +136,7 @@ osd_check(const uint8_t plain[FTX_LDPC_K])
         return 0;
     }
 
-    if (check_crc(plain) == 0)
+    if (ftx_check_crc(plain) == 0)
     {
         return 0;
     }

@@ -46,8 +46,8 @@ extern "C"
 #define FTX_LDPC_K_BYTES ((FTX_LDPC_K + 7) / 8) ///< Number of whole bytes needed to store 91 bits (payload + CRC only)
 
 // Define CRC parameters
-#define FT8_CRC_POLYNOMIAL ((uint16_t)0x2757u) ///< CRC-14 polynomial without the leading (MSB) 1
-#define FT8_CRC_WIDTH      (14)
+#define FTX_CRC_POLYNOMIAL ((uint16_t)0x2757u) ///< CRC-14 polynomial without the leading (MSB) 1
+#define FTX_CRC_WIDTH      (14)
 
 typedef enum
 {

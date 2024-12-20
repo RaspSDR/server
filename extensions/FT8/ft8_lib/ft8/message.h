@@ -19,6 +19,7 @@ typedef struct
 {
     uint8_t payload[FTX_PAYLOAD_LENGTH_BYTES];
     uint16_t hash; ///< Hash value to be used in hash table and quick checking for duplicates
+    float snr;
 } ftx_message_t;
 
 // i3: bits 74..76

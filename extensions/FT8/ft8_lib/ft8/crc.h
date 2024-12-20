@@ -24,6 +24,12 @@ uint16_t ftx_extract_crc(const uint8_t a91[]);
 /// @param[out] a91 91 bits of payload data + CRC
 void ftx_add_crc(const uint8_t payload[], uint8_t a91[]);
 
+// Calculate 14-bit CRC for a sequence of given number of bits
+void ftx_crc(uint8_t msg1[], int msglen, uint8_t out[]);
+
+// check if bits are crc valid
+int ftx_check_crc(const uint8_t a91[]);
+
 #ifdef __cplusplus
 }
 #endif

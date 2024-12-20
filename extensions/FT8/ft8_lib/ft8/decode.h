@@ -24,10 +24,12 @@ typedef struct
 #define WF_ELEM_T          waterfall_cpx_t
 #define WF_ELEM_MAG(x)     ((x).mag)
 #define WF_ELEM_MAG_INT(x) (int)(2 * ((x).mag + 120.0f))
+#define SUB_WF_ELEM_MAG(x, y) do {(x).mag -= y; } while(0)
 #else
 #define WF_ELEM_T          uint8_t
 #define WF_ELEM_MAG(x)     ((float)(x)*0.5f - 120.0f)
 #define WF_ELEM_MAG_INT(x) (int)(x)
+#define SUB_WF_ELEM_MAG(x, y) do {(x) -= y * 2 + 240; } while(0)
 #endif
 
 /// Input structure to ftx_find_sync() function. This structure describes stored waterfall data over the whole message slot.
@@ -65,9 +67,8 @@ typedef struct
     float freq;
     float time;
     int ldpc_errors;         ///< Number of LDPC errors during decoding
-    uint16_t crc_extracted;  ///< CRC value recovered from the message
-    uint16_t crc_calculated; ///< CRC value calculated over the payload
-    // int unpack_status;       ///< Return value of the unpack routine
+    uint8_t crc_valid;       ///< CRC value recovered from the message
+    // int unpack_status;    ///< Return value of the unpack routine
 } ftx_decode_status_t;
 
 /// Localize top N candidates in frequency and time according to their sync strength (looking at Costas symbols)
@@ -88,6 +89,14 @@ int ftx_find_candidates(const ftx_waterfall_t* power, int num_candidates, ftx_ca
 /// @param[out] status ftx_decode_status_t structure that will be filled with the status of various decoding steps
 /// @return True if the decoding was successful, false otherwise (check status for details)
 bool ftx_decode_candidate(const ftx_waterfall_t* power, const ftx_candidate_t* cand, int max_iterations, ftx_message_t* message, ftx_decode_status_t* status);
+
+/// @brief Substract the estimated noise from the signal, given a candidate and a sequence of tones
+/// @param wf waterfall data
+/// @param candidate Candidate to substract
+/// @param tones The message payload
+/// @param n_tones the payload length
+/// @return 
+float ftx_substract(const ftx_waterfall_t* wf, const ftx_candidate_t* candidate, uint8_t* tones, uint8_t n_tones);
 
 #ifdef __cplusplus
 }

@@ -120,8 +120,7 @@ function control_html()
          w3_div('',
             w3_div('',
                w3_button('w3-aqua w3-margin', 'Web-888 server restart', 'control_restart_cb'),
-               w3_button('w3-blue w3-margin', 'Web-888 reboot', 'control_reboot_cb'),
-               w3_button('w3-red w3-margin', 'Web-888 power off', 'control_power_off_cb')
+               w3_button('w3-blue w3-margin', 'Web-888 reboot', 'control_reboot_cb')
             )
          ),
          w3_div('w3-center',
@@ -341,12 +340,6 @@ function control_reboot_cb()
 {
 	pending_reboot = true;
 	control_confirm_show('Really reboot?');
-}
-
-function control_power_off_cb()
-{
-	pending_power_off = true;
-	control_confirm_show('Really power off?');
 }
 
 function control_confirm_cb()

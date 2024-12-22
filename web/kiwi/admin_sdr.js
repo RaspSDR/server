@@ -250,7 +250,7 @@ function config_html()
 			w3_divs('w3-restart/w3-center w3-tspace-8',
             w3_select('', 'GPS correction of ADC clock', '', 'cfg.ADC_clk2_corr', cfg.ADC_clk2_corr, admin_sdr.ADC_clk2_corr_s, 'admin_select_cb'),
 				w3_text('w3-text-black w3-center',
-				   'Set "disabled" to keep the Kiwi GPS from correcting <br>' +
+				   'Set "disabled" to keep the GPS from correcting <br>' +
 				   'for errors in the ADC clock (internal or external). <br>' +
 				   'Other settings prevent corrections from <br>' +
 				   'disturbing WSPR and FST4W reception.'

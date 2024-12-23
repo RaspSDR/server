@@ -218,7 +218,7 @@ function config_html()
 			w3_divs('w3-restart/w3-center w3-tspace-8',
 				w3_select_get_param('w3-width-auto', 'CAT interface baud rate', '', 'CAT_baud', admin_sdr.CAT_baud_s, 'admin_select_cb', 0),
 				w3_div('w3-text-black',
-					'Attach an optional USB/serial adapter to the Kiwi <br> for CAT interface reporting of frequency tuning.'
+					'Attach an optional USB/serial adapter <br> for CAT interface reporting of frequency tuning.'
 				)
 			),
 

@@ -105,14 +105,14 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
 
     if (report) report_progress(conn, "Download Web-888 Server");
 
-    status = blocking_system((url_base + "websdr.bin").c_str(), "/media/mmcblk0p1/update/websdr.bin", 15);
+    status = curl_get_file((url_base + "websdr.bin").c_str(), "/media/mmcblk0p1/update/websdr.bin", 15);
     if (status != 0) {
         lprintf("UPDATE: fetch binary status=0x%08x\n", status);
         goto exit;
     }
 
     if (report) report_progress(conn, "Download checksum file");
-    status = blocking_system((url_base + "checksum").c_str(), "/media/mmcblk0p1/update/checksum", 15);
+    status = curl_get_file((url_base + "checksum").c_str(), "/media/mmcblk0p1/update/checksum", 15);
     if (status != 0) {
         lprintf("UPDATE: fetch checksum status=0x%08x\n", status);
         goto exit;

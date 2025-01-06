@@ -37,6 +37,7 @@ Boston, MA  02110-1301, USA.
 #include "net.h"
 #include "debug.h"
 #include "ext_int.h"
+#include "FT8.h"
 #include "wspr.h"
 #include "security.h"
 #include "options.h"
@@ -1783,7 +1784,7 @@ bool rx_common_cmd(int stream_type, conn_t* conn, char* cmd) {
                                gps.acquiring, gps.tracking, gps.good, gps.fixes, adc_clock_system() / 1e6, clk.adc_gps_clk_corrections);
 
             // printf("ch=%d ug=%d haveLat=%d\n", ch, wspr_c.GPS_update_grid, (gps.StatLat != 0));
-            if (wspr_c.GPS_update_grid && gps.StatLat) {
+            if ((ft8_conf.GPS_update_grid || wspr_c.GPS_update_grid) && gps.StatLat) {
                 latLon_t loc;
                 loc.lat = gps.sgnLat;
                 loc.lon = gps.sgnLon;

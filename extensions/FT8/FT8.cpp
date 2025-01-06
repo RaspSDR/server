@@ -54,17 +54,6 @@ static ft8_t ft8[MAX_RX_CHANS];
 
 ft8_conf_t ft8_conf;
 
-typedef struct {
-    int num_autorun;
-    char *rcall;
-    char rgrid[LEN_GRID];
-    latLon_t r_loc;
-	bool GPS_update_grid;
-	bool syslog, spot_log;
-} ft8_conf2_t;
-
-static ft8_conf2_t ft8_conf2;
-
 static int ft8_arun_band[MAX_ARUN_INST];
 static int ft8_arun_preempt[MAX_ARUN_INST];
 static internal_conn_t iconn[MAX_ARUN_INST];
@@ -256,7 +245,7 @@ bool ft8_update_vars_from_config(bool called_at_init_or_restart)
     // Changing reporter call on admin page requires restart. This is because of
     // conditional behavior at startup, e.g. uploads enabled because valid call is now present
     // or autorun tasks starting for the same reason.
-    // ft8_conf2.rcall is still updated here to handle the initial assignment and
+    // ft8_conf.rcall is still updated here to handle the initial assignment and
     // manual changes from FT8 admin page.
     //
     // Also, first-time init of FT8 reporter call/grid from WSPR values
@@ -265,20 +254,20 @@ bool ft8_update_vars_from_config(bool called_at_init_or_restart)
     cfg_default_string("ft8.callsign", s, &update_cfg);
 	cfg_string_free(s);
     s = (char *) cfg_string("ft8.callsign", NULL, CFG_REQUIRED);
-    kiwi_ifree(ft8_conf2.rcall, "ft8 rcall");
-	ft8_conf2.rcall = kiwi_str_encode(s);
+    kiwi_ifree(ft8_conf.rcall, "ft8 rcall");
+	ft8_conf.rcall = kiwi_str_encode(s);
 	cfg_string_free(s);
 
     s = (char *) cfg_string("WSPR.grid", NULL, CFG_REQUIRED);
     cfg_default_string("ft8.grid", s, &update_cfg);
 	cfg_string_free(s);
     s = (char *) cfg_string("ft8.grid", NULL, CFG_REQUIRED);
-	kiwi_strncpy(ft8_conf2.rgrid, s, LEN_GRID);
+	kiwi_strncpy(ft8_conf.rgrid, s, LEN_GRID);
 	cfg_string_free(s);
-    set_reporter_grid((char *) ft8_conf2.rgrid);
-	grid_to_latLon(ft8_conf2.rgrid, &ft8_conf2.r_loc);
-	if (ft8_conf2.r_loc.lat != 999.0)
-		latLon_deg_to_rad(ft8_conf2.r_loc);
+    set_reporter_grid((char *) ft8_conf.rgrid);
+	grid_to_latLon(ft8_conf.rgrid, &ft8_conf.r_loc);
+	if (ft8_conf.r_loc.lat != 999.0)
+		latLon_deg_to_rad(ft8_conf.r_loc);
     
     // Make sure ft8.autorun holds *correct* count of non-preemptible autorun processes.
     // If Kiwi was previously configured for a larger rx_chans, and more than rx_chans worth
@@ -300,11 +289,11 @@ bool ft8_update_vars_from_config(bool called_at_init_or_restart)
             printf("FT8 autorun: Only works on Kiwis configured for 12 kHz wide channels\n");
             num_autorun = num_non_preempt = 0;
         }
-        if (ft8_conf2.rcall == NULL || *ft8_conf2.rcall == '\0' || ft8_conf2.rgrid[0] == '\0') {
+        if (ft8_conf.rcall == NULL || *ft8_conf.rcall == '\0' || ft8_conf.rgrid[0] == '\0') {
             printf("FT8 autorun: reporter callsign and grid square fields must be entered on FT8 section of admin page\n");
             num_autorun = num_non_preempt = 0;
         }
-        ft8_conf2.num_autorun = num_autorun;
+        ft8_conf.num_autorun = num_autorun;
         cfg_update_int("ft8.autorun", num_non_preempt, &update_cfg);
         //printf("FT8 autorun: num_autorun=%d ft8.autorun=%d(non-preempt) rx_chans=%d\n", num_autorun, num_non_preempt, rx_chans);
     }
@@ -320,11 +309,11 @@ bool ft8_update_vars_from_config(bool called_at_init_or_restart)
         update_cfg = true;
     }
 
-    ft8_conf2.GPS_update_grid = cfg_default_bool("ft8.GPS_update_grid", false, &update_cfg);
-    ft8_conf2.syslog = cfg_default_bool("ft8.syslog", false, &update_cfg);
-    ft8_conf2.spot_log = cfg_default_bool("ft8.spot_log", false, &update_cfg);
+    ft8_conf.GPS_update_grid = cfg_default_bool("ft8.GPS_update_grid", false, &update_cfg);
+    ft8_conf.syslog = cfg_default_bool("ft8.syslog", false, &update_cfg);
+    ft8_conf.spot_log = cfg_default_bool("ft8.spot_log", false, &update_cfg);
 
-	//printf("ft8_update_vars_from_config: rcall <%s> ft8_conf2.rgrid=<%s> ft8_conf2.GPS_update_grid=%d\n", ft8_conf2.rcall, ft8_conf2.rgrid, ft8_conf2.GPS_update_grid);
+	//printf("ft8_update_vars_from_config: rcall <%s> ft8_conf.rgrid=<%s> ft8_conf.GPS_update_grid=%d\n", ft8_conf.rcall, ft8_conf.rgrid, ft8_conf.GPS_update_grid);
     return update_cfg;
 }
 
@@ -397,7 +386,7 @@ static void ft8_autorun(int instance, bool initial)
 void ft8_autorun_start(bool initial)
 {
     rx_util_t *r = &rx_util;
-    if (ft8_conf2.num_autorun == 0) {
+    if (ft8_conf.num_autorun == 0) {
         //printf("FT8 autorun_start: none configured\n");
         return;
     }

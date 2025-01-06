@@ -1103,7 +1103,7 @@ void c2s_admin(void* param) {
                         grid6[6] = '\0';
                         send_msg_encoded(conn, "ADM", "gps_info", "{\"grid\":\"%s\"}", grid6);
                         kiwi_strncpy(wspr_c.rgrid, grid6, LEN_GRID);
-                        // kiwi_strncpy(ft8_conf2.rgrid, grid6, LEN_GRID);
+                        // kiwi_strncpy(ft8_conf.rgrid, grid6, LEN_GRID);
                         // jksx FIXME need to do more when setting grid?
                     }
                 }

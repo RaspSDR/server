@@ -4,6 +4,8 @@
 
 #include "types.h"
 #include "config.h"
+#include "misc.h"
+#include "wspr.h"
 
 #define FT8_PASSBAND_LO     100
 #define FT8_PASSBAND_HI     3100
@@ -17,6 +19,13 @@ typedef struct {
     int test;
     s2_t *s2p_start, *s2p_end;
     int tsamps;
+
+    int num_autorun;
+    char *rcall;
+    char rgrid[LEN_GRID];
+    latLon_t r_loc;
+	bool GPS_update_grid;
+	bool syslog, spot_log;
 } ft8_conf_t;
 
 extern ft8_conf_t ft8_conf;

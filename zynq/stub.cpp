@@ -1,7 +1,7 @@
 #include "kiwi.h"
 #include "eeprom.h"
 
-bool background_mode = false;
+bool background_mode = true;
 
 int eeprom_check() {
     int status;

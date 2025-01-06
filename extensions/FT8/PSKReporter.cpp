@@ -311,16 +311,17 @@ int PSKReporter_distance(const char *grid)
 
 int PSKReporter_spot(int rx_chan, const char *call, u4_t passband_freq, s1_t snr, const char* mode, const char *grid, u4_t slot_time, u4_t slot)
 {
+    u4_t printf_type = ft8_conf.syslog? (PRINTF_REG | PRINTF_LOG) : PRINTF_REG;
     pr_conf_t *pr = &pr_conf;
     int km = PSKReporter_distance(grid);
-    
+
     if (pr->task_created) {
         lock_holder holder(pr_lock);
         conn_t *conn = rx_channels[rx_chan].conn;
         u4_t freq = conn->freqHz + ft8_conf.freq_offset_Hz + passband_freq;
         time_t time = (time_t) slot_time;
         char buf[CTIME_R_BUFSIZE];
-        rcprintf(rx_chan, "PSKReporter spot %s %9.3f %8s %s %+3d %5dkm %s\n", mode, (double) freq / 1e3, call, grid, snr, km, var_ctime_r(&time, buf));
+        rcfprintf(rx_chan, printf_type, "%s DECODE: %.3f %s %s %+d %dkm %s\n", mode, (double) freq / 1e3, call, grid, snr, km, var_ctime_r(&time, buf));
         ext_send_msg_encoded(rx_chan, false, "EXT", "debug", "%s %.3f %s %s %+d %dkm %s", mode, (double) freq / 1e3, call, grid, snr, km, var_ctime_r(&time, buf));
     
         u1_t *bp = pr->bp;

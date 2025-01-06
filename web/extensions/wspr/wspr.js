@@ -604,7 +604,7 @@ function wspr_config_html()
             w3_divs('w3-center w3-tspace-8',
                w3_switch_label('w3-center', 'Update grid continuously<br>from GPS?', 'Yes', 'No', 'cfg.WSPR.GPS_update_grid', cfg.WSPR.GPS_update_grid, 'admin_radio_YN_cb'),
                w3_text('w3-text-black w3-center',
-                  'Useful for Kiwis in motion <br> (e.g. marine mobile)'
+                  'Useful for Device in motion <br> (e.g. marine mobile)'
                )
             ), 22,
             '&nbsp;', 3,
@@ -629,9 +629,9 @@ function wspr_config_html()
             w3_div('w3-container',
                w3_div('w3-text-black', 'On startup automatically begins running the WSPR decoder on the selected band(s).<br>' +
                   'Channels available for regular use are reduced by one for each WSPR autorun enabled.<br>' +
-                  'If Kiwi has been configured for a mix of channels with and without waterfalls then channels without waterfalls will be used first.<br><br>' +
+                  'If the device has been configured for a mix of channels with and without waterfalls then channels without waterfalls will be used first.<br><br>' +
                   
-                  'Spot decodes are available in the Kiwi log (use "Log" tab above) and are listed on <a href="http://wsprnet.org/drupal/wsprnet/spots" target="_blank">wsprnet.org</a><br>' +
+                  'Spot decodes are available in the server log (use "Log" tab above) and are listed on <a href="http://wsprnet.org/drupal/wsprnet/spots" target="_blank">wsprnet.org</a><br>' +
                   'The "Reporter" fields above must be set to valid values for proper spot entry into the <a href="http://wsprnet.org/drupal/wsprnet/spots" target="_blank">wsprnet.org</a> database.'),
                
                w3_div('w3-margin-T-10 w3-valign',

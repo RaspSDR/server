@@ -101,6 +101,8 @@ void _panic(const char* str, bool coreFile, const char* file, int line) {
     kiwi_backtrace("panic");
     if (coreFile) abort();
     kiwi_exit(-1);
+
+    while(1);
 }
 
 void _real_panic(const char* str, bool coreFile, const char* file, int line) {
@@ -117,6 +119,8 @@ void _real_panic(const char* str, bool coreFile, const char* file, int line) {
     // kiwi_backtrace("panic");
     if (coreFile) abort();
     kiwi_exit(-1);
+
+    while(1);
 }
 
 void _sys_panic(const char* str, const char* file, int line) {
@@ -132,6 +136,8 @@ void _sys_panic(const char* str, const char* file, int line) {
     printf("%s %s\n", buf, strerror(errno));
     kiwi_backtrace("sys_panic");
     kiwi_exit(-1);
+
+    while(1);
 }
 
 void _ll_printf_panic() {
@@ -412,7 +418,7 @@ void clprintf(conn_t* c, const char* fmt, ...) {
     va_list ap;
     lock_holder holder(print_lock);
     va_start(ap, fmt);
-    ll_printf(PRINTF_LOG, c, fmt, ap);
+    ll_printf(PRINTF_REG, c, fmt, ap);
     va_end(ap);
 }
 
@@ -428,7 +434,7 @@ void lprintf(const char* fmt, ...) {
     va_list ap;
     lock_holder holder(print_lock);
     va_start(ap, fmt);
-    ll_printf(PRINTF_LOG, NULL, fmt, ap);
+    ll_printf(PRINTF_REG, NULL, fmt, ap);
     va_end(ap);
 }
 
@@ -448,7 +454,7 @@ void rclprintf(int rx_chan, const char* fmt, ...) {
 
     va_list ap;
     va_start(ap, fmt);
-    ll_printf(PRINTF_LOG, c, fmt, ap);
+    ll_printf(PRINTF_REG, c, fmt, ap);
     va_end(ap);
 }
 

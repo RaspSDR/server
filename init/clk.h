@@ -27,7 +27,7 @@ Boston, MA  02110-1301, USA.
 extern double adc_clock_hz;
 
 #define ADC_CLOCK_HF  (122.88 * MHz)
-#define ADC_CLOCK_VHF (98.304 * MHz)
+#define ADC_CLOCK_VHF (100.7616 * MHz)
 
 // ADC clk generated from FPGA via Si5351
 #define ADC_CLOCK_NOM       adc_clock_hz // 66.6666 MHz 15.0 ns

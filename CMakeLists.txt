@@ -99,6 +99,7 @@ SET(EXTENSIONS
     ant_switch
     colormap
     CW_decoder
+    CW_skimmer
     devl
     digi_modes
     DRM

@@ -3,7 +3,6 @@
 var cw = {
    ext_name: 'CW_skimmer',    // NB: must match cw_skimmer.cpp:cw_skimmer_ext.name
    first_time: true,
-   pboff: -1,
    wspace: true,
    test: 0,
    texts: [],
@@ -25,7 +24,6 @@ var cw = {
 
    log_mins: 0,
    log_interval: null,
-   log_txt: '',
 
    last_last: 0
 };
@@ -141,11 +139,6 @@ function cw_skimmer_output_chars(input)
        }
    
        w3_innerHTML('id-cw-console-table-body', body);		// overwrites last status msg
-//   cw.console_status_msg_p.s = c;      // NB: already encoded on C-side
-//   cw.log_txt += kiwi_remove_escape_sequences(kiwi_decodeURIComponent('CW', c));
-
-
-
 }
 
 function cw_skimmer_controls_setup()
@@ -160,7 +153,6 @@ function cw_skimmer_controls_setup()
             var r;
             if (i == 0 && isNumber(a)) {
                cw.pboff_locked = a;
-               console.log('CW pboff_locked='+ cw.pboff_locked);
             } else
             if (w3_ext_param('test', a).match) {
                do_test = true;
@@ -208,12 +200,6 @@ function cw_skimmer_controls_setup()
                   ),
                   w3_inline('',
                      w3_button('w3-margin-T-8 w3-padding-smaller', 'Clear', 'cw_clear_button_cb', 0),
-                     w3_checkbox('w3-margin-L-16 w3-margin-T-8/w3-label-inline w3-label-not-bold/', 'word space corr', 'cw.wspace', true, 'cw_decoder_wsc_cb')
-                  ),
-                  w3_inline('',
-                     w3_button('id-cw-log w3-margin-T-8 w3-padding-smaller w3-purple', 'Log', 'cw_log_cb'),
-                     w3_input('id-cw-log-mins w3-margin-L-16/w3-label-not-bold/w3-ext-retain-input-focus|padding:0;width:auto|size=4',
-                        'log min', 'cw.log_mins', cw.log_mins, 'cw_log_mins_cb')
                   )
                )
 				)
@@ -229,26 +215,10 @@ function cw_skimmer_controls_setup()
 	ext_set_controls_width_height(380, 200);
 	
    ext_send('SET cw_start');
-	CW_skimmer_environment_changed();
 
    cw_clear_button_cb();
 	if (do_test) cw_test_cb();
 	if (do_help) extint_help_click();
-}
-
-function CW_skimmer_environment_changed(changed)
-{
-   // detect passband offset change and inform C-side so detection filter can be adjusted
-   var pboff = Math.abs(ext_get_passband_center_freq() - ext_get_carrier_freq());
-   if (cw.pboff != pboff) {
-      var first_and_locked = (cw.pboff == -1 && cw.pboff_locked);
-      var pbo = first_and_locked? cw.pboff_locked : pboff;
-	   if (first_and_locked || !cw.pboff_locked) {
-         console.log('CW ENV new pbo='+ pbo);
-	      ext_send('SET cw_pboff='+ pbo);
-	   }
-      cw.pboff = pboff;
-   }
 }
 
 function cw_clear_button_cb(path, idx, first)
@@ -257,7 +227,6 @@ function cw_clear_button_cb(path, idx, first)
    cw.console_status_msg_p.s = encodeURIComponent('\f');
    cw.texts = [];
    w3_innerHTML('id-cw-console-table-body', '');
-   cw.log_txt = '';
 }
 
 function cw_log_mins_cb(path, val)
@@ -273,8 +242,14 @@ function cw_log_mins_cb(path, val)
    }
 }
 
+/*
 function cw_log_cb()
 {
+   for (var j = 0 ; j < cw.texts.length ; j++) {
+      cw.log_txt += kiwi_remove_escape_sequences(kiwi_decodeURIComponent('CW', cw.texts[j].text));
+      cw.log_txt += "\n";
+   }
+
    var txt = new Blob([cw.log_txt], { type: 'text/plain' });
    var a = document.createElement('a');
    a.style = 'display: none';
@@ -286,16 +261,7 @@ function cw_log_cb()
    window.URL.revokeObjectURL(a.href);
    document.body.removeChild(a);
 }
-
-function cw_skimmer_set_threshold()
-{
-   var auto = cw.is_auto_thresh? 1:0;
-   ext_send('SET cw_auto_thresh='+ auto);
-   var th_dB = 0;
-   if (!auto) th_dB = cw.threshold_dB;
-   if (auto && cw.auto_thresh_dB != 0) th_dB = cw.auto_thresh_dB;
-	if (th_dB) ext_send('SET cw_threshold='+ Math.pow(10, th_dB/10).toFixed(0));
-}
+*/
 
 function cw_test_cb()
 {

@@ -12,8 +12,8 @@
 #include <math.h>
 #include <sys/mman.h>
 
-#define DEBUG_MSG true
-// #define DEBUG_MSG false
+//#define DEBUG_MSG true
+#define DEBUG_MSG false
 
 void CW_skimmer_main();
 static void CW_skimmer_close(int rx_chan);

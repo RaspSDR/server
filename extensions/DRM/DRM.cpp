@@ -37,6 +37,8 @@ void DRM_close(int rx_chan)
             TaskRemove(d->tid);
             d->tid = 0;
         }
+    #else
+        d->run = 0;
     #endif
 }
 

@@ -85,6 +85,14 @@ public:
 
     void SetCallback(OutputCallback callback) {
         this->callback = callback;
+
+        // reset the state as well
+        for (int i = 0; i < MAX_CHANNELS; i++) {
+            outState[i] = ' ';
+        }
+
+        remains = 0;
+        avgPower = 4.0;
     }
 
     void AddSamples(float* sample, size_t count) {

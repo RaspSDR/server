@@ -118,7 +118,7 @@ static void cw_file_data(int rx_chan, int chan, int nsamps, TYPEMONO16* samps, i
     }
 }
 
-static void cw_task(void* param) {
+static void cw_skimmer_task(void* param) {
     while (1) {
 
         int rx_chan = (int)FROM_VOID_PARAM(TaskSleepReason("wait for wakeup"));
@@ -168,7 +168,7 @@ bool CW_skimmer_msgs(char* msg, int rx_chan) {
         }
 
         if (e->tid == 0) {
-            e->tid = CreateTaskF(cw_task, TO_VOID_PARAM(rx_chan), EXT_PRIORITY, CTF_RX_CHANNEL | (rx_chan & CTF_CHANNEL));
+            e->tid = CreateTaskF(cw_skimmer_task, TO_VOID_PARAM(rx_chan), EXT_PRIORITY, CTF_RX_CHANNEL | (rx_chan & CTF_CHANNEL));
         }
 
         e->seq_init = false;

@@ -287,7 +287,7 @@ function CW_skimmer_config_html()
    ext_config_html(cw, 'cw', 'CW', 'CW decoder configuration');
 }
 
-function CW_decoder_help(show)
+function CW_skimmer_help(show)
 {
    if (show) {
       var s = 

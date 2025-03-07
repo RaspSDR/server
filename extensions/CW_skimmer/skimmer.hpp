@@ -10,7 +10,7 @@
 #define USE_AVG_RATIO  0 // 1: Divide each bucket by average value
 #define USE_THRESHOLD  1 // 1: Convert each bucket to 0.0/1.0 values
 
-#define sampleRate  12000 // Input audio sampling rate
+#define sampleRate   12000 // Input audio sampling rate
 #define MAX_SCALES   (16)
 #define MAX_CHANNELS (sampleRate / 2 / 100)
 #define MAX_INPUT    (MAX_CHANNELS * 2)
@@ -123,7 +123,7 @@ public:
         while (count > 0) {
             if (count > MAX_INPUT - remains) {
                 // more samples than we can fit in the buffer
-                for(size_t i = 0; i < MAX_INPUT - remains; i++) {
+                for (size_t i = 0; i < MAX_INPUT - remains; i++) {
                     dataBuf[remains + i] = sample[i] / 32768.0;
                 }
                 count -= MAX_INPUT - remains;
@@ -133,7 +133,7 @@ public:
             }
             else {
                 // we can fit the samples in the buffer
-                for(size_t i = 0; i < count; i++) {
+                for (size_t i = 0; i < count; i++) {
                     dataBuf[remains + i] = sample[i] / 32768.0;
                 }
 
@@ -148,10 +148,10 @@ public:
     }
 
 private:
-    float accPower, avgPower, maxPower;
+    float avgPower;
     size_t remains;
 
-    unsigned int printChars = 8;     // Number of characters to print at once
+    unsigned int printChars = 8; // Number of characters to print at once
 
     fftwf_complex fftOut[MAX_INPUT];
     short dataIn[MAX_INPUT];
@@ -175,25 +175,25 @@ private:
 
     // when there is enough samples
     void process() {
-        int j, k, i, n;
+        float maxPower, accPower;
         // Apply Hamming window
-        float hk = 2.0 * M_PI / (MAX_INPUT - 1);
-        for (j = 0; j < MAX_INPUT; ++j)
+        const float hk = 2.0 * M_PI / (MAX_INPUT - 1);
+        for (int j = 0; j < MAX_INPUT; ++j)
             fftIn[j] = dataBuf[j] * (0.54 - 0.46 * cosf(j * hk));
 
         // Compute FFT
         fftwf_execute(fft);
 
         // Go to magnitudes
-        for (j = 0; j < MAX_INPUT / 2; ++j)
+        for (int j = 0; j < MAX_INPUT / 2; ++j)
             fftOut[j][0] = fftOut[j][1] = sqrtf(fftOut[j][0] * fftOut[j][0] + fftOut[j][1] * fftOut[j][1]);
 
         // Filter out spurs
 #if USE_NEIGHBORS
-        fftOut[MAX_INPUT / 2 - 1][0] = fmax(0.0, fftOut[MAX_INPUT / 2 - 1][1] - NEIGH_WEIGHT * fftOut[MAX_INPUT / 2 - 2][1]);
-        fftOut[0][0] = fmax(0.0, fftOut[0][1] - NEIGH_WEIGHT * fftOut[1][1]);
-        for (j = 1; j < MAX_INPUT / 2 - 1; ++j)
-            fftOut[j][0] = fmax(0.0, fftOut[j][1] - 0.5 * NEIGH_WEIGHT * (fftOut[j - 1][1] + fftOut[j + 1][1]));
+        fftOut[MAX_INPUT / 2 - 1][0] = fmaxf(0.0, fftOut[MAX_INPUT / 2 - 1][1] - NEIGH_WEIGHT * fftOut[MAX_INPUT / 2 - 2][1]);
+        fftOut[0][0] = fmaxf(0.0, fftOut[0][1] - NEIGH_WEIGHT * fftOut[1][1]);
+        for (int j = 1; j < MAX_INPUT / 2 - 1; ++j)
+            fftOut[j][0] = fmaxf(0.0, fftOut[j][1] - 0.5 * NEIGH_WEIGHT * (fftOut[j - 1][1] + fftOut[j + 1][1]));
 #endif
 
         struct
@@ -204,19 +204,23 @@ private:
 
         // Sort buckets into scales
         memset(scales, 0, sizeof(scales));
-        for (j = 0, maxPower = 0.0; j < MAX_INPUT / 2; ++j) {
+        maxPower = 0.0;
+        for (int j = 0; j < MAX_INPUT / 2; ++j) {
             float v = fftOut[j][0];
             int scale = floorf(logf(v));
             scale = scale < 0 ? 0 : scale + 1 >= MAX_SCALES ? MAX_SCALES - 1
                                                             : scale + 1;
-            maxPower = fmax(maxPower, v);
+            maxPower = fmaxf(maxPower, v);
             scales[scale].power += v;
             scales[scale].count++;
         }
 
         // Find most populated scales and use them for ground power
-        for (i = 0, n = 0, accPower = 0.0; i < MAX_SCALES - 1; ++i) {
+        int n = 0;
+        accPower = 0.0;
+        for (int i = 0; i < MAX_SCALES - 1; ++i) {
             // Look for the next most populated scale
+            int k, j;
             for (k = i, j = i + 1; j < MAX_SCALES; ++j)
                 if (scales[j].count > scales[k].count) k = j;
             // If found, swap with current one
@@ -241,6 +245,7 @@ private:
         avgPower += (accPower - avgPower) * MAX_INPUT / sampleRate / AVG_SECONDS;
 
         // Decode by channel
+        int i, j, k;
         for (j = i = k = n = 0, accPower = 0.0; j < MAX_INPUT / 2; ++j, ++n) {
             float power = fftOut[j][0];
 
@@ -248,10 +253,10 @@ private:
             if (k >= MAX_INPUT / 2) {
 #if USE_AVG_RATIO
                 // Divide channel signal by the average power
-                accPower = fmax(1.0, accPower / fmax(avgPower, 0.000001));
+                accPower = fmaxf(1.0, accPower / fmaxf(avgPower, 0.000001));
 #elif USE_AVG_BOTTOM
                 // Subtract average power from the channel signal
-                accPower = fmax(0.0, accPower - avgPower);
+                accPower = fmaxf(0.0, accPower - avgPower);
 #elif USE_THRESHOLD
                 // Convert channel signal to 1/0 values based on threshold
                 accPower = accPower >= avgPower * THRES_WEIGHT ? 1.0 : 0.0;
@@ -279,7 +284,7 @@ private:
             }
 
             // Maximize channel signal power
-            accPower = fmax(accPower, power);
+            accPower = fmaxf(accPower, power);
             k += MAX_CHANNELS;
         }
     }

@@ -169,7 +169,7 @@ function cw_skimmer_controls_setup()
       
       w3_div('id-cw-data|left:150px; width:1044px; height:300px; overflow:hidden; position:relative; background-color:mediumBlue;',
 			w3_div('id-cw-console-msg w3-text-output w3-scroll-down w3-small w3-text-black|width:1024px; position:absolute; overflow-x:hidden;',
-            '<table width="100%" height="100%">' +
+            '<table width="100%">' +
             '<thead><tr>' +
                 '<th class="freq">Freq</th>' +
                 '<th class="text">Text</th>' +

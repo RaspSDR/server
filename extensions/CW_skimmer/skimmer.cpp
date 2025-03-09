@@ -179,7 +179,7 @@ bool CW_skimmer_msgs(char* msg, int rx_chan) {
     }
 
     if (strcmp(msg, "SET cw_stop") == 0) {
-        e->skimmer.flush();
+        e->skimmer.reset();
         e->test = false;
         return true;
     }

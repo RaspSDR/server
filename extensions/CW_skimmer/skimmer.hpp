@@ -5,6 +5,8 @@
 #include <string.h>
 #include <math.h>
 
+#define showDbg 0 // 1: Show debug information
+
 #define USE_NEIGHBORS  0 // 1: Subtract neighbors from each FFT bucket
 #define USE_AVG_BOTTOM 0 // 1: Subtract average value from each bucket
 #define USE_AVG_RATIO  0 // 1: Divide each bucket by average value
@@ -14,6 +16,7 @@
 #define MAX_SCALES   (16)
 #define MAX_CHANNELS (sampleRate / 2 / 100)
 #define MAX_INPUT    (MAX_CHANNELS * 2)
+#define INPUT_STEP (MAX_INPUT) // MAX_INPUT/4)
 #define AVG_SECONDS  (3)
 #define NEIGH_WEIGHT (0.5)
 #define THRES_WEIGHT (6.0)
@@ -26,14 +29,6 @@ public:
     CwSkimmer() {
         // initialize fftw
         fft = fftwf_plan_dft_r2c_1d(MAX_INPUT, fftIn, fftOut, FFTW_ESTIMATE);
-
-        // Allocate CSDR object storage
-        in = new Csdr::Ringbuffer<float>*[MAX_CHANNELS];
-        inReader = new Csdr::RingbufferReader<float>*[MAX_CHANNELS];
-        out = new Csdr::Ringbuffer<unsigned char>*[MAX_CHANNELS];
-        outReader = new Csdr::RingbufferReader<unsigned char>*[MAX_CHANNELS];
-        cwDecoder = new Csdr::CwDecoder<float>*[MAX_CHANNELS];
-        outState = new unsigned int[MAX_CHANNELS];
 
         // Create and connect CSDR objects, clear output state
         for (int j = 0; j < MAX_CHANNELS; ++j) {
@@ -63,20 +58,12 @@ public:
             delete inReader[j];
             delete in[j];
         }
-
-        // Release CSDR object storage
-        delete[] in;
-        delete[] inReader;
-        delete[] out;
-        delete[] outReader;
-        delete[] cwDecoder;
-        delete[] outState;
     }
 
-    void flush() {
+    void reset() {
         // Final printout
         for (int i = 0; i < MAX_CHANNELS; i++) {
-            printOutput(i, i * sampleRate / 2 / MAX_CHANNELS, 1);
+            cwDecoder[i]->reset();
             outState[i] = ' ';
         }
         remains = 0;
@@ -91,13 +78,12 @@ public:
             outState[i] = ' ';
         }
 
-        remains = 0;
-        avgPower = 4.0;
+        reset();
     }
 
     void AddSamples(float* sample, size_t count) {
         while (count > 0) {
-            if (count > MAX_INPUT - remains) {
+            if (count >= MAX_INPUT - remains) {
                 // more samples than we can fit in the buffer
                 memcpy(dataBuf + remains, sample, (MAX_INPUT - remains) * sizeof(float));
                 count -= MAX_INPUT - remains;
@@ -110,21 +96,17 @@ public:
                 memcpy(dataBuf + remains, sample, count * sizeof(float));
 
                 remains += count;
-                if (remains == 0) {
-                    process();
-                    remains = 0;
-                }
-                break;
+                count = 0;
             }
         }
     }
 
     void AddSamples(int16_t* sample, size_t count) {
         while (count > 0) {
-            if (count > MAX_INPUT - remains) {
-                // more samples than we can fit in the buffer
+            if (count >= MAX_INPUT - remains) {
+                // same or more samples than we can fit in the buffer
                 for (size_t i = 0; i < MAX_INPUT - remains; i++) {
-                    dataBuf[remains + i] = sample[i] / 32768.0;
+                    dataBuf[remains + i] = (float)sample[i] / 32768.0;
                 }
                 count -= MAX_INPUT - remains;
                 sample += MAX_INPUT - remains;
@@ -138,11 +120,7 @@ public:
                 }
 
                 remains += count;
-                if (remains == 0) {
-                    process();
-                    remains = 0;
-                }
-                break;
+                count = 0;
             }
         }
     }
@@ -154,17 +132,16 @@ private:
     unsigned int printChars = 8; // Number of characters to print at once
 
     fftwf_complex fftOut[MAX_INPUT];
-    short dataIn[MAX_INPUT];
     float dataBuf[MAX_INPUT];
     float fftIn[MAX_INPUT];
     fftwf_plan fft;
 
-    Csdr::Ringbuffer<float>** in;
-    Csdr::RingbufferReader<float>** inReader;
-    Csdr::Ringbuffer<unsigned char>** out;
-    Csdr::RingbufferReader<unsigned char>** outReader;
-    Csdr::CwDecoder<float>** cwDecoder;
-    unsigned int* outState;
+    Csdr::Ringbuffer<float>* in[MAX_CHANNELS];
+    Csdr::RingbufferReader<float>* inReader[MAX_CHANNELS];
+    Csdr::Ringbuffer<unsigned char>* out[MAX_CHANNELS];
+    Csdr::RingbufferReader<unsigned char>* outReader[MAX_CHANNELS];
+    Csdr::CwDecoder<float>* cwDecoder[MAX_CHANNELS];
+    unsigned int outState[MAX_CHANNELS];
 
     OutputCallback callback;
 
@@ -175,27 +152,35 @@ private:
 
     // when there is enough samples
     void process() {
+        // Debug output gets accumulated here
+        char dbgOut[MAX_CHANNELS + 16];
+
         float maxPower, accPower;
+        int j, i, k, n;
+
         // Apply Hamming window
-        const float hk = 2.0 * M_PI / (MAX_INPUT - 1);
-        for (int j = 0; j < MAX_INPUT; ++j)
-            fftIn[j] = dataBuf[j] * (0.54 - 0.46 * cosf(j * hk));
+        double hk = 2.0 * M_PI / (MAX_INPUT - 1);
+        for (j = 0; j < MAX_INPUT; ++j)
+            fftIn[j] = dataBuf[j] * (0.54 - 0.46 * cos(j * hk));
+
+        // Shift input data
+        // remains = MAX_INPUT-INPUT_STEP;
+        // memcpy(dataBuf, dataBuf+INPUT_STEP, remains*sizeof(float));
 
         // Compute FFT
         fftwf_execute(fft);
 
         // Go to magnitudes
-        for (int j = 0; j < MAX_INPUT / 2; ++j)
-            fftOut[j][0] = fftOut[j][1] = sqrtf(fftOut[j][0] * fftOut[j][0] + fftOut[j][1] * fftOut[j][1]);
+        for (j = 0; j < MAX_INPUT / 2; ++j)
+            fftOut[j][0] = fftOut[j][1] = sqrt(fftOut[j][0] * fftOut[j][0] + fftOut[j][1] * fftOut[j][1]);
 
         // Filter out spurs
 #if USE_NEIGHBORS
-        fftOut[MAX_INPUT / 2 - 1][0] = fmaxf(0.0, fftOut[MAX_INPUT / 2 - 1][1] - NEIGH_WEIGHT * fftOut[MAX_INPUT / 2 - 2][1]);
-        fftOut[0][0] = fmaxf(0.0, fftOut[0][1] - NEIGH_WEIGHT * fftOut[1][1]);
-        for (int j = 1; j < MAX_INPUT / 2 - 1; ++j)
-            fftOut[j][0] = fmaxf(0.0, fftOut[j][1] - 0.5 * NEIGH_WEIGHT * (fftOut[j - 1][1] + fftOut[j + 1][1]));
+        fftOut[MAX_INPUT / 2 - 1][0] = fmax(0.0, fftOut[MAX_INPUT / 2 - 1][1] - NEIGH_WEIGHT * fftOut[MAX_INPUT / 2 - 2][1]);
+        fftOut[0][0] = fmax(0.0, fftOut[0][1] - NEIGH_WEIGHT * fftOut[1][1]);
+        for (j = 1; j < MAX_INPUT / 2 - 1; ++j)
+            fftOut[j][0] = fmax(0.0, fftOut[j][1] - 0.5 * NEIGH_WEIGHT * (fftOut[j - 1][1] + fftOut[j + 1][1]));
 #endif
-
         struct
         {
             float power;
@@ -204,25 +189,22 @@ private:
 
         // Sort buckets into scales
         memset(scales, 0, sizeof(scales));
-        maxPower = 0.0;
-        for (int j = 0; j < MAX_INPUT / 2; ++j) {
+        for (j = 0, maxPower = 0.0; j < MAX_INPUT / 2; ++j) {
             float v = fftOut[j][0];
-            int scale = floorf(logf(v));
+            int scale = floor(log(v));
             scale = scale < 0 ? 0 : scale + 1 >= MAX_SCALES ? MAX_SCALES - 1
                                                             : scale + 1;
-            maxPower = fmaxf(maxPower, v);
+            maxPower = fmax(maxPower, v);
             scales[scale].power += v;
             scales[scale].count++;
         }
 
         // Find most populated scales and use them for ground power
-        int n = 0;
-        accPower = 0.0;
-        for (int i = 0; i < MAX_SCALES - 1; ++i) {
+        for (i = 0, n = 0, accPower = 0.0; i < MAX_SCALES - 1; ++i) {
             // Look for the next most populated scale
-            int k, j;
             for (k = i, j = i + 1; j < MAX_SCALES; ++j)
-                if (scales[j].count > scales[k].count) k = j;
+                if (scales[j].count > scales[k].count)
+                    k = j;
             // If found, swap with current one
             if (k != i) {
                 float v = scales[k].power;
@@ -235,17 +217,17 @@ private:
             accPower += scales[i].power;
             n += scales[i].count;
             // Stop when we collect 1/2 of all buckets
-            if (n >= MAX_INPUT / 2 / 2) break;
+            if (n >= MAX_INPUT / 2 / 2)
+                break;
         }
 
         // fprintf(stderr, "accPower = %f (%d buckets, %d%%)\n", accPower/n, i+1, 100*n*2/MAX_INPUT);
 
         // Maintain rolling average over AVG_SECONDS
         accPower /= n;
-        avgPower += (accPower - avgPower) * MAX_INPUT / sampleRate / AVG_SECONDS;
+        avgPower += (accPower - avgPower) * INPUT_STEP / sampleRate / AVG_SECONDS;
 
         // Decode by channel
-        int i, j, k;
         for (j = i = k = n = 0, accPower = 0.0; j < MAX_INPUT / 2; ++j, ++n) {
             float power = fftOut[j][0];
 
@@ -253,24 +235,28 @@ private:
             if (k >= MAX_INPUT / 2) {
 #if USE_AVG_RATIO
                 // Divide channel signal by the average power
-                accPower = fmaxf(1.0, accPower / fmaxf(avgPower, 0.000001));
+                accPower = fmax(1.0, accPower / fmax(avgPower, 0.000001));
 #elif USE_AVG_BOTTOM
                 // Subtract average power from the channel signal
-                accPower = fmaxf(0.0, accPower - avgPower);
+                accPower = fmax(0.0, accPower - avgPower);
 #elif USE_THRESHOLD
                 // Convert channel signal to 1/0 values based on threshold
                 accPower = accPower >= avgPower * THRES_WEIGHT ? 1.0 : 0.0;
 #endif
 
+                dbgOut[i] = accPower < 0.5 ? '.' : '0' + round(fmax(fmin(accPower / maxPower * 10.0, 9.0), 0.0));
+
                 // If CW input buffer can accept samples...
-                if (in[i]->writeable() >= MAX_INPUT) {
+                if (in[i]->writeable() >= INPUT_STEP) {
                     // Fill input buffer with computed signal power
                     float* dst = in[i]->getWritePointer();
-                    for (int j = 0; j < MAX_INPUT; ++j) dst[j] = accPower;
-                    in[i]->advance(MAX_INPUT);
+                    for (int j = 0; j < INPUT_STEP; ++j)
+                        dst[j] = accPower;
+                    in[i]->advance(INPUT_STEP);
 
                     // Process input for the current channel
-                    while (cwDecoder[i]->canProcess()) cwDecoder[i]->process();
+                    while (cwDecoder[i]->canProcess())
+                        cwDecoder[i]->process();
 
                     // Print output
                     printOutput(i, i * sampleRate / 2 / MAX_CHANNELS, printChars);
@@ -284,9 +270,14 @@ private:
             }
 
             // Maximize channel signal power
-            accPower = fmaxf(accPower, power);
+            accPower = fmax(accPower, power);
             k += MAX_CHANNELS;
         }
+
+        // Print debug information to the stderr
+        dbgOut[i] = '\0';
+        if (showDbg)
+            fprintf(stderr, "%s (%.2f, %.2f)\n", dbgOut, avgPower, maxPower);
     }
 
     // Print output from ith decoder

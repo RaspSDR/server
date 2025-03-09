@@ -113,7 +113,7 @@ function cw_skimmer_output_chars(input)
            }
        } else if (cw.texts[j].freq == msg.freq) {
            // Update existing entry
-           cw.texts[j].text = (cw.texts[j].text + msg.text).slice(-120);
+           cw.texts[j].text = (cw.texts[j].text + msg.text).slice(-60);
            cw.texts[j].ts   = now;
        } else {
            // Insert a new entry
@@ -130,7 +130,7 @@ function cw_skimmer_output_chars(input)
            if (now - cw.texts[j].ts >= cutoff) {
                cw.texts.splice(j--, 1);
            } else {
-               var f = Math.floor(cw.texts[j].freq / 100.0) / 10.0;
+               var f = Math.floor((freq_displayed_Hz + cw.texts[j].freq) / 100.0) / 10.0;
                body +=
                    '<tr style="color:black;background-color:' + (j&1? '#E0FFE0':'#FFFFFF') +
                    ';"><td class="freq">' + f.toFixed(1) +

@@ -72,13 +72,6 @@ public:
 
     void SetCallback(OutputCallback callback) {
         this->callback = callback;
-
-        // reset the state as well
-        for (int i = 0; i < MAX_CHANNELS; i++) {
-            outState[i] = ' ';
-        }
-
-        reset();
     }
 
     void AddSamples(float* sample, size_t count) {

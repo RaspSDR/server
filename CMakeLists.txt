@@ -570,3 +570,14 @@ add_custom_command(
 )
 add_custom_target(eibi_gen_target DEPENDS ${PROJECT_BINARY_DIR}/EiBi.h)
 add_dependencies(websdr.bin eibi_gen_target)
+
+set(DEBUG_FILE "websdr.dbg")
+set(TARGET_FILE "$<TARGET_FILE:websdr.bin>")
+
+add_custom_command(
+    TARGET websdr.bin POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} --only-keep-debug ${TARGET_FILE} ${DEBUG_FILE}
+    COMMAND ${CMAKE_STRIP} ${TARGET_FILE}
+    COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=${DEBUG_FILE} ${TARGET_FILE}
+    COMMENT "Stripping binary and saving debug symbols"
+)

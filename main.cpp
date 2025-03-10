@@ -37,6 +37,8 @@ Boston, MA  02110-1301, USA.
 #include "shmem.h" // shmem_init()
 #include "debug.h"
 
+#include "version.h"
+
 #ifdef EV_MEAS
 #warning NB: EV_MEAS is enabled
 #endif

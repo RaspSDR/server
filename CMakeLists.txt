@@ -268,8 +268,14 @@ endif()
 
 set(DIR_DATA /tmp/kiwi.data)
 
+# Generate a version file based on year and month day
+file(WRITE ${PROJECT_BINARY_DIR}/version.h
+    "#pragma once\n"
+    "#define VERSION_MAJ ${CURRENT_YEAR}\n"
+    "#define VERSION_MIN ${CURRENT_MONTH_DAY}\n"
+)
+
 target_compile_definitions(websdr.bin PUBLIC
-    VERSION_MAJ=${CURRENT_YEAR} VERSION_MIN=${CURRENT_MONTH_DAY}
     KIWI KIWISDR
     DIR_CFG="/root/config"
     DIR_SAMPLES="/media/mmcblk0p1/config/samples"

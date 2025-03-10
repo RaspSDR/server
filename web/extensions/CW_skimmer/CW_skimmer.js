@@ -85,6 +85,13 @@ function cw_skimmer_recv(data)
             }
 			   break;
 
+         case "test_done":
+            if (cw.test) {
+               cw.test = false;
+               w3_show_hide('id-cw-bar-container', cw.test);
+            }
+            break;
+   
 			default:
 				console.log('cw_skimmer_recv: UNKNOWN CMD '+ param[0]);
 				break;

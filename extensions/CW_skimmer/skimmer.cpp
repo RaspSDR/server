@@ -104,8 +104,9 @@ static void cw_file_data(int rx_chan, int chan, int nsamps, TYPEMONO16* samps, i
         // real_printf("#"); fflush(stdout);
         for (int i = 0; i < nsamps; i++) {
             if (e->s2p > cw_conf.s2p_end) {
-                e->s2p = cw_conf.s2p_start;
-                e->nsamps = 0;
+                 ext_send_msg(rx_chan, false, "EXT test_done");
+                e->test = false;
+                return;
             }
             *samps++ = (s2_t)FLIP16(*e->s2p);
             e->s2p++;
@@ -153,6 +154,7 @@ bool CW_skimmer_msgs(char* msg, int rx_chan) {
 
     if (strcmp(msg, "SET ext_server_init") == 0) {
         e->chan = rx_chan;	// remember our receiver channel number
+        e->skimmer.reset();
         e->skimmer.SetCallback([e](int freq, char ch) {
             ext_send_msg_encoded(e->chan, DEBUG_MSG, "EXT", "cw_chars", "%c%d", ch, freq);
         });
@@ -162,6 +164,7 @@ bool CW_skimmer_msgs(char* msg, int rx_chan) {
     }
 
     if (strcmp(msg, "SET cw_start") == 0) {
+        e->test = false;
 
         if (cw_conf.tsamps != 0) {
             ext_register_receive_real_samps(cw_file_data, rx_chan);

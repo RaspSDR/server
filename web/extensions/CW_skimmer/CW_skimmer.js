@@ -120,7 +120,7 @@ function cw_skimmer_output_chars(input)
            }
        } else if (cw.texts[j].freq == msg.freq) {
            // Update existing entry
-           cw.texts[j].text = (cw.texts[j].text + msg.text).slice(-60);
+           cw.texts[j].text = (cw.texts[j].text + msg.text).slice(-120);
            cw.texts[j].ts   = now;
        } else {
            // Insert a new entry

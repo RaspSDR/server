@@ -204,12 +204,13 @@ function kiwi_map_init(ext_name, init_latlon, init_zoom, mapZoom_nom, move_cb, z
    day_night.setStyle({ fillOpacity: 0.35 });
    day_night.addTo(map);
    kmap.day_night_interval = setInterval(function() {
-      var t2 = new Terminator();
+      var t2 = new L.terminator();
       day_night.setLatLngs(t2.getLatLngs());
       day_night.redraw();
    }, 60000);
    day_night._path.style.cursor = 'grab';
 
+   kmap.map_layers = [];
    kmap.day_night = day_night;
    kmap.init_latlon = init_latlon;
    kmap.init_zoom = init_zoom;

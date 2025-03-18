@@ -394,11 +394,11 @@ function tdoa_controls_setup()
    
       L.control.ruler({ position: 'bottomright' }).addTo(m);
 
-      var terminator = new Terminator();
+      var terminator = new L.terminator();
       terminator.setStyle({ fillOpacity: 0.35 });
       terminator.addTo(m);
       tdoa.day_night_interval = setInterval(function() {
-         var t2 = new Terminator();
+         var t2 = new L.terminator();
          terminator.setLatLngs(t2.getLatLngs());
          terminator.redraw();
       }, 60000);

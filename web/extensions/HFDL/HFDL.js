@@ -414,8 +414,8 @@ function hfdl_controls_setup()
 	w3_do_when_rendered('id-hfdl-menus',
 	   function() {
          ext_send('SET reset');
-         hfdl.ext_url = kiwi_SSL() +'files.kiwisdr.com/hfdl/systable.cjson';
-         hfdl.int_url = kiwi_url_origin() +'/extensions/HFDL/systable.backup.cjson';
+         hfdl.ext_url = kiwi_SSL() +'downloads.rx-888.com/webconfig/systable.cjson';
+         hfdl.int_url = kiwi_url_origin() +'downloads.rx-888.com/webconfig/systable.backup.cjson';
          hfdl.using_default = false;
          hfdl.double_fault = false;
          if (0 && dbgUs) {

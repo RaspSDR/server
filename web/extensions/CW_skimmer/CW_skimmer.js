@@ -193,7 +193,7 @@ function cw_skimmer_controls_setup()
                w3_div('',
 				      w3_div('w3-medium w3-text-aqua', '<b>CW Skimmer</b>')
 				   ), 32,
-					w3_div('', 'Luarvique, <br> <b><a href="https://github.com/luarvique/csdr-cwskimmer" target="_blank">CSDR Based CW Skimmer</a></b> &copy; 2022'
+					w3_div('', 'Luarvique, <br> <b><a href="https://github.com/luarvique/csdr-cwskimmer" target="_blank">CSDR Based CW Skimmer</a></b> &copy; 2025'
 					), 50
 				),
             

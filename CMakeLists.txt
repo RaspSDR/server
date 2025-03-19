@@ -9,7 +9,7 @@ find_program(MINIFY_COMMAND NAMES minify)
 
 option(ZYNQ "Build for Zynq7000 serial based WebSDR" ON)
 option(RPI "Build for RPI serial based WebSDR" OFF)
-option(ENABLE_HDFL "Enable HFDL" OFF)
+option(ENABLE_HDFL "Enable HFDL" ON)
 
 if(NOT CMAKE_BUILD_TYPE)
    set(CMAKE_BUILD_TYPE Release)
@@ -65,11 +65,10 @@ if(ENABLE_HDFL)
 
     ExternalProject_Add(
         liquid-dsp
-        GIT_REPOSITORY https://github.com/jgaeddert/liquid-dsp.git
-        GIT_TAG        v1.6.0
-        #PATCH_COMMAND  git apply ${CMAKE_SOURCE_DIR}/extensions/HFDL/patches/liquid.patch
+        URL https://github.com/jgaeddert/liquid-dsp/archive/refs/tags/v1.7.0.tar.gz
+        PATCH_COMMAND  patch -p1 < ${CMAKE_SOURCE_DIR}/extensions/HFDL/patches/liquid.patch
         CONFIGURE_COMMAND cd <SOURCE_DIR> && ./bootstrap.sh && ./configure --prefix=${CMAKE_BINARY_DIR}/liquid-dsp
-        BUILD_COMMAND make -j 8 -C <SOURCE_DIR>
+        BUILD_COMMAND make -C <SOURCE_DIR>
         INSTALL_COMMAND make install -C <SOURCE_DIR>
     )
 
@@ -78,9 +77,8 @@ if(ENABLE_HDFL)
 
     ExternalProject_Add(
         libacars
-        GIT_REPOSITORY https://github.com/szpajder/libacars
-        GIT_TAG        v2.2.0
-        #PATCH_COMMAND  git apply ${CMAKE_SOURCE_DIR}/extensions/HFDL/patches/libacars.patch
+        URL https://github.com/szpajder/libacars/archive/refs/tags/v2.2.0.tar.gz
+        PATCH_COMMAND  patch -p1 < ${CMAKE_SOURCE_DIR}/extensions/HFDL/patches/libacars.patch
         CMAKE_ARGS
             -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/libacars
             -DBUILD_SHARED_LIBS=OFF  # Ensure static library is built
@@ -125,6 +123,8 @@ SET(EXTENSIONS
 if(ENABLE_HDFL)
     list(APPEND EXTENSIONS HFDL)
 endif(ENABLE_HDFL)
+
+list(SORT EXTENSIONS)
 
 SET(GEN_EXT_MAIN "// auto-generated file -- do not edit by hand\n")
 STRING(APPEND GEN_EXT_MAIN "void extint_init() {\n")

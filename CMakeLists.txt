@@ -68,6 +68,7 @@ if(ENABLE_HDFL)
         URL https://github.com/jgaeddert/liquid-dsp/archive/refs/tags/v1.7.0.tar.gz
         PATCH_COMMAND  patch -p1 < ${CMAKE_SOURCE_DIR}/extensions/HFDL/patches/liquid.patch
         CONFIGURE_COMMAND cd <SOURCE_DIR> && ./bootstrap.sh && ./configure --prefix=${CMAKE_BINARY_DIR}/liquid-dsp
+        DOWNLOAD_EXTRACT_TIMESTAMP false
         BUILD_COMMAND make -C <SOURCE_DIR>
         INSTALL_COMMAND make install -C <SOURCE_DIR>
     )
@@ -79,6 +80,7 @@ if(ENABLE_HDFL)
         libacars
         URL https://github.com/szpajder/libacars/archive/refs/tags/v2.2.0.tar.gz
         PATCH_COMMAND  patch -p1 < ${CMAKE_SOURCE_DIR}/extensions/HFDL/patches/libacars.patch
+        DOWNLOAD_EXTRACT_TIMESTAMP false
         CMAKE_ARGS
             -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/libacars
             -DBUILD_SHARED_LIBS=OFF  # Ensure static library is built

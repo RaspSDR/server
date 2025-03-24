@@ -42,6 +42,8 @@ namespace Csdr {
             bool canProcess() override;
             void process() override;
 
+            int getWPM() const { return(wpm); }
+
             void reset();
 
         private:

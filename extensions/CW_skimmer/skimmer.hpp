@@ -16,17 +16,23 @@
 #define MAX_SCALES   (16)
 #define MAX_CHANNELS (sampleRate / 2 / 100)
 #define MAX_INPUT    (MAX_CHANNELS * 2)
-#define INPUT_STEP (MAX_INPUT) // MAX_INPUT/4)
+#define INPUT_STEP   (MAX_INPUT) // MAX_INPUT/4
 #define AVG_SECONDS  (3)
 #define NEIGH_WEIGHT (0.5)
 #define THRES_WEIGHT (6.0)
 
 #include <functional>
-typedef std::function<void(int, char)> OutputCallback;
+typedef std::function<void(int, char, int)> OutputCallback;
+
+typedef enum {
+    PWR_CALC_AVG_RATIO,  // Divide each bucket by average value
+    PWR_CALC_AVG_BOTTOM, // Subtract average value from each bucket
+    PWR_CALC_THRESHOLD,  // Convert each bucket to 0.0/1.0 values
+} PwrCalc_t;
 
 class CwSkimmer {
 public:
-    CwSkimmer() {
+    CwSkimmer() : pwr_calc(PWR_CALC_AVG_RATIO), filter_neighbors(false) {
         // initialize fftw
         fft = fftwf_plan_dft_r2c_1d(MAX_INPUT, fftIn, fftOut, FFTW_ESTIMATE);
 
@@ -68,6 +74,11 @@ public:
         }
         remains = 0;
         avgPower = 4.0;
+    }
+
+    void SetParams(PwrCalc_t pwr_calc, bool filter_neighbors) {
+        this->pwr_calc = pwr_calc;
+        this->filter_neighbors = filter_neighbors;
     }
 
     void SetCallback(OutputCallback callback) {
@@ -122,6 +133,9 @@ private:
     float avgPower;
     size_t remains;
 
+    PwrCalc_t pwr_calc;
+    bool filter_neighbors;
+
     unsigned int printChars = 8; // Number of characters to print at once
 
     fftwf_complex fftOut[MAX_INPUT];
@@ -168,12 +182,13 @@ private:
             fftOut[j][0] = fftOut[j][1] = sqrt(fftOut[j][0] * fftOut[j][0] + fftOut[j][1] * fftOut[j][1]);
 
         // Filter out spurs
-#if USE_NEIGHBORS
-        fftOut[MAX_INPUT / 2 - 1][0] = fmax(0.0, fftOut[MAX_INPUT / 2 - 1][1] - NEIGH_WEIGHT * fftOut[MAX_INPUT / 2 - 2][1]);
-        fftOut[0][0] = fmax(0.0, fftOut[0][1] - NEIGH_WEIGHT * fftOut[1][1]);
-        for (j = 1; j < MAX_INPUT / 2 - 1; ++j)
-            fftOut[j][0] = fmax(0.0, fftOut[j][1] - 0.5 * NEIGH_WEIGHT * (fftOut[j - 1][1] + fftOut[j + 1][1]));
-#endif
+        if (filter_neighbors) {
+            fftOut[MAX_INPUT / 2 - 1][0] = fmax(0.0, fftOut[MAX_INPUT / 2 - 1][1] - NEIGH_WEIGHT * fftOut[MAX_INPUT / 2 - 2][1]);
+            fftOut[0][0] = fmax(0.0, fftOut[0][1] - NEIGH_WEIGHT * fftOut[1][1]);
+            for (j = 1; j < MAX_INPUT / 2 - 1; ++j)
+                fftOut[j][0] = fmax(0.0, fftOut[j][1] - 0.5 * NEIGH_WEIGHT * (fftOut[j - 1][1] + fftOut[j + 1][1]));
+        }
+
         struct
         {
             float power;
@@ -226,16 +241,20 @@ private:
 
             // If accumulated enough FFT buckets for a channel...
             if (k >= MAX_INPUT / 2) {
-#if USE_AVG_RATIO
-                // Divide channel signal by the average power
-                accPower = fmax(1.0, accPower / fmax(avgPower, 0.000001));
-#elif USE_AVG_BOTTOM
-                // Subtract average power from the channel signal
-                accPower = fmax(0.0, accPower - avgPower);
-#elif USE_THRESHOLD
-                // Convert channel signal to 1/0 values based on threshold
-                accPower = accPower >= avgPower * THRES_WEIGHT ? 1.0 : 0.0;
-#endif
+                switch(pwr_calc) {
+                case PWR_CALC_AVG_RATIO:
+                    // Divide channel signal by the average power
+                    accPower = fmaxf(1.0, accPower / fmaxf(avgPower, 0.000001));
+                    break;
+                case PWR_CALC_AVG_BOTTOM:
+                    // Subtract average power from the channel signal
+                    accPower = fmaxf(0.0, accPower - avgPower);
+                    break;
+                case PWR_CALC_THRESHOLD:
+                    // Convert channel signal to 1/0 values based on threshold
+                    accPower = accPower >= avgPower * THRES_WEIGHT ? 1.0f : 0.0f;
+                    break;
+                }
 
                 dbgOut[i] = accPower < 0.5 ? '.' : '0' + round(fmax(fmin(accPower / maxPower * 10.0, 9.0), 0.0));
 
@@ -279,6 +298,7 @@ private:
         // Must have a minimum of printChars
         size_t n = outReader[i]->available();
         if (n < printChars) return;
+        int wpm = cwDecoder[i]->getWPM();
 
         // Print characters
         unsigned char* p = outReader[i]->getReadPointer();
@@ -286,7 +306,7 @@ private:
             switch (outState[i] & 0xFF) {
             case '\0':
                 // Print character
-                callback(freq, p[j]);
+                callback(freq, p[j], wpm);
                 // Once we encounter a space, wait for stray characters
                 if (p[j] == ' ') outState[i] = p[j];
                 break;
@@ -295,7 +315,7 @@ private:
                 if (strchr("TEI ", p[j]))
                     outState[i] = p[j];
                 else {
-                    callback(freq, p[j]);
+                    callback(freq, p[j], wpm);
                     outState[i] = '\0';
                 }
                 break;
@@ -306,8 +326,8 @@ private:
                 else {
                     for (int k = 24; k >= 0; k -= 8)
                         if ((outState[i] >> k) & 0xFF)
-                            callback(freq, (outState[i] >> k) & 0xFF);
-                    callback(freq, p[j]);
+                            callback(freq, (outState[i] >> k) & 0xFF, wpm);
+                    callback(freq, p[j], wpm);
                     outState[i] = '\0';
                 }
                 break;

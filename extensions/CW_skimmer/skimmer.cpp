@@ -19,7 +19,7 @@ void CW_skimmer_main();
 static void CW_skimmer_close(int rx_chan);
 static bool CW_skimmer_msgs(char* msg, int rx_chan);
 
-struct skimmer_state {
+static struct skimmer_state {
     CwSkimmer skimmer;
     tid_t tid;
     int chan;
@@ -36,11 +36,11 @@ struct skimmer_state {
 typedef struct {
     s2_t *s2p_start, *s2p_end;
     int tsamps;
-} cw_conf_t;
+} cws_conf_t;
 
-static cw_conf_t cw_conf;
+static cws_conf_t cw_conf;
 
-ext_t cw_skimmer_ext = {
+static ext_t cw_skimmer_ext = {
     "CW_skimmer",
     CW_skimmer_main,
     CW_skimmer_close,
@@ -97,7 +97,6 @@ static void CW_skimmer_close(int rx_chan) {
 
 static void cw_file_data(int rx_chan, int chan, int nsamps, TYPEMONO16* samps, int freqHz) {
     skimmer_state* e = &states[rx_chan];
-
     if (!e->test) return;
 
     if (e->test) {
@@ -153,20 +152,23 @@ bool CW_skimmer_msgs(char* msg, int rx_chan) {
     // printf("### cw_decoder_msgs RX%d <%s>\n", rx_chan, msg);
 
     if (strcmp(msg, "SET ext_server_init") == 0) {
+        printf("CW init rx%d start\n", rx_chan);
         e->chan = rx_chan;	// remember our receiver channel number
         e->skimmer.reset();
-        e->skimmer.SetCallback([e](int freq, char ch) {
-            ext_send_msg_encoded(e->chan, DEBUG_MSG, "EXT", "cw_chars", "%c%d", ch, freq);
+        e->skimmer.SetCallback([e](int freq, char ch, int wpm) {
+            ext_send_msg_encoded(e->chan, DEBUG_MSG, "EXT", "cw_chars", "%c%d,%d", ch, freq, wpm);
         });
 
         ext_send_msg(rx_chan, DEBUG_MSG, "EXT ready");
         return true;
     }
 
-    if (strcmp(msg, "SET cw_start") == 0) {
+    if (strcmp(msg, "SET cws_start") == 0) {
+        printf("CW rx%d start\n", rx_chan);
         e->test = false;
 
         if (cw_conf.tsamps != 0) {
+            printf("Registering receive real samps\n");
             ext_register_receive_real_samps(cw_file_data, rx_chan);
         }
 
@@ -181,14 +183,21 @@ bool CW_skimmer_msgs(char* msg, int rx_chan) {
         return true;
     }
 
-    if (strcmp(msg, "SET cw_stop") == 0) {
+    if (strcmp(msg, "SET cws_stop") == 0) {
         e->skimmer.reset();
         e->test = false;
         return true;
     }
 
+    int pwr_calc, filter_neighbors;
+    if (sscanf(msg, "SET cws_params=%d,%d", &pwr_calc, &filter_neighbors) == 2) {
+        printf("cws_params=%d,%d\n", pwr_calc, filter_neighbors);
+        e->skimmer.SetParams((PwrCalc_t)pwr_calc, filter_neighbors != 0);
+        return true;
+    }
+
     int test;
-    if (sscanf(msg, "SET cw_test=%d", &test) == 1) {
+    if (sscanf(msg, "SET cws_test=%d", &test) == 1) {
         printf("CW rx%d test=%d\n", rx_chan, test);
         e->s2p = cw_conf.s2p_start;
         e->nsamps = 0;

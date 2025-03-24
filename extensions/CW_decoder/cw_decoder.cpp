@@ -215,7 +215,7 @@ bool cw_decoder_msgs(char *msg, int rx_chan)
 
 void CW_decoder_main();
 
-ext_t cw_decoder_ext = {
+static ext_t cw_decoder_ext = {
 	"CW_decoder",
 	CW_decoder_main,
 	cw_close,

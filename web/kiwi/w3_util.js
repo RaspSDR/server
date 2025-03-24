@@ -3766,6 +3766,19 @@ function w3_table_heads(psa)
 	return s;
 }
 
+function w3_table_body(psa)
+{
+	var p = w3_psa(psa);
+	var s = '<tbody '+ p +'>';
+		for (var i=1; i < arguments.length; i++) {
+	      if (arguments[i] == null) continue;
+			s += arguments[i];
+		}
+	s += '</tbody>';
+	//console.log(s);
+	return s;
+}
+
 function w3_table_row(psa)
 {
 	var p = w3_psa(psa, 'w3-table-row');

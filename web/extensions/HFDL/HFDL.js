@@ -1180,6 +1180,7 @@ function HFDL_blur()
    kiwi_clearInterval(hfdl.locations_age_interval);
    kiwi_map_blur(hfdl.kmap);
    
+   ext_send('SET stop');
    console.log('HFDL restore dx_db_save='+ hfdl.dx_db_save +' dx_type_save='+ hfdl.dx_type_save.toHex());
    dx.eibi_types_mask = hfdl.dx_type_save;
    dx_database_cb('', hfdl.dx_db_save);

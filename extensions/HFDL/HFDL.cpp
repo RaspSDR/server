@@ -1,8 +1,10 @@
 // Copyright (c) 2021 John Seamons, ZL4VO/KF6VO
 
-#ifdef KIWI
-
 #include "HFDL.h"
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#define SAMPLES_CF32
 
 static hfdl_t hfdl;
 static hfdl_chan_t hfdl_chan[MAX_RX_CHANS];
@@ -11,7 +13,7 @@ static void hfdl_pushback_file_data(int rx_chan, int instance, int nsamps, TYPEC
 {
     hfdl_chan_t *e = &hfdl_chan[rx_chan];
 
-    if (!e->test || !e->input_tid) return;
+    if (!e->test) return;
     if (e->s2p >= hfdl.s2p_end) {
         //printf("HFDL: pushback test file DONE ch=%d tid=%d\n", rx_chan, e->input_tid);
 
@@ -40,14 +42,16 @@ static void hfdl_pushback_file_data(int rx_chan, int instance, int nsamps, TYPEC
     ext_send_msg(rx_chan, false, "EXT bar_pct=%d", pct);
 }
 
-static int hfdl_input(int rx_chan, TYPECPX **samps_c = NULL)
+static void hfdl_task(void *param)
 {
-    hfdl_chan_t *e = &hfdl_chan[rx_chan];
-    iq_buf_t *rx = &RX_SHMEM->iq_buf[rx_chan];
-    
     while (1) {
+        int rx_chan = (int)FROM_VOID_PARAM(TaskSleepReason("wait for wakeup"));
+
+        hfdl_chan_t *e = &hfdl_chan[rx_chan];
+        iq_buf_t *rx = &RX_SHMEM->iq_buf[rx_chan];
+    
         // blocks via TaskSleep() / wakeup due to ext_register_receive_iq_samps_task()
-        if (e->rd_pos != rx->iq_wr_pos) {
+        while (e->rd_pos != rx->iq_wr_pos) {
             if (rx->iq_seqnum[e->rd_pos] != e->seq) {
                 if (!e->seq_init) {
                     e->seq_init = true;
@@ -63,55 +67,31 @@ static int hfdl_input(int rx_chan, TYPECPX **samps_c = NULL)
                 e->reset = false;
             }
 
-            if (samps_c) *samps_c = &rx->iq_samples[e->rd_pos][0];
-            e->rd_pos = (e->rd_pos+1) & (N_DPBUF-1);
+            // TODO: Output to stdin of the dumper process
+            // if (samps_c) *samps_c = &rx->iq_samples[e->rd_pos][0];
+            int rd_pos = e->rd_pos;
+            if (e->input_pipe) {
+                // write to the dumper process
+                size_t total_written = 0;
+                size_t to_write = sizeof(TYPECPX) * FASTFIR_OUTBUF_SIZE;
+                char *data_ptr = (char *)&rx->iq_samples[e->rd_pos][0];
 
-            return HFDL_OUTBUF_SIZE;
-        } else {
-            TaskSleepReason("wait for wakeup");
-        }
-    }
-}
-
-static void hfdl_task(void *param)
-{
-    int i, n;
-    int rx_chan = (int) FROM_VOID_PARAM(param);
-    hfdl_chan_t *e = &hfdl_chan[rx_chan];
-
-    while (1) {
-        n = hfdl_input(rx_chan, &e->samps_c);
-
-        //if (e->test && e->input_tid) {
-        if (e->input_tid) {
-            e->HFDLResample.run((float *) e->samps_c, n, &e->resamp);
-
-            #define SAMPLES_CF32
-            #ifdef SAMPLES_CF32
-                // needed so hfdl_channel_create() "c->noise_floor = 1.0f" works
-                // i.e. float samples need to be restricted to (+1,-1)
-                const float f_scale = 32768.0f;      
-                static float out[HFDL_N_SAMPS];
-                for (int i=0; i < e->outputBlockSize; i++) {
-                    out[i*2]   = e->resamp.out_I[i] / f_scale;
-                    out[i*2+1] = e->resamp.out_Q[i] / f_scale;
+                while (total_written < to_write) {
+                    ssize_t n = write(e->input_pipe, data_ptr + total_written, to_write - total_written);
+                    if (n < 0) {
+                        perror("HFDL: write() failed");
+                        break;
+                    }
+                    total_written += n;
                 }
-            #endif
 
-            // FIXME: doesn't seem to work?
-            //#define SAMPLES_CS16
-            #ifdef SAMPLES_CS16
-                const s2_t s2_scale = 2;
-                static s2_t out[HFDL_N_SAMPS];
-                for (int i=0; i < e->outputBlockSize; i++) {
-                    out[i*2]   = (s2_t) (e->resamp.out_I[i] / s2_scale);
-                    out[i*2+1] = (s2_t) (e->resamp.out_Q[i] / s2_scale);
+                if (total_written != to_write) {
+                    printf("HFDL: write() incomplete\n");
+                    break;
                 }
-            #endif
-            
-            //static int wakes;
-            //real_printf("%d-", wakes++); fflush(stdout);
-            TaskWakeupFP(e->input_tid, TWF_NONE, TO_VOID_PARAM(out));
+            }
+
+            e->rd_pos = (rd_pos+1) & (N_DPBUF-1);
         }
     }
 }
@@ -119,7 +99,7 @@ static void hfdl_task(void *param)
 void hfdl_close(int rx_chan)
 {
 	hfdl_chan_t *e = &hfdl_chan[rx_chan];
-    //printf("HFDL: close tid=%d dumphfdl_tid=%d\n", e->tid, e->dumphfdl_tid);
+    printf("HFDL: close tid=%d dumphfdl_tid=%d\n", e->tid, e->dumphfdl_tid);
 
     ext_unregister_receive_iq_samps_task(e->rx_chan);
     
@@ -129,17 +109,19 @@ void hfdl_close(int rx_chan)
 		e->tid = 0;
 	}
 
-#if 0
-	if (e->dumphfdl_tid) {
-        //printf("HFDL: TaskRemove dumphfdl_tid\n");
-		TaskRemove(e->dumphfdl_tid);
-		e->dumphfdl_tid = 0;
-	}
-#else
-    // everything should shutdown when the input routine receives an EOF
-    if (e->input_tid)
-        TaskWakeupFP(e->input_tid, TWF_NONE, TO_VOID_PARAM(0));
-#endif
+    if (e->input_pipe)
+    {
+        // kill(e->pid, SIGTERM);
+        close(e->input_pipe);
+        close(e->output_pipe);
+
+        // check if the process exit
+        waitpid(e->pid, NULL, 0);
+
+        e->input_pipe = 0;
+        e->output_pipe = 0;
+        e->pid = 0;
+    }
 
     ext_unregister_receive_cmds(e->rx_chan);
 }
@@ -156,7 +138,7 @@ bool hfdl_receive_cmds(u2_t key, char *cmd, int rx_chan)
         if (n == 4 || n == 5) {
 	        hfdl_chan_t *e = &hfdl_chan[rx_chan];
 	        e->tuned_f = freq;
-            //printf("HFDL: CMD_TUNE freq=%.2f mode=%s\n", freq, mode_m);
+            printf("HFDL: CMD_TUNE freq=%.2f mode=%s\n", freq, mode_m);
             kiwi_asfree(mode_m);
             return true;
         }
@@ -165,29 +147,68 @@ bool hfdl_receive_cmds(u2_t key, char *cmd, int rx_chan)
     return false;
 }
 
-static const char *hfdl_argv[] = {
-    "dumphfdl", "--system-table", DIR_SAMPLES "/HFDL_systable.conf",
-    "--in-buf",
-
-    #ifdef SAMPLES_CF32
-        "--sample-format", "CF32",
-    #endif
-
-    #ifdef SAMPLES_CS16
-        "--sample-format", "CS16",
-    #endif
-
-    "--sample-rate", "36000", "--centerfreq", "0", "0"
-};
-
 static void dumphfdl_task(void *param)
 {
+    int in_pipe[2], out_pipe[2];
     int rx_chan = (int) FROM_VOID_PARAM(param);
     hfdl_chan_t *e = &hfdl_chan[rx_chan];
+    pid_t pid;
 
-    #ifdef HFDL
-        dumphfdl_main(ARRAY_LEN(hfdl_argv), (char **) hfdl_argv, rx_chan, e->outputBlockSize * NIQ);
-    #endif
+    if (pipe(in_pipe) == -1 || pipe(out_pipe) == -1) {
+        printf("HFDL: pipe() failed\n");
+        return;
+    }
+
+    pid = fork();
+    if (pid == -1) {
+        printf("HFDL: fork() failed\n");
+        return;
+    }
+
+    if (pid == 0) { // Child process
+        close(in_pipe[1]);  // Close unused write end
+        close(out_pipe[0]); // Close unused read end
+
+        dup2(in_pipe[0], STDIN_FILENO);
+        dup2(out_pipe[1], STDOUT_FILENO);
+
+        close(in_pipe[0]);
+        close(out_pipe[1]);
+
+        execlp("/media/mmcblk0p1/dumphfdl",     
+            "/media/mmcblk0p1/dumphfdl", "--system-table", DIR_SAMPLES "/HFDL_systable.conf",
+            "--iq-file", "-",
+        
+            #ifdef SAMPLES_CF32
+                "--sample-format", "CF32",
+            #endif
+        
+            #ifdef SAMPLES_CS16
+                "--sample-format", "CS16",
+            #endif
+        
+            "--sample-rate", "12000", "--centerfreq", "0", "0", NULL
+        ); // Replace with the target process
+        perror("execlp");
+        exit(EXIT_FAILURE);
+    } else {
+        close(in_pipe[0]);  // Close unused read end
+        close(out_pipe[1]); // Close unused write end
+
+        e->input_pipe = in_pipe[1];
+        e->output_pipe = out_pipe[0];
+        e->pid = pid;
+
+        // mark the process is ready to accept data
+        while(1) {
+            char buffer[1024];
+            ssize_t n = read(e->output_pipe, buffer, sizeof(buffer) - 1);
+            if (n > 0) {
+                ext_send_msg_encoded(e->rx_chan, false, "EXT", "chars", "%.*s", n, buffer);
+            }
+        }
+    }
+
     e->dumphfdl_tid = 0;
 }
     
@@ -218,7 +239,6 @@ bool hfdl_msgs(char *msg, int rx_chan)
 		
 		ext_register_receive_iq_samps_task(e->tid, rx_chan, POST_AGC);
 
-        e->outputBlockSize = e->HFDLResample.setup(snd_rate, HFDL_OUTBUF_SIZE);
         if (!e->dumphfdl_tid)
             e->dumphfdl_tid = CreateTaskF(dumphfdl_task, TO_VOID_PARAM(rx_chan), EXT_PRIORITY, CTF_RX_CHANNEL | (rx_chan & CTF_CHANNEL));
 
@@ -247,18 +267,11 @@ bool hfdl_msgs(char *msg, int rx_chan)
 		return true;
 	}
 	
-	tid_t tid;
-	if (sscanf(msg, "SET input_tid=%d", &tid) == 1) {
-	    e->input_tid = tid;
-		//printf("HFDL: input_tid=%d\n", tid);
-		return true;
-	}
-	
 	double freq;
 	if (sscanf(msg, "SET display_freq=%lf", &freq) == 1) {
-		//rcprintf(rx_chan, "HFDL: display_freq=%.2lf\n", freq);
+		rcprintf(rx_chan, "HFDL: display_freq=%.2lf\n", freq);
         #ifdef HFDL
-		    dumphfdl_set_freq(rx_chan, freq);
+		//    dumphfdl_set_freq(rx_chan, freq);
 		#endif
 		return true;
 	}
@@ -308,7 +321,6 @@ void HFDL_main()
 
     #ifdef HFDL
 	    ext_register(&hfdl_ext);
-        dumphfdl_init();
 	#else
         printf("ext_register: \"HFDL\" not configured\n");
 	    return;
@@ -332,5 +344,3 @@ void HFDL_main()
     hfdl.s2p_end = hfdl.s2p_start + words;
     hfdl.tsamps = words / NIQ;
 }
-
-#endif

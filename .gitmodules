@@ -4,3 +4,6 @@
 [submodule "pkgs/jsmn"]
         path = pkgs/jsmn
         url = https://github.com/zserge/jsmn
+[submodule "externals/dumphfdl"]
+	path = externals/dumphfdl
+	url = https://github.com/RaspSDR/dumphfdl

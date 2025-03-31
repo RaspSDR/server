@@ -60,6 +60,11 @@ if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
 endif(CCACHE_FOUND)
 
+if(ENABLE_HDFL)
+    ## HFDL external depedency
+
+    add_subdirectory(${UPSTREAM_DIR}/externals/dumphfdl)
+endif(ENABLE_HDFL)
 ###########################################################
 
 SET(EXT_SRCS ${PROJECT_BINARY_DIR}/extint.cpp ${UPSTREAM_DIR}/extensions/ext.cpp)
@@ -216,6 +221,10 @@ target_link_libraries(websdr.bin PRIVATE
     ${CONFIG_LIBRARIES}
     ${CURL_LIBRARIES}
 )
+
+if(ENABLE_HDFL)
+    add_dependencies(websdr.bin dumphfdl)
+endif(ENABLE_HDFL)
 
 cmake_host_system_information(RESULT _host_name QUERY HOSTNAME)
 string(TIMESTAMP CURRENT_YEAR "%Y")

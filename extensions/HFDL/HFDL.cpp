@@ -81,7 +81,7 @@ static void hfdl_task(void *param)
                 while (total_written < to_write) {
                     ssize_t n = write(e->input_pipe, data_ptr + total_written, to_write - total_written);
                     if (n < 0) {
-                        perror("HFDL: write() failed");
+                        // perror("HFDL: write() failed");
                         hfdl_close(rx_chan);
                         break;
                     }
@@ -192,7 +192,7 @@ static void dumphfdl_task(void *param)
         
             "--sample-rate", "12000", "--centerfreq", "0", "0", NULL
         ); // Replace with the target process
-        perror("execlp");
+        // perror("execlp");
         exit(EXIT_FAILURE);
     } else {
         close(in_pipe[0]);  // Close unused read end
@@ -211,7 +211,7 @@ static void dumphfdl_task(void *param)
             }
             else if (n < 0) {
                 hfdl_close(rx_chan);
-                perror("HFDL: read() failed");
+                // perror("HFDL: read() failed");
                 break;
             }
         }

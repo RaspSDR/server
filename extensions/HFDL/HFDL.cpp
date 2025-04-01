@@ -9,6 +9,8 @@
 static hfdl_t hfdl;
 static hfdl_chan_t hfdl_chan[MAX_RX_CHANS];
 
+static void hfdl_close(int rx_chan);
+
 static void hfdl_pushback_file_data(int rx_chan, int instance, int nsamps, TYPECPX *samps)
 {
     hfdl_chan_t *e = &hfdl_chan[rx_chan];
@@ -27,9 +29,9 @@ static void hfdl_pushback_file_data(int rx_chan, int instance, int nsamps, TYPEC
     // Have hfdl_task() do 12k => 36k resampling before calling decoder (which requires 36 kHz sampling)
     for (int i = 0; i < nsamps; i++) {
         if (e->s2p < hfdl.s2p_end) {
-            samps->re = (TYPEREAL) (s4_t) *e->s2p;
+            samps->re = (TYPEREAL) (s4_t) *e->s2p / 32768.0;
             e->s2p++;
-            samps->im = (TYPEREAL) (s4_t) *e->s2p;
+            samps->im = (TYPEREAL) (s4_t) *e->s2p / 32768.0;
             e->s2p++;
             samps++;
         }
@@ -80,6 +82,7 @@ static void hfdl_task(void *param)
                     ssize_t n = write(e->input_pipe, data_ptr + total_written, to_write - total_written);
                     if (n < 0) {
                         perror("HFDL: write() failed");
+                        hfdl_close(rx_chan);
                         break;
                     }
                     total_written += n;
@@ -111,7 +114,7 @@ void hfdl_close(int rx_chan)
 
     if (e->input_pipe)
     {
-        // kill(e->pid, SIGTERM);
+        kill(e->pid, SIGTERM);
         close(e->input_pipe);
         close(e->output_pipe);
 
@@ -205,6 +208,11 @@ static void dumphfdl_task(void *param)
             ssize_t n = read(e->output_pipe, buffer, sizeof(buffer) - 1);
             if (n > 0) {
                 ext_send_msg_encoded(e->rx_chan, false, "EXT", "chars", "%.*s", n, buffer);
+            }
+            else if (n < 0) {
+                hfdl_close(rx_chan);
+                perror("HFDL: read() failed");
+                break;
             }
         }
     }

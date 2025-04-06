@@ -7328,7 +7328,7 @@ var dx = {
    DB_COMMUNITY: 2,
    DB_N: 3,
    db: 0,
-   db_s: [ 'stored (writeable)', 'EiBi-A23 (read-only)', 'community (downloaded)' ],
+   db_s: [ 'stored (writeable)', 'EiBi-A25 (read-only)', 'community (downloaded)' ],
    db_short_s: [ 'stored', 'EiBi', 'community' ],
    ignore_dx_update: false,
    last_community_download: '',

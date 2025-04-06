@@ -493,7 +493,7 @@ function(download_if_needed url local_file)
     endif()
 endfunction()
 
-download_if_needed("http://www.eibispace.de/dx/sked-b24.csv" ${PROJECT_BINARY_DIR}/sked-current.csv)
+download_if_needed("http://www.eibispace.de/dx/sked-a25.csv" ${PROJECT_BINARY_DIR}/sked-current.csv)
 
 add_executable(eibi_proc ${UPSTREAM_DIR}/pkgs/EiBi/eibi_proc.cpp)
 target_include_directories(eibi_proc PUBLIC

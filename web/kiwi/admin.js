@@ -17,6 +17,11 @@ var admin = {
    
    spectral_inversion_lockout: false,
    
+
+   c_rates: [
+      '12kHz', '24kHz', '48kHz'
+   ],
+
    _last_: 0
 };
 
@@ -114,9 +119,10 @@ function status_user_kick_cb(id, idx)
 ////////////////////////////////
 function control_html()
 {
+   var init_ifrate = adm.snd_rate;
 	var s1 =
 		'<hr>' +
-		w3_third('w3-valign', '',
+		w3_quarter('w3-valign', '',
          w3_div('',
             w3_div('',
                w3_button('w3-aqua w3-margin', 'Web-888 server restart', 'control_restart_cb'),
@@ -125,6 +131,9 @@ function control_html()
          ),
          w3_div('w3-center',
             w3_switch_label('w3-center w3-restart', 'HF Bandwidth Selection', '32Mhz', '64Mhz', 'adm.narrowband', adm.narrowband, 'wf_narrowband_enabled_cb')
+         ),
+         w3_div('w3-center',
+            w3_select('w3-center w3-restart', 'RX Bandwidth', '', 'adm.snd_rate', init_ifrate, admin.c_rates, 'admin_select_cb'),
          ),
          w3_div('w3-center',
             w3_switch_label('w3-center w3-restart', 'Share WF channels with all users', 'Share', 'Exclusive', 'adm.wf_share', adm.wf_share, 'wf_share_enabled_cb')

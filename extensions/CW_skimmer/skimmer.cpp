@@ -20,7 +20,7 @@ static void CW_skimmer_close(int rx_chan);
 static bool CW_skimmer_msgs(char* msg, int rx_chan);
 
 static struct skimmer_state {
-    CwSkimmer skimmer;
+    CwSkimmer *skimmer;
     tid_t tid;
     int chan;
 
@@ -81,6 +81,16 @@ void CW_skimmer_main() {
     words -= off;
     cw_conf.s2p_end = cw_conf.s2p_start + words;
     cw_conf.tsamps = words;
+
+    for(int i = 0; i < MAX_RX_CHANS; i++) {
+        states[i].skimmer = new CwSkimmer(snd_rate);
+        states[i].rd_pos = 0;
+        states[i].seq_init = false;
+        states[i].seq = 0;
+        states[i].tid = 0;
+        states[i].test = false;
+        states[i].s2p = NULL;
+    }
 }
 
 static void CW_skimmer_close(int rx_chan) {
@@ -92,6 +102,10 @@ static void CW_skimmer_close(int rx_chan) {
         printf("CW_Skimmer: TaskRemove\n");
         TaskRemove(e->tid);
         e->tid = 0;
+    }
+
+    for(int i = 0; i < MAX_RX_CHANS; i++) {
+        delete states[i].skimmer;
     }
 }
 
@@ -141,7 +155,7 @@ static void cw_skimmer_task(void* param) {
 
             // real_printf("%d ", e->rd_pos); fflush(stdout);
             int rd_pos = e->rd_pos;
-            e->skimmer.AddSamples(&rx->real_samples_s2[rd_pos][0], FASTFIR_OUTBUF_SIZE);
+            e->skimmer->AddSamples(&rx->real_samples_s2[rd_pos][0], FASTFIR_OUTBUF_SIZE);
             e->rd_pos = (rd_pos + 1) & (N_DPBUF - 1);
         }
     }
@@ -154,8 +168,8 @@ bool CW_skimmer_msgs(char* msg, int rx_chan) {
     if (strcmp(msg, "SET ext_server_init") == 0) {
         printf("CW init rx%d start\n", rx_chan);
         e->chan = rx_chan;	// remember our receiver channel number
-        e->skimmer.reset();
-        e->skimmer.SetCallback([e](int freq, char ch, int wpm) {
+        e->skimmer->reset();
+        e->skimmer->SetCallback([e](int freq, char ch, int wpm) {
             ext_send_msg_encoded(e->chan, DEBUG_MSG, "EXT", "cw_chars", "%c%d,%d", ch, freq, wpm);
         });
 
@@ -184,7 +198,7 @@ bool CW_skimmer_msgs(char* msg, int rx_chan) {
     }
 
     if (strcmp(msg, "SET cws_stop") == 0) {
-        e->skimmer.reset();
+        e->skimmer->reset();
         e->test = false;
         return true;
     }
@@ -192,7 +206,7 @@ bool CW_skimmer_msgs(char* msg, int rx_chan) {
     int pwr_calc, filter_neighbors;
     if (sscanf(msg, "SET cws_params=%d,%d", &pwr_calc, &filter_neighbors) == 2) {
         printf("cws_params=%d,%d\n", pwr_calc, filter_neighbors);
-        e->skimmer.SetParams((PwrCalc_t)pwr_calc, filter_neighbors != 0);
+        e->skimmer->SetParams((PwrCalc_t)pwr_calc, filter_neighbors != 0);
         return true;
     }
 

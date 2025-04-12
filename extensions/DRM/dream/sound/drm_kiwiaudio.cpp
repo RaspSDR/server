@@ -146,7 +146,7 @@ CSoundOutKiwi::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking)
     drm_buf_t *drm_buf = &DRM_SHMEM->drm_buf[(int) FROM_VOID_PARAM(TaskGetUserParam())];
     //printf("$$$$ drm_kiwiaudio rx_chan=%d pid=%d\n", TaskGetUserParam(), getpid());
     drm_buf->out_rd_pos = drm_buf->out_wr_pos = drm_buf->out_pos = 0;
-    drm_buf->out_samps = (snd_rate == SND_RATE_4CH)? 4800 : 8100;
+    drm_buf->out_samps = snd_rate * 2 / 5; // (snd_rate == SND_RATE_4CH)? 4800 : 9600;
     return hw.Init(iSampleRate, iNewBufferSize, bNewBlocking);
 }
 

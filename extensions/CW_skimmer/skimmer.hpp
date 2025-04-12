@@ -12,9 +12,8 @@
 #define USE_AVG_RATIO  0 // 1: Divide each bucket by average value
 #define USE_THRESHOLD  1 // 1: Convert each bucket to 0.0/1.0 values
 
-#define sampleRate   12000 // Input audio sampling rate
 #define MAX_SCALES   (16)
-#define MAX_CHANNELS (sampleRate / 2 / 100)
+#define MAX_CHANNELS (128)
 #define MAX_INPUT    (MAX_CHANNELS * 2)
 #define INPUT_STEP   (MAX_INPUT) // MAX_INPUT/4
 #define AVG_SECONDS  (3)
@@ -32,7 +31,7 @@ typedef enum {
 
 class CwSkimmer {
 public:
-    CwSkimmer() : pwr_calc(PWR_CALC_AVG_RATIO), filter_neighbors(false) {
+    CwSkimmer(int sampleRate) : pwr_calc(PWR_CALC_AVG_RATIO), filter_neighbors(false), sampleRate(sampleRate) {
         // initialize fftw
         fft = fftwf_plan_dft_r2c_1d(MAX_INPUT, fftIn, fftOut, FFTW_ESTIMATE);
 
@@ -135,6 +134,7 @@ private:
 
     PwrCalc_t pwr_calc;
     bool filter_neighbors;
+    unsigned int sampleRate;
 
     unsigned int printChars = 8; // Number of characters to print at once
 

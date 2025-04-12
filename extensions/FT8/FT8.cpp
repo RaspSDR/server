@@ -235,8 +235,6 @@ bool ft8_msgs(char *msg, int rx_chan)
 // catch changes to reporter call/grid from admin page FT8 config (also called during initialization)
 bool ft8_update_vars_from_config(bool called_at_init_or_restart)
 {
-    int i, n;
-    rx_util_t *r = &rx_util;
     bool update_cfg = false;
     char *s;
     
@@ -284,10 +282,6 @@ bool ft8_update_vars_from_config(bool called_at_init_or_restart)
             if (autorun && (preempt == 0)) num_non_preempt++;
             ft8_arun_band[instance] = autorun;
             ft8_arun_preempt[instance] = preempt;
-        }
-        if (snd_rate != MIN_SND_RATE) {
-            printf("FT8 autorun: Only works on Kiwis configured for 12 kHz wide channels\n");
-            num_autorun = num_non_preempt = 0;
         }
         if (ft8_conf.rcall == NULL || *ft8_conf.rcall == '\0' || ft8_conf.rgrid[0] == '\0') {
             printf("FT8 autorun: reporter callsign and grid square fields must be entered on FT8 section of admin page\n");

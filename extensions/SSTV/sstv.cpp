@@ -235,7 +235,7 @@ bool sstv_msgs(char *msg, int rx_chan)
             e->s2p[tn] = e->s22p[tn] = sstv.s2p_start[tn];
 		#endif
 
-		e->test = (snd_rate != SND_RATE_3CH);
+		e->test = (snd_rate == SND_RATE_4CH);
 		if (e->test) ext_send_msg_encoded(rx_chan, false, "EXT", "mode_name", "");
         ext_send_msg_encoded(rx_chan, false, "EXT", "status",
             e->test? "test image" : "test image not available in 3-channel/20 kHz mode");

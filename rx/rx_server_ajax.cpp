@@ -666,7 +666,7 @@ char* rx_server_ajax(struct mg_connection* mc, char* ip_forwarded) {
         if (tdoa_ch == -1) tdoa_ch = rx_chans; // has never been set
         if (!admcfg_bool("GPS_tstamp", NULL, CFG_REQUIRED)) tdoa_ch = -1;
 
-        bool has_20kHz = (snd_rate == SND_RATE_3CH);
+        bool has_20kHz = (snd_rate != SND_RATE_4CH);
         bool has_GPS = (clk.adc_gps_clk_corrections > 8);
         bool has_tlimit = (inactivity_timeout_mins || ip_limit_mins);
         bool has_masked = (dx.masked_len > 0);

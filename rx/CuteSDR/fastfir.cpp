@@ -67,8 +67,8 @@ CFastFIR::CFastFIR() {
 
         // CIC compensating filter
         const TYPEREAL f = fabs(fmod(TYPEREAL(i) / CONV_FFT_SIZE + 0.5f, 1.0f) - 0.5f);
-        const TYPEREAL p1 = (snd_rate == SND_RATE_3CH ? -3.107f : -2.969f);
-        const TYPEREAL p2 = (snd_rate == SND_RATE_3CH ? 32.04f : 36.26f);
+        const TYPEREAL p1 = (snd_rate != SND_RATE_4CH ? -3.107f : -2.969f);
+        const TYPEREAL p2 = (snd_rate != SND_RATE_4CH ? 32.04f : 36.26f);
         const TYPEREAL sincf = f ? MSIN(f * K_PI) / (f * K_PI) : 1.0f;
         m_CIC_coeffs[i] = pow(sincf, -5) + p1 * exp(p2 * (f - 0.5f));
     }

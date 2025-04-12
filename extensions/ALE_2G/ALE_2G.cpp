@@ -345,8 +345,8 @@ bool ale_2g_msgs(char *msg, int rx_chan)
             e->nsamps = 0;
 		#endif
 
-        //e->test = (test_f != 0) && (snd_rate != SND_RATE_3CH);
-        e->test = (test_f != 0);
+        e->test = (test_f != 0) && (snd_rate == SND_RATE_4CH);
+        //e->test = (test_f != 0);
         //printf("ALE_2G: test=%d test_f=%.2f\n", e->test, e->test_f);
         if (e->test) {
             e->decode.modem_init(e->rx_chan, e->use_new_resampler, ext_update_get_sample_rateHz(rx_chan), FASTFIR_OUTBUF_SIZE);

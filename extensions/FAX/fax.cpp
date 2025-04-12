@@ -135,7 +135,7 @@ bool fax_msgs(char *msg, int rx_chan)
             8,          // int BitsPerPixel
             1900,       // int carrier
             400,        // int deviation, black/white freq +/- deviation from carrier
-            FaxDecoder::firfilter::MIDDLE,     // bandwidth
+            snd_rate == SND_RATE_4CH ? FaxDecoder::firfilter::MIDDLE : FaxDecoder::firfilter::NARROW,     // bandwidth
             15.0,       // double minus_saturation_threshold
             true,       // bool bIncludeHeadersInImages
             phasing,
@@ -199,7 +199,7 @@ bool fax_msgs(char *msg, int rx_chan)
                 POLL_MSEC(500));
 		#else
             non_blocking_cmd_system_child("kiwi.fax", 
-                stprintf("cd " DIR_DATA ";
+                stprintf("cd " DIR_DATA ";"
                     "pnmtopng fax.ch%d.pgm > fax.ch%d_%d.png; "
                     "pnmscale fax.ch%d.pgm -width=96 -height=32 > fax.ch%d.thumb.pgm; "
                     "pnmtopng fax.ch%d.thumb.pgm > fax.ch%d_%d.thumb.png",

@@ -162,8 +162,8 @@ void c2s_waterfall_init() {
 
         // CIC compensating filter
         const TYPEREAL f = fabs(fmod(TYPEREAL(i) / WF_C_NSAMPS + 0.5f, 1.0f) - 0.5f);
-        const TYPEREAL p1 = -2.969f;
-        const TYPEREAL p2 = 36.26f;
+        const TYPEREAL p1 = -1.3137f;
+        const TYPEREAL p2 = 44.8742f;
         const TYPEREAL sincf = f ? MSIN(f * K_PI) / (f * K_PI) : 1.0f;
         float cic_comp = pow(sincf, -5) + p1 * exp(p2 * (f - 0.5f));
         WF_SHMEM->CIC_comp[i] = 0.5 + cic_comp / 2.0; // scaling value is empirical

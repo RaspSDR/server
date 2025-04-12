@@ -525,8 +525,7 @@ void rx_sound_cmd(conn_t* conn, double frate, int n, char* cmd) {
                 if (_nfm) {
                     // -20 dB @ 4 kHz
                     // cprintf(conn, "DEEMP: NFM %d %s\n", (snd_rate == SND_RATE_4CH)? 12000:20250, (_de_emp == 1)? "-LF":"+LF");
-                    const TYPEREAL* pCoef =
-                        (snd_rate == SND_RATE_4CH) ? nfm_deemp_12000[_de_emp - 1] : nfm_deemp_24000[_de_emp - 1];
+                    const TYPEREAL* pCoef = nfm_deemp[kiwi.snd_rate * 2 + _de_emp - 1];
                     m_nfm_deemp_FIR[rx_chan].InitConstFir(N_DEEMP_TAPS, pCoef, frate);
                 }
                 else {
@@ -548,8 +547,7 @@ void rx_sound_cmd(conn_t* conn, double frate, int n, char* cmd) {
                             snd_rate, (_de_emp == 1) ? 75 : 50, a0, a1, a2, b0, b1, b2);
 #else
                     // cprintf(conn, "DEEMP: AM/SSB %d %d uS\n", (snd_rate == SND_RATE_4CH)? 12000:20250, (_de_emp == 1)? 75:50);
-                    const TYPEREAL* pCoef =
-                        (snd_rate == SND_RATE_4CH) ? am_ssb_deemp_12000[_de_emp - 1] : am_ssb_deemp_24000[_de_emp - 1];
+                    const TYPEREAL* pCoef = am_ssb_deemp[kiwi.snd_rate * 2 + _de_emp - 1];
                     m_am_ssb_deemp_FIR[rx_chan].InitConstFir(N_DEEMP_TAPS, pCoef, frate);
 #endif
                 }

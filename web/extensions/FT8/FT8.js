@@ -182,14 +182,7 @@ function ft8_controls_setup()
 	ext_set_controls_width_height(525, 90);
    ft8_clear_button_cb();
 
-	if (ext_nom_sample_rate() != 12000) {
-	   w3_hide2('id-ft8-container', true);
-	   w3_hide2('id-ft8-err', false);
-	   w3_innerHTML('id-ft8-err',
-	      'FT8 extension only works on Kiwis configured for 12 kHz wide channels');
-	} else {
-	   ext_send('SET ft8_start='+ ft8.FT8 +' debug='+ (dbgUs? 1:0));
-	}
+   ext_send('SET ft8_start='+ ft8.FT8 +' debug='+ (dbgUs? 1:0));
 
 	ft8.url_params = ext_param();
 	var p = ft8.url_params;

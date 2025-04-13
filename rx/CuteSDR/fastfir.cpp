@@ -267,7 +267,6 @@ int CFastFIR::ProcessData(int rx_chan, int InLength, TYPECPX* InBuf, TYPECPX* Ou
                                   reinterpret_cast<fftwf_complex*>(m_pFFTBuf));
             }
             else {
-                // CpxMpy(CONV_FFT_SIZE, m_pFilterCoef_CIC, m_pFFTBuf, m_pFFTBuf);
                 simd_multiply_ccc(CONV_FFT_SIZE,
                                   reinterpret_cast<const fftwf_complex*>(m_pFilterCoef_CIC),
                                   reinterpret_cast<const fftwf_complex*>(m_pFFTBuf),
@@ -299,17 +298,4 @@ int CFastFIR::ProcessData(int rx_chan, int InLength, TYPECPX* InBuf, TYPECPX* Ou
     }
 
     return outpos; // return number of output samples processed and placed in OutBuf
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//   Complex multiply N point array m with src and place in dest.
-// src and dest can be the same buffer.
-///////////////////////////////////////////////////////////////////////////////
-inline void CFastFIR::CpxMpy(int N, TYPECPX* m, TYPECPX* src, TYPECPX* dest) {
-    for (int i = 0; i < N; i++) {
-        TYPEREAL sr = src[i].re;
-        TYPEREAL si = src[i].im;
-        dest[i].re = m[i].re * sr - m[i].im * si;
-        dest[i].im = m[i].re * si + m[i].im * sr;
-    }
 }

@@ -32,8 +32,6 @@ public:
     int FirPos() const { return m_InBufInPos - CONV_FIR_SIZE + 1; }
 
 private:
-    inline void CpxMpy(int N, TYPECPX* m, TYPECPX* src, TYPECPX* dest);
-
     int m_instance;
     bool m_do_CIC_comp;
 

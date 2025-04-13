@@ -99,7 +99,7 @@ void monitor_init(monitor_t* me, const monitor_config_t* cfg)
     me->timedata = (float *) fftwf_malloc(sizeof(float) * me->nfft);
     me->freqdata = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex) * (me->nfft / 2 + 1));
     
-    me->fft_plan = fftwf_plan_dft_r2c_1d(me->nfft, me->timedata, me->freqdata, FFTW_ESTIMATE);
+    me->fft_plan = fftwf_plan_dft_r2c_1d(me->nfft, me->timedata, me->freqdata, FFTW_MEASURE);
 }
 
 void monitor_free(monitor_t* me)

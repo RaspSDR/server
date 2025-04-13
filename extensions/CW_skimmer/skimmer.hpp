@@ -33,7 +33,7 @@ class CwSkimmer {
 public:
     CwSkimmer(int sampleRate) : pwr_calc(PWR_CALC_AVG_RATIO), filter_neighbors(false), sampleRate(sampleRate) {
         // initialize fftw
-        fft = fftwf_plan_dft_r2c_1d(MAX_INPUT, fftIn, fftOut, FFTW_ESTIMATE);
+        fft = fftwf_plan_dft_r2c_1d(MAX_INPUT, fftIn, fftOut, FFTW_MEASURE);
 
         // Create and connect CSDR objects, clear output state
         for (int j = 0; j < MAX_CHANNELS; ++j) {

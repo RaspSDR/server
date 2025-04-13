@@ -186,7 +186,7 @@ namespace ale {
             fft_ss_twiddle[i] = sin((-2.0*PI * i) / FFT_SIZE);
         }
 
-        dft_plan = fftwf_plan_dft_1d(FFT_SIZE, dft_in, dft_out, FFTW_FORWARD, FFTW_ESTIMATE);
+        dft_plan = fftwf_plan_dft_1d(FFT_SIZE, dft_in, dft_out, FFTW_FORWARD, FFTW_MEASURE);
 	}
 
 	decode_ff_impl::~decode_ff_impl() { }

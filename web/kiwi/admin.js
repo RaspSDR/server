@@ -19,7 +19,7 @@ var admin = {
    
 
    c_rates: [
-      '12kHz', '24kHz', '36kHz', '48kHz'
+      '12kHz', '24kHz', '36kHz'
    ],
 
    _last_: 0

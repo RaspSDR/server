@@ -212,6 +212,10 @@ function cw_skimmer_controls_setup()
    ext_set_data_height(cws.height);
 	ext_set_controls_width_height(350, 125);
 	
+	// our sample file is 12k only
+	if (ext_nom_sample_rate() != 12000)
+	   w3_add('id-cw-test', 'w3-disabled');
+
    ext_send('SET cws_start');
 
    cws_clear_button_cb();

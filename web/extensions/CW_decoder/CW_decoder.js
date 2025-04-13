@@ -261,7 +261,11 @@ function cw_decoder_controls_setup()
 
    ext_set_data_height(300);
 	ext_set_controls_width_height(380, 200);
-	
+
+	// our sample file is 12k only
+	if (ext_nom_sample_rate() != 12000)
+	   w3_add('id-cw-test', 'w3-disabled');
+
    ext_send('SET cw_start='+ cw.training_interval);
 	cw.pboff = -1;
 	CW_decoder_environment_changed();

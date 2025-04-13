@@ -137,12 +137,13 @@ void CNoiseProc::SetupBlanker(const char* id, TYPEREAL SampleRate, TYPEREAL nb_p
 }
 
 void CNoiseProc::ProcessBlanker(int InLength, TYPECPX* pInData, TYPECPX* pOutData) {
-    TYPECPX new_samp;
-    TYPECPX oldest;
-    int msg = 0;
+    int local_Mptr = m_Mptr;
+    int local_Dptr = m_Dptr;
+    int local_BlankCounter = m_BlankCounter;
+    TYPEREAL local_MagAveSum = m_MagAveSum;
 
     for (int i = 0; i < InLength; i++) {
-        new_samp = pInData[i];
+        TYPECPX new_samp = pInData[i];
 
         // calculate peak magnitude
         TYPEREAL mre = MFABS(new_samp.re);
@@ -150,43 +151,37 @@ void CNoiseProc::ProcessBlanker(int InLength, TYPECPX* pInData, TYPECPX* pOutDat
         TYPEREAL mag = (mre > mim) ? mre : mim;
 
         // calc moving average of "m_MagSamples"
-        m_MagAveSum -= m_MagBuf[m_Mptr]; // subtract oldest sample
-        m_MagAveSum += mag;              // add new sample
-        m_MagBuf[m_Mptr++] = mag;        // stick in buffer
+        local_MagAveSum -= m_MagBuf[local_Mptr]; // subtract oldest sample
+        local_MagAveSum += mag;                  // add new sample
+        m_MagBuf[local_Mptr] = mag;              // stick in buffer
 
-        if (m_Mptr > m_MagSamples)
-            m_Mptr = 0;
+        if (++local_Mptr >= m_MagSamples)
+            local_Mptr = 0;
 
         // pull out oldest sample from delay buffer and put in new one
-        oldest = m_DelayBuf[m_Dptr];
-        m_DelayBuf[m_Dptr++] = new_samp;
-        if (m_Dptr > m_DelaySamples)
-            m_Dptr = 0;
+        TYPECPX oldest = m_DelayBuf[local_Dptr];
+        m_DelayBuf[local_Dptr] = new_samp;
 
-        if (mag * m_Ratio > m_MagAveSum) {
-            m_BlankCounter = m_GateSamples;
-#if 0
-			    m_Blanked++;
-                int now = timer_sec();
-                if (m_LastMsg != now) {
-                    printf("noiseproc %s blank=%d usec=%.0f gs=%d mag=%.1e mag*ratio=%.1e > avg=%.1e\n",
-                        m_id, m_Blanked, m_GateUsec, m_BlankCounter, mag, mag * m_Ratio, m_MagAveSum);
-                    m_LastMsg = now;
-                    m_Blanked = 0;
-                }
-#endif
+        if (++local_Dptr >= m_DelaySamples)
+            local_Dptr = 0;
+
+        if (mag * m_Ratio > local_MagAveSum) {
+            local_BlankCounter = m_GateSamples;
         }
 
-        if (m_BlankCounter) {
-            m_BlankCounter--;
+        if (local_BlankCounter) {
+            local_BlankCounter--;
             pOutData[i].re = 0.0;
             pOutData[i].im = 0.0;
-            // pOutData[i].re = pOutData[i].im = m_MagAveSum;
-        }
-        else {
+        } else {
             pOutData[i] = oldest;
         }
     }
+
+    m_Mptr = local_Mptr;
+    m_Dptr = local_Dptr;
+    m_BlankCounter = local_BlankCounter;
+    m_MagAveSum = local_MagAveSum;
 }
 
 void CNoiseProc::ProcessBlanker(int InLength, TYPEMONO16* pInData, TYPEMONO16* pOutData) {

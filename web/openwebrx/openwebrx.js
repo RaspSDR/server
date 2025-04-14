@@ -72,6 +72,8 @@ var owrx = {
    dx_click_gid_last_stored: undefined,
    dx_click_gid_last_until_tune: undefined,
    
+   wheel_tunes: 0,
+
    sam_pll: 1,
    sam_pll_s: [ 'DX', 'med', 'fast' ],
    
@@ -2890,6 +2892,71 @@ function canvas_mousewheel(evt)
 	evt.preventDefault();	
 }
 
+function freqstep_cb(path, sel, first, ev)
+{
+   var shiftKey = ev? ev.shiftKey : false;
+   var hold = (ev && ev.type == 'hold');
+   var hold_done = (ev && ev.type == 'hold-done');
+   //console.log('freqstep_cb: path='+ path +' sel='+ sel +' first='+ first +' ev='+ ev +' shiftKey='+ shiftKey +' hold='+ hold +' hold_done='+ hold_done);
+   if (hold) {
+      //console.log('freqstep_cb HOLD '+ sel);
+      kiwi_clearInterval(owrx.freqstep_interval);
+      owrx.freqstep_interval = setInterval(
+         function() {
+            freqstep_cb(null, sel);
+         }, 100);
+      w3_autorepeat_canceller(path, owrx.freqstep_interval);
+      return;
+   }
+   if (hold_done) {
+      //console.log('freqstep_cb HOLD-DONE '+ sel);
+      kiwi_clearInterval(owrx.freqstep_interval);
+      w3_autorepeat_canceller();
+      return;
+   }
+	var step_Hz = up_down[cur_mode][sel]*1000;
+	
+	// set step size from band channel spacing
+	if (step_Hz == 0) {
+		var b = find_band(freq_displayed_Hz);
+		step_Hz = special_step(b, sel, 'freqstep_cb');
+	}
+
+	var fnew = freq_displayed_Hz;
+	var incHz = Math.abs(step_Hz);
+	var posHz = (step_Hz >= 0)? 1:0;
+	var trunc = fnew / incHz;
+	trunc = (posHz? Math.ceil(trunc) : Math.floor(trunc)) * incHz;
+	var took;
+
+	if (incHz == NDB_400_1000_mode) {
+	   if (shiftKey != true) {
+         var kHz = fnew % 1000;
+         if (posHz)
+            kHz = (kHz < 400)? 400 : ( (kHz < 600)? 600 : 1000 );
+         else
+            kHz = (kHz == 0)? -400 : ( (kHz <= 400)? 0 : ( (kHz <= 600)? 400 : 600 ) );
+         trunc = Math.floor(fnew/1000)*1000;
+         fnew = trunc + kHz;
+         took = '400/1000';
+         //console.log("STEP -400/1000 kHz="+kHz+" trunc="+trunc+" fnew="+fnew);
+      } else {
+		   fnew += Math.sign(step_Hz) * 1000;
+		   took = 'SHIFT';
+      }
+	} else
+	if (shiftKey != true && freq_displayed_Hz != trunc) {
+		fnew = trunc;
+		took = 'TRUNC';
+	} else {
+		fnew += step_Hz;
+		took = (shiftKey == true)? 'SHIFT' : 'INC';
+	}
+	//console.log('STEP '+sel+' '+cur_mode+' fold='+freq_displayed_Hz+' inc='+incHz+' trunc='+trunc+' fnew='+fnew+' '+took);
+	
+	// audioFFT mode: don't clear waterfall for small frequency steps
+	freqmode_set_dsp_kHz(fnew/1000, null, { dont_clear_wf:true });
+}
 
 function canvas_mousewheel_cb(evt)
 {
@@ -2915,18 +2982,83 @@ function canvas_mousewheel_cb(evt)
    // x != 0 is two-finger swipe L/R
    var x = evt.deltaX;
    var y = evt.deltaY;
+   var fwd_bak = ((x < 0 && y <= 0) || (x >= 0 && y < 0)) ^ owrx.wheel_dir;
+   var key_mod = shortcut_key_mod(evt);
    var inout = (x < 0 || (x == 0 && y < 0));
    
    if (evt.target && evt.target.id && (evt.target.id == 'id-scale-canvas' || evt.target.id.startsWith('id-pb-'))) {
       //event_dump(evt, 'canvas_mousewheel_cb', true);
       var edge = owrx.PB_LEFT_EDGE;
-      var key_mod = shortcut_key_mod(evt);
       if (key_mod == shortcut.NO_MODIFIER) edge = owrx.PB_NO_EDGE; else
       if (key_mod == shortcut.SHIFT) edge = owrx.PB_RIGHT_EDGE;
       passband_increment(inout, edge);
    } else {
-      var to_passband = (evt.ctrlKey || x != 0);
-      zoom_step(inout? ext_zoom.IN : ext_zoom.OUT, to_passband? undefined : evt.pageX);
+            // Wheel makes tuning or zoom adjustment depending on a setting in the right-click-menu.
+      // Holding down wheel (middle) button reverses sense of tune/zoom setting.
+      var flip_sense = (owrx.buttons == mouse.BUTTONS_M)? 1:0;
+      //console.log('canvas_mousewheel_cb flip_sense='+ flip_sense);
+      if (owrx.wheel_tunes ^ flip_sense) {
+         //console.log('wheel fwd_bak='+ fwd_bak +' key_mod='+ key_mod +' buttons='+ evt.buttons);
+         // step
+         // 0: -large, 1: -med, 2: -small || 3: +small, 4: +med, 5: +large
+         // CTL_ALT    SHIFT    NO_MOD       NO_MOD     SHIFT    CTL_ALT
+         //
+         // No key modifier (NO_MOD) will drop into the variable tune rate code below
+         // which tunes by the slowest rate unless the wheel is spun quickly.
+         if (key_mod) {
+            if (fwd_bak) {    // wheel fwd tunes higher
+               if (key_mod != shortcut.SHIFT_PLUS_CTL_ALT) {
+                  freqstep_cb(null, owrx.wf_snap? (5 - key_mod) : (3 + key_mod));
+               } else {
+                  dx_label_step(+1);
+               }
+            } else {
+               if (key_mod != shortcut.SHIFT_PLUS_CTL_ALT) {
+                  freqstep_cb(null, owrx.wf_snap? key_mod : (2 - key_mod));
+               } else {
+                  dx_label_step(-1);
+               }
+            }
+         } else {
+            var ay = Math.abs(y);
+            var fast = (ay >= owrx.wheel_fast);
+            if (fast && !owrx.lock_fast || owrx.lock_fast) {
+            
+               // For MacOS trackpad unlock delay has to be long enough to capture
+               // ending scroll inertia that would otherwise produce trailing "slow" events.
+               kiwi_clearTimeout(owrx.lock_fast_timeo);
+               owrx.lock_fast_timeo = setTimeout(
+                  function() {
+                     owrx.lock_fast = false;
+                     mkenvelopes(g_range);
+                     //console.log('U');
+                  }, owrx.wheel_unlock);
+               owrx.lock_fast = true;
+            }
+            if (owrx.lock_fast) { fast = true; }
+            //console.log(owrx.lock_fast? 'L' : (fast? 'F':'S') + y);
+               
+            if (fwd_bak)
+               freqstep_cb(null, owrx.wf_snap? 5 : (fast? 5:3));
+            else
+               freqstep_cb(null, owrx.wf_snap? 0 : (fast? 0:2));
+         }
+      } else {
+         // evt.ctrlKey is:
+         //    true for trackpad pinch (zoom-to-passband),
+         //    false for two-finger swipe across or up/down.
+         //    false for actual USB-mouse mousewheel (zoom-to-cursor)
+         // x != 0 is two-finger swipe L/R
+         var zoom_to_pb_pinch = evt.ctrlKey;
+         var two_finger_swipe_LR = (x != 0);
+         var to_passband = ((zoom_to_pb_pinch || two_finger_swipe_LR) && !flip_sense);
+         //console_nv('canvas_mousewheel_cb', {zoom_to_pb_pinch}, {two_finger_swipe_LR}, {flip_sense}, {to_passband});
+         zoom_step(fwd_bak? ext_zoom.IN : ext_zoom.OUT, to_passband? ext_zoom.TO_PASSBAND : evt.pageX);
+         
+         // need to keep canvas drag click mouseup code from changing freq
+         if (!to_passband) owrx.ignore_freq_tune_onmouseup = true;
+         //owrx.trace_freq_update=1;
+      }
    
       /*
       // scaling value is a scrolling sensitivity compromise between wheel mice and
@@ -2940,6 +3072,13 @@ function canvas_mousewheel_cb(evt)
    }
 }
 
+function canvas_mouse_wheel_set(set)
+{
+   //console.log('canvas_mouse_wheel_set wheel_tunes(cur)='+ TF(owrx.wheel_tunes) +' set='+ set);
+   owrx.wheel_tunes = isUndefined(set)? (owrx.wheel_tunes ^ 1) : (isNull(set)? 0 : (+set));
+   //console.log('canvas_mouse_wheel_set wheel_tunes(new)='+ TF(owrx.wheel_tunes));
+   kiwi_storeWrite('wheel_tunes', owrx.wheel_tunes);
+}
 
 ////////////////////////////////
 // right click menu
@@ -2960,6 +3099,8 @@ function right_click_menu_init()
    //m.push('Utility database lookup'); owrx.rcm_util = i; i++;
    m.push('DX Cluster lookup'); owrx.rcm_cluster = i; i++;
    m.push('<hr>'); i++;
+
+   m.push('mouse wheel zooms'); owrx.rcm_wheel = i; i++;
 
    m.push('snap to nearest'); owrx.rcm_snap = i; i++;
 	owrx.show_cursor_freq = +kiwi_storeGet('wf_showCurF', 0);
@@ -3006,6 +3147,7 @@ function right_click_menu(x, y, which)
       db = 'SWBC';
 
    owrx.right_click_menu_content[owrx.rcm_lookup] = db + ' database lookup';
+   owrx.right_click_menu_content[owrx.rcm_wheel] = owrx.wheel_tunes? 'mouse wheel zooms' : 'mouse wheel tunes';
    owrx.right_click_menu_content[owrx.rcm_snap] = owrx.wf_snap? 'no snap' : 'snap to nearest';
    
    w3_menu_items('id-right-click-menu', owrx.right_click_menu_content);
@@ -3043,6 +3185,10 @@ function right_click_menu_cb(idx, x, cbp)
 		freq_database_lookup(canvas_get_dspfreq(x), idx);
       break;
    
+   case owrx.rcm_wheel:  // mouse wheel zooms or tunes
+      canvas_mouse_wheel_set();
+      break;
+
    case owrx.rcm_snap:  // snap to nearest
       wf_snap();
       break;
@@ -9414,6 +9560,7 @@ function keyboard_shortcut_init()
          w3_inline_percent('w3-padding-tiny', '@ alt-@', 25, 'open DX label filter, quick clear'),
          w3_inline_percent('w3-padding-tiny', '\\ |', 25, 'toggle (& open) DX stored/EiBi/community database,<br>alt to toggle <x1>filter by time/day-of-week</x1> checkbox'),
          w3_inline_percent('w3-padding-tiny', 'x y', 25, 'toggle visibility of control panels, top bar'),
+         w3_inline_percent('w3-padding-tiny', '^', 25, 'toggle mouse wheel tune/zoom'),
          w3_inline_percent('w3-padding-tiny', '~', 25, 'open admin page in new tab'),
          w3_inline_percent('w3-padding-tiny', 'esc', 25, 'close/cancel action'),
          w3_inline_percent('w3-padding-tiny', '? h', 25, 'toggle this help list'),
@@ -9571,6 +9718,7 @@ function keyboard_shortcut(key, key_mod, ctlAlt, evt)
    case 'e': extension_scroll(1); break;
    case 'E': extension_scroll(-1); break;
    case '~': admin_page_cb(); break;
+   case '^': canvas_mouse_wheel_set(owrx.wheel_tunes ^ 1); break;
    case '?': case 'h': keyboard_shortcut_help(); break;
    case 'H':
       if (extint.current_ext_name)

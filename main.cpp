@@ -250,7 +250,7 @@ int main(int argc, char* argv[]) {
             ext_update_get_sample_rateHz(ADC_CLK_TYP), snd_rate, nrx_samps);
 
     assert(nrx_samps <= MAX_NRX_SAMPS);
-    assert(nrx_samps < FASTFIR_OUTBUF_SIZE); // see data_pump.h
+    assert(nrx_samps <= FASTFIR_OUTBUF_SIZE); // see data_pump.h
 
     rx_num = rx_chans, wf_num = wf_chans;
     monitors_max = (rx_chans * N_CAMP) + N_QUEUERS;

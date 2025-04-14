@@ -9414,6 +9414,7 @@ function keyboard_shortcut_init()
          w3_inline_percent('w3-padding-tiny', '@ alt-@', 25, 'open DX label filter, quick clear'),
          w3_inline_percent('w3-padding-tiny', '\\ |', 25, 'toggle (& open) DX stored/EiBi/community database,<br>alt to toggle <x1>filter by time/day-of-week</x1> checkbox'),
          w3_inline_percent('w3-padding-tiny', 'x y', 25, 'toggle visibility of control panels, top bar'),
+         w3_inline_percent('w3-padding-tiny', '~', 25, 'open admin page in new tab'),
          w3_inline_percent('w3-padding-tiny', 'esc', 25, 'close/cancel action'),
          w3_inline_percent('w3-padding-tiny', '? h', 25, 'toggle this help list'),
          w3_inline_percent('w3-padding-tiny', 'H', 25, 'toggle extension or frequency entry field help'),
@@ -9569,6 +9570,7 @@ function keyboard_shortcut(key, key_mod, ctlAlt, evt)
    case '@': dx_filter(key_mod == shortcut.SHIFT_PLUS_CTL_ALT); shortcut.nav_click = true; break;
    case 'e': extension_scroll(1); break;
    case 'E': extension_scroll(-1); break;
+   case '~': admin_page_cb(); break;
    case '?': case 'h': keyboard_shortcut_help(); break;
    case 'H':
       if (extint.current_ext_name)
@@ -11630,6 +11632,12 @@ function users_setup()
 	w3_innerHTML('id-optbar-users', w3_div('w3-nowrap', s));
 }
 
+
+function admin_page_cb() {
+   // NB: Without the indirection provided by the minimal delay the browser will give a popup warning.
+   // This does not occur for a button callback calling admin_page_cb()
+   kiwi_open_or_reload_page({ path:'/admin', tab:1, delay:1 });
+}
 
 ////////////////////////////////
 // control panel

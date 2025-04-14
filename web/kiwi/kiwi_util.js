@@ -1221,6 +1221,42 @@ function kiwi_remove_protocol(url)
    return url.replace(/^http:\/\//, '').replace(/^https:\/\//, '');
 }
 
+function kiwi_open_or_reload_page(obj)   // { url, hp, path, qs, tab, delay }
+{
+   var url = w3_opt(obj, 'url', null);
+   if (url == 'reload')
+      url = kiwi_url();
+   else
+   if (isNull(url)) {
+      var host_port = w3_opt(obj, 'hp', kiwi_host_port());
+      var pathname = w3_opt(obj, 'path', '', '/');
+      var query = w3_opt(obj, 'qs', '', '/?');
+      url = kiwi_SSL() + host_port + pathname + query;
+   }
+   var delay = w3_opt(obj, 'delay', 0);
+   console.log('kiwi_open_or_reload_page: '+ url +' delay='+ delay);
+   
+   var reload = function() {
+      var rv;
+      if (w3_opt(obj, 'tab', false)) {
+         rv = window.open(url, '_blank');
+      } else {
+         window.location.href = url;
+         rv = true;
+      }
+      return rv;
+   };
+   
+   var rval;
+   if (delay) {
+      setTimeout(function(url) { reload(); }, delay);
+      rval = true;
+   } else {
+      rval = reload();
+   }
+   return rval;
+}
+
 function kiwi_add_end(s, end)
 {
    if (!s.endsWith(end)) s = s + end;

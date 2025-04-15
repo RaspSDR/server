@@ -16,7 +16,7 @@ if(NOT CMAKE_BUILD_TYPE)
    message(STATUS "Build type not specified: defaulting to Release")
 endif(NOT CMAKE_BUILD_TYPE)
 
-# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 set (CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS "-Wall -fsingle-precision-constant -pthread")
@@ -163,6 +163,7 @@ file(GLOB_RECURSE KIWI_SRCS
 
     "${UPSTREAM_DIR}/pkgs/mongoose/*.cpp"
     "${UPSTREAM_DIR}/pkgs/sha256/*.cpp"
+    "${UPSTREAM_DIR}/pkgs/mqtt-c/*.c"
 )
 
 add_executable(websdr.bin ${KIWI_SRCS} ${EXT_SRCS}
@@ -204,6 +205,7 @@ target_include_directories(websdr.bin PUBLIC
     "${UPSTREAM_DIR}/pkgs/mongoose"
     "${UPSTREAM_DIR}/pkgs/sha256"
     "${UPSTREAM_DIR}/pkgs/utf8/"
+    "${UPSTREAM_DIR}/pkgs/mqtt-c/"
 )
 
 target_include_directories(websdr.bin PUBLIC ${FFTW3_INCLUDE_DIRS})

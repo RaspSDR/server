@@ -33,8 +33,8 @@ typedef enum { ESPEED_AUTO = 0,
 #define MAX_RX_CHANS         16 // must be pow2, see coroutines.h:CTF_CHANNEL
 #define MAX_WF_CHANS         16
 #define MAX_NRX_BUFS         16  // for RXBUF_SIZE_14CH
-#define MAX_NRX_SAMPS        226 // for nch = 3
-#define NRX_SAMPS_CHANS(nch) 512
+#define MAX_NRX_SAMPS        512 // for nch = 3
+#define NRX_SAMPS_CHANS(nch) MAX_NRX_SAMPS
 
 #define N_CONN_ADMIN 8 // simultaneous admin connections
 

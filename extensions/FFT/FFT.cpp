@@ -56,9 +56,9 @@ typedef struct {
 	double fi;
 	float pwr[MAX_BINS][INTEG_WIDTH];
 	int ncma[MAX_BINS];
-} fft_t;
+} fft_state_t;
 
-static fft_t fft[MAX_RX_CHANS];
+static fft_state_t fft[MAX_RX_CHANS];
 
 #define	FFT		0
 #define	CLEAR	1
@@ -68,7 +68,7 @@ static const char* func_s[] = { "off", "wf", "spec", "integ" };
 
 bool fft_data(int rx_chan, int instance, int flags, int ratio, int nsamps, TYPECPX *samps)
 {
-	fft_t *e = &fft[rx_chan];
+	fft_state_t *e = &fft[rx_chan];
 	if (instance != e->instance) return false;      // not the instance we want
 	//real_printf("%d", e->instance); fflush(stdout);
 	int i, bin;
@@ -192,7 +192,7 @@ bool fft_data(int rx_chan, int instance, int flags, int ratio, int nsamps, TYPEC
 
 bool fft_msgs(char *msg, int rx_chan)
 {
-	fft_t *e = &fft[rx_chan];
+	fft_state_t *e = &fft[rx_chan];
 	int n;
 	
 	//printf("FFT RX%d <%s>\n", rx_chan, msg);

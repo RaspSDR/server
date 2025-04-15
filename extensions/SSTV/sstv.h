@@ -213,7 +213,7 @@ typedef struct {
     struct {
         s2_t HeaderShift;
         u1_t Mode;
-        ModeSpec_t *modespec;
+        const ModeSpec_t *modespec;
         SSTV_REAL Rate, undo_rate;
         int Skip;
     } pic;

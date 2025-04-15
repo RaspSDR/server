@@ -177,7 +177,7 @@ bool sstv_msgs(char *msg, int rx_chan)
 	    printf("SSTV: xy %d,%d -> %d,%d\n", x0, y0, x1, y1);
 	    if (e->state != DONE) return true;
 
-        ModeSpec_t  *m = e->pic.modespec;
+        const ModeSpec_t  *m = e->pic.modespec;
         SSTV_REAL x = x1;
         SSTV_REAL y = y1 / m->LineHeight;
         SSTV_REAL dx = x - x0;

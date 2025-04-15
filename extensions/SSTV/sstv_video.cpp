@@ -19,7 +19,7 @@ void sstv_video_init(sstv_chan_t *e, SSTV_REAL rate, u1_t mode)
 {
     e->pic.Rate = rate;
     e->pic.Mode = mode;
-    ModeSpec_t *m = &ModeSpec[mode];
+    const ModeSpec_t *m = &ModeSpec[mode];
     e->pic.modespec = m;
 
     SSTV_REAL spp = rate * m->LineTime / m->ImgWidth;

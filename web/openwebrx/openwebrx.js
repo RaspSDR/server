@@ -2884,12 +2884,18 @@ function canvas_touchEnd(evt)
 	evt.preventDefault();
 }
 
-var canvas_mousewheel_rlimit = kiwi_rateLimit(canvas_mousewheel_cb, 170);
+var canvas_mousewheel_rlimit_zoom = kiwi_rateLimit(canvas_mousewheel_cb, 170);
+var canvas_mousewheel_rlimit_tune = kiwi_rateLimit(canvas_mousewheel_cb, 25);
 
 function canvas_mousewheel(evt)
 {
-   canvas_mousewheel_rlimit(evt);
-	evt.preventDefault();	
+   var flip_sense = (owrx.buttons == mouse.BUTTONS_M)? 1:0;
+   if (owrx.wheel_tunes ^ flip_sense) {
+      canvas_mousewheel_rlimit_tune(evt);
+   } else {
+      canvas_mousewheel_rlimit_zoom(evt);
+   }
+	evt.preventDefault();
 }
 
 function freqstep_cb(path, sel, first, ev)
@@ -3077,7 +3083,7 @@ function canvas_mouse_wheel_set(set)
    //console.log('canvas_mouse_wheel_set wheel_tunes(cur)='+ TF(owrx.wheel_tunes) +' set='+ set);
    owrx.wheel_tunes = isUndefined(set)? (owrx.wheel_tunes ^ 1) : (isNull(set)? 0 : (+set));
    //console.log('canvas_mouse_wheel_set wheel_tunes(new)='+ TF(owrx.wheel_tunes));
-   kiwi_storeWrite('wheel_tunes', owrx.wheel_tunes);
+   kiwi_storeSet('wheel_tunes', owrx.wheel_tunes);
 }
 
 ////////////////////////////////
@@ -4234,6 +4240,7 @@ function wf_init_ready()
    if (isNonEmptyArray(shortcut.keys) && !override_ext)
 	   setTimeout(keyboard_shortcut_url_keys, 5000);
 	
+   canvas_mouse_wheel_set(kiwi_storeGet('wheel_tunes', 1));
 	wf_snap(kiwi_storeGet('wf_snap'));
 
    if (kiwi_isMobile())

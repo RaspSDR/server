@@ -50,6 +50,7 @@ pkg_check_modules(GPS REQUIRED libgps)
 pkg_check_modules(UNWIND REQUIRED libunwind)
 pkg_check_modules(SQLite3 REQUIRED sqlite3)
 pkg_check_modules(CURL REQUIRED libcurl)
+pkg_check_modules(SSL REQUIRED openssl)
 
 set(CONFIG_LIBRARIES "/usr/lib/libconfig++.a")
 
@@ -222,6 +223,7 @@ target_link_libraries(websdr.bin PRIVATE
     ${UNWIND_LIBRARIES}
     ${CONFIG_LIBRARIES}
     ${CURL_LIBRARIES}
+    ${SSL_LIBRARIES}
 )
 
 if(ENABLE_HDFL)
@@ -263,6 +265,10 @@ target_compile_definitions(websdr.bin PUBLIC
 
     # for SIMD
     __ARM_NEON
+
+    # Enable SSL
+    USE_SSL
+    MQTT_USE_BIO
 
     # for extensions
     DRM HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H HAVE_STRINGS_H

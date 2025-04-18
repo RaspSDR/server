@@ -9,7 +9,7 @@ This code is forked from KiwiSDR project.
 1. Use native thread instead of process for most blocking opertaions.
 1. Use hardware GPS instead of Software Defined GPS receiver
 1. Use PPS signal to tune ADC clock.
-1. Disable HDL, ToDA extention for now
+1. Disable ToDA extention for now
 1. Use CMake as build system instead of Makefile, gcc as compiler instead of clang.
 
 ## Setup a build enviorment by qemu

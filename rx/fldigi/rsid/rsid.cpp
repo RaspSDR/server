@@ -36,7 +36,6 @@
 #include "timer.h"
 #include "ext.h"
 
-#include "fldigi_complex.h"
 #include "fldigi_globals.h"
 #include "rsid.h"
 #include "rsid_defs.h"

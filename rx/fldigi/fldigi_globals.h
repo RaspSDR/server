@@ -279,50 +279,6 @@ enum {
 
 typedef intptr_t trx_mode;
 
-struct mode_info_t {
-    trx_mode mode;
-    class modem** modem;
-    const char* sname;
-    const char* name;
-    const char* pskmail_name;
-    const char* adif_name;
-    const char* export_mode;
-    const char* export_submode;
-    const char* vid_name;
-    const unsigned int iface_io; // Some modes are not usable for a given interface.
-};
-extern const struct mode_info_t mode_info[NUM_MODES];
-
-class qrg_mode_t {
-public:
-    unsigned long long rfcarrier;
-    std::string rmode;
-    int carrier;
-    trx_mode mode;
-    std::string usage;
-
-    qrg_mode_t() : rfcarrier(0),
-                   rmode("NONE"),
-                   carrier(0),
-                   mode(NUM_MODES),
-                   usage("") {}
-    qrg_mode_t(unsigned long long rfc_, std::string rm_, int c_, trx_mode m_, std::string use_ = "")
-        : rfcarrier(rfc_), rmode(rm_), carrier(c_), mode(m_), usage(use_) {}
-    bool operator<(const qrg_mode_t& rhs) const {
-        return rfcarrier < rhs.rfcarrier;
-    }
-    bool operator==(const qrg_mode_t& rhs) const {
-        return rfcarrier == rhs.rfcarrier && rmode == rhs.rmode &&
-               carrier == rhs.carrier && mode == rhs.mode;
-    }
-    std::string str(void);
-};
-std::ostream& operator<<(std::ostream& s, const qrg_mode_t& m);
-std::istream& operator>>(std::istream& s, qrg_mode_t& m);
-
-#include <bitset>
-class mode_set_t : public std::bitset<NUM_MODES> {};
-
 enum band_t {
     BAND_160M,
     BAND_80M,
@@ -369,8 +325,5 @@ enum { VIEWER_LABEL_OFF,
        VIEWER_LABEL_RF,
        VIEWER_LABEL_CH,
        VIEWER_LABEL_NTYPES };
-
-extern std::string adif2export(std::string adif);
-extern std::string adif2submode(std::string adif);
 
 #endif

@@ -30,6 +30,10 @@ public:
         i2c = new I2C(i2c_bus_addr, chip_address);
     }
 
+    virtual ~LinuxInterface() {
+        delete i2c;
+    }
+
     // check f
     uint8_t check_address(uint8_t device_addr) {
 

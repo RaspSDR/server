@@ -47,6 +47,10 @@ public:
      * @return The number of bytes written
      */
     virtual uint8_t write_bulk(uint8_t i2c_bus_addr, uint8_t addr, uint8_t bytes, uint8_t* data) = 0;
+
+    virtual ~I2CInterface() {
+        // Nothing to do here
+    }
 };
 
 #endif

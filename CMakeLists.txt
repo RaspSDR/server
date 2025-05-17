@@ -17,7 +17,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS "-Wall -fsingle-precision-constant -pthread")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
@@ -268,7 +268,6 @@ target_compile_definitions(websdr.bin PUBLIC
 
     # Enable SSL
     USE_SSL
-    MQTT_USE_BIO
 
     # for extensions
     DRM HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H HAVE_STRINGS_H

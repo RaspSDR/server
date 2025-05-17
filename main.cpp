@@ -36,6 +36,7 @@ Boston, MA  02110-1301, USA.
 #include "sanitizer.h"
 #include "shmem.h" // shmem_init()
 #include "debug.h"
+#include "mqttpub.h"
 
 #include "version.h"
 
@@ -270,6 +271,8 @@ int main(int argc, char* argv[]) {
         printf("device DNA %08x|%08x\n", PRINTF_U64_ARG(net.dna));
     }
 
+    mqtt_init();
+
     rx_server_init();
 
     extint_setup();
@@ -286,6 +289,7 @@ int main(int argc, char* argv[]) {
 
     CreateTask(stat_task, NULL, MAIN_PRIORITY);
 
+    mqtt_publish("start", "");
     // run periodic housekeeping functions
     while (TRUE) {
 
@@ -294,6 +298,10 @@ int main(int argc, char* argv[]) {
 
         TaskSleepReasonSec("main loop", 10);
 
-        if (_kiwi_restart) kiwi_exit(0);
+        if (_kiwi_restart)
+        {
+            mqtt_publish("stop", "");
+            kiwi_exit(0);
+        }
     }
 }

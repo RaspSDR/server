@@ -33,6 +33,7 @@ Boston, MA  02110-1301, USA.
 #include "non_block.h"
 #include "eeprom.h"
 #include "shmem.h"
+#include "mqttpub.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -210,6 +211,8 @@ static void webserver_collect_print_stats(int print) {
         }
         ks = kstr_asprintf(NULL, "\"ct\":%d,\"cf\":%f,\"cc\":%.0f,",
                            timer_sec(), cpufreq_kHz / 1000.0, temp_deg_mC);
+
+        mqtt_publish("stat", "\"temp\":%.0f", temp_deg_mC);
 
         ks = kstr_cat(ks, kstr_list_int("\"cu\":[", "%d", "],", &del_usi[0][0], ncpu));
         ks = kstr_cat(ks, kstr_list_int("\"cs\":[", "%d", "],", &del_usi[1][0], ncpu));

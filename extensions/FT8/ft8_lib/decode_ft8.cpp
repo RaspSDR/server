@@ -8,6 +8,7 @@
 #include "PSKReporter.h"
 #include "printf.h"
 #include "ext.h"
+#include "mqttpub.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -468,12 +469,16 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
                 asprintf(&grid_de_s, rr73? "(RR73)" : "<a style=\"color:blue\" href=\"http://www.levinecentral.com/ham/grid_square.php?"
                     "Grid=%s\" target=\"_blank\">%s</a>", grid_de, grid_de);
 
+                const char *protocol = (ft8->protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4";
+
+                mqtt_publish(protocol, "\"call:\":\"%s\", \"grid\":\"%s\", \"snr\":%.1f, \"dT\":%.2f, \"freq\":%.0f, \"km\":%d, \"age\":%d",
+                    call_to, grid_de, snr, time_sec, freq_hz, km, age);
+
                 if (n == 3) {
                     // call_to call_de grid4
                     ext_send_msg_encoded(rx_chan, false, "EXT", "chars",
                         "%s %s%s %s%s %s" NONL, kstr_sp(ks), ft8->debug? "3> ":"", call_to_s, uploaded? GREEN : "", call_de_s, grid_de_s);
-                } else
-                if (n == 4) {
+                } else if (n == 4) {
                     // CQ DX call_de grid4
                     ext_send_msg_encoded(rx_chan, false, "EXT", "chars",
                         "%s %s%s %s %s%s %s" NONL, kstr_sp(ks), ft8->debug? "4> ":"", f[0], f[1], uploaded? GREEN : "", call_de_s, grid_de_s);

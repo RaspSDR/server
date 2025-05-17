@@ -36,6 +36,7 @@
 #include "coroutines.h"
 #include "wspr.h"
 #include "services.h"
+#include "mqttpub.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -495,6 +496,9 @@ void WSPR_Deco(void *param)
             wspr_decode_t *dp = &w->deco[i];
             if (strcmp(dp->call, "...") == 0) continue;
             
+            mqtt_publish("WSPR", "\"call\":\"%s\",\"grid\":\"%s\",\"snr\":%.1f,\"dt\":%.1f,\"drift\":%d,\"freq\":%.6f,\"pwr\":%d",
+                dp->call, dp->grid, dp->snr, dp->dt_print, (int) dp->drift1, dp->freq_print, (int) dp->pwr);
+
             if (w->autorun) {
                 asprintf(&cmd, WSPR_SPOT, wspr_c.rcall, wspr_c.rgrid, rqrg, year%100, month, day,
                     dp->hour, dp->min, dp->snr, dp->dt_print, (int) dp->drift1, dp->freq_print, dp->call, dp->grid, dp->pwr);

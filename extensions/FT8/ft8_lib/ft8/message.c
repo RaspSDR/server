@@ -2,6 +2,7 @@
 #include "coroutines.h"
 
 #include "message.h"
+#include "ext.h"
 #include "text.h"
 #include <stdio.h>
 #include <unistd.h>

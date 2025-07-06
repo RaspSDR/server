@@ -1059,9 +1059,6 @@ function network_html()
 	
 	var s2 =
 		'<hr>' +
-		w3_div('id-net-config w3-container') +
-
-		'<hr>' +
 		w3_half('w3-container', '',
          w3_div('',
             w3_div('', 
@@ -1080,10 +1077,26 @@ function network_html()
                w3_label('id-net-check-port-ip-q w3-show-inline-block w3-margin-LR-16 w3-text-teal') +
                w3_div('id-net-check-port-ip-s w3-show-inline-block w3-text-black w3-background-pale-aqua')
             )
-         )
+            ), w3_div('id-net-config w3-container')
       );
 
-   var s3 =
+      var s3 = '<hr>' +
+      w3_third('w3-container w3-text-teal', 'w3-container',
+            w3_div('',
+               w3_text('w3-bold w3-text-teal', 'MQTT Configurations'),
+               w3_text('w3-text-black w3-show-block', "Leave Server name blank to disable MQTT.<br> Have to restart server to take effect.")
+            ),
+            w3_div('w3-margin-B-8 w3-text-teal',
+               w3_input_get('', 'MQTT Server', 'adm.mqtt_server', 'w3_string_set_cfg_cb', '', 'server name'),
+               w3_input_get('', 'MQTT Port', 'adm.mqtt_port', 'w3_int_set_cfg_cb', '1899', ''),
+            ),
+            w3_div('w3-margin-B-8 w3-text-teal',
+				   w3_input_get('', 'MQTT Username', 'adm.mqtt_user', 'w3_string_set_cfg_cb', '', 'mqtt user'),
+				   w3_input_get('', 'MQTT Password', 'adm.mqtt_password', 'w3_string_set_cfg_cb', '', 'mqtt password')
+            )
+      );
+
+   var s4 =
 		'<hr>' +
       w3_div('w3-container w3-text-teal',
          w3_inline('w3-valign w3-halign-space-between/',
@@ -1146,7 +1159,7 @@ function network_html()
       ) +
       '<hr>';
 
-	return w3_div('id-network w3-hide', s1 + s2 + s3);
+	return w3_div('id-network w3-hide', s1 + s2 + s3 + s4);
 }
 
 function network_ssl_container_init()

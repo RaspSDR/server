@@ -38,27 +38,13 @@ static void ant_switch_init(int rx_chan)
     ext_send_msg(rx_chan, ANT_SWITCH_DEBUG_MSG, "EXT channels=%d", n_ch);
 }
 
-int ant_switch_queryantennas()
-{
-    if (antenna_current)
-    {
-        // find the first 1
-        for(int i = 0; i < kiwi.ant_switch_nch; i++)
-        {
-            if (antenna_current & (1 << i))
-                return i + 1;
-        }
-    }
-
-    return 0;
-}
-
 void ant_switch_setantenna(int antenna)
 {
     if (antenna == 0)
         antenna_current = 0;
     else
-        antenna_current |= 1 << (antenna - 1);
+        antenna_current = 1 << (antenna - 1);
+
     fpga_set_antenna(antenna_current);
     return;
 }
@@ -189,20 +175,31 @@ bool ant_switch_msgs(char *msg, int rx_chan)
 
     if (strcmp(msg, "GET Antenna") == 0)
     {
-        int selected_antennas = ant_switch_queryantennas();
-        ext_send_msg(rx_chan, ANT_SWITCH_DEBUG_MSG, "EXT Antenna=%d", selected_antennas);
+        char buf[32] = "";
+        if (antenna_current == 0)
+            snprintf(buf, sizeof(buf), "0");
+        else {
+            for(int i = 0; i < kiwi.ant_switch_nch; i++)
+            {
+                if (antenna_current & (1 << i))
+                    sprintf(buf + strlen(buf), "%d,", i + 1);
+            }
+            buf[strlen(buf) - 1] = '\0'; // remove trailing comma
+        }
+
+        ext_send_msg(rx_chan, ANT_SWITCH_DEBUG_MSG, "EXT Antenna=%s", buf);
 
         static int last_selected_antennas;
-        if (selected_antennas != last_selected_antennas)
+        if (antenna_current != last_selected_antennas)
         {
             char *s;
-            if (selected_antennas == 0)
+            if (antenna_current == 0)
                 s = (char *)"All antennas now grounded.";
             else
-                s = stprintf("Selected antennas are now: %d", selected_antennas);
+                s = stprintf("Selected antennas are now: %s", buf);
             static u4_t seq;
             ext_notify_connected(rx_chan, seq++, s);
-            last_selected_antennas = selected_antennas;
+            last_selected_antennas = antenna_current;
         }
 
         int deny_reason = 0;
@@ -225,7 +222,7 @@ bool ant_switch_msgs(char *msg, int rx_chan)
         {
             ext_send_msg(rx_chan, ANT_SWITCH_DEBUG_MSG, "EXT Thunderstorm=1");
             // also ground antenna if not grounded
-            if (selected_antennas == 0)
+            if (antenna_current == 0)
             {
                 ant_switch_setantenna(0);
                 ext_send_msg(rx_chan, ANT_SWITCH_DEBUG_MSG, "EXT Antenna=g");

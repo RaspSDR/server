@@ -211,13 +211,13 @@ var ant_sw = {
                 'ant_switch.denyswitching', deny_select, ant_sw.deny_s, 'ant_switchdeny_cb'
              ),
  
-             w3_div('w3-margin-T-16','If antenna mixing is denied then users can select only one antenna at time.'),
-             w3_div('w3-margin-T-8', '<b>Deny antenna mixing?</b> ' +
+             w3_div('w3-margin-T-16','If Single antenna mode is selected then users can select only one antenna at time.'),
+             w3_div('w3-margin-T-8', '<b>Single Antenna Mode?</b> ' +
                 w3_switch('', 'No', 'Yes', 'ant_switch.denymixing', denymixing_no_yes, 'ant_switch_confdenymixing')
              ),
  
-             w3_div('w3-margin-T-16','If multiuser is denied then antenna switching is disabled when more than one user is online.'),
-             w3_div('w3-margin-T-8', '<b>Deny multiuser switching?</b> ' +
+             w3_div('w3-margin-T-16','If Single user mode is selected then antenna switching is disabled when more than one user is online.'),
+             w3_div('w3-margin-T-8', '<b>Enable Only single-user switching?</b> ' +
                 w3_switch('', 'No', 'Yes', 'ant_switch.denymultiuser', denymultiuser_no_yes, 'ant_switch_confdenymultiuser')
              ),
  

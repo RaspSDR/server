@@ -36,6 +36,8 @@ Boston, MA  02110-1301, USA.
 #include "ext_int.h"
 #include "debug.h"
 #include "services.h"
+#include "options.h"
+#include "support/version.h"
 
 #include <string.h>
 #include <ctype.h>

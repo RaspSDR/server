@@ -28,6 +28,7 @@ Boston, MA  02110-1301, USA.
 #include "coroutines.h"
 #include "mongoose.h"
 #include "nbuf.h"
+#include "support/version.h"
 #include "cfg.h"
 #include "net.h"
 #include "ip_blacklist.h"

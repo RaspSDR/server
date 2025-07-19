@@ -8,6 +8,15 @@
 #include <stdarg.h>
 #include <signal.h>
 
+// Debug variables
+int ev_dump = 0, test_flag, dx_print;
+bool debug_printfs, cmd_debug;
+
+void debug_init() {
+    // Debug variables are initialized to their default values above
+    // or set via command line arguments
+}
+
 #ifdef EV_MEAS
 
 typedef struct {

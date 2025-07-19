@@ -170,4 +170,11 @@ void ev(int cmd, int event, int param, const char* s, const char* s2);
 
 char* evprintf(const char* fmt, ...);
 
+// Debug variables
+extern int ev_dump, test_flag, dx_print;
+extern bool debug_printfs, cmd_debug;
+
+// Initialize debug variables
+void debug_init();
+
 #endif

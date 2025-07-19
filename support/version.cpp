@@ -15,18 +15,14 @@ Boston, MA  02110-1301, USA.
 --------------------------------------------------------------------------------
 */
 
-// Copyright (c) 2022 John Seamons, ZL4VO/KF6VO
+// Copyright (c) 2014-2022 John Seamons, ZL4VO/KF6VO
 
-#pragma once
+#include "version.h"
 
-#define OPTION_SERVER_GEOLOC
-#define OPTION_LOG_WF_ONLY_UPDATES
-#define OPTION_DENY_APP_FINGERPRINT_CONN
-#define OPTION_EXPERIMENT_CICF
-//#define OPTION_HONEY_POT
+// Version information
+int version_maj, version_min;
 
-// Command-line options and runtime settings
-extern int tone, down, navg, meas, print_stats, use_foptim;
-
-// Initialize options
-void options_init();
+void version_init() {
+    version_maj = VERSION_MAJ;
+    version_min = VERSION_MIN;
+}

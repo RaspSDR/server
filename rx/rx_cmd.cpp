@@ -38,7 +38,6 @@ Boston, MA  02110-1301, USA.
 #include "debug.h"
 #include "ext_int.h"
 #include "FT8.h"
-#include "support/version.h"
 #include "wspr.h"
 #include "security.h"
 #include "options.h"

@@ -37,8 +37,6 @@ Boston, MA  02110-1301, USA.
 #include "shmem.h" // shmem_init()
 #include "debug.h"
 #include "mqttpub.h"
-#include "options.h"
-#include "support/version.h"
 
 #include "version.h"
 
@@ -61,7 +59,19 @@ Boston, MA  02110-1301, USA.
 
 kiwi_t kiwi;
 
-// Main program arguments (keep in main.cpp)
+int version_maj, version_min;
+int rx_chans, wf_chans, nrx_samps, snd_rate, rx_decim;
+
+int ev_dump = 0, tone, down, gps_chans = GPS_MAX_CHANS, rx_num, wf_num,
+    navg = 1, meas, monitors_max, bg,
+    print_stats, debian_maj, debian_min, test_flag, dx_print,
+    use_foptim, is_locked, drm_nreg_chans;
+
+u4_t ov_mask;
+
+bool create_eeprom, need_hardware, kiwi_reg_debug, have_ant_switch_ext,
+    disable_led_task, debug_printfs, cmd_debug;
+
 int main_argc;
 char** main_argv;
 static bool _kiwi_restart;
@@ -77,14 +87,11 @@ void kiwi_restart() {
 int main(int argc, char* argv[]) {
     bool err;
 
+    version_maj = VERSION_MAJ;
+    version_min = VERSION_MIN;
+
     main_argc = argc;
     main_argv = argv;
-
-    // Initialize various subsystems
-    version_init();
-    debug_init();
-    options_init();
-    cfg_hw_init();
 
     // enable generation of core file in /tmp
     // scall("core_pattern", system("echo /tmp/core-%e-%s-%p-%t > /proc/sys/kernel/core_pattern"));

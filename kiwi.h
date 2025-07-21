@@ -75,6 +75,8 @@ typedef struct {
 
 extern kiwi_t kiwi;
 
+extern int version_maj, version_min;
+
 extern bool background_mode, any_preempt_autorun,
     DUC_enable_start, rev_enable_start, web_nocache, force_camp,
     snr_local_time, log_local_ip, DRM_enable, have_snd_users, admin_keepalive;

@@ -234,3 +234,22 @@ typedef enum { CFG_OPT_NONE,
                CFG_OPT_ID1,
                CFG_OPT_ID2,
                CFG_OPT_NO_DOT } cfg_lookup_e;
+
+// Hardware configuration variables
+extern int rx_chans, wf_chans, nrx_samps, snd_rate, rx_decim;
+extern int rx_num, wf_num, monitors_max;
+
+// System configuration variables
+extern int debian_maj, debian_min, bg;
+extern bool need_hardware, create_eeprom;
+
+// System state variables
+extern u4_t ov_mask;
+extern int is_locked, drm_nreg_chans;
+extern bool have_ant_switch_ext, disable_led_task, kiwi_reg_debug;
+
+// GPS configuration variables  
+extern int gps_chans;
+
+// Initialize hardware configuration
+void cfg_hw_init();

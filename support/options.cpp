@@ -15,18 +15,14 @@ Boston, MA  02110-1301, USA.
 --------------------------------------------------------------------------------
 */
 
-// Copyright (c) 2022 John Seamons, ZL4VO/KF6VO
+// Copyright (c) 2014-2022 John Seamons, ZL4VO/KF6VO
 
-#pragma once
-
-#define OPTION_SERVER_GEOLOC
-#define OPTION_LOG_WF_ONLY_UPDATES
-#define OPTION_DENY_APP_FINGERPRINT_CONN
-#define OPTION_EXPERIMENT_CICF
-//#define OPTION_HONEY_POT
+#include "options.h"
 
 // Command-line options and runtime settings
-extern int tone, down, navg, meas, print_stats, use_foptim;
+int tone, down, navg = 1, meas, print_stats, use_foptim;
 
-// Initialize options
-void options_init();
+void options_init() {
+    // Options are initialized to their default values above
+    // or set via command line arguments
+}

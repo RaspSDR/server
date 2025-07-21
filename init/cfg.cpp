@@ -156,6 +156,27 @@ static void cfg_test() {
 
 int serial_number;
 
+// Hardware configuration variables
+int rx_chans, wf_chans, nrx_samps, snd_rate, rx_decim;
+int rx_num, wf_num, monitors_max;
+
+// System configuration variables
+int debian_maj, debian_min, bg;
+bool need_hardware, create_eeprom;
+
+// System state variables
+u4_t ov_mask;
+int is_locked, drm_nreg_chans;
+bool have_ant_switch_ext, disable_led_task, kiwi_reg_debug;
+
+// GPS configuration variables
+int gps_chans = GPS_MAX_CHANS;
+
+void cfg_hw_init() {
+    // Hardware configuration variables are initialized when hardware is detected
+    // or set via configuration/command line arguments
+}
+
 // only called once from main()
 void cfg_reload() {
     cfg_init();

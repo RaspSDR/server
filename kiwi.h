@@ -77,22 +77,16 @@ extern kiwi_t kiwi;
 
 extern int version_maj, version_min;
 
-extern bool background_mode, need_hardware, any_preempt_autorun,
-    DUC_enable_start, rev_enable_start, web_nocache, kiwi_reg_debug, cmd_debug,
-    have_ant_switch_ext, disable_led_task, debug_printfs, force_camp,
+extern bool background_mode, any_preempt_autorun,
+    DUC_enable_start, rev_enable_start, web_nocache, force_camp,
     snr_local_time, log_local_ip, DRM_enable, have_snd_users, admin_keepalive;
 
-extern int ev_dump, tone, down, navg, meas, monitors_max,
-    gps_chans, rx_num, wf_num, bg, dx_print,
-    port, print_stats, serial_number, ip_limit_mins, is_locked, test_flag, n_camp,
+extern int port, serial_number, ip_limit_mins, test_flag, n_camp,
     inactivity_timeout_mins, S_meter_cal, waterfall_cal, current_nusers, debug_v,
     utc_offset, dst_offset, reg_kiwisdr_com_status, kiwi_reg_lo_kHz, kiwi_reg_hi_kHz,
-    debian_maj, debian_min, use_foptim, web_caching_debug,
-    drm_nreg_chans, snr_meas_interval_hrs, snr_all, snr_HF, ant_connected;
+    web_caching_debug, snr_meas_interval_hrs, snr_all, snr_HF, ant_connected;
 
 extern char** main_argv;
-
-extern u4_t ov_mask;
 extern float g_genfreq, g_genampl, g_mixfreq, max_thr;
 extern double ui_srate, ui_srate_kHz, freq_offset_kHz, freq_offmax_kHz;
 #define freq_offset freq_offset_kHz // ant switch ext compatibility

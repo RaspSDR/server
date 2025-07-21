@@ -8,7 +8,6 @@ set(UPSTREAM_DIR ${CMAKE_SOURCE_DIR})
 find_program(MINIFY_COMMAND NAMES minify)
 
 option(ZYNQ "Build for Zynq7000 serial based WebSDR" ON)
-option(RPI "Build for RPI serial based WebSDR" OFF)
 option(ENABLE_HDFL "Enable HFDL" ON)
 
 if(NOT CMAKE_BUILD_TYPE)

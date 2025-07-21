@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wall -fsingle-precision-constant -ffast-math -pthread -g -O0 -flto=auto -fno-fat-lto-objects -Wl,--dependency-file=CMakeFiles/eibi_proc.dir/link.d CMakeFiles/eibi_proc.dir/pkgs/EiBi/eibi_proc.cpp.o -o eibi_proc

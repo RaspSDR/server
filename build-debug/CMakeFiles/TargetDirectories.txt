@@ -1,7 +1,0 @@
-/home/runner/work/server/server/build-debug/CMakeFiles/websdr.bin.dir
-/home/runner/work/server/server/build-debug/CMakeFiles/copy_config_target.dir
-/home/runner/work/server/server/build-debug/CMakeFiles/copy_libfdk_target.dir
-/home/runner/work/server/server/build-debug/CMakeFiles/eibi_proc.dir
-/home/runner/work/server/server/build-debug/CMakeFiles/eibi_gen_target.dir
-/home/runner/work/server/server/build-debug/CMakeFiles/edit_cache.dir
-/home/runner/work/server/server/build-debug/CMakeFiles/rebuild_cache.dir

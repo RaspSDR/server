@@ -1,9 +1,12 @@
 name: Server Build
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
     env:
       alpine_url: http://dl-cdn.alpinelinux.org/alpine/v3.20
       SKIP_MODLOOP: 1
@@ -21,8 +24,8 @@ jobs:
             libfftw3-dev zlib1g-dev libfdk-aac-dev libgps-dev libunwind-dev \
             libsqlite3-dev libcurl4-openssl-dev libssl-dev libconfig++-dev minify
 
-      - name: Build
+      - name: Build ${{ matrix.build_type }}
         run: |
           mkdir -p build && cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_HDFL=OFF ..
-          cmake --build . --config Release
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_HDFL=OFF ..
+          cmake --build . --config ${{ matrix.build_type }}

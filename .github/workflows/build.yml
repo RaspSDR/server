@@ -1,0 +1,28 @@
+name: Server Build
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      alpine_url: http://dl-cdn.alpinelinux.org/alpine/v3.20
+      SKIP_MODLOOP: 1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: setup packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libconfig++-dev \
+            libfftw3-dev zlib1g-dev libfdk-aac-dev libgps-dev libunwind-dev \
+            libsqlite3-dev libcurl4-openssl-dev libssl-dev libconfig++-dev
+
+      - name: Build
+        run: |
+          mkdir -p build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --config Release

@@ -19,25 +19,35 @@ endif(NOT CMAKE_BUILD_TYPE)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 set(CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_CXX_FLAGS "-Wall -fsingle-precision-constant -pthread")
+set(CMAKE_CXX_FLAGS "-Wall -fsingle-precision-constant -ffast-math -pthread")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-g -O3")
 
-set(CMAKE_C_FLAGS "-Wall -fsingle-precision-constant")
+set(CMAKE_C_FLAGS "-Wall -fsingle-precision-constant -ffast-math")
 set(CMAKE_C_FLAGS_DEBUG "-g -O0")
 set(CMAKE_C_FLAGS_RELEASE "-g -O3")
 
+set(PLATFORM zynq)
+set(PLATFORM_INC ${PLATFORM})
+FILE(GLOB PLATFORM_SRCS
+    "${PLATFORM}/*.cpp"
+)
 
-if(ZYNQ)
-    set(PLATFORM zynq)
-    set(PLATFORM_INC ${PLATFORM})
-    set(PLATFORM_FLAGS -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard -ffast-math -fsingle-precision-constant -mvectorize-with-neon-quad)
-    FILE(GLOB PLATFORM_SRCS
-        "${PLATFORM}/*.cpp"
+# Detect if host system is ARM
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+    set(PLATFORM_FLAGS -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard  -mvectorize-with-neon-quad)
+    set(PLATFORM_DEFINES 
+            # for CMSIS
+        ARM_MATH_NEON
+        ARM_MATH_LOOPUNROLL
+
+        # for SIMD
+        __ARM_NEON
     )
 else()
-    # Not supported
-    MESSAGE(FATAL "Not supported")
+    set(PLATFORM_FLAGS -ffast-math)
+    set(ENABLE_HFDL OFF)
+    SET(EMULATOR ON)
 endif()
 
 find_package(PkgConfig REQUIRED)
@@ -52,7 +62,11 @@ pkg_check_modules(SQLite3 REQUIRED sqlite3)
 pkg_check_modules(CURL REQUIRED libcurl)
 pkg_check_modules(SSL REQUIRED openssl)
 
-set(CONFIG_LIBRARIES "/usr/lib/libconfig++.a")
+if (EMULATOR)
+    pkg_check_modules(CONFIG REQUIRED libconfig++)
+else()
+    set(CONFIG_LIBRARIES "/usr/lib/libconfig++.a")
+endif()
 
 find_program(CCACHE_FOUND ccache)
 
@@ -259,12 +273,7 @@ target_compile_definitions(websdr.bin PUBLIC
     MONGOOSE_USE_EXTRA_HTTP_HEADERS="Access-Control-Allow-Origin: *"
     EDATA_EMBED
 
-    # for CMSIS
-    ARM_MATH_NEON
-    ARM_MATH_LOOPUNROLL
-
-    # for SIMD
-    __ARM_NEON
+    ${PLATFORM_DEFINES}
 
     # Enable SSL
     USE_SSL

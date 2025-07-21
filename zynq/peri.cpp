@@ -218,7 +218,7 @@ void fpga_rxfreq(int rx_chan, uint64_t freq) {
 
 void fpga_read_rx(void* buf, uint32_t size) {
     int rc;
-    struct rx_read_op read_op = { (__u32)buf, size };
+    struct rx_read_op read_op = { (__u32)(uintptr_t)buf, size };
 
     while (true) {
         // printf("In: 0x%x %d\t", read_op.address, read_op.length);
@@ -394,7 +394,7 @@ void fpga_free_wf(int wf_chan, int rx_chan) {
 
 void fpga_read_wf(int wf_chan, void* buf, uint32_t size) {
     int rc;
-    struct wf_read_op read_op = { (__u16)wf_chan, (__u32)buf, (__u32)size };
+    struct wf_read_op read_op = { (__u16)wf_chan, (__u32)(uintptr_t)buf, (__u32)size };
     while (true) {
         // printf("In: 0x%x %d\t", read_op.address, read_op.length);
         rc = ioctl(ad8370_fd, WF_READ, &read_op);

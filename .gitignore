@@ -1,4 +1,5 @@
 app/a.out
 *.zip
 build
+build-*
 debug

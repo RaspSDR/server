@@ -117,6 +117,14 @@ var ant_sw = {
     console.log('ant_switch: Antenna configuration');
     var buttons_html = '';
     var n_ant = 0;
+    
+    // Add "Switch All Off" button at the top
+    buttons_html += w3_div('w3-valign w3-margin-T-8',
+       w3_button('id-ant-sw-btn', 'Switch All Off', 'ant_switch_select_groundall', 0),
+       w3_div('w3-margin-L-8', 'Ground all antennas')
+    );
+    n_ant++;
+    
     for (tmp = 1; tmp <= ant_sw.n_ant; tmp++) {
        if (antdesc[tmp] == undefined || antdesc[tmp] == null || antdesc[tmp] == '') {
           antdesc[tmp] = ''; 
@@ -296,12 +304,24 @@ var ant_sw = {
     
     // update highlight
     var selected_antennas_list = ant_selected_antenna.split(',');
-    var re=/^Antenna ([1]?[0-9]+)/i;
- 
+    var re_antenna=/^Antenna ([1]?[0-9]+)/i;
+    var re_switch_off=/^Switch All Off$/i;
+
     w3_els('id-ant-sw-btn',
        function(el, i) {
-          if (!el.textContent.match(re)) return;
+          // Always unhighlight first
           w3_unhighlight(el);
+          
+          // Handle "Switch All Off" button
+          if (el.textContent.match(re_switch_off)) {
+             if (ant_selected_antenna == '0') {
+                w3_highlight(el);
+             }
+             return;
+          }
+          
+          // Handle numbered antenna buttons
+          if (!el.textContent.match(re_antenna)) return;
           var antN = el.textContent.parseIntEnd();
           if (!isArray(selected_antennas_list)) return;
           if (selected_antennas_list.indexOf(antN.toString()) < 0) return;  // not currently selected
@@ -378,8 +398,8 @@ var ant_sw = {
              w3_disable(el, lock);
           }
  
-          // Ground All
-          var re=/^Ground all$/i;
+          // Switch All Off
+          var re=/^Switch All Off$/i;
           if (el.textContent.match(re)) {
              w3_disable(el, lock);
           }

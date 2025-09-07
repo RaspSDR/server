@@ -130,6 +130,14 @@ var ant_sw = {
        ant_sw.desc_lc[tmp] = antdesc[tmp].toLowerCase();
        console.log('ant_switch: Antenna '+ tmp +': '+ antdesc[tmp]);
     }
+
+    // Add Ground All button
+    buttons_html += w3_div('w3-valign w3-margin-T-8',
+       w3_button('id-ant-sw-btn w3-red', 'Ground All', 'ant_switch_select_groundall', 0),
+       w3_div('w3-margin-L-8', 'Ground all antennas')
+    );
+    n_ant++;
+
     w3_innerHTML('id-ant_switch-user', buttons_html);
     ext_set_controls_width_height(400, 90 + Math.round(n_ant * 40));
  }
@@ -251,11 +259,12 @@ var ant_sw = {
  }
  
  function ant_switch_select_groundall(path,val) {
-    setTimeout('w3_radio_unhighlight('+ q(path) +')', w3_highlight_time);
     ant_switch_select_antenna(0);
  }
  
- function ant_switch_select_antenna_cb(path, val) { ant_switch_select_antenna(val); }
+ function ant_switch_select_antenna_cb(path, val) {
+    ant_switch_select_antenna(val);
+ }
  
  function ant_switch_select_antenna(ant) {
     console.log('ant_switch: switching antenna '+ant);
@@ -379,7 +388,7 @@ var ant_sw = {
           }
  
           // Ground All
-          var re=/^Ground all$/i;
+          var re=/^Ground All$/i;
           if (el.textContent.match(re)) {
              w3_disable(el, lock);
           }

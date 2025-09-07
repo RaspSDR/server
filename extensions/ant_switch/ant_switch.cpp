@@ -40,10 +40,12 @@ static void ant_switch_init(int rx_chan)
 
 void ant_switch_setantenna(int antenna)
 {
-    if (antenna == 0)
+    if (antenna == 0) {
+        // ground all
         antenna_current = 0;
-    else
+    } else {
         antenna_current = 1 << (antenna - 1);
+    }
 
     fpga_set_antenna(antenna_current);
     return;
@@ -52,14 +54,18 @@ void ant_switch_setantenna(int antenna)
 void ant_switch_toggleantenna(int antenna)
 {
     if (antenna == 0)
-        return;
+    {
+        // ground all
+        antenna_current = 0;
+    } else {
+        antenna--;
 
-    antenna--;
+        if (antenna_current & (1 << antenna))
+            antenna_current &= ~(1 << antenna);
+        else
+            antenna_current |= 1 << antenna;
 
-    if (antenna_current & (1 << antenna))
-        antenna_current &= ~(1 << antenna);
-    else
-        antenna_current |= 1 << antenna;
+    }
 
     fpga_set_antenna(antenna_current);
 

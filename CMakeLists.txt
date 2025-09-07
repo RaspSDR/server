@@ -45,7 +45,7 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch
     )
 else()
     set(PLATFORM_FLAGS -ffast-math)
-    set(ENABLE_HFDL OFF)
+    set(ENABLE_HDFL OFF)
     SET(EMULATOR ON)
 endif()
 

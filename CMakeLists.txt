@@ -175,6 +175,7 @@ file(GLOB_RECURSE KIWI_SRCS
     "${UPSTREAM_DIR}/init/*.cpp"
     "${UPSTREAM_DIR}/si5351/*.cpp"
 
+    "${UPSTREAM_DIR}/pkgs/sdrpp_server/*.cpp"
     "${UPSTREAM_DIR}/pkgs/mongoose/*.cpp"
     "${UPSTREAM_DIR}/pkgs/sha256/*.cpp"
     "${UPSTREAM_DIR}/pkgs/mqtt-c/*.c"

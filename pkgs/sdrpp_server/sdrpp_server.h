@@ -22,4 +22,4 @@ Boston, MA  02110-1301, USA.
 #include "types.h"
 #include "mongoose.h"
 
-void sdrpp_server_init(struct mg_mgr *server);
+void sdrpp_server_init(void);

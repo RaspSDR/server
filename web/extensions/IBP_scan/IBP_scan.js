@@ -364,3 +364,9 @@ function IBP_scan_plot(oneline_image)
 
    ibp.oldSlot = slot;
 }
+
+// called to display HTML for configuration parameters in admin interface
+function IBP_scan_config_html()
+{
+   ext_config_html(ibp, 'ibp', 'IBP scan', 'IBP scan configuration');
+}

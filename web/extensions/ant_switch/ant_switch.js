@@ -205,52 +205,51 @@ var ant_sw = {
     var denymultiuser_no_yes = ext_get_cfg_param('ant_switch.denymultiuser', '', EXT_NO_SAVE)? 0:1;
     var thunderstorm_no_yes = ext_get_cfg_param('ant_switch.thunderstorm', '', EXT_NO_SAVE)? 0:1;
  
-    ext_admin_config(ant_sw.ext_name, 'Antenna switch',
-       w3_div('id-ant_switch w3-text-teal w3-hide', '<b>Antenna switch configuration</b>' + '<hr>' +
+    var config_html =
+       w3_div('',
+          w3_div('', 'Version 0.5: 16 Jun 2023 <br><br>' +
+             'If antenna switching is denied then users cannot switch antennas. <br>' +
+             'Admin can always switch antennas from a connection on the local network.' +
+             'The last option allows anyone connecting using a password to switch antennas <br>' +
+             'i.e. time limit exemption password on the admin page control tab, not the user login password. <br>' +
+             'Other connections made without passwords are denied.'
+          ),
+          w3_select('w3-width-auto w3-label-inline w3-margin-T-8|color:red', 'Allow antenna switching by:', '',
+             'ant_switch.denyswitching', deny_select, ant_sw.deny_s, 'ant_switchdeny_cb'
+          ),
+ 
+          w3_div('w3-margin-T-16','If Single antenna mode is selected then users can select only one antenna at time.'),
+          w3_div('w3-margin-T-8', '<b>Single Antenna Mode?</b> ' +
+             w3_switch('', 'No', 'Yes', 'ant_switch.denymixing', denymixing_no_yes, 'ant_switch_confdenymixing')
+          ),
+ 
+          w3_div('w3-margin-T-16','If Single user mode is selected then antenna switching is disabled when more than one user is online.'),
+          w3_div('w3-margin-T-8', '<b>Enable Only single-user switching?</b> ' +
+             w3_switch('', 'No', 'Yes', 'ant_switch.denymultiuser', denymultiuser_no_yes, 'ant_switch_confdenymultiuser')
+          ),
+ 
+          w3_div('w3-margin-T-16','If thunderstorm mode is activated, all antennas and forced to ground and switching is disabled.'),
+          w3_div('w3-margin-T-8', '<b>Enable thunderstorm mode?</b> ' +
+             w3_switch('', 'No', 'Yes', 'ant_switch.thunderstorm', thunderstorm_no_yes, 'ant_switch_confthunderstorm')
+          ),
+ 
+          w3_div('','<hr><b>Antenna buttons configuration</b><br>'),
+          w3_col_percent('w3-margin-T-16/',
+             'Leave antenna description field empty if you want to hide antenna button from users. <br>' +
+             'For two-line descriptions use break sequence &lt;br&gt; between lines.', 68,
+             'Overrides frequency scale offset value on <br> config tab when any antenna selected. <br>' +
+             'No effect if antenna mixing enabled.'
+          ),
+ 
           w3_div('',
-             w3_div('', 'Version 0.5: 16 Jun 2023 <br><br>' +
-                'If antenna switching is denied then users cannot switch antennas. <br>' +
-                'Admin can always switch antennas from a connection on the local network.' +
-                'The last option allows anyone connecting using a password to switch antennas <br>' +
-                'i.e. time limit exemption password on the admin page control tab, not the user login password. <br>' +
-                'Other connections made without passwords are denied.'
-             ),
-             w3_select('w3-width-auto w3-label-inline w3-margin-T-8|color:red', 'Allow antenna switching by:', '',
-                'ant_switch.denyswitching', deny_select, ant_sw.deny_s, 'ant_switchdeny_cb'
-             ),
- 
-             w3_div('w3-margin-T-16','If Single antenna mode is selected then users can select only one antenna at time.'),
-             w3_div('w3-margin-T-8', '<b>Single Antenna Mode?</b> ' +
-                w3_switch('', 'No', 'Yes', 'ant_switch.denymixing', denymixing_no_yes, 'ant_switch_confdenymixing')
-             ),
- 
-             w3_div('w3-margin-T-16','If Single user mode is selected then antenna switching is disabled when more than one user is online.'),
-             w3_div('w3-margin-T-8', '<b>Enable Only single-user switching?</b> ' +
-                w3_switch('', 'No', 'Yes', 'ant_switch.denymultiuser', denymultiuser_no_yes, 'ant_switch_confdenymultiuser')
-             ),
- 
-             w3_div('w3-margin-T-16','If thunderstorm mode is activated, all antennas and forced to ground and switching is disabled.'),
-             w3_div('w3-margin-T-8', '<b>Enable thunderstorm mode?</b> ' +
-                w3_switch('', 'No', 'Yes', 'ant_switch.thunderstorm', thunderstorm_no_yes, 'ant_switch_confthunderstorm')
-             ),
- 
-             w3_div('','<hr><b>Antenna buttons configuration</b><br>'),
+             s,
              w3_col_percent('w3-margin-T-16/',
-                'Leave antenna description field empty if you want to hide antenna button from users. <br>' +
-                'For two-line descriptions use break sequence &lt;br&gt; between lines.', 68,
-                'Overrides frequency scale offset value on <br> config tab when any antenna selected. <br>' +
-                'No effect if antenna mixing enabled.'
-             ),
- 
-             w3_div('',
-                s,
-                w3_col_percent('w3-margin-T-16/',
-                   w3_input_get('', 'Antenna switch failure or unknown status decription', 'ant_switch.ant0desc', 'w3_string_set_cfg_cb', ''), 70
-                )
+                w3_input_get('', 'Antenna switch failure or unknown status decription', 'ant_switch.ant0desc', 'w3_string_set_cfg_cb', ''), 70
              )
           )
-       )
-    );
+       );
+    
+    ext_config_html(ant_sw, 'ant_switch', 'Antenna switch', 'Antenna switch configuration', config_html);
  }
  
  function ant_switchdeny_cb(path, val, first) {

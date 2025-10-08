@@ -303,7 +303,8 @@ function CW_skimmer_blur()
 // called to display HTML for configuration parameters in admin interface
 function CW_skimmer_config_html()
 {
-   ext_config_html(cws, 'cws', 'CW skimmer', 'CW skimmer configuration');
+   var s = w3_div('', '(no configuration options)');
+   ext_config_html(cws, 'cws', 'CW skimmer', 'CW skimmer configuration', s);
 }
 
 function CW_skimmer_help(show)

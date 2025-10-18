@@ -3545,14 +3545,13 @@ void mg_send_standard_headers(struct mg_connection *mc, const char *path, file_s
                   "Last-Modified: %s\r\n"
                   "Etag: %s\r\n"
                   "Content-Type: %.*s\r\n"
-                  "Content-Length: %" INT64_FMT "\r\n"
                   "Connection: %s\r\n"
                   "Accept-Ranges: bytes\r\n"
                   "%s%s%s%s",
                   mc->status_code, msg,
                   date,
                   lm, etag,
-                  (int) mime_vec.len, mime_vec.ptr, c->cl,
+                  (int) mime_vec.len, mime_vec.ptr,
                   suggest_connection_header(mc),
                   range, extra_headers == NULL ? "" : extra_headers,
                   MONGOOSE_USE_EXTRA_HTTP_HEADERS, term_cr_nl? "\r\n" : "");

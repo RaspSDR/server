@@ -18,7 +18,7 @@
 #include "mqtt.h"
 #include "mqttpub.h"
 
-static uint8_t sendbuf[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
+static uint8_t sendbuf[65536]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
 static uint8_t recvbuf[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
 
 static const char* mqtt_server;

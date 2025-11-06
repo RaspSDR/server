@@ -471,8 +471,8 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
 
                 const char *protocol = (ft8->protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4";
 
-                mqtt_publish(protocol, "\"call:\":\"%s\", \"grid\":\"%s\", \"snr\":%.1f, \"dT\":%.2f, \"freq\":%.0f, \"km\":%d, \"age\":%d",
-                    call_to, grid_de, snr, time_sec, freq_hz, km, age);
+                mqtt_publish(protocol, "\"call:\":\"%s\", \"call_to\":\"%s\", \"grid\":\"%s\", \"snr\":%.1f, \"dT\":%.2f, \"freq\":%.0f, \"km\":%d, \"age\":%d",
+                    call_de, call_to, grid_de, snr, time_sec, freq_hz, km, age);
 
                 if (n == 3) {
                     // call_to call_de grid4

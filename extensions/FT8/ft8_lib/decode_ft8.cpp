@@ -3,6 +3,7 @@
 #include "config.h"
 #include "str.h"
 #include "rx/CuteSDR/datatypes.h"
+#include "rx/rx.h"
 #include "coroutines.h"
 #include "FT8.h"
 #include "PSKReporter.h"
@@ -470,9 +471,10 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
                     "Grid=%s\" target=\"_blank\">%s</a>", grid_de, grid_de);
 
                 const char *protocol = (ft8->protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4";
-
-                mqtt_publish(protocol, "\"call:\":\"%s\", \"grid\":\"%s\", \"snr\":%.1f, \"dT\":%.2f, \"freq\":%.0f, \"km\":%d, \"age\":%d",
-                    call_to, grid_de, snr, time_sec, freq_hz, km, age);
+                conn_t *conn = rx_channels[rx_chan].conn;
+                u4_t freq = conn->freqHz + ft8_conf.freq_offset_Hz + freq_hz;
+                mqtt_publish(protocol, "\"call:\":\"%s\", \"call_to\":\"%s\", \"grid\":\"%s\", \"snr\":%.1f, \"dT\":%.2f, \"freq\":%.3f, \"km\":%d, \"age\":%d",
+                    call_de, call_to, grid_de, snr, time_sec, (double) freq / 1e3, km, age);
 
                 if (n == 3) {
                     // call_to call_de grid4

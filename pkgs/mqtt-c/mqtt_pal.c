@@ -339,7 +339,7 @@ ssize_t mqtt_pal_sendall(mqtt_pal_socket_handle fd, const void* buf, size_t len,
     while(sent < len) {
         ssize_t rv = send(fd, (const char*)buf + sent, len - sent, flags);
         if (rv < 0) {
-            if (errno == EAGAIN) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 /* should call send later again */
                 break;
             }

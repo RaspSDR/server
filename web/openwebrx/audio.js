@@ -147,6 +147,30 @@ var audio_resample_ratio;
 var audio_transition_bw;
 var audio_min_nbuf;
 var audio_max_nbuf;
+var audio_adapt_min_nbuf;
+var audio_adapt_max_nbuf;
+var audio_adapt_target_nbuf;
+var audio_adapt_last_underruns;
+var audio_adapt_last_overruns;
+var audio_adapt_stable_windows;
+var audio_adapt_cooldown;
+var audio_adapt_queue_avg;
+var audio_adapt_queue_samples;
+var audio_adapt_queue_min;
+var audio_adapt_queue_max;
+var audio_adapt_rtt_ewma;
+var audio_adapt_jitter_ewma;
+var audio_adapt_last_arrival_ms;
+var audio_adapt_server_seq;
+
+// size axis (two-axis adaptive controller)
+var audio_adapt_cb_ewma_ms;
+var audio_adapt_cb_overruns;
+var audio_adapt_cb_overruns_last;
+var audio_adapt_size_stable_windows;
+var audio_adapt_size_cooldown;
+var audio_adapt_size_min = 1024;        // power-of-two; ScriptProcessor allows 256 but very risky
+var audio_adapt_size_max = 8192;        // ScriptProcessor max
 
 // set in audio_connect()
 var audio_stat_output_epoch;
@@ -225,6 +249,200 @@ function audio_camp(disconnect, is_local, less_buffering, compression)
    audio_watchdog_restart = false;;
 }
 
+function audio_adapt_calc_nbuf(length_sec)
+{
+   return Math.ceil((length_sec * audio_output_rate) / audio_buffer_size);
+}
+
+function audio_adapt_recalc_bounds()
+{
+   audio_min_nbuf = audio_adapt_calc_nbuf(audio_buffer_min_length_sec);
+   audio_max_nbuf = audio_adapt_calc_nbuf(audio_buffer_max_length_sec);
+   audio_adapt_min_nbuf = audio_min_nbuf;
+   audio_adapt_max_nbuf = audio_max_nbuf;
+   audio_adapt_target_nbuf = audio_min_nbuf;
+}
+
+function audio_adapt_reset()
+{
+   audio_adapt_last_underruns = audio_underrun_errors;
+   audio_adapt_last_overruns = audio_overrun_errors;
+   audio_adapt_stable_windows = 0;
+   audio_adapt_cooldown = 0;
+   audio_adapt_queue_avg = 0;
+   audio_adapt_queue_samples = 0;
+   audio_adapt_queue_min = 0;
+   audio_adapt_queue_max = 0;
+   audio_adapt_rtt_ewma = 0;
+   audio_adapt_jitter_ewma = 0;
+   audio_adapt_last_arrival_ms = 0;
+   audio_adapt_server_seq = 0;
+   audio_adapt_cb_ewma_ms = 0;
+   audio_adapt_cb_overruns = 0;
+   audio_adapt_cb_overruns_last = 0;
+   audio_adapt_size_stable_windows = 0;
+   audio_adapt_size_cooldown = 0;
+}
+
+function audio_adapt_note_arrival(seq)
+{
+   var now = Date.now();
+   if (audio_adapt_last_arrival_ms) {
+      var delta = now - audio_adapt_last_arrival_ms;
+      if (audio_adapt_rtt_ewma == 0) {
+         audio_adapt_jitter_ewma = 0;
+      } else {
+         var err = Math.abs(delta - audio_adapt_rtt_ewma);
+         audio_adapt_jitter_ewma = audio_adapt_jitter_ewma? ((audio_adapt_jitter_ewma * 0.85) + (err * 0.15)) : err;
+      }
+   }
+   audio_adapt_last_arrival_ms = now;
+   audio_adapt_server_seq = seq;
+}
+
+function audio_adapt_set_rtt(rtt_ms)
+{
+   if (!(rtt_ms > 0)) return;
+   audio_adapt_rtt_ewma = audio_adapt_rtt_ewma? ((audio_adapt_rtt_ewma * 0.8) + (rtt_ms * 0.2)) : rtt_ms;
+}
+
+function audio_adapt_update()
+{
+   if (!audio_output_rate || !audio_buffer_size) return;
+
+   var qlen = audio_prepared_buffers.length;
+   audio_adapt_queue_samples++;
+   audio_adapt_queue_avg += qlen;
+   if (audio_adapt_queue_samples == 1) {
+      audio_adapt_queue_min = qlen;
+      audio_adapt_queue_max = qlen;
+   } else {
+      audio_adapt_queue_min = Math.min(audio_adapt_queue_min, qlen);
+      audio_adapt_queue_max = Math.max(audio_adapt_queue_max, qlen);
+   }
+
+   var underrun_delta = audio_underrun_errors - audio_adapt_last_underruns;
+   var overrun_delta = audio_overrun_errors - audio_adapt_last_overruns;
+   var queue_avg = audio_adapt_queue_samples? (audio_adapt_queue_avg / audio_adapt_queue_samples) : qlen;
+   var target = audio_adapt_target_nbuf;
+   var grew = false;
+
+   if (audio_buffering || underrun_delta > 0) {
+      target = Math.min(audio_adapt_max_nbuf, target + 1);
+      audio_adapt_stable_windows = 0;
+      audio_adapt_cooldown = 3;
+      grew = true;
+   } else if (overrun_delta > 0 || audio_adapt_queue_max > (target + 1)) {
+      target = Math.min(audio_adapt_max_nbuf, target + 1);
+      audio_adapt_stable_windows = 0;
+      audio_adapt_cooldown = Math.max(audio_adapt_cooldown, 2);
+      grew = true;
+   } else {
+      audio_adapt_stable_windows++;
+      if (audio_adapt_cooldown > 0) {
+         audio_adapt_cooldown--;
+      } else {
+         var advisory = audio_adapt_min_nbuf;
+         if (audio_adapt_rtt_ewma > 250) advisory++;
+         if (audio_adapt_jitter_ewma > 40) advisory++;
+         advisory = Math.min(audio_adapt_max_nbuf, advisory);
+         target = Math.max(target, advisory);
+         if (audio_adapt_stable_windows >= 6 && queue_avg > audio_adapt_min_nbuf && qlen > target && target > advisory) {
+            target--;
+            audio_adapt_stable_windows = 0;
+         }
+      }
+   }
+
+   audio_adapt_target_nbuf = Math.max(audio_adapt_min_nbuf, Math.min(audio_adapt_max_nbuf, target));
+   audio_min_nbuf = audio_adapt_target_nbuf;
+   audio_max_nbuf = Math.max(audio_min_nbuf + 2, Math.min(audio_adapt_max_nbuf, audio_adapt_target_nbuf + 6));
+   audio_adapt_last_underruns = audio_underrun_errors;
+   audio_adapt_last_overruns = audio_overrun_errors;
+
+   if (!grew && audio_prepared_buffers.length > audio_max_nbuf) {
+      audio.trim_bufs = true;
+   }
+
+   if ((audio_stat_input_epoch != -1) && ws_snd && ws_snd.up) {
+      snd_send('SET latency target='+ audio_adapt_target_nbuf +' min='+ audio_adapt_queue_min +' max='+ audio_adapt_queue_max +
+         ' avg='+ queue_avg.toFixed(2) +' underruns='+ audio_underrun_errors +' overruns='+ audio_overrun_errors +
+         ' rtt='+ Math.round(audio_adapt_rtt_ewma) +' jitter='+ Math.round(audio_adapt_jitter_ewma) +' seq='+ audio_adapt_server_seq +
+         ' bufsize='+ audio_buffer_size +' cb_ms='+ Math.round(audio_adapt_cb_ewma_ms) +' cb_over='+ audio_adapt_cb_overruns);
+   }
+
+   audio_adapt_queue_avg = 0;
+   audio_adapt_queue_samples = 0;
+   audio_adapt_queue_min = 0;
+   audio_adapt_queue_max = 0;
+
+   audio_adapt_size_update();
+}
+
+function audio_adapt_note_callback(dur_ms)
+{
+   if (!audio_buffer_size || !audio_output_rate) return;
+   var buf_ms = (audio_buffer_size / audio_output_rate) * 1000;
+   audio_adapt_cb_ewma_ms = audio_adapt_cb_ewma_ms? ((audio_adapt_cb_ewma_ms * 0.9) + (dur_ms * 0.1)) : dur_ms;
+   if (dur_ms > buf_ms * 0.7) audio_adapt_cb_overruns++;
+}
+
+function audio_adapt_size_update()
+{
+   if (!audio_running || !audio_buffer_size || !audio_output_rate) return;
+   if (!audio_started) return;
+
+   var buf_ms = (audio_buffer_size / audio_output_rate) * 1000;
+   var cb_over_delta = audio_adapt_cb_overruns - audio_adapt_cb_overruns_last;
+   audio_adapt_cb_overruns_last = audio_adapt_cb_overruns;
+   // count axis just stored last_underruns; use stable_windows as the "count axis healthy" proxy
+   var count_healthy = (audio_adapt_stable_windows > 0);
+
+   var next_size = audio_buffer_size;
+
+   // FAST: grow on CPU stress
+   if (cb_over_delta > 0 || audio_adapt_cb_ewma_ms > buf_ms * 0.7) {
+      if (audio_buffer_size < audio_adapt_size_max) {
+         next_size = Math.min(audio_adapt_size_max, audio_buffer_size * 2);
+      }
+      audio_adapt_size_stable_windows = 0;
+      audio_adapt_size_cooldown = 10;
+   }
+   // SLOW: shrink only with sustained headroom and a healthy count axis
+   else if (audio_adapt_size_cooldown == 0 &&
+            audio_adapt_cb_ewma_ms > 0 && audio_adapt_cb_ewma_ms < buf_ms * 0.25 &&
+            count_healthy &&
+            audio_buffer_size > audio_adapt_size_min &&
+            audio_adapt_size_stable_windows >= 30) {
+      next_size = audio_buffer_size / 2;
+      audio_adapt_size_stable_windows = 0;
+      audio_adapt_size_cooldown = 5;
+   } else {
+      audio_adapt_size_stable_windows++;
+      if (audio_adapt_size_cooldown > 0) audio_adapt_size_cooldown--;
+   }
+
+   if (next_size != audio_buffer_size) {
+      console.log('AUDIO size axis: '+ audio_buffer_size +' -> '+ next_size +
+                  ' cb_ms='+ audio_adapt_cb_ewma_ms.toFixed(1) +' buf_ms='+ buf_ms.toFixed(1));
+      audio.buffer_size = next_size;
+      audio_buffer_size = next_size;
+      // reallocate buffers sized off audio_buffer_size; queue is reset by audio_connect(reconnect=1)
+      audio_data = new Int16Array(audio_buffer_size);
+      audio_data_unsquelched = new Int16Array(audio_buffer_size);
+      audio_last_output_buffer = new Float32Array(audio_buffer_size);
+      audio_last_output_buffer2 = new Float32Array(audio_buffer_size);
+      audio_silence_buffer = new Float32Array(audio_buffer_size);
+      // count-axis bounds are in buffers; recompute and let the count axis re-stabilize
+      audio_adapt_recalc_bounds();
+      audio_adapt_stable_windows = 0;
+      audio_adapt_cooldown = 3;
+      audio_buffering = true;
+      audio_adapt_cb_ewma_ms = 0;       // EWMA must reset because buf_ms changed
+      audio_connect(1);                 // reinstantiates ScriptProcessorNode at the new size
+   }
+}
+
 function audio_reset()
 {
    audio.trim_bufs = true;
@@ -293,7 +511,8 @@ function audio_init(is_local, less_buffering, compression)
    audio_change_sq_UI_latch = false;
    audio_last_sq = undefined;    // so set true/false first time
    audio_firefox_watchdog = 0;
-   
+   audio_adapt_reset();
+
 	kiwi_clearInterval(audio_stats_interval);
    if (audio_init_disconnect) {
       if (audio.d) console.log('AUDIO audio_init DISCONNECT');
@@ -309,12 +528,12 @@ function audio_init(is_local, less_buffering, compression)
    if (a != null) {
       var a2 = a.split(',');
       abuf = parseFloat(a2[0]);
-      if (!isNaN(abuf) && abuf >= 0.15 && abuf <= 5.0) {
+      if (!isNaN(abuf) && abuf >= 0.08 && abuf <= 5.0) {
          console.log('AUDIO override abuf='+ a);
          var max = abuf * 3;
          if (a2.length >= 2) {
             var m = parseFloat(a2[1]);
-            if (!isNaN(m) && m >= 0.15 && m <= 5.0 && m > abuf) {
+            if (!isNaN(m) && m >= 0.08 && m <= 5.0 && m > abuf) {
                max = m;
             }
          } else {
@@ -346,21 +565,21 @@ function audio_init(is_local, less_buffering, compression)
    
       if (buffering_scheme == 2) {
          audio_buffer_size = audio.buffer_size;
-         audio_buffer_min_length_sec = 0.25;    // min_nbuf = 2 @ 44.1 kHz
+         audio_buffer_min_length_sec = 0.15;    // min_nbuf = 1 @ 44.1 kHz; controller raises if needed
          audio_buffer_max_length_sec = 2.00;
          scheme_s = 'less buf, local';
       } else
-      
+
       if (buffering_scheme == 1) {
          audio_buffer_size = audio.buffer_size;
-         audio_buffer_min_length_sec = 0.35;    // min_nbuf = 4 @ 44.1 kHz
+         audio_buffer_min_length_sec = 0.20;    // min_nbuf = 2 @ 44.1 kHz; controller raises if needed
          audio_buffer_max_length_sec = 3.00;
          scheme_s = 'less buf, remote';
       } else
-      
+
       if (buffering_scheme == 0) {
          audio_buffer_size = audio.buffer_size;
-         audio_buffer_min_length_sec = 0.85;    // min_nbuf = 5 @ 44.1 kHz
+         audio_buffer_min_length_sec = 0.50;    // min_nbuf = 3 @ 44.1 kHz; controller raises if needed
          audio_buffer_max_length_sec = 3.40;
          scheme_s = 'more buf';
       }
@@ -459,8 +678,7 @@ function audio_rate(input_rate)
 	   audio_resample_ratio = 1;
 	}
 
-   audio_min_nbuf = Math.ceil((audio_buffer_min_length_sec * audio_output_rate) / audio_buffer_size);
-   audio_max_nbuf = Math.ceil((audio_buffer_max_length_sec * audio_output_rate) / audio_buffer_size);
+   audio_adapt_recalc_bounds();
 	console.log('AUDIO audio_input_rate='+ audio_input_rate +' audio_output_rate='+ audio_output_rate);
 	console.log('AUDIO min_length_sec='+ audio_buffer_min_length_sec +'('+ audio_min_nbuf +' bufs) max_length_sec='+ audio_buffer_max_length_sec +'('+ audio_max_nbuf +' bufs)');
 }
@@ -617,10 +835,11 @@ function audio_watchdog_process(ev)
 // NB: always use kiwi_log() instead of console.log() in here
 function audio_onprocess(ev)
 {
+   var _cb_t0 = (typeof performance !== 'undefined' && performance.now)? performance.now() : Date.now();
    audio_firefox_watchdog++;
 
    if (audio_disconnected) return;
-   
+
    //if (!audio_started) { kiwi_log('audio_onprocess audio_started='+ audio_started +' ql='+ audio_prepared_buffers.length  +' ----------------'); }
 	if (audio_stat_output_epoch == -1) {
 		audio_stat_output_epoch = (new Date()).getTime();
@@ -655,6 +874,7 @@ function audio_onprocess(ev)
 		audio_need_stats_reset = true;
 		ev.outputBuffer.copyToChannel(audio_silence_buffer, 0);
       if (audio_channels == 2) ev.outputBuffer.copyToChannel(audio_silence_buffer, 1);
+		audio_adapt_note_callback((((typeof performance !== 'undefined' && performance.now)? performance.now() : Date.now()) - _cb_t0));
 		return;
 	}
 
@@ -694,6 +914,7 @@ function audio_onprocess(ev)
       kiwi_log('AUDIO dly='+ audio_meas_dly);
 		audio_meas_dly_start = 0;
 	}
+	audio_adapt_note_callback((((typeof performance !== 'undefined' && performance.now)? performance.now() : Date.now()) - _cb_t0));
 }
 
 //setInterval(function() { audio_ext_adc_ovfl = audio_ext_adc_ovfl? false:true; }, 1000);
@@ -732,9 +953,10 @@ function audio_periodic()
    //if (audio_watchdog_restart) { console.log('audio_watchdog_restart '+ audio_watchdog_restart_cnt); audio_watchdog_restart_cnt++; }
 
    //console.log('AUDIO FLUSH');
+	audio_adapt_update();
 	var overran = false;
 	//var audio_buffer_mid_length_sec = audio_buffer_min_length_sec + ((audio_buffer_max_length_sec - audio_buffer_min_length_sec) /2);
-	
+
 	while (audio_prepared_buffers.length > audio_max_nbuf) {
 		overran = true;
 		audio_prepared_buffers.shift();
@@ -825,7 +1047,8 @@ function audio_recv(data, ws, firstChars)
    //if (flags != audio.last_flags) { console.log('AUDIO flags='+ flags.toHex(+4)); audio.last_flags = flags; }
 
 	var seq = (h8[7] << 24) | (h8[6] << 16) | (h8[5] << 8) | h8[4];
-	
+   audio_adapt_note_arrival(seq);
+
    // if camping and compressed have to wait for MSG with adpcm state
    //if (audio_camping)
    //console.log('camping='+ audio_camping +' comp='+ ((flags & audio.SND_FLAG_COMPRESSED)? 1:0) +' seq='+ seq);

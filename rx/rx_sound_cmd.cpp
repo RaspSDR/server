@@ -596,6 +596,26 @@ void rx_sound_cmd(conn_t* conn, double frate, int n, char* cmd) {
         }
         break;
 
+    case CMD_LATENCY: {
+        int target, min, max, underruns, overruns, rtt, jitter;
+        int bufsize = 0, cb_ms = 0, cb_over = 0;
+        float avg;
+        u4_t seq;
+        n = sscanf(cmd, "SET latency target=%d min=%d max=%d avg=%f underruns=%d overruns=%d rtt=%d jitter=%d seq=%u bufsize=%d cb_ms=%d cb_over=%d",
+            &target, &min, &max, &avg, &underruns, &overruns, &rtt, &jitter, &seq, &bufsize, &cb_ms, &cb_over);
+        if (n == 12) {
+            did_cmd = true;
+            cprintf(conn, "SND: latency target=%d q=%d/%0.2f/%d und=%d ovr=%d rtt=%d jitter=%d seq=%u bufsize=%d cb_ms=%d cb_over=%d %s\n",
+                target, min, avg, max, underruns, overruns, rtt, jitter, seq, bufsize, cb_ms, cb_over, conn->ident_user);
+        } else if (n == 9) {
+            // backward compatibility with older clients
+            did_cmd = true;
+            cprintf(conn, "SND: latency target=%d q=%d/%0.2f/%d und=%d ovr=%d rtt=%d jitter=%d seq=%u %s\n",
+                target, min, avg, max, underruns, overruns, rtt, jitter, seq, conn->ident_user);
+        }
+        break;
+    }
+
 #ifdef SND_SEQ_CHECK
     case CMD_SEQ: {
         int _seq, _sequence;

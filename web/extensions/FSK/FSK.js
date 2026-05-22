@@ -4,11 +4,11 @@ var fsk = {
    ext_name: 'FSK',     // NB: must match fsk.c:fsk_ext.name
    first_time: true,
    
-   dataH: 300,
+   dataH: 250,
    ctrlW: 575,
    ctrlH: 200,
 
-   lhs: 150,
+   lhs: 50,
    tw: 1024,
    x: 0,
    last_y: [],
@@ -70,6 +70,16 @@ var fsk = {
    log_interval: null,
    log_txt: '',
 
+   // CTC (Chinese Telegraph Code) translation state
+   ctc_enable: false,
+   ctc_buffer: '',
+   ctc_in_bracket: false,
+   ctc_last_was_letter: false,
+   ctc_invalid_num: false,
+
+   // height toggle state
+   height_big: false,
+
    last_last: 0
 };
 
@@ -113,7 +123,7 @@ function fsk_recv(data)
 		switch (param[0]) {
 
 			case "ready":
-            kiwi_load_js_dir('extensions/FSK/', ['JNX.js', 'BiQuadraticFilter.js', 'CCIR476.js', 'DSC.js', 'Selcall.js', 'FSK_async.js'], 'fsk_controls_setup');
+            kiwi_load_js_dir('extensions/FSK/', ['JNX.js', 'BiQuadraticFilter.js', 'CCIR476.js', 'DSC.js', 'Selcall.js', 'FSK_async.js', 'CTC_dict.js'], 'fsk_controls_setup');
 				break;
 
 			case "test_done":
@@ -385,9 +395,9 @@ function fsk_baud_error(err)
 }
 
 // must set "remove_returns" so output lines with \r\n (instead of \n alone) don't produce double spacing
-var fsk_console_status_msg_p = { scroll_only_at_bottom: true, process_return_alone: false, remove_returns: true, cols: 135 };
+var fsk_console_status_msg_p = { scroll_only_at_bottom: true, process_return_alone: false, remove_returns: true, cols: 999 };
 
-function fsk_output_char(s)
+function fsk_output_char_raw(s)
 {
    if (s == '') return;
    
@@ -400,6 +410,68 @@ function fsk_output_char(s)
 
    // kiwi_output_msg() does decodeURIComponent()
    kiwi_output_msg('id-fsk-console-msgs', 'id-fsk-console-msg', fsk_console_status_msg_p);
+}
+
+function fsk_output_char(s)
+{
+   if (s == '') return;
+   if (fsk.ctc_enable && window.CTC_DICT) {
+      fsk_ctc_process(s);
+      return;
+   }
+   fsk_output_char_raw(s);
+}
+
+// CTC (Chinese Telegraph Code) translation
+// Buffers digits and translates 4-digit sequences to Chinese characters.
+function fsk_ctc_process(s)
+{
+   for (var i = 0; i < s.length; i++) {
+      var ch = s[i];
+
+      if (ch === '(' || ch === '\uff08' || ch === '[' || ch === '\u3010') {
+         fsk.ctc_in_bracket = true;
+      }
+      if (ch === ')' || ch === '\uff09' || ch === ']' || ch === '\u3011') {
+         fsk.ctc_in_bracket = false;
+      }
+
+      if (/[0-9]/.test(ch)) {
+         if (fsk.ctc_in_bracket) {
+            fsk_output_char_raw(ch);
+         } else {
+            if (fsk.ctc_buffer === '' && fsk.ctc_last_was_letter) {
+               fsk.ctc_invalid_num = true;
+            }
+            fsk.ctc_buffer += ch;
+         }
+         fsk.ctc_last_was_letter = false;
+      } else {
+         if (fsk.ctc_buffer.length > 0) {
+            if (/[a-zA-Z]/.test(ch)) fsk.ctc_invalid_num = true;
+
+            if (!fsk.ctc_in_bracket && !fsk.ctc_invalid_num &&
+                fsk.ctc_buffer.length === 4 && window.CTC_DICT[fsk.ctc_buffer]) {
+               fsk_output_char_raw(window.CTC_DICT[fsk.ctc_buffer]);
+            } else {
+               fsk_output_char_raw(fsk.ctc_buffer);
+            }
+            fsk.ctc_buffer = '';
+            fsk.ctc_invalid_num = false;
+         }
+
+         fsk.ctc_last_was_letter = /[a-zA-Z]/.test(ch);
+         fsk_output_char_raw(ch);
+      }
+   }
+}
+
+function fsk_ctc_reset()
+{
+   fsk.ctc_buffer = '';
+   fsk.ctc_in_bracket = false;
+   fsk.ctc_last_was_letter = false;
+   fsk.ctc_invalid_num = false;
 }
 
 function fsk_audio_data_cb(samps, nsamps)
@@ -529,10 +601,13 @@ function fsk_controls_setup()
    var data_html =
       time_display_html('fsk') +
       
-      w3_div('id-fsk-data|width:'+ px(fsk.lhs+1024) +'; height:'+ px(fsk.dataH) +'; overflow:hidden; position:relative; background-color:black;',
-         '<canvas id="id-fsk-canvas" width='+ dq(fsk.lhs+1024) +' height='+ dq(fsk.dataH) +' style="left:0; position:absolute"></canvas>',
-			w3_div('id-fsk-console-msg w3-text-output w3-scroll-down w3-small w3-text-black|left:'+ px(fsk.lhs) +'; width:1024px; position:relative; overflow-x:hidden;',
-			   '<pre><code id="id-fsk-console-msgs"></code></pre>'
+      w3_div('id-fsk-data|width:100%; height:'+ px(fsk.dataH) +'; overflow:hidden; position:relative; background-color:black;',
+         '<canvas id="id-fsk-canvas" width="2048" height='+ dq(fsk.dataH) +' style="left:0; position:absolute; width:100%"></canvas>',
+         w3_div('id-fsk-height-btn|position:absolute; top:2px; left:2px; z-index:101; background:rgba(255,255,255,0.1); color:white; width:22px; height:22px; line-height:20px; text-align:center; cursor:pointer; border:1px solid #555; font-size:14px;',
+            '\u2195\ufe0f'
+         ),
+			w3_div('id-fsk-console-msg w3-text-output w3-scroll-down w3-small w3-text-black|left:'+ px(fsk.lhs) +'; right:0; width:auto; position:relative; overflow-x:hidden;',
+			   '<pre style="white-space:pre-wrap; word-break:break-all; overflow-wrap:anywhere; margin:0; padding:0 2px;"><code id="id-fsk-console-msgs"></code></pre>'
 			)
       );
 
@@ -568,7 +643,9 @@ function fsk_controls_setup()
 
                w3_select(fsk.sfmt, '', 'encoding', 'fsk.encoding', fsk.encoding, fsk_encoding_s, 'fsk_encoding_cb'),
 
-               w3_checkbox('w3-label-inline w3-label-not-bold/', 'inverted', 'fsk.inverted', fsk.inverted, 'fsk_inverted_cb')
+               w3_checkbox('w3-label-inline w3-label-not-bold/', 'inverted', 'fsk.inverted', fsk.inverted, 'fsk_inverted_cb'),
+
+               w3_checkbox('w3-label-inline w3-label-not-bold/', 'CTC', 'fsk.ctc_enable', fsk.ctc_enable, 'fsk_ctc_enable_cb')
             ),
 
             w3_inline('/w3-margin-between-16',
@@ -609,6 +686,21 @@ function fsk_controls_setup()
 		);
 	
 	ext_panel_show(controls_html, data_html, null);
+
+	// bind height toggle button
+	var height_btn = w3_el('id-fsk-height-btn');
+	if (height_btn) {
+	   height_btn.onclick = function() {
+	      fsk.height_big = !fsk.height_big;
+	      var newH = fsk.height_big ? 480 : fsk.dataH;
+	      var dataDiv = w3_el('id-fsk-data');
+	      if (dataDiv) dataDiv.style.height = px(newH);
+	      var parentDiv = w3_el('id-ext-data-container');
+	      if (parentDiv) parentDiv.style.height = px(newH);
+	      this.style.background = fsk.height_big ? 'rgba(40,167,69,0.9)' : 'rgba(255,255,255,0.1)';
+	   };
+	}
+
 	time_display_setup('fsk');
 	fsk.canvas = w3_el('id-fsk-canvas');
 	fsk.canvas.ctx = fsk.canvas.getContext("2d");
@@ -634,6 +726,10 @@ function fsk_controls_setup()
          } else
          if (w3_ext_param('help', a).match) {
             extint_help_click();
+         } else
+         if (w3_ext_param('ctc', a).match) {
+            fsk.ctc_enable = true;
+            w3_checkbox_set('fsk.ctc_enable', true);
          }
       });
    }
@@ -996,6 +1092,14 @@ function fsk_clear_button_cb(path, idx, first)
    fsk_console_status_msg_p.s = encodeURIComponent('\f');
    kiwi_output_msg('id-fsk-console-msgs', 'id-fsk-console-msg', fsk_console_status_msg_p);
    fsk.log_txt = '';
+   fsk_ctc_reset();
+}
+
+function fsk_ctc_enable_cb(path, checked, first)
+{
+   checked = checked? true : false;
+   fsk.ctc_enable = checked;
+   if (!checked) fsk_ctc_reset();
 }
 
 function fsk_log_mins_cb(path, val)

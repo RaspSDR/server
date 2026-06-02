@@ -15,7 +15,8 @@ if(NOT CMAKE_BUILD_TYPE)
    message(STATUS "Build type not specified: defaulting to Release")
 endif(NOT CMAKE_BUILD_TYPE)
 
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+# little gain but slow rebuild
+# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS "-Wall -fsingle-precision-constant -ffast-math -pthread")

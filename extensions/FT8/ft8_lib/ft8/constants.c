@@ -26,6 +26,17 @@ const uint8_t kFT4_XOR_sequence[10] = {
     0x28u, // 00101 [000]
 };
 
+// FST4 sync words from WSJT-X genfst4.f90
+// isyncword1 and isyncword2 alternate: S1 D30 S2 D30 S1 D30 S2 D30 S1
+const uint8_t kFST4_Sync_word1[FST4_LENGTH_SYNC] = { 0, 1, 3, 2, 1, 0, 2, 3 };
+const uint8_t kFST4_Sync_word2[FST4_LENGTH_SYNC] = { 2, 3, 1, 0, 3, 2, 0, 1 };
+
+// Note: FST4 uses the same XOR sequence as FT4 (rvec in genfst4.f90 == kFT4_XOR_sequence)
+
+// NSPS (samples per symbol at 12000 Hz sample rate) from WSJT-X fst4sim.f90
+const int kFST4_NSPS[7] = { 720, 1680, 3888, 8200, 21504, 66560, 134400 };
+const int kFST4_TR_periods[7] = { 15, 30, 60, 120, 300, 900, 1800 };
+
 // Parity generator matrix for (174,91) LDPC code, stored in bitpacked format (MSB first)
 const uint8_t kFTX_LDPC_generator[FTX_LDPC_M][FTX_LDPC_K_BYTES] = {
     { 0x83, 0x29, 0xce, 0x11, 0xbf, 0x31, 0xea, 0xf5, 0x09, 0xf2, 0x7f, 0xc0 },

@@ -23,10 +23,10 @@
  * Returns 1 if the matrix is successfully inverted, or 0 if it is singular.
  */
 
-int gauss_jordan(int rows, int cols, uint8_t m[FTX_LDPC_N][2 * FTX_LDPC_K], uint8_t which[FTX_LDPC_K])
+int gauss_jordan(uint8_t m[FTX_LDPC_N][2 * FTX_LDPC_K], uint8_t which[FTX_LDPC_K])
 {
-    assert(rows == FTX_LDPC_K);
-    assert(cols == FTX_LDPC_N);
+    const int rows = FTX_LDPC_K; 
+    const int cols = FTX_LDPC_N;
 
     for (int row = 0; row < rows; row++)
     {
@@ -39,11 +39,12 @@ int gauss_jordan(int rows, int cols, uint8_t m[FTX_LDPC_N][2 * FTX_LDPC_K], uint
                     // swap m[row] and m[row1]
                     for (int col = 0; col < 2 * rows; col++)
                     {
-                        int tmp = m[row][col];
+                        uint8_t temp = m[row][col];
                         m[row][col] = m[row1][col];
-                        m[row1][col] = tmp;
+                        m[row1][col] = temp;
                     }
-                    int tmp = which[row];
+
+                    uint8_t tmp = which[row];
                     which[row] = which[row1];
                     which[row1] = tmp;
                     break;
@@ -56,7 +57,7 @@ int gauss_jordan(int rows, int cols, uint8_t m[FTX_LDPC_N][2 * FTX_LDPC_K], uint
             return 0;
         }
         // lazy creation of identity matrix in the upper-right quarter
-        m[row][rows + row] = (m[row][rows + row] + 1) % 2;
+        m[row][rows + row] ^= 1;
         // now eliminate
         for (int row1 = 0; row1 < cols; row1++)
         {
@@ -67,7 +68,7 @@ int gauss_jordan(int rows, int cols, uint8_t m[FTX_LDPC_N][2 * FTX_LDPC_K], uint
 
             for (int col = 0; col < 2 * rows; col++)
             {
-                m[row1][col] = (m[row1][col] + m[row][col]) % 2;
+                m[row1][col] ^= m[row][col];
             }
         }
     }
@@ -83,7 +84,7 @@ int gauss_jordan(int rows, int cols, uint8_t m[FTX_LDPC_N][2 * FTX_LDPC_K], uint
  * @return A score, where higher means better match.
  */
 static float
-osd_score(uint8_t xplain[FTX_LDPC_K], float ll174[FTX_LDPC_N])
+osd_score(const uint8_t xplain[FTX_LDPC_K], const float ll174[FTX_LDPC_N])
 {
     uint8_t xcode[FTX_LDPC_N];
     ldpc_encode(xplain, xcode);
@@ -94,12 +95,12 @@ osd_score(uint8_t xplain[FTX_LDPC_K], float ll174[FTX_LDPC_N])
         if (xcode[i])
         {
             // one-bit, expect ll to be negative.
-            score -= ll174[i] * 4.6f;
+            score -= ll174[i];
         }
         else
         {
             // zero-bit, expect ll to be positive.
-            score += ll174[i] * 4.6f;
+            score += ll174[i];
         }
     }
 
@@ -119,29 +120,19 @@ osd_score(uint8_t xplain[FTX_LDPC_K], float ll174[FTX_LDPC_N])
  *         otherwise returns 0.
  */
 
-static int
+static bool
 osd_check(const uint8_t plain[FTX_LDPC_K])
 {
-    // does a decode look plausible?
-    int allzero = 1;
     for (int i = 0; i < FTX_LDPC_K; i++)
     {
         if (plain[i] != 0)
         {
-            allzero = 0;
+            return ftx_check_crc(plain);
         }
     }
-    if (allzero)
-    {
-        return 0;
-    }
 
-    if (ftx_check_crc(plain) == 0)
-    {
-        return 0;
-    }
-
-    return 1;
+    // all zeros
+    return false;
 }
 
 /**
@@ -155,16 +146,16 @@ osd_check(const uint8_t plain[FTX_LDPC_K])
  * @param[out] c A 1D array representing the resulting vector after matrix multiplication and modulo operation.
  */
 static void
-matmul(uint8_t a[FTX_LDPC_K][FTX_LDPC_K], uint8_t b[FTX_LDPC_K], uint8_t c[FTX_LDPC_K])
+matmul(const uint8_t a[FTX_LDPC_K][FTX_LDPC_K], const uint8_t b[FTX_LDPC_K], uint8_t c[FTX_LDPC_K])
 {
     for (int i = 0; i < FTX_LDPC_K; i++)
     {
         int sum = 0;
         for (int j = 0; j < FTX_LDPC_K; j++)
         {
-            sum += a[i][j] & b[j]; // one bit multiply
+            sum ^= a[i][j] & b[j]; // one bit multiply
         }
-        c[i] = sum % 2;
+        c[i] = sum;
     }
 }
 
@@ -180,7 +171,11 @@ matmul(uint8_t a[FTX_LDPC_K][FTX_LDPC_K], uint8_t b[FTX_LDPC_K], uint8_t c[FTX_L
  *
  * @return A negative value if 'a' is greater than 'b', zero if equal, and a positive value if 'a' is less than 'b'.
  */
+#ifdef __APPLE__
+static int osd_cmp(void *c, const void* a, const void* b)
+#else
 static int osd_cmp(const void* a, const void* b, void* c)
+#endif
 {
     float* codeword = (float*)c;
     uint8_t aa = *(uint8_t*)a;
@@ -212,17 +207,20 @@ static int osd_cmp(const void* a, const void* b, void* c)
  *
  * @return Returns 1 if the decode was successful, 0 otherwise.
  */
-int osd_decode(float codeword[FTX_LDPC_N], int depth, uint8_t out[FTX_LDPC_K], int* out_depth)
+int osd_decode(const float codeword[FTX_LDPC_N], int depth, uint8_t out[FTX_LDPC_K], int* out_depth)
 {
-    const int osd_thresh = -500;
+    const float osd_thresh = -100.0f;
 
     // sort, strongest first; we'll use strongest 91.
     uint8_t which[FTX_LDPC_N];
     for (int i = 0; i < FTX_LDPC_N; i++)
         which[i] = i;
 
-    qsort_r(which, FTX_LDPC_N, sizeof(uint8_t), osd_cmp, codeword);
-
+#ifdef __APPLE__
+    qsort_r(which, FTX_LDPC_N, sizeof(uint8_t), (void*)codeword, osd_cmp);
+#else
+    qsort_r(which, FTX_LDPC_N, sizeof(uint8_t), osd_cmp, (void*)codeword);
+#endif
     // gen_sys[174 rows][91 cols] has a row per each of the 174 codeword bits,
     // indicating how to generate it by xor with each of the 91 plain bits.
 
@@ -234,7 +232,7 @@ int osd_decode(float codeword[FTX_LDPC_N], int depth, uint8_t out[FTX_LDPC_K], i
         uint8_t ii = which[i];
         if (ii < FTX_LDPC_K)
         {
-                b[i][ii] = 1;
+            b[i][ii] = 1;
         }
         else
         {
@@ -246,7 +244,7 @@ int osd_decode(float codeword[FTX_LDPC_N], int depth, uint8_t out[FTX_LDPC_K], i
         }
     }
 
-    if (gauss_jordan(FTX_LDPC_K, FTX_LDPC_N, b, which) == 0)
+    if (gauss_jordan(b, which) == 0)
     {
         return 0;
     }
@@ -275,7 +273,7 @@ int osd_decode(float codeword[FTX_LDPC_N], int depth, uint8_t out[FTX_LDPC_K], i
     matmul(gen1_inv, y1, xplain); // also does mod 2
 
     float xscore = osd_score(xplain, codeword);
-    int ch = osd_check(xplain);
+    bool ch = osd_check(xplain);
     if (xscore < osd_thresh && ch)
     {
         // just accept this, since no bits had to be flipped.
@@ -297,7 +295,7 @@ int osd_decode(float codeword[FTX_LDPC_N], int depth, uint8_t out[FTX_LDPC_K], i
         matmul(gen1_inv, y1, xplain);
         y1[i] ^= 1;
         float xscore = osd_score(xplain, codeword);
-        int ch = osd_check(xplain);
+        bool ch = osd_check(xplain);
         if (xscore < osd_thresh && ch)
         {
             if (got_a_best == 0 || xscore < best_score)

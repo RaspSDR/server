@@ -32,24 +32,6 @@ typedef struct
 #define SUB_WF_ELEM_MAG(x, y) do {(x) -= y * 2 + 240; } while(0)
 #endif
 
-/// Input structure to ftx_find_sync() function. This structure describes stored waterfall data over the whole message slot.
-/// Fields time_osr and freq_osr specify additional oversampling rate for time and frequency resolution.
-/// If time_osr=1, FFT magnitude data is collected once for every symbol transmitted, i.e. every 1/6.25 = 0.16 seconds.
-/// Values time_osr > 1 mean each symbol is further subdivided in time.
-/// If freq_osr=1, each bin in the FFT magnitude data corresponds to 6.25 Hz, which is the tone spacing.
-/// Values freq_osr > 1 mean the tone spacing is further subdivided by FFT analysis.
-typedef struct
-{
-    int max_blocks;          ///< number of blocks (symbols) allocated in the mag array
-    int num_blocks;          ///< number of blocks (symbols) stored in the mag array
-    int num_bins;            ///< number of FFT bins in terms of 6.25 Hz
-    int time_osr;            ///< number of time subdivisions
-    int freq_osr;            ///< number of frequency subdivisions
-    WF_ELEM_T* mag;          ///< FFT magnitudes stored as uint8_t[blocks][time_osr][freq_osr][num_bins]
-    int block_stride;        ///< Helper value = time_osr * freq_osr * num_bins
-    ftx_protocol_t protocol; ///< Indicate if using FT4 or FT8
-} ftx_waterfall_t;
-
 /// Output structure of ftx_find_sync() and input structure of ftx_decode().
 /// Holds the position of potential start of a message in time and frequency.
 typedef struct
@@ -60,6 +42,58 @@ typedef struct
     uint8_t time_sub;    ///< Index of the time subdivision used
     uint8_t freq_sub;    ///< Index of the frequency subdivision used
 } ftx_candidate_t;
+
+// Forward declaration for circular dependency with protocol descriptor
+struct ftx_waterfall;
+
+/// Protocol descriptor: bundles all protocol-specific constants and function pointers.
+/// One static const instance per protocol (FT8, FT4, FST4, FST4W).
+typedef struct
+{
+    ftx_protocol_t protocol;
+
+    // Structure
+    int num_tones;           ///< 8 (FT8), 4 (FT4/FST4/FST4W)
+    int num_symbols;         ///< Total symbols: 79, 105, 160
+    int ldpc_n;              ///< Codeword length: 174 or 240
+    int ldpc_k;              ///< Info bits: 91, 101, 74
+    int ldpc_k_bytes;        ///< Packed byte count for info bits
+    int max_ldpc_iterations; ///< Default LDPC iterations: 25 or 100
+
+    // DSP
+    bool use_rect_window;    ///< true for FST4/FST4W (rectangular FFT window)
+    bool xor_payload;        ///< true for FT4 and FST4
+
+    // Function pointers for protocol-specific operations
+    int  (*sync_score)(const struct ftx_waterfall*, const ftx_candidate_t*);
+    void (*extract_likelihood)(const struct ftx_waterfall*, const ftx_candidate_t*, float*);
+    void (*ldpc_decode)(const float*, int, uint8_t*, int*);
+    int  (*osd_decode)(const float*, int, uint8_t*, int*);  ///< NULL if OSD not supported
+    bool (*check_crc)(const uint8_t*);
+    uint32_t (*extract_crc)(const uint8_t*);
+    void (*encode)(const uint8_t*, uint8_t*);
+} ftx_protocol_desc_t;
+
+/// Look up the protocol descriptor for a given protocol enum value
+const ftx_protocol_desc_t* ftx_protocol_get_desc(ftx_protocol_t protocol);
+
+/// Input structure to ftx_find_sync() function. This structure describes stored waterfall data over the whole message slot.
+/// Fields time_osr and freq_osr specify additional oversampling rate for time and frequency resolution.
+/// If time_osr=1, FFT magnitude data is collected once for every symbol transmitted, i.e. every 1/6.25 = 0.16 seconds.
+/// Values time_osr > 1 mean each symbol is further subdivided in time.
+/// If freq_osr=1, each bin in the FFT magnitude data corresponds to 6.25 Hz, which is the tone spacing.
+/// Values freq_osr > 1 mean the tone spacing is further subdivided by FFT analysis.
+typedef struct ftx_waterfall
+{
+    int max_blocks;          ///< number of blocks (symbols) allocated in the mag array
+    int num_blocks;          ///< number of blocks (symbols) stored in the mag array
+    int num_bins;            ///< number of FFT bins in terms of 6.25 Hz
+    int time_osr;            ///< number of time subdivisions
+    int freq_osr;            ///< number of frequency subdivisions
+    WF_ELEM_T* mag;          ///< FFT magnitudes stored as uint8_t[blocks][time_osr][freq_osr][num_bins]
+    int block_stride;        ///< Helper value = time_osr * freq_osr * num_bins
+    const ftx_protocol_desc_t* desc; ///< Protocol descriptor with constants and function pointers
+} ftx_waterfall_t;
 
 /// Structure that contains the status of various steps during decoding of a message
 typedef struct

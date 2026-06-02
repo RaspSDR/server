@@ -73,7 +73,7 @@ typedef struct {
     int freqHz;
    
     ftx_protocol_t protocol;
-    char protocol_s[4];
+    char protocol_s[8];
     int have_call_and_grid;
 
     float slot_period;
@@ -90,6 +90,7 @@ typedef struct {
 
     callsign_hashtable_t *callsign_hashtable;
     int callsign_hashtable_size;
+    int last_hash_idx;
 
     ftx_candidate_t candidate_list[kMax_candidates];
     uint64_t padding0;
@@ -150,7 +151,7 @@ static void hashtable_cleanup(int rx_chan, uint8_t max_age)
     }
 }
 
-static void hashtable_add(const char* callsign, uint32_t hash, int *hash_idx)
+static void hashtable_add(const char* callsign, uint32_t hash)
 {
     decode_ft8_t *ft8 = (decode_ft8_t *) &decode_ft8[FROM_VOID_PARAM(TaskGetUserParam())];
     uint16_t hash10 = (hash >> 12) & 0x3FFu;
@@ -169,7 +170,7 @@ static void hashtable_add(const char* callsign, uint32_t hash, int *hash_idx)
                 ht->hash &= 0x3FFFFFu;
             #endif
             
-            if (hash_idx != NULL) *hash_idx = idx_hash;
+            ft8->last_hash_idx = idx_hash;
             LOG(LOG_DEBUG, "Found a duplicate [%s]\n", callsign);
             //printf("hashtable_add DUP idx=%d hash=0x%x <%s>\n", idx_hash, hash, callsign);
             return;
@@ -189,9 +190,10 @@ static void hashtable_add(const char* callsign, uint32_t hash, int *hash_idx)
         }
     }
     ft8->callsign_hashtable_size++;
-    strncpy(ht->callsign, callsign, 11);    // NB: strncpy does zero-fill
+    memcpy(ht->callsign, callsign, sizeof(ht->callsign));
+    ht->callsign[sizeof(ht->callsign) - 1] = '\0';
     ht->hash = hash;
-    if (hash_idx != NULL) *hash_idx = idx_hash;
+    ft8->last_hash_idx = idx_hash;
 }
 
 static bool hashtable_lookup(ftx_callsign_hash_type_t hash_type, uint32_t hash, char* callsign)
@@ -225,8 +227,8 @@ static bool hashtable_lookup(ftx_callsign_hash_type_t hash_type, uint32_t hash, 
 }
 
 ftx_callsign_hash_interface_t hash_if = {
-    .lookup_hash = hashtable_lookup,
-    .save_hash = hashtable_add
+    hashtable_lookup,
+    hashtable_add
 };
 
 static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
@@ -255,6 +257,9 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
 
     for(int pass = 0; pass < 2; ++pass)
     {
+    bool freq_decoded[1024];
+    memset(freq_decoded, 0, sizeof(freq_decoded));
+
     // Find top candidates by Costas sync score and localize them in time and frequency
     int num_candidates = ftx_find_candidates(wf, kMax_candidates / (pass + 1), ft8->candidate_list, kMin_score);
 
@@ -264,6 +269,13 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
 
         float freq_hz = (mon->min_bin + cand->freq_offset + (float)cand->freq_sub / wf->freq_osr) / mon->symbol_period;
         float time_sec = (cand->time_offset + (float)cand->time_sub / wf->time_osr) * mon->symbol_period;
+
+        // Skip candidates at frequencies where a message was already decoded
+        int freq_bin = (int)freq_hz / 4;
+        if (freq_bin >= 0 && freq_bin < 1024 && freq_decoded[freq_bin])
+        {
+            continue;
+        }
 
 #ifdef WATERFALL_USE_PHASE
         // int resynth_len = 12000 * 16;
@@ -293,6 +305,12 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
             continue;
         }
         CHECK_PADDING(ft8);
+
+        // Mark this frequency bin as decoded to skip future candidates at same freq
+        if (freq_bin >= 0 && freq_bin < 1024)
+        {
+            freq_decoded[freq_bin] = true;
+        }
 
         LOG(LOG_DEBUG, "Checking hash table for %4.1fs / %4.1fHz [%d]...\n", time_sec, freq_hz, cand->score);
         int idx_hash = message.hash % kMax_decoded_messages;
@@ -324,12 +342,12 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
         if (found_empty_slot)
         {
             char text[FTX_MAX_MESSAGE_LENGTH];
-            int hash_idx = -1;
             bool need_free = false, uploaded = false;
             char *f[4];
             int n = 0, km = 0;
-            ftx_message_rc_t unpack_status = ftx_message_decode(&message, &hash_if, text, &hash_idx);
-            if (unpack_status != FTX_MESSAGE_RC_OK && unpack_status != FTX_MESSAGE_RC_PSKR_OK && unpack_status != FTX_MESSAGE_RC_ERROR_TYPE)
+            ft8->last_hash_idx = -1;
+            ftx_message_rc_t unpack_status = ftx_message_decode(&message, &hash_if, text);
+            if (unpack_status != FTX_MESSAGE_RC_OK && unpack_status != FTX_MESSAGE_RC_ERROR_TYPE)
             {
                 snprintf(text, sizeof(text), "Error [%d] while unpacking!", (int)unpack_status);
                 continue;
@@ -343,7 +361,9 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
             float snr = message.snr * 0.5f + ft8_conf.SNR_adj;
             bool pskr_ok = false;
             int age = 0;
-            if (unpack_status == FTX_MESSAGE_RC_PSKR_OK) {
+            int hash_idx = ft8->last_hash_idx;
+            ftx_message_type_t msg_type = ftx_message_get_type(&message);
+            if (msg_type == FTX_MESSAGE_TYPE_STANDARD || msg_type == FTX_MESSAGE_TYPE_NONSTD_CALL) {
                 if (hash_idx < 0 || hash_idx >= CALLSIGN_HASHTABLE_MAX) {
                     printf("FT8 hash_idx=%d ??? <%s>\n", hash_idx, text);
                 } else {
@@ -391,7 +411,7 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
                                                 if (!ft8_conf.test)
                                             #endif
                                                     {
-                                                        km = PSKReporter_spot(rx_chan, call, passband_freq, snr_i, (ft8->protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4",
+                                                        km = PSKReporter_spot(rx_chan, call, passband_freq, snr_i, ft8->protocol_s,
                                                             grid, frame->decode_time, ft8->slot);
                                                     }
                                             ht->uploaded = 1;
@@ -434,11 +454,11 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
             ks = kstr_asprintf(ks, (km > 0)? " %5d" : "      ", km);
             ks = kstr_asprintf(ks, (age != 0)? "  %02d" : "    ", age);
 
-            uint8_t i3 = FTX_MSG_I3(&message);
+            uint8_t i3 = ftx_message_get_i3(&message);
             if (i3)
                 ks = kstr_asprintf(ks, " %d.0 ", i3);
             else
-                ks = kstr_asprintf(ks, " 0.%d*", FTX_MSG_N3(&message));
+                ks = kstr_asprintf(ks, " 0.%d*", ftx_message_get_n3(&message));
                 
             if (pskr_ok) {
                 char *call_to, *call_to_s = NULL, *call_de, *call_de_s, *grid_de, *grid_de_s;
@@ -470,7 +490,7 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
                 asprintf(&grid_de_s, rr73? "(RR73)" : "<a style=\"color:blue\" href=\"http://www.levinecentral.com/ham/grid_square.php?"
                     "Grid=%s\" target=\"_blank\">%s</a>", grid_de, grid_de);
 
-                const char *protocol = (ft8->protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4";
+                const char *protocol = ft8->protocol_s;
                 conn_t *conn = rx_channels[rx_chan].conn;
                 u4_t freq = conn->freqHz + ft8_conf.freq_offset_Hz + freq_hz;
                 mqtt_publish(protocol, "\"call:\":\"%s\", \"call_to\":\"%s\", \"grid\":\"%s\", \"snr\":%.1f, \"dT\":%.2f, \"freq\":%.3f, \"km\":%d, \"age\":%d",
@@ -636,16 +656,44 @@ void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, 
     ft8->tsync = false;
 }
 
-void decode_ft8_init(int rx_chan, int proto)
+void decode_ft8_init(int rx_chan, int proto, float tr_period)
 {
     decode_ft8_t *ft8 = &decode_ft8[rx_chan];
     memset(ft8, 0, sizeof(decode_ft8_t));
     ft8->magic = 0xbeefcafe;
     ft8->rx_chan = rx_chan;
-    ftx_protocol_t protocol = proto? FTX_PROTOCOL_FT4 : FTX_PROTOCOL_FT8;
+
+    ftx_protocol_t protocol;
+    float slot_period;
+    switch (proto) {
+    case 0:
+        protocol = FTX_PROTOCOL_FT8;
+        slot_period = FT8_SLOT_TIME;
+        sprintf(ft8->protocol_s, "FT8");
+        break;
+    case 1:
+        protocol = FTX_PROTOCOL_FT4;
+        slot_period = FT4_SLOT_TIME;
+        sprintf(ft8->protocol_s, "FT4");
+        break;
+    case 2:
+        protocol = FTX_PROTOCOL_FST4;
+        slot_period = tr_period;
+        sprintf(ft8->protocol_s, "FST4");
+        break;
+    case 3:
+        protocol = FTX_PROTOCOL_FST4W;
+        slot_period = tr_period;
+        sprintf(ft8->protocol_s, "FST4W");
+        break;
+    default:
+        protocol = FTX_PROTOCOL_FT8;
+        slot_period = FT8_SLOT_TIME;
+        sprintf(ft8->protocol_s, "FT8");
+        break;
+    }
+
     ft8->protocol = protocol;
-    float slot_period = ((protocol == FTX_PROTOCOL_FT8) ? FT8_SLOT_TIME : FT4_SLOT_TIME);
-    sprintf(ft8->protocol_s, "FT%d", (protocol == FTX_PROTOCOL_FT8)? 8:4);
     ft8->slot_period = slot_period;
     int sample_rate = snd_rate;
     int num_samples = slot_period * sample_rate;
@@ -657,13 +705,17 @@ void decode_ft8_init(int rx_chan, int proto)
 
     // Compute FFT over the whole signal and store it
     monitor_config_t mon_cfg = {
-        .f_min = FT8_PASSBAND_LO,
-        .f_max = FT8_PASSBAND_HI,
-        .sample_rate = sample_rate,
-        .time_osr = kTime_osr,
-        .freq_osr = kFreq_osr,
-        .protocol = protocol
+        FT8_PASSBAND_LO,
+        FT8_PASSBAND_HI,
+        sample_rate,
+        kTime_osr,
+        kFreq_osr,
+        protocol,
+        slot_period
     };
+
+    LOG(LOG_WARN, "decode_ft8_init: rx_chan=%d proto=%d tr_period=%.1f slot_period=%.1f sample_rate=%d\n",
+        rx_chan, proto, tr_period, slot_period, sample_rate);
 
     hashtable_init(rx_chan);
 
@@ -697,11 +749,11 @@ void decode_ft8_free(int rx_chan)
         monitor_free(&ft8->frames[i].mon);
 }
 
-void decode_ft8_protocol(int rx_chan, int freqHz, int proto)
+void decode_ft8_protocol(int rx_chan, int freqHz, int proto, float tr_period)
 {
     decode_ft8_t *ft8 = &decode_ft8[rx_chan];
     decode_ft8_free(rx_chan);
-    decode_ft8_init(rx_chan, proto);
+    decode_ft8_init(rx_chan, proto, tr_period);
     ext_send_msg_encoded(rx_chan, false, "EXT", "chars",
         "-------------------------------------------------------  new freq %.2f mode %s\n",
         freqHz/1e3, ft8->protocol_s);

@@ -1,6 +1,7 @@
 #include "encode.h"
 #include "constants.h"
 #include "crc.h"
+#include "fst4_ldpc.h"
 
 #include <stdio.h>
 
@@ -192,4 +193,104 @@ void ft4_encode(const uint8_t* payload, uint8_t* tones)
             tones[i_tone] = kFT4_Gray_map[bits2];
         }
     }
+}
+
+// Assemble FST4 frame: S8 D30 S8 D30 S8 D30 S8 D30 S8 = 160 symbols
+// Sync positions (0-indexed): 0-7, 38-45, 76-83, 114-121, 152-159
+// Data symbols fill the gaps between sync blocks
+static void fst4_assemble_frame(const uint8_t* codeword, uint8_t* tones)
+{
+    // Sync pattern: sync1 at positions 0,76,152; sync2 at positions 38,114
+    const int sync_pos[5] = { 0, 38, 76, 114, 152 };
+    const uint8_t* sync_words[5] = {
+        kFST4_Sync_word1, kFST4_Sync_word2,
+        kFST4_Sync_word1, kFST4_Sync_word2,
+        kFST4_Sync_word1
+    };
+
+    // Place sync symbols
+    for (int s = 0; s < 5; ++s)
+    {
+        for (int i = 0; i < FST4_LENGTH_SYNC; ++i)
+        {
+            tones[sync_pos[s] + i] = sync_words[s][i];
+        }
+    }
+
+    // Place data symbols (120 symbols from 240 codeword bits, 2 bits each)
+    uint8_t mask = 0x80u;
+    int i_byte = 0;
+    int i_data = 0;
+
+    for (int i_tone = 0; i_tone < FST4_NN; ++i_tone)
+    {
+        // Skip sync positions
+        bool is_sync = false;
+        for (int s = 0; s < 5; ++s)
+        {
+            if (i_tone >= sync_pos[s] && i_tone < sync_pos[s] + FST4_LENGTH_SYNC)
+            {
+                is_sync = true;
+                break;
+            }
+        }
+        if (is_sync)
+            continue;
+
+        // Extract 2 bits from codeword, Gray-map to tone
+        uint8_t bits2 = 0;
+        if (codeword[i_byte] & mask)
+            bits2 |= 2;
+        if (0 == (mask >>= 1))
+        {
+            mask = 0x80u;
+            i_byte++;
+        }
+        if (codeword[i_byte] & mask)
+            bits2 |= 1;
+        if (0 == (mask >>= 1))
+        {
+            mask = 0x80u;
+            i_byte++;
+        }
+        tones[i_tone] = kFT4_Gray_map[bits2];
+        i_data++;
+    }
+}
+
+void fst4_encode(const uint8_t* payload, uint8_t* tones)
+{
+    // XOR payload with pseudorandom sequence (same as FT4)
+    uint8_t payload_xor[10];
+    for (int i = 0; i < 10; ++i)
+    {
+        payload_xor[i] = payload[i] ^ kFT4_XOR_sequence[i];
+    }
+
+    // Compute CRC-24 and form 101-bit message
+    uint8_t a101[FST4_LDPC_K_BYTES];
+    fst4_add_crc(payload_xor, a101);
+
+    // LDPC encode: 101 bits → 240 bits
+    uint8_t codeword[FST4_LDPC_N_BYTES];
+    fst4_ldpc_encode(a101, codeword);
+
+    // Assemble frame with sync words
+    fst4_assemble_frame(codeword, tones);
+}
+
+void fst4w_encode(const uint8_t* payload, uint8_t* tones)
+{
+    // No XOR scrambling for FST4W
+
+    // Compute CRC-24 and form 74-bit message
+    uint8_t a74[FST4W_LDPC_K_BYTES];
+    fst4w_add_crc(payload, a74);
+
+    // LDPC encode: 74 bits → 240 bits
+    uint8_t codeword[FST4_LDPC_N_BYTES];
+    fst4w_ldpc_encode(a74, codeword);
+
+    // Assemble frame with sync words (same structure as FST4)
+    fst4_assemble_frame(codeword, tones);
 }

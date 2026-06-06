@@ -70,12 +70,9 @@ var fsk = {
    log_interval: null,
    log_txt: '',
 
-   // CTC (Chinese Telegraph Code) translation state
+   // CTC (Chinese Telegraph Code) translation
    ctc_enable: false,
-   ctc_buffer: '',
-   ctc_in_bracket: false,
-   ctc_last_was_letter: false,
-   ctc_invalid_num: false,
+   ctc_state: null,
 
    // height toggle state
    height_big: false,
@@ -123,7 +120,7 @@ function fsk_recv(data)
 		switch (param[0]) {
 
 			case "ready":
-            kiwi_load_js_dir('extensions/FSK/', ['JNX.js', 'BiQuadraticFilter.js', 'CCIR476.js', 'DSC.js', 'Selcall.js', 'FSK_async.js', 'CTC_dict.js'], 'fsk_controls_setup');
+            kiwi_load_js_dir('extensions/FSK/', ['JNX.js', 'BiQuadraticFilter.js', 'CCIR476.js', 'DSC.js', 'Selcall.js', 'FSK_async.js', 'CTC.js', 'CTC_dict.js'], 'fsk_controls_setup');
 				break;
 
 			case "test_done":
@@ -416,62 +413,16 @@ function fsk_output_char(s)
 {
    if (s == '') return;
    if (fsk.ctc_enable && window.CTC_DICT) {
-      fsk_ctc_process(s);
+      if (!fsk.ctc_state) fsk.ctc_state = CTC.new_state();
+      CTC.process(s, fsk.ctc_state, fsk_output_char_raw);
       return;
    }
    fsk_output_char_raw(s);
 }
 
-// CTC (Chinese Telegraph Code) translation
-// Buffers digits and translates 4-digit sequences to Chinese characters.
-function fsk_ctc_process(s)
-{
-   for (var i = 0; i < s.length; i++) {
-      var ch = s[i];
-
-      if (ch === '(' || ch === '\uff08' || ch === '[' || ch === '\u3010') {
-         fsk.ctc_in_bracket = true;
-      }
-      if (ch === ')' || ch === '\uff09' || ch === ']' || ch === '\u3011') {
-         fsk.ctc_in_bracket = false;
-      }
-
-      if (/[0-9]/.test(ch)) {
-         if (fsk.ctc_in_bracket) {
-            fsk_output_char_raw(ch);
-         } else {
-            if (fsk.ctc_buffer === '' && fsk.ctc_last_was_letter) {
-               fsk.ctc_invalid_num = true;
-            }
-            fsk.ctc_buffer += ch;
-         }
-         fsk.ctc_last_was_letter = false;
-      } else {
-         if (fsk.ctc_buffer.length > 0) {
-            if (/[a-zA-Z]/.test(ch)) fsk.ctc_invalid_num = true;
-
-            if (!fsk.ctc_in_bracket && !fsk.ctc_invalid_num &&
-                fsk.ctc_buffer.length === 4 && window.CTC_DICT[fsk.ctc_buffer]) {
-               fsk_output_char_raw(window.CTC_DICT[fsk.ctc_buffer]);
-            } else {
-               fsk_output_char_raw(fsk.ctc_buffer);
-            }
-            fsk.ctc_buffer = '';
-            fsk.ctc_invalid_num = false;
-         }
-
-         fsk.ctc_last_was_letter = /[a-zA-Z]/.test(ch);
-         fsk_output_char_raw(ch);
-      }
-   }
-}
-
 function fsk_ctc_reset()
 {
-   fsk.ctc_buffer = '';
-   fsk.ctc_in_bracket = false;
-   fsk.ctc_last_was_letter = false;
-   fsk.ctc_invalid_num = false;
+   if (fsk.ctc_state) CTC.reset(fsk.ctc_state);
 }
 
 function fsk_audio_data_cb(samps, nsamps)

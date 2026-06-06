@@ -70,6 +70,10 @@ var nt = {
    too_old_min: 30,
    locations_visible: true,
 
+   // CTC (Chinese Telegraph Code) translation
+   ctc_enable: false,
+   ctc_state: null,
+
    last_last: 0
 };
 
@@ -114,7 +118,7 @@ function navtex_recv(data)
 
 			case "ready":
 				var f = 'extensions/FSK/';
-            kiwi_load_js([f+'JNX.js', f+'BiQuadraticFilter.js', f+'CCIR476.js', f+'DSC.js', f+'Selcall.js'],
+            kiwi_load_js([f+'JNX.js', f+'BiQuadraticFilter.js', f+'CCIR476.js', f+'DSC.js', f+'Selcall.js', f+'CTC.js', f+'CTC_dict.js'],
                'navtex_controls_setup');
 				break;
 
@@ -205,8 +209,16 @@ function navtex_output_char(c)
       }
    }
    
-   navtex_output(c);
-   nt.log_txt += kiwi_remove_escape_sequences(kiwi_decodeURIComponent('NAVTEX', c));
+   if (nt.ctc_enable && window.CTC_DICT) {
+      if (!nt.ctc_state) nt.ctc_state = CTC.new_state();
+      CTC.process(c, nt.ctc_state, function(out) {
+         navtex_output(out);
+         nt.log_txt += kiwi_remove_escape_sequences(kiwi_decodeURIComponent('NAVTEX', out));
+      });
+   } else {
+      navtex_output(c);
+      nt.log_txt += kiwi_remove_escape_sequences(kiwi_decodeURIComponent('NAVTEX', c));
+   }
 }
 
 function navtex_audio_data_cb(samps, nsamps)
@@ -312,6 +324,7 @@ function navtex_controls_setup()
                ),
                
                w3_checkbox('w3-label-inline w3-label-not-bold/', 'auto<br>zoom', 'nt.auto_zoom', nt.auto_zoom, 'navtex_auto_zoom_cb'),
+               w3_checkbox('w3-label-inline w3-label-not-bold/', 'CTC', 'nt.ctc_enable', nt.ctc_enable, 'navtex_ctc_enable_cb'),
                w3_button('w3-padding-smaller w3-css-yellow', 'Clear', 'navtex_clear_button_cb', 0),
                w3_button('id-navtex-log w3-padding-smaller w3-purple', 'Log', 'navtex_log_cb'),
 
@@ -365,6 +378,10 @@ function navtex_controls_setup()
          } else
          if (w3_ext_param('help', a).match) {
             extint_help_click();
+         } else
+         if (w3_ext_param('ctc', a).match) {
+            nt.ctc_enable = true;
+            w3_checkbox_set('nt.ctc_enable', true);
          }
       });
    }
@@ -708,11 +725,19 @@ function navtex_auto_zoom_cb(path, checked, first)
    w3_checkbox_set(path, checked);
 }
 
+function navtex_ctc_enable_cb(path, checked, first)
+{
+   checked = checked? true : false;
+   nt.ctc_enable = checked;
+   if (!checked && nt.ctc_state) CTC.reset(nt.ctc_state);
+}
+
 function navtex_clear_button_cb(path, idx, first)
 {
    if (first) return;
    navtex_output('\f');
    nt.log_txt = '';
+   if (nt.ctc_state) CTC.reset(nt.ctc_state);
    
    // if the map is showing clear all the markers as well
    if (nt.show == nt.SHOW_MAP || nt.show == nt.SHOW_SPLIT) navtex_clear_old_cb('', 2);

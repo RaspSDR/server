@@ -1,5 +1,9 @@
 /* NAVTEX.css */
 
+#id-navtex-controls input[type="checkbox"].w3-hover-shadow:hover {
+    box-shadow: none !important;
+}
+
 #id-navtex-map-kiwi {
     position: absolute;
     top: 0;

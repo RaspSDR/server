@@ -328,7 +328,7 @@ function navtex_controls_setup()
                w3_button('w3-padding-smaller w3-css-yellow', 'Clear', 'navtex_clear_button_cb', 0),
                w3_button('id-navtex-log w3-padding-smaller w3-purple', 'Log', 'navtex_log_cb'),
 
-               cfg.navtex.test_file? w3_button('w3-padding-smaller w3-aqua', 'Test', 'navtex_test_cb') : '',
+               (cfg.navtex && cfg.navtex.test_file)? w3_button('w3-padding-smaller w3-aqua', 'Test', 'navtex_test_cb') : '',
 
                w3_input('id-navtex-log-mins/w3-label-not-bold/w3-ext-retain-input-focus|padding:0;width:auto|size=4',
                   'log min', 'nt.log_mins', nt.log_mins, 'navtex_log_mins_cb')
@@ -373,7 +373,7 @@ function navtex_controls_setup()
          if (w3_ext_param('split', a).match) {
             nt.show = nt.SHOW_SPLIT;
          } else
-         if (cfg.navtex.test_file && w3_ext_param('test', a).match) {
+         if (cfg.navtex && cfg.navtex.test_file && w3_ext_param('test', a).match) {
             ext_send('SET test');
          } else
          if (w3_ext_param('help', a).match) {

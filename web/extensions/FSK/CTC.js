@@ -24,18 +24,22 @@ var CTC = {
                   state.invalid_num = true;
                }
                state.buffer += ch;
+               // Translate immediately when buffer reaches 4 digits
+               if (state.buffer.length === 4) {
+                  if (!state.invalid_num && window.CTC_DICT && window.CTC_DICT[state.buffer]) {
+                     output_fn(window.CTC_DICT[state.buffer]);
+                  } else {
+                     output_fn(state.buffer);
+                  }
+                  state.buffer = '';
+                  state.invalid_num = false;
+               }
             }
             state.last_was_letter = false;
          } else {
+            // Flush partial buffer (less than 4 digits) as raw
             if (state.buffer.length > 0) {
-               if (/[a-zA-Z]/.test(ch)) state.invalid_num = true;
-
-               if (!state.in_bracket && !state.invalid_num &&
-                   state.buffer.length === 4 && window.CTC_DICT && window.CTC_DICT[state.buffer]) {
-                  output_fn(window.CTC_DICT[state.buffer]);
-               } else {
-                  output_fn(state.buffer);
-               }
+               output_fn(state.buffer);
                state.buffer = '';
                state.invalid_num = false;
             }

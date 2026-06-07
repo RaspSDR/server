@@ -36,7 +36,8 @@ console.log('CTC module tests\n');
 // Basic translation
 assert_eq('4-digit code translates to Chinese', '0001 ', '一 ');
 assert_eq('known code 1004 = 城', '1004 ', '城 ');
-assert_eq('multiple codes', '0001,1004 ', '一,城 ');
+assert_eq('multiple codes with separator', '0001,1004 ', '一,城 ');
+assert_eq('consecutive codes without separator', '00011004', '一城');
 
 // Bracket passthrough
 assert_eq('digits in () stay raw', '(1234)', '(1234)');
@@ -45,11 +46,11 @@ assert_eq('digits in [] stay raw', '[5678]', '[5678]');
 
 // Letter-adjacent numbers stay raw
 assert_eq('letter before digits keeps raw', 'A1234 ', 'A1234 ');
-assert_eq('digits followed by letter keeps raw', '1234B', '1234B');
+assert_eq('code followed by letter translates', '1234B', '姹B');
 
 // Non-4-digit sequences stay raw
 assert_eq('3 digits stay raw', '123 ', '123 ');
-assert_eq('5 digits stay raw', '12345 ', '12345 ');
+assert_eq('5 digits: first 4 translate, 5th stays', '12345 ', '姹5 ');
 
 // Unknown 4-digit code stays raw
 assert_eq('unknown code 9999 stays raw', '9999 ', '9999 ');

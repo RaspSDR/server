@@ -323,8 +323,10 @@ function navtex_controls_setup()
                   )
                ),
                
-               w3_checkbox('w3-label-inline w3-label-not-bold/', 'auto<br>zoom', 'nt.auto_zoom', nt.auto_zoom, 'navtex_auto_zoom_cb'),
-               w3_checkbox('w3-label-inline w3-label-not-bold/', 'CTC', 'nt.ctc_enable', nt.ctc_enable, 'navtex_ctc_enable_cb'),
+               w3_inline('',     // isolate checkboxes from w3-margin-between-16
+                  w3_checkbox('w3-label-inline w3-label-not-bold/', 'auto<br>zoom', 'nt.auto_zoom', nt.auto_zoom, 'navtex_auto_zoom_cb'),
+                  w3_checkbox('w3-label-inline w3-label-not-bold/', 'CTC', 'nt.ctc_enable', nt.ctc_enable, 'navtex_ctc_enable_cb')
+               ),
                w3_button('w3-padding-smaller w3-css-yellow', 'Clear', 'navtex_clear_button_cb', 0),
                w3_button('id-navtex-log w3-padding-smaller w3-purple', 'Log', 'navtex_log_cb'),
 

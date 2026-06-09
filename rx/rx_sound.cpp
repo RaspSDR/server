@@ -115,6 +115,7 @@ static str_hashes_t snd_cmd_hashes[] = {
     { "SET UAR ", CMD_UAR },
     { "SET AR O", CMD_AR_OKAY },
     { "SET unde", CMD_UNDERRUN },
+    { "SET late", CMD_LATENCY },
     { "SET seq=", CMD_SEQ },
     { "SET lms_", CMD_LMS_AUTONOTCH },
     { "SET sam_", CMD_SAM_PLL },

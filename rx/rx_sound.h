@@ -155,6 +155,7 @@ enum snd_cmd_key_e {
     CMD_UAR,
     CMD_AR_OKAY,
     CMD_UNDERRUN,
+    CMD_LATENCY,
     CMD_SEQ,
     CMD_LMS_AUTONOTCH,
     CMD_SAM_PLL,

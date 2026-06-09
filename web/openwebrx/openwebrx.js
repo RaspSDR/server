@@ -12424,6 +12424,13 @@ function owrx_msg_cb(param, ws)     // #msg-proc
 		case "rf_attn":
          rf_attn_cb(null, +param[1], false, false, true);
 		   break;
+		case "keepalive":
+		   if (ws === ws_snd && snd_keepalive_time) {
+		      var rtt = Date.now() - snd_keepalive_time;
+		      snd_keepalive_time = 0;
+		      if (typeof audio_adapt_set_rtt == 'function') audio_adapt_set_rtt(rtt);
+		   }
+		   break;
 		default:
 		   return false;
 	}
@@ -12492,12 +12499,14 @@ function ws_any()
 
 var need_geo = true;
 var need_status = true;
+var snd_keepalive_time = 0;
 
 function send_keepalive()
 {
 	for (var i=0; i<1; i++) {
 		if (!ws_snd.up || snd_send("SET keepalive") < 0)
 			break;
+		if (!snd_keepalive_time) snd_keepalive_time = Date.now();
 	
 		// these are done here because we know the audio connection is up and can receive messages
 		if (need_geo && kiwi_geo() != "") {

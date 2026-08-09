@@ -1,0 +1,53 @@
+.sw-row {
+   display: flex;
+   justify-content: space-between;
+   padding: 2px 0;
+   border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sw-label {
+   color: #aaa;
+}
+
+.sw-value {
+   font-weight: bold;
+}
+
+.sw-separator {
+   border-top: 1px solid rgba(255,255,255,0.2);
+   margin: 6px 0;
+}
+
+.sw-section-title {
+   color: #00bcd4;
+   font-weight: bold;
+   margin-bottom: 4px;
+   font-size: 11px;
+}
+
+.sw-bands {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 3px;
+}
+
+.sw-band {
+   padding: 3px 6px;
+   border-radius: 3px;
+   font-size: 10px;
+   font-weight: bold;
+   text-align: center;
+   min-width: 40px;
+}
+
+.sw-band-cond {
+   font-weight: normal;
+   font-size: 9px;
+}
+
+.sw-footer {
+   color: #bbb;
+   font-size: 9px;
+   text-align: right;
+   margin-top: 4px;
+}

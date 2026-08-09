@@ -2705,6 +2705,11 @@ function extensions_focus()
       w3_click_nav(kiwi_toggle(toggle_e.FROM_COOKIE | toggle_e.SET, 'wspr', 'wspr', 'last_admin_ext_nav'), 'extensions_nav');
    }
 
+   // ant_switch is a core component, not a registered extension, so register its admin config manually
+   if (typeof ant_switch_config_html === 'function' && !w3_el('id-nav-ant_switch')) {
+      ant_switch_config_html();
+   }
+
 	// get updates while the extensions tab is selected
 	admin_update_start();
 }

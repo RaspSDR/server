@@ -96,7 +96,7 @@ void FaxDecoder::UpdateSampleRate()
     m_SampleRateRatio = m_SamplesPerSec_frac / m_SamplesPerSec_nom;
 }
 
-/* perform fourier transform at a specific frequency to look for start/stop */
+/* perform fourier transform at a specific frequency on demodulated pixel data (u1_t) */
 TYPEREAL FaxDecoder::FourierTransformSub(u1_t* buffer, int samps_per_line, int buffer_len, int freq)
 {
     int i, n;
@@ -113,19 +113,28 @@ TYPEREAL FaxDecoder::FourierTransformSub(u1_t* buffer, int samps_per_line, int b
     return MSQRT(retr*retr + reti*reti);
 }
 
-/* see if the fourier transform at the start and stop frequencies reveils header */
-FaxDecoder::Header FaxDecoder::DetectLineType(u1_t* buffer, int samps_per_line, int buffer_len)
+/* detect start/stop tones on FM-demodulated data [0-255]
+   Start tone: carrier modulated at 300 Hz (IOC576) between black/white
+   Stop tone: carrier modulated at 450 Hz between black/white
+   DFT at 300/450 Hz on demodulated data detects these modulation rates */
+FaxDecoder::Header FaxDecoder::DetectLineType(u1_t *buffer, int samps_per_line, int buffer_len)
 {
-     const int threshold = 5; /* 5 is pretty arbitrary but works in practice even with lots of noise */
-     TYPEREAL start_det = FourierTransformSub(buffer, samps_per_line, buffer_len, m_Start_IOC576_Frequency) / buffer_len;
-     TYPEREAL stop_det = FourierTransformSub(buffer, samps_per_line, buffer_len, m_StopFrequency) / buffer_len;
-    //faxprintf("FAX start_det=%.2f stop_det=%.2f\n", start_det, stop_det);
+     double start_freq = m_Start_IOC576_Frequency;  // 300 Hz modulation rate
+     double stop_freq = m_StopFrequency;              // 450 Hz modulation rate
+     const float threshold = 5.0;  // CSDR uses 5
 
+     TYPEREAL start_det = FourierTransformSub(buffer, samps_per_line, buffer_len, (int)start_freq) / buffer_len;
+     TYPEREAL stop_det = FourierTransformSub(buffer, samps_per_line, buffer_len, (int)stop_freq) / buffer_len;
+
+     Header result;
      if (start_det > threshold)
-         return START;
-     if (stop_det > threshold)
-         return STOP;
-     return IMAGE;
+         result = START;
+     else if (stop_det > threshold && start_det < threshold)
+         result = STOP;
+     else
+         result = IMAGE;
+
+     return result;
 }
 
 /* detect start position from phasing line
@@ -169,9 +178,8 @@ bool FaxDecoder::DecodeFaxLine()
     if (m_bSkipHeaderDetection) {
         type = IMAGE;
     } else {
-        // processing all the line samples for low LPM is too expensive
-        int buffer_len = MIN(m_SamplesPerLine, 3000);
-        type = DetectLineType(m_demod_data, m_SamplesPerLine, buffer_len);
+        // detect start/stop tones on FM-demodulated data (CSDR method)
+        type = DetectLineType(m_demod_data, m_SamplesPerLine, m_SamplesPerLine);
         NextTaskFast("DetectLineType");
     }
 
@@ -189,10 +197,11 @@ bool FaxDecoder::DecodeFaxLine()
         /* require 4 less lines than there really are to handle
            noise and also misalignment on first and last lines */
         const int leewaylines = 4;
+        int needed = (int)(m_StartStopLength*m_lpm/60.0 - leewaylines);
 
-        faxprintf("FAX L%d %s cnt=%d prepare=%d\n", m_imageline, (type == START)? "START":"STOP", typecount,
-            typecount == m_StartStopLength*m_lpm/60.0 - leewaylines);
-        if (typecount == m_StartStopLength*m_lpm/60.0 - leewaylines) {
+        faxprintf("FAX L%d %s cnt=%d needed=%d prepare=%d\n", m_imageline, (type == START)? "START":"STOP", typecount,
+            needed, typecount == needed);
+        if (typecount == needed) {
             if (type == START /* && m_imageline < 100 */) {
                 /* prepare for phasing */
                 /* image start detected, reset image at 0 lines  */
@@ -205,6 +214,8 @@ bool FaxDecoder::DecodeFaxLine()
                 phasingLinesLeft = m_phasingLines;
                 phasingSkipData = 0;
                 have_phasing = false;
+                if (!m_use_phasing && !m_autostop)
+                    m_bSkipHeaderDetection = true;
                 if (m_autostopped) {
                     ext_send_msg(m_rx_chan, false, "EXT fax_autostopped=0");
                     m_autostopped = false;
@@ -212,6 +223,7 @@ bool FaxDecoder::DecodeFaxLine()
                 }
             } else {
                 // type == STOP
+                m_bSkipHeaderDetection = false;  // re-enable detection for next START
                 if (m_autostop) {
                     ext_send_msg(m_rx_chan, false, "EXT fax_autostopped=1");
                     m_autostopped = true;
@@ -250,19 +262,6 @@ bool FaxDecoder::DecodeFaxLine()
             height *= 2;
             m_imgdata = (u1_t*) kiwi_irealloc("DecodeFaxLine", m_imgdata, m_imagewidth*height*m_imagecolors);
         }
-
-        /*
-            if (m_imageline == 10) {
-                m_autostopped = true;
-                ext_send_msg(m_rx_chan, false, "EXT fax_autostopped=1");
-                faxprintf("FAX L%d TEST AUTOSTOPPED=1\n", m_imageline);
-            }
-            if (m_imageline == 20) {
-                m_autostopped = false;
-                ext_send_msg(m_rx_chan, false, "EXT fax_autostopped=0");
-                faxprintf("FAX L%d TEST AUTOSTOPPED=0\n", m_imageline);
-            }
-        */
 
         if (!m_autostopped)
             DecodeImageLine(m_demod_data, m_SamplesPerLine, m_imgdata+imgpos);

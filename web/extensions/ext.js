@@ -25,11 +25,12 @@ var extint = {
    send_hiwat: 0,
    send_hiwat_msg: null,
    
-   // extensions not subject to DRM lockout
-   // FIXME: allow C-side API to specify
-   no_lockout: [ 'noise_blank', 'noise_filter', 'ant_switch', 'iframe', 'colormap', 'devl', 'prefs' ],
-   use_rf_tab: [ 'ant_switch' ],
-   excl_devl: [ 'devl', 'digi_modes', 's4285', 'prefs' ],
+    // extensions not subject to DRM lockout
+    // FIXME: allow C-side API to specify
+    no_lockout: [ 'noise_blank', 'noise_filter', 'iframe', 'colormap', 'devl', 'prefs' ],
+    use_rf_tab: [ ],
+    excl_devl: [ 'devl', 'digi_modes', 's4285', 'prefs' ],
+    former_exts: [ 'ant_switch' ],
    
    OPT_NOLOCAL: 1,
 };
@@ -1109,14 +1110,10 @@ var extint_first_ext_load = true;
 // called on extension menu item selection
 function extint_select(value)
 {
-	extint_blur_prev(0);
-	w3_call(extint.hide_func);
-   freqset_select();
-	
+	// handle former extensions now contained in main control panel
 	value = +value;
 	var el = w3_el('id-select-ext');
 	if (!el) {
-	   //console.log('$ extint_select NOT READY v='+ value);
 	   setTimeout(extint_select, 1000, value);
 	   return;
 	}
@@ -1124,12 +1121,27 @@ function extint_select(value)
 	var menu = el.childNodes;
 	var name = menu[value+1].innerHTML.toLowerCase();
 	console.log('extint_select val='+ value +' name='+ name);
+
+	if (name == 'ant_switch') {
+	   if (typeof ant_switch_focus === 'function') ant_switch_focus();
+	   if (typeof ant_switch_view === 'function') ant_switch_view();
+	   return;
+	} else {
+	   if (typeof ant_switch_blur === 'function') ant_switch_blur();
+	}
+
+	if (extint.former_exts && extint.former_exts.includes(name)) {
+	   w3_call(name +'_view');
+	   return;
+	}
+
+	extint_blur_prev(0);
+	w3_call(extint.hide_func);
+   freqset_select();
+
 	var idx;
    extint_names_enum(function(i, value, id, id_en) {
-	   //console.log('extint_select CONSIDER id='+ id +' name='+ name +' id_en='+ id_en +' i='+ i +' value='+ value);
-      //if (id.toLowerCase().includes(name)) {
       if (name.startsWith(id.toLowerCase())) {
-	      //console.log('extint_select HIT id='+ id +' name='+ name +' id_en='+ id_en +' i='+ i +' value='+ value);
 	      idx = i;
       }
    });
@@ -1139,8 +1151,7 @@ function extint_select(value)
 		extint.ws = extint_connect_server();
 		extint_first_ext_load = false;
 	} else {
-		//extint_focus();
-		ext_send('SET ext_is_locked_status');     // request is_locked status
+		ext_send('SET ext_is_locked_status');
 	}
 }
 
@@ -1149,8 +1160,13 @@ var extint_names;
 function extint_list_json(param)
 {
    extint_names = kiwi_JSON_parse('extint_list_json', decodeURIComponent(param));
-	//console.log('extint_names=');
-	//console.log(extint_names);
+
+   // add former extensions (now part of core) to the menu for UI compatibility
+   if (extint.former_exts) {
+      extint.former_exts.forEach(function(e, i) {
+         if (!extint_names.includes(e)) extint_names.push(e);
+      });
+   }
 }
 
 function extint_names_enum(func)

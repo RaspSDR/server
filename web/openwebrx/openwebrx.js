@@ -7495,7 +7495,7 @@ var dx = {
    DB_COMMUNITY: 2,
    DB_N: 3,
    db: 0,
-   db_s: [ 'stored (writeable)', 'EiBi-A25 (read-only)', 'community (downloaded)' ],
+   db_s: [ 'stored (writeable)', 'EiBi-A26 (read-only)', 'community (downloaded)' ],
    db_short_s: [ 'stored', 'EiBi', 'community' ],
    ignore_dx_update: false,
    last_community_download: '',
@@ -10229,7 +10229,8 @@ function panels_setup()
          w3_div('id-field-rf-attn class-slider'), 19
       ) +
       w3_hr('|border-color:grey; margin:4px 6px 4px 0') +
-      w3_div('id-optbar-rf-container');
+      w3_div('id-optbar-rf-container') +
+      w3_div('id-optbar-rf-antsw');
 
    // wf
 	w3_el("id-optbar-wf").innerHTML =
@@ -10436,7 +10437,11 @@ function panels_setup()
 	// optbar_setup
 	//console.log('optbar_setup');
    w3_click_nav(kiwi_toggle(toggle_e.FROM_COOKIE | toggle_e.SET, 'optbar-wf', 'optbar-wf', 'last_optbar'), 'optbar', 'init');
-	
+
+	// ant_switch core init
+	if (typeof ant_switch_user_init === 'function')
+	   ant_switch_user_init();
+
 
 	// id-news
 	w3_el('id-news').style.backgroundColor = news_color;
@@ -12424,6 +12429,16 @@ function owrx_msg_cb(param, ws)     // #msg-proc
 		case "rf_attn":
          rf_attn_cb(null, +param[1], false, false, true);
 		   break;
+		case "antsw_ready":
+		case "antsw_backend_ver":
+		case "antsw_channels":
+		case "antsw_Antenna":
+		case "antsw_AntennaDenySwitching":
+		case "antsw_AntennaDenyMixing":
+		case "antsw_Thunderstorm":
+			if (typeof ant_switch_msg === 'function')
+			   return ant_switch_msg(param);
+			return false;
 		default:
 		   return false;
 	}

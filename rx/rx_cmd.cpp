@@ -41,6 +41,7 @@ Boston, MA  02110-1301, USA.
 #include "wspr.h"
 #include "security.h"
 #include "options.h"
+#include "ant_switch.h"
 
 #include "data_pump.h"
 #include "dx.h"
@@ -134,6 +135,7 @@ static str_hashes_t rx_common_cmd_hashes[] = {
     { "SET clk_ad", CMD_CLK_ADJ },
     { "SERVER DE ", CMD_SERVER_DE_CLIENT },
     { "SET x-DEBU", CMD_X_DEBUG },
+    { "SET antsw_", CMD_ANT_SWITCH },
     { 0 }
 };
 
@@ -2236,6 +2238,13 @@ bool rx_common_cmd(int stream_type, conn_t* conn, char* cmd) {
     case CMD_SERVER_DE_CLIENT:
         if (kiwi_str_begins_with(cmd, "SERVER DE CLIENT"))
             return true;
+        break;
+
+    case CMD_ANT_SWITCH:
+        if (kiwi_str_begins_with(cmd, "SET antsw")) {
+            ant_switch_msgs(cmd, conn);
+            return true;
+        }
         break;
 
     default:

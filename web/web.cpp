@@ -491,6 +491,7 @@ void reload_index_params() {
         "kiwi/w3_util.js",
         "pkgs/w3/w3color.js",
         "kiwi/monitor.js",
+        "kiwi/ant_switch.js",
         "openwebrx.js",
         "ima_adpcm.js",
         "audio.js",

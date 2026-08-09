@@ -193,8 +193,6 @@ void ext_register(ext_t *ext)
 {
 	check(n_exts < N_EXT);
 	ext_list[n_exts] = ext;
-	if (strcmp(ext->name, "ant_switch") == 0)
-	    have_ant_switch_ext = true;
 	printf("ext_register: #%d \"%s\"\n", n_exts, ext->name);
 	n_exts++;
 }

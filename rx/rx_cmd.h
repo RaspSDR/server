@@ -56,7 +56,8 @@ enum rx_common_cmd_key_e {
     CMD_GET_AUTHKEY,
     CMD_CLK_ADJ,
     CMD_SERVER_DE_CLIENT,
-    CMD_X_DEBUG
+    CMD_X_DEBUG,
+    CMD_ANT_SWITCH
 };
 
 // NB: must match kiwi.js

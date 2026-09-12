@@ -9,6 +9,7 @@ find_program(MINIFY_COMMAND NAMES minify)
 
 option(ZYNQ "Build for Zynq7000 serial based WebSDR" ON)
 option(ENABLE_HDFL "Enable HFDL" ON)
+option(NATIVE_HARNESS "Build a native fake-hardware browser test harness" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
    set(CMAKE_BUILD_TYPE Release)
@@ -66,6 +67,10 @@ if (EMULATOR)
     pkg_check_modules(CONFIG REQUIRED libconfig++)
 else()
     set(CONFIG_LIBRARIES "/usr/lib/libconfig++.a")
+endif()
+
+if(NATIVE_HARNESS)
+    find_library(CRYPT_LIBRARY crypt REQUIRED)
 endif()
 
 find_program(CCACHE_FOUND ccache)
@@ -240,6 +245,11 @@ target_link_libraries(websdr.bin PRIVATE
     ${CURL_LIBRARIES}
     ${SSL_LIBRARIES}
 )
+
+if(NATIVE_HARNESS)
+    target_link_libraries(websdr.bin PRIVATE ${CRYPT_LIBRARY})
+    target_compile_definitions(websdr.bin PUBLIC NATIVE_HARNESS)
+endif()
 
 if(ENABLE_HDFL)
     add_dependencies(websdr.bin dumphfdl)

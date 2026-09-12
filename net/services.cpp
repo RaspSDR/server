@@ -838,6 +838,21 @@ void services_start() {
 
     net.serno = serial_number;
 
+#ifdef NATIVE_HARNESS
+    net.pvt_valid = IPV4;
+    net.ip4_valid = true;
+    net.ip4_pvt = INET4_DTOH(127, 0, 0, 1);
+    kiwi_strncpy(net.ip4_pvt_s, "127.0.0.1", sizeof(net.ip4_pvt_s));
+    net.ip_pvt = net.ip4_pvt_s;
+    net.nm_bits = net.nm_bits4 = 8;
+    kiwi_strncpy(net.mac, "02:00:00:00:08:88", sizeof(net.mac));
+    kiwi_strncpy(net.mac_no_delim, "020000000888", sizeof(net.mac_no_delim));
+    net.mac_valid = true;
+    kiwi.allow_admin_conns = true;
+    lprintf("native harness: external services disabled\n");
+    return;
+#endif
+
     // Because these run early on child_task() doesn't have to be used to avoid excessive task pauses.
     // This is good, because otherwise shared memory would have to be used to communicate with
     // the child tasks as it does with led_task.

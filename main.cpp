@@ -96,11 +96,13 @@ int main(int argc, char* argv[]) {
     // enable generation of core file in /tmp
     // scall("core_pattern", system("echo /tmp/core-%e-%s-%p-%t > /proc/sys/kernel/core_pattern"));
 
+#ifndef NATIVE_HARNESS
     // use same filename to prevent looping dumps from filling up filesystem
     scall("core_pattern", system("echo /tmp/core-%e > /proc/sys/kernel/core_pattern"));
     const struct rlimit unlim = { RLIM_INFINITY, RLIM_INFINITY };
     scall("setrlimit", setrlimit(RLIMIT_CORE, &unlim));
     system("rm -f /tmp/core-*"); // remove old core files
+#endif
 
     kiwi.platform = PLATFORM_ZYNQ7010;
 
@@ -187,11 +189,17 @@ int main(int argc, char* argv[]) {
             version_maj, version_min);
     lprintf("compiled: %s %s on %s\n", __DATE__, __TIME__, COMPILE_HOST);
 
+#ifdef NATIVE_HARNESS
+    debian_maj = debian_min = 0;
+    disable_led_task = true;
+    lprintf("native harness host\n");
+#else
     char* reply = read_file_string_reply("/etc/alpine-release");
     if (reply == NULL) panic("debian_version");
     if (sscanf(kstr_sp(reply), "%d.%d", &debian_maj, &debian_min) != 2) panic("debian_version");
     kstr_free(reply);
     lprintf("/etc/debian_version %d.%d\n", debian_maj, debian_min);
+#endif
 
 #if defined(USE_ASAN)
     lprintf("### compiled with USE_ASAN\n");
@@ -285,7 +293,9 @@ int main(int argc, char* argv[]) {
         kiwi_msleep(100);
     }
 
+#ifndef NATIVE_HARNESS
     gps_main(argc, argv);
+#endif
 
     CreateTask(stat_task, NULL, MAIN_PRIORITY);
 

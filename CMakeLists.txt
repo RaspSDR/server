@@ -28,11 +28,20 @@ set(CMAKE_C_FLAGS "-Wall -fsingle-precision-constant -ffast-math")
 set(CMAKE_C_FLAGS_DEBUG "-g -O0")
 set(CMAKE_C_FLAGS_RELEASE "-g -O3")
 
-set(PLATFORM zynq)
-set(PLATFORM_INC ${PLATFORM})
-FILE(GLOB PLATFORM_SRCS
-    "${PLATFORM}/*.cpp"
-)
+set(PLATFORM_INC zynq)
+if(NATIVE_HARNESS)
+    set(PLATFORM_SRCS
+        "${UPSTREAM_DIR}/native/eeprom.cpp"
+        "${UPSTREAM_DIR}/native/peri.cpp"
+        "${UPSTREAM_DIR}/native/system.cpp"
+        "${UPSTREAM_DIR}/zynq/leds.cpp"
+        "${UPSTREAM_DIR}/zynq/timer.cpp"
+    )
+else()
+    file(GLOB PLATFORM_SRCS
+        "${UPSTREAM_DIR}/zynq/*.cpp"
+    )
+endif()
 
 # Detect if host system is ARM
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
@@ -116,6 +125,16 @@ SET(EXTENSIONS
     waterfall
     wspr
 )
+
+if(NATIVE_HARNESS)
+    # DRM starts per-channel decoder processes during server initialization and
+    # depends on the target-specific FDK-AAC runtime.
+    list(REMOVE_ITEM EXTENSIONS DRM)
+    list(APPEND EXT_SRCS
+        "${UPSTREAM_DIR}/extensions/DRM/dream/resample/AudioResample.cpp"
+        "${UPSTREAM_DIR}/extensions/DRM/dream/resample/ResampleFilter.cpp"
+    )
+endif()
 
 if(ENABLE_HDFL)
     list(APPEND EXTENSIONS HFDL)
@@ -265,6 +284,13 @@ if (${CURRENT_MONTH_DAY} MATCHES "^0[0-9].*")
 endif()
 
 set(DIR_DATA /tmp/kiwi.data)
+if(NATIVE_HARNESS)
+    set(RUNTIME_CFG_DIR "${PROJECT_BINARY_DIR}/config")
+    set(RUNTIME_SAMPLES_DIR "${PROJECT_BINARY_DIR}/config/samples")
+else()
+    set(RUNTIME_CFG_DIR "/root/config")
+    set(RUNTIME_SAMPLES_DIR "/media/mmcblk0p1/config/samples")
+endif()
 
 # Generate a version file based on year and month day
 file(WRITE ${PROJECT_BINARY_DIR}/version.h
@@ -275,8 +301,8 @@ file(WRITE ${PROJECT_BINARY_DIR}/version.h
 
 target_compile_definitions(websdr.bin PUBLIC
     KIWI KIWISDR
-    DIR_CFG="/root/config"
-    DIR_SAMPLES="/media/mmcblk0p1/config/samples"
+    DIR_CFG="${RUNTIME_CFG_DIR}"
+    DIR_SAMPLES="${RUNTIME_SAMPLES_DIR}"
     CFG_PREFIX=""
     DIR_DATA=STRINGIFY\(${DIR_DATA}\)
     BUILD_DIR="${PROJECT_BINARY_DIR}"

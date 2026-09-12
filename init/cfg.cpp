@@ -1503,10 +1503,12 @@ static void _cfg_write_file(void* param) {
     fclose(fp);
     // real_printf("_cfg_write_file DONE\n");
 
+#ifndef NATIVE_HARNESS
     // copy config file to sd card
     sd_enable(true);
     system("cp -f /root/config/* /media/mmcblk0p1/config/");
     sd_enable(false);
+#endif
 }
 
 void _cfg_save_json(cfg_t* cfg, char* json) {

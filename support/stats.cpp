@@ -173,6 +173,9 @@ static void webserver_collect_print_stats(int print) {
         int cpufreq_kHz = 0;
         float temp_deg_mC = 0;
 
+#ifdef NATIVE_HARNESS
+        temp_deg_mC = 25.0f;
+#else
         // find out tempture
         const char* raw_path = "/sys/bus/iio/devices/iio:device0/in_temp0_raw";
         const char* offset_path = "/sys/bus/iio/devices/iio:device0/in_temp0_offset";
@@ -201,6 +204,7 @@ static void webserver_collect_print_stats(int print) {
             sscanf(kstr_sp(reply), "%u", &cpufreq_kHz);
             kstr_free(reply);
         }
+#endif
 
         // ecpu_use() below can thread block, so cpu_stats_buf must be properly set NULL for reading thread
         kstr_t* ks;

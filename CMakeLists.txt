@@ -120,6 +120,7 @@ SET(EXTENSIONS
     noise_filter
     S_meter
     s4285
+    space_weather
     SSTV
     timecode
     waterfall

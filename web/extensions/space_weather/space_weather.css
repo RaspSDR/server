@@ -1,0 +1,27 @@
+.sw-row {
+   display: flex;
+   justify-content: space-between;
+   padding: 3px 0;
+   border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sw-label {
+   color: #aaa;
+}
+
+.sw-value {
+   font-weight: bold;
+}
+
+.sw-section-title {
+   color: #00bcd4;
+   font-weight: bold;
+   margin: 8px 0 3px;
+}
+
+.sw-footer {
+   color: #bbb;
+   font-size: 9px;
+   margin-top: 6px;
+   text-align: right;
+}

@@ -10,6 +10,31 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const errors = [];
 
+    await page.route('https://services.swpc.noaa.gov/**', async route => {
+        const path = new URL(route.request().url()).pathname;
+        const fixtures = {
+            '/products/noaa-planetary-k-index.json':
+                [{ time_tag: '2026-09-12T18:00:00', Kp: 2.33, a_running: 9 }],
+            '/products/noaa-planetary-k-index-forecast.json': [
+                { time_tag: '2026-09-13T00:00:00', kp: 2.0, observed: 'predicted' },
+                { time_tag: '2026-09-13T03:00:00', kp: 3.0, observed: 'predicted' }
+            ],
+            '/products/summary/10cm-flux.json':
+                [{ flux: 109, time_tag: '2026-09-12T20:00:00' }],
+            '/json/goes/primary/xray-background-7-day.json':
+                [{ time_tag: '2026-09-11T00:00:00Z', background: 3.1e-7 }],
+            '/products/summary/solar-wind-mag-field.json':
+                [{ bt: 7, bz_gsm: -4, time_tag: '2026-09-12T23:17:00Z' }]
+        };
+        if (!fixtures[path])
+            return route.abort();
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(fixtures[path])
+        });
+    });
+
     page.on('console', message => {
         if (message.type() === 'error')
             errors.push(`console: ${message.text()}`);
@@ -30,12 +55,22 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 window.wf_canvas_actual_line !== line;
         }, initialLine, { timeout: 30000 });
 
+        await page.evaluate(() => extint_open('space_weather'));
+        await page.waitForFunction(() => {
+            const el = w3_el('id-sw-data');
+            return el && el.textContent.includes('Solar flux') &&
+                el.textContent.includes('109') &&
+                el.textContent.includes('Kp 2.0 - 3.0') &&
+                el.textContent.includes('-4.0 nT');
+        }, null, { timeout: 30000 });
+
         const state = await page.evaluate(() => ({
             title: document.title,
             soundSocket: window.ws_snd.readyState,
             waterfallSocket: window.ws_wf.readyState,
             waterfallLine: window.wf_canvas_actual_line,
             waterfallCanvases: window.wf_canvases.length,
+            spaceWeather: w3_el('id-sw-data').textContent,
             spectrumPassband: (() => {
                 const savedCenter = center_freq;
                 try {

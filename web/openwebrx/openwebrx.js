@@ -3981,6 +3981,33 @@ function spectrum_tooltip_update(evt, clientX, clientY)
    }
 }
 
+function spectrum_passband_px(demod, range, axis_width, clip_width)
+{
+   if (!isDefined(demod) || demod.low_cut == demod.high_cut || !range.bw ||
+       axis_width <= 0 || clip_width <= 0)
+      return null;
+
+   var carrier = center_freq + demod.offset_frequency;
+   var left = (carrier + demod.low_cut - range.start) / range.bw * axis_width;
+   var right = (carrier + demod.high_cut - range.start) / range.bw * axis_width;
+   if (right < left) {
+      var swap = left;
+      left = right;
+      right = swap;
+   }
+   left = Math.max(0, left);
+   right = Math.min(clip_width, right);
+   if (right <= left)
+      return null;
+
+   left = Math.min(clip_width - 1, Math.round(left));
+   right = Math.min(clip_width, Math.round(right));
+   if (right <= left)
+      right = left + 1;
+
+   return { left:left, right:right, width:right-left };
+}
+
 function spectrum_update(data)
 {
    // because of audio pipeline delay need to check
@@ -4161,6 +4188,19 @@ function spectrum_update(data)
             ctx.fillRect(x,y, 1,h);
             y = b.y2;
          }
+      }
+   }
+
+   // Show the receiver filter passband on the RF spectrum.
+   if (spec.source == spec.RF) {
+      var passband = spectrum_passband_px(
+         demodulators[0], get_visible_freq_range(), spec.canvas.width, sw);
+      if (passband) {
+         ctx.fillStyle = 'rgba(255, 255, 0, 0.15)';
+         ctx.fillRect(passband.left, 0, passband.width, sh);
+         ctx.fillStyle = 'yellow';
+         ctx.fillRect(passband.left, 0, 1, sh);
+         ctx.fillRect(passband.right - 1, 0, 1, sh);
       }
    }
    

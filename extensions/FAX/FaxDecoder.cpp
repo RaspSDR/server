@@ -189,10 +189,11 @@ bool FaxDecoder::DecodeFaxLine()
         /* require 4 less lines than there really are to handle
            noise and also misalignment on first and last lines */
         const int leewaylines = 4;
+        const int required_lines = (int) (m_StartStopLength * m_lpm / 60.0) - leewaylines;
 
         faxprintf("FAX L%d %s cnt=%d prepare=%d\n", m_imageline, (type == START)? "START":"STOP", typecount,
-            typecount == m_StartStopLength*m_lpm/60.0 - leewaylines);
-        if (typecount == m_StartStopLength*m_lpm/60.0 - leewaylines) {
+            typecount == required_lines);
+        if (typecount == required_lines) {
             if (type == START /* && m_imageline < 100 */) {
                 /* prepare for phasing */
                 /* image start detected, reset image at 0 lines  */

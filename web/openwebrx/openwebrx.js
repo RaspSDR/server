@@ -7044,6 +7044,7 @@ function find_band(freq)
 	dx_container_h = 80;
 	dx_container_top = band_canvas_h;
 		dx_label_top = 5;
+		dx_sig_top = 70;
 		dx_line_h = dx_container_h - dx_label_top;
 	
 	scale_canvas_h = 47;
@@ -7477,6 +7478,16 @@ function admin_pwd_cb2(el, val)
 ////////////////////////////////
 // dx labels
 ////////////////////////////////
+
+function dx_label_top_px(eibi, dx_idx, gap)
+{
+   if (!eibi && cfg.dx_three_high) {
+      var spacing = Math.floor((dx_sig_top - dx_label_top) / 3);
+      return dx_label_top + spacing * (dx_idx % 3);
+   }
+
+   return dx_label_top + gap * (dx_idx & 1);
+}
 
 var dx = {
    step_dbg: 0,
@@ -8082,7 +8093,7 @@ function dx_label_render_cb(arr)
             lock_z = 0;
          }
 		}
-		var top = dx_label_top + (gap * (dx_idx & 1));    // stagger the labels vertically
+		var top = dx_label_top_px(eibi, dx_idx, gap);
       dx.post_render[dx_idx] = { top: top, ltop: top, x: x /* , f: f_base_label_Hz/1e3, ident: ident */ };
 		dx.last_f_base = f_base_label_Hz;
 

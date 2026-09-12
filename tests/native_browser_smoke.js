@@ -35,8 +35,33 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             soundSocket: window.ws_snd.readyState,
             waterfallSocket: window.ws_wf.readyState,
             waterfallLine: window.wf_canvas_actual_line,
-            waterfallCanvases: window.wf_canvases.length
+            waterfallCanvases: window.wf_canvases.length,
+            dxLabelRows: (() => {
+                const saved = cfg.dx_three_high;
+                try {
+                    cfg.dx_three_high = true;
+                    const rows = [0, 1, 2, 3].map(i => dx_label_top_px(false, i, 35));
+                    const eibiRows = [0, 1, 2].map(i => dx_label_top_px(true, i, 40));
+                    const label = document.createElement('div');
+                    label.className = 'cl-dx-label';
+                    label.textContent = 'DX';
+                    document.body.appendChild(label);
+                    const labelHeight = label.getBoundingClientRect().height;
+                    label.remove();
+                    return { rows, eibiRows, labelHeight };
+                } finally {
+                    cfg.dx_three_high = saved;
+                }
+            })()
         }));
+
+        const dxRows = state.dxLabelRows;
+        if (new Set(dxRows.rows.slice(0, 3)).size !== 3 ||
+            dxRows.rows[3] !== dxRows.rows[0] ||
+            dxRows.rows[2] + dxRows.labelHeight > 70)
+            throw new Error(`invalid three-row DX label layout: ${JSON.stringify(dxRows)}`);
+        if (dxRows.eibiRows.join(',') !== '5,45,5')
+            throw new Error(`EiBi DX label layout changed: ${dxRows.eibiRows}`);
 
         if (errors.length)
             throw new Error(errors.join('\n'));

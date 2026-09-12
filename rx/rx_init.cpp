@@ -137,7 +137,9 @@ TYPEREAL DC_offset_I, DC_offset_Q;
 
 #define WATERFALL_CALIBRATION_DEFAULT -13
 #define SMETER_CALIBRATION_DEFAULT    -13
-#define AIRBAND_FREQ_OFFSET_PREV_KHZ  100762.0
+#define AIRBAND_FREQ_OFFSET_PREV_KHZ       100761.6
+#define AIRBAND_FREQ_OFFSET_PREV_UI_KHZ    100762.0
+#define AIRBAND_FREQ_OFFSET_MIGRATION_KHZ  100.0
 
 static int snr_interval[] = { 0, 1, 4, 6, 24 };
 
@@ -145,8 +147,12 @@ void update_freqs(bool* update_cfg) {
     ui_srate = ADC_CLOCK_TYP / 2.0;
     ui_srate_kHz = round(ui_srate / kHz);
     freq_offset_kHz = cfg_default_float("freq_offset", 0, update_cfg);
-    if (update_cfg != NULL && kiwi.airband && freq_offset_kHz == AIRBAND_FREQ_OFFSET_PREV_KHZ) {
+    double airband_offset_delta_kHz = freq_offset_kHz - AIRBAND_FREQ_OFFSET_PREV_KHZ;
+    bool airband_offset_from_prev_ui = freq_offset_kHz == AIRBAND_FREQ_OFFSET_PREV_UI_KHZ;
+    if (update_cfg != NULL && kiwi.airband &&
+        (airband_offset_from_prev_ui || fabs(airband_offset_delta_kHz) <= AIRBAND_FREQ_OFFSET_MIGRATION_KHZ)) {
         freq_offset_kHz = ADC_CLOCK_VHF / kHz;
+        if (!airband_offset_from_prev_ui) freq_offset_kHz += airband_offset_delta_kHz;
         cfg_set_float("freq_offset", freq_offset_kHz);
         *update_cfg = true;
         lprintf("airband: updating frequency offset to %.3f kHz\n", freq_offset_kHz);

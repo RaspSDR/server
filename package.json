@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "test:native-browser": "tools/test-native-browser.sh"
+  },
+  "devDependencies": {
+    "playwright": "1.55.0"
+  }
+}

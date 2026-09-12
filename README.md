@@ -68,3 +68,27 @@ run the following commands to install the build tools
 5. Use the compiled binary websdr.bin to replace the one in the root of your TF card.
 
 6. Happy hack
+
+## Native browser harness
+
+The native harness builds the server for the current Linux host, replaces the
+Zynq hardware interface with deterministic fake receiver and waterfall data,
+and opens the UI in headless Chromium.
+
+Install the browser test dependency and Chromium once:
+
+```sh
+npm install
+npx playwright install chromium
+```
+
+Run the complete build and browser smoke test:
+
+```sh
+npm run test:native-browser
+```
+
+Set `WEBSDR_HARNESS_PORT` to use a port other than 8073. The native harness
+does not start GPS, update, registration, LED, or other target-only services.
+DRM is excluded because its decoder processes depend on the target FDK-AAC
+runtime.

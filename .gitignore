@@ -3,3 +3,4 @@ app/a.out
 build
 build-native
 debug
+node_modules

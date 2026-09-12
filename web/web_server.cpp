@@ -323,9 +323,22 @@ void web_server_init(ws_init_t type) {
         net.port = admcfg_int("port", NULL, CFG_REQUIRED);
         net.port_ext = admcfg_default_int("port_ext", net.port, &update_admcfg);
 
+#ifdef NATIVE_HARNESS
+        const char* harness_port = getenv("WEBSDR_HARNESS_PORT");
+        if (harness_port != NULL) {
+            int port = atoi(harness_port);
+            if (port <= 0 || port > 65535)
+                panic("invalid WEBSDR_HARNESS_PORT");
+            net.port = net.port_ext = port;
+        }
+#endif
+
 #ifdef USE_SSL
         net.use_ssl = admcfg_default_bool("use_ssl", false, &update_admcfg);
         net.port_http_local = admcfg_default_int("port_http_local", net.port + 100, &update_admcfg);
+#ifdef NATIVE_HARNESS
+        net.use_ssl = false;
+#endif
 #endif
 
         if (update_admcfg) admcfg_save_json(cfg_adm.json); // during init doesn't conflict with admin cfg

@@ -106,6 +106,7 @@ var drm = {
    last_ilv: -1,
    last_sdc: -1,
    last_msc: -1,
+   last_epg: -1,
    
    DRM_DAT_IQ: 0,
    
@@ -307,6 +308,14 @@ function drm_recv(data)
             if (!o) break;
 
             drm_all_status(o.io, o.time, o.frame, o.FAC, o.SDC, o.MSC);
+
+            if (isDefined(o.epg)) {
+               if (drm.last_epg != o.epg) {
+                  drm.last_epg = o.epg;
+                  console.log('drm EPG service='+ o.epg);
+               }
+               drm_status('program', (o.epg >= 0 && o.nds >= 1)? drm.ST_GRN : drm.ST_GRY);
+            }
 
 			   w3_innerHTML('id-drm-if_level', 'IF Level: '+ o.if.toFixed(1) +' dB');
 			   if (o.if < 0 && o.if > -100) {

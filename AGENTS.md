@@ -181,6 +181,70 @@ FPGA loading, `/dev/zynqsdr` I/O, PPS timing, ADC clock tuning, real-time DSP,
 or receiver concurrency. A successful native browser-harness run is not
 production or device validation.
 
+### WEB-888 hardware validation
+
+The development receiver is reachable as `root@web-888.local`. Check that no
+users are connected before interrupting the production service:
+
+```sh
+curl -fsS http://web-888.local:8073/status
+```
+
+Build the ARM release using the host Alpine environment, then verify the
+artifact before deployment:
+
+```sh
+sudo ~/alpine/build
+file build/websdr.bin
+sha256sum build/websdr.bin
+```
+
+The build script writes the target binary to `build/websdr.bin` in this
+checkout. The `file` output must identify a 32-bit ARM EABI5 executable using
+`/lib/ld-musl-armhf.so.1`.
+
+Stop the supervised service, preserve the installed binary, and deploy through
+a temporary path so `/root/websdr.bin` is never partially written:
+
+```sh
+ssh root@web-888.local \
+  '/etc/init.d/sdrd stop && cp -p /root/websdr.bin /root/websdr.bin.pre-test'
+scp build/websdr.bin root@web-888.local:/root/websdr.bin.test
+ssh root@web-888.local \
+  'chmod 755 /root/websdr.bin.test && mv /root/websdr.bin.test /root/websdr.bin'
+```
+
+Run the private binary in the foreground from a dedicated terminal so startup
+and hardware errors remain visible:
+
+```sh
+ssh -t root@web-888.local 'cd /root && ./websdr.bin'
+```
+
+Confirm FPGA and peripheral initialization, the expected receiver/waterfall
+channel counts, and the HTTP listener. From another terminal, verify `/status`
+and exercise the affected behavior through a real browser. For receiver or UI
+changes, confirm live sound and waterfall WebSockets, advancing waterfall
+data, and the specific modified controls or rendering paths.
+
+After testing, stop the foreground process and return the receiver to
+supervised operation. Restore the saved binary first when the test build
+should not remain installed:
+
+```sh
+ssh root@web-888.local \
+  'cp -p /root/websdr.bin.pre-test /root/websdr.bin && /etc/init.d/sdrd start'
+```
+
+If retaining the tested binary, omit the copy and start `sdrd`. In either case,
+recheck the remote checksum, service status, process list, and `/status`
+version. Boot or service-management scripts may restore the SD-card-managed
+production image, so do not assume the manually tested binary remains active.
+
+If the receiver reboots and its SSH host key changes, stop and independently
+verify the new fingerprint. Never disable strict host-key checking or remove
+the existing `known_hosts` entry merely to continue a test.
+
 ## Change guidelines
 
 - Follow the existing C/C++ style in the file being changed. The codebase

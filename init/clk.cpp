@@ -45,13 +45,87 @@ static bool clk_printfs;
 
 double adc_clock_hz;
 
+static const airband_clock_profile_t airband_clock_profiles[AIRBAND_ADC_CLOCK_COUNT] = {
+    {
+        "98.304 MHz",
+        98304000,
+        786432000,
+        8,
+        AIRBAND_RATE_12K | AIRBAND_RATE_24K,
+        98304000,
+        147456000
+    },
+    {
+        "110.592 MHz",
+        110592000,
+        663552000,
+        6,
+        AIRBAND_RATE_12K | AIRBAND_RATE_24K | AIRBAND_RATE_36K,
+        110592000,
+        165888000
+    }
+};
+
+static_assert(98304000U % (12000U * 256U) == 0, "98.304 MHz must support 12 kHz audio");
+static_assert(98304000U % (24000U * 256U) == 0, "98.304 MHz must support 24 kHz audio");
+static_assert(110592000U % (12000U * 256U) == 0, "110.592 MHz must support 12 kHz audio");
+static_assert(110592000U % (24000U * 256U) == 0, "110.592 MHz must support 24 kHz audio");
+static_assert(110592000U % (36000U * 256U) == 0, "110.592 MHz must support 36 kHz audio");
+static_assert(786432000U == 98304000U * 8U, "98.304 MHz integer multisynth");
+static_assert(663552000U == 110592000U * 6U, "110.592 MHz integer multisynth");
+
+const airband_clock_profile_t* airband_clock_profile(int profile) {
+    if (profile < 0 || profile >= AIRBAND_ADC_CLOCK_COUNT)
+        return NULL;
+    return &airband_clock_profiles[profile];
+}
+
+bool airband_clock_supports_rate(int profile, int snd_rate_index) {
+    const airband_clock_profile_t* p = airband_clock_profile(profile);
+    if (p == NULL || snd_rate_index < 0 || snd_rate_index > 2)
+        return false;
+    return (p->audio_rate_mask & (1U << snd_rate_index)) != 0;
+}
+
+int airband_clock_effective_profile(int requested_profile, int snd_rate_index) {
+    if (airband_clock_supports_rate(requested_profile, snd_rate_index))
+        return requested_profile;
+    if (requested_profile == AIRBAND_ADC_CLOCK_98_304 && snd_rate_index == 2)
+        return AIRBAND_ADC_CLOCK_110_592;
+    return -1;
+}
+
+u4_t adc_clock_nominal_hz() {
+    return (u4_t) adc_clock_hz;
+}
+
 void clock_init() {
     bool err; // NB: all CFG_OPTIONAL because don't get defaulted early enough
 
     if (kiwi.airband) {
-        adc_clock_hz = ADC_CLOCK_VHF;
+        clk.airband_profile_requested = kiwi.airband_adc_clock;
+        clk.airband_profile_effective =
+            airband_clock_effective_profile(clk.airband_profile_requested, kiwi.snd_rate);
+        if (clk.airband_profile_effective < 0) {
+            lprintf("airband: invalid ADC clock profile=%d audio_rate=%d\n",
+                clk.airband_profile_requested, 12000 * (1 + kiwi.snd_rate));
+            panic("airband ADC clock configuration");
+        }
+
+        const airband_clock_profile_t* profile =
+            airband_clock_profile(clk.airband_profile_effective);
+        adc_clock_hz = profile->adc_hz;
+        clk.airband_profile_forced =
+            clk.airband_profile_requested != clk.airband_profile_effective;
+        lprintf("airband: requested clock %s, effective clock %s%s\n",
+            airband_clock_profile(clk.airband_profile_requested)->name,
+            profile->name,
+            clk.airband_profile_forced ? " (audio-rate override)" : "");
     }
     else {
+        clk.airband_profile_requested = -1;
+        clk.airband_profile_effective = -1;
+        clk.airband_profile_forced = false;
         adc_clock_hz = ADC_CLOCK_HF;
         if (kiwi.narrowband)
             adc_clock_hz /= 2;

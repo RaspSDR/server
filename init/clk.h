@@ -27,7 +27,28 @@ Boston, MA  02110-1301, USA.
 extern double adc_clock_hz;
 
 #define ADC_CLOCK_HF  (122.88 * MHz)
-#define ADC_CLOCK_VHF (110.592 * MHz)
+
+enum airband_adc_clock_e {
+    AIRBAND_ADC_CLOCK_98_304 = 0,
+    AIRBAND_ADC_CLOCK_110_592,
+    AIRBAND_ADC_CLOCK_COUNT
+};
+
+enum airband_audio_rate_mask_e {
+    AIRBAND_RATE_12K = 1 << 0,
+    AIRBAND_RATE_24K = 1 << 1,
+    AIRBAND_RATE_36K = 1 << 2
+};
+
+typedef struct {
+    const char* name;
+    u4_t adc_hz;
+    u4_t pll_hz;
+    u1_t multisynth_div;
+    u1_t audio_rate_mask;
+    u4_t coverage_lo_hz;
+    u4_t coverage_hi_hz;
+} airband_clock_profile_t;
 
 // ADC clk generated from FPGA via Si5351
 #define ADC_CLOCK_NOM       adc_clock_hz // 66.6666 MHz 15.0 ns
@@ -61,10 +82,17 @@ typedef struct {
     uint32_t clock_ref;     // reference clock freq
     int manual_adj;
     u64_t ticks; // ticks value captured at the corresponding gps_secs
+    int airband_profile_requested;
+    int airband_profile_effective;
+    bool airband_profile_forced;
 } clk_t;
 
 extern clk_t clk;
 
+const airband_clock_profile_t* airband_clock_profile(int profile);
+bool airband_clock_supports_rate(int profile, int snd_rate_index);
+int airband_clock_effective_profile(int requested_profile, int snd_rate_index);
+u4_t adc_clock_nominal_hz();
 double adc_clock_system();
 void clock_manual_adj(int manual_adj);
 void clock_init();

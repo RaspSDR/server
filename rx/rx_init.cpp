@@ -137,9 +137,7 @@ TYPEREAL DC_offset_I, DC_offset_Q;
 
 #define WATERFALL_CALIBRATION_DEFAULT -13
 #define SMETER_CALIBRATION_DEFAULT    -13
-#define AIRBAND_FREQ_OFFSET_PREV_KHZ       100761.6
-#define AIRBAND_FREQ_OFFSET_PREV_UI_KHZ    100762.0
-#define AIRBAND_FREQ_OFFSET_MIGRATION_KHZ  100.0
+#define AIRBAND_FREQ_OFFSET_MIGRATION_KHZ 100.0
 
 static int snr_interval[] = { 0, 1, 4, 6, 24 };
 
@@ -147,15 +145,34 @@ void update_freqs(bool* update_cfg) {
     ui_srate = ADC_CLOCK_TYP / 2.0;
     ui_srate_kHz = round(ui_srate / kHz);
     freq_offset_kHz = cfg_default_float("freq_offset", 0, update_cfg);
-    double airband_offset_delta_kHz = freq_offset_kHz - AIRBAND_FREQ_OFFSET_PREV_KHZ;
-    bool airband_offset_from_prev_ui = freq_offset_kHz == AIRBAND_FREQ_OFFSET_PREV_UI_KHZ;
-    if (update_cfg != NULL && kiwi.airband &&
-        (airband_offset_from_prev_ui || fabs(airband_offset_delta_kHz) <= AIRBAND_FREQ_OFFSET_MIGRATION_KHZ)) {
-        freq_offset_kHz = ADC_CLOCK_VHF / kHz;
-        if (!airband_offset_from_prev_ui) freq_offset_kHz += airband_offset_delta_kHz;
-        cfg_set_float("freq_offset", freq_offset_kHz);
-        *update_cfg = true;
-        lprintf("airband: updating frequency offset to %.3f kHz\n", freq_offset_kHz);
+    if (update_cfg != NULL && kiwi.airband) {
+        static const double known_airband_offsets_kHz[] = {
+            98304.0,
+            100761.6,
+            110592.0
+        };
+        double target_offset_kHz = adc_clock_nominal_hz() / kHz;
+        double closest_delta_kHz = AIRBAND_FREQ_OFFSET_MIGRATION_KHZ + 1;
+        for (unsigned i = 0; i < ARRAY_LEN(known_airband_offsets_kHz); i++) {
+            double delta_kHz = freq_offset_kHz - known_airband_offsets_kHz[i];
+            if (fabs(delta_kHz) < fabs(closest_delta_kHz))
+                closest_delta_kHz = delta_kHz;
+        }
+
+        // The old UI rounded 100.7616 MHz to 100762.0 kHz.
+        if (freq_offset_kHz == 100762.0)
+            closest_delta_kHz = 0;
+
+        if (fabs(closest_delta_kHz) <= AIRBAND_FREQ_OFFSET_MIGRATION_KHZ) {
+            double previous_offset_kHz = freq_offset_kHz;
+            freq_offset_kHz = target_offset_kHz + closest_delta_kHz;
+            if (freq_offset_kHz != previous_offset_kHz) {
+                cfg_set_float("freq_offset", freq_offset_kHz);
+                *update_cfg = true;
+                lprintf("airband: updating frequency offset %.3f => %.3f kHz\n",
+                    previous_offset_kHz, freq_offset_kHz);
+            }
+        }
     }
     freq_offmax_kHz = freq_offset_kHz + ui_srate_kHz;
     // printf("ui_srate=%.3f ui_srate_kHz=%.3f freq_offset_kHz=%.3f freq_offmax_kHz=%.3f\n",

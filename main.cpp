@@ -60,7 +60,7 @@ Boston, MA  02110-1301, USA.
 kiwi_t kiwi;
 
 int version_maj, version_min;
-int rx_chans, wf_chans, nrx_samps, snd_rate, rx_decim;
+int rx_chans, wf_chans, nrx_samps, snd_rate, rx_decim, fpga_rx_decim;
 
 int ev_dump = 0, tone, down, gps_chans = GPS_MAX_CHANS, rx_num, wf_num,
     navg = 1, meas, monitors_max, bg,
@@ -225,6 +225,13 @@ int main(int argc, char* argv[]) {
     kiwi.airband = admcfg_default_bool("airband", false, &update_admcfg);
     kiwi.wf_share = admcfg_default_bool("wf_share", false, &update_admcfg);
     kiwi.narrowband = admcfg_default_bool("narrowband", false, &update_admcfg);
+    kiwi.airband_adc_clock =
+        admcfg_default_int("airband_adc_clock", AIRBAND_ADC_CLOCK_98_304, &update_admcfg);
+    if (kiwi.airband_adc_clock < 0 || kiwi.airband_adc_clock >= AIRBAND_ADC_CLOCK_COUNT) {
+        kiwi.airband_adc_clock = AIRBAND_ADC_CLOCK_98_304;
+        admcfg_set_int("airband_adc_clock", kiwi.airband_adc_clock);
+        update_admcfg = true;
+    }
     kiwi.snd_rate = admcfg_default_int("snd_rate", 0, &update_admcfg);
     if (kiwi.snd_rate >= 4) { kiwi.snd_rate = 0; update_admcfg = true; }
 
@@ -241,8 +248,22 @@ int main(int argc, char* argv[]) {
         wf_chans = (signature >> 8) & 0x0f;
 
     snd_rate = 12000 * (1 + kiwi.snd_rate);// * 2;
-    rx_decim = (int)(ADC_CLOCK_TYP / snd_rate); // 12k
-    lprintf("firmware: rx_decim=%d sndrate=%dkHz\n", rx_decim, snd_rate / 1000);
+    if (kiwi.airband) {
+        u4_t adc_hz = adc_clock_nominal_hz();
+        u4_t decim_quantum = snd_rate * 256U;
+        if (adc_hz % decim_quantum != 0) {
+            lprintf("airband: ADC clock %u is not divisible by audio decimation quantum %u\n",
+                adc_hz, decim_quantum);
+            panic("airband ADC clock/audio rate mismatch");
+        }
+        fpga_rx_decim = adc_hz / decim_quantum;
+        rx_decim = fpga_rx_decim * 256;
+    } else {
+        rx_decim = (int)(ADC_CLOCK_TYP / snd_rate);
+        fpga_rx_decim = rx_decim / 256;
+    }
+    lprintf("firmware: rx_decim=%d fpga_decim=%d sndrate=%dkHz real_rate=%.3f\n",
+        rx_decim, fpga_rx_decim, snd_rate / 1000, ADC_CLOCK_TYP / rx_decim);
 
     bool no_wf = cfg_bool("no_wf", &err, CFG_OPTIONAL);
     if (err) no_wf = false;

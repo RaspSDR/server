@@ -203,15 +203,15 @@ The build script writes the target binary to `build/websdr.bin` in this
 checkout. The `file` output must identify a 32-bit ARM EABI5 executable using
 `/lib/ld-musl-armhf.so.1`.
 
-Stop the supervised service, preserve the installed binary, and deploy through
-a temporary path so `/root/websdr.bin` is never partially written:
+The target has limited storage. Do not retain, rename, or copy the installed
+`/root/websdr.bin` as a backup on the board. Stop the supervised service,
+remove the installed binary, and upload its replacement directly:
 
 ```sh
 ssh root@web-888.local \
-  '/etc/init.d/sdrd stop && cp -p /root/websdr.bin /root/websdr.bin.pre-test'
-scp build/websdr.bin root@web-888.local:/root/websdr.bin.test
-ssh root@web-888.local \
-  'chmod 755 /root/websdr.bin.test && mv /root/websdr.bin.test /root/websdr.bin'
+  '/etc/init.d/sdrd stop && rm -f /root/websdr.bin'
+scp build/websdr.bin root@web-888.local:/root/websdr.bin
+ssh root@web-888.local 'chmod 755 /root/websdr.bin'
 ```
 
 Run the private binary in the foreground from a dedicated terminal so startup
@@ -228,18 +228,17 @@ changes, confirm live sound and waterfall WebSockets, advancing waterfall
 data, and the specific modified controls or rendering paths.
 
 After testing, stop the foreground process and return the receiver to
-supervised operation. Restore the saved binary first when the test build
-should not remain installed:
+supervised operation using the tested binary:
 
 ```sh
-ssh root@web-888.local \
-  'cp -p /root/websdr.bin.pre-test /root/websdr.bin && /etc/init.d/sdrd start'
+ssh root@web-888.local '/etc/init.d/sdrd start'
 ```
 
-If retaining the tested binary, omit the copy and start `sdrd`. In either case,
-recheck the remote checksum, service status, process list, and `/status`
+Recheck the remote checksum, service status, process list, and `/status`
 version. Boot or service-management scripts may restore the SD-card-managed
 production image, so do not assume the manually tested binary remains active.
+If the production binary must be restored, use the SD-card-managed image or
+upload it again from the host; never keep a second binary on the ARM board.
 
 If the receiver reboots and its SSH host key changes, stop and independently
 verify the new fingerprint. Never disable strict host-key checking or remove

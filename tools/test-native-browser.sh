@@ -23,6 +23,7 @@ cmake -S . -B "$build_dir" \
     -DNATIVE_HARNESS=ON \
     -DENABLE_HDFL=OFF
 cmake --build "$build_dir" --parallel "${BUILD_JOBS:-$(nproc)}"
+"$build_dir/test_airband_si5351"
 
 WEBSDR_HARNESS_PORT=$port "$build_dir/websdr.bin" >"$log_file" 2>&1 &
 server_pid=$!

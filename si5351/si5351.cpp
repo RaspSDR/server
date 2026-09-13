@@ -444,6 +444,7 @@ uint8_t Si5351::set_freq_manual(uint64_t freq, uint64_t pll_freq, enum si5351_cl
 
     // Keep the output disabled until the PLL and multisynth are configured.
     output_enable(clk, 0);
+    if (io_error) return 1;
 
     // Select the proper R div value
     r_div = select_r_div(&freq);
@@ -463,8 +464,11 @@ uint8_t Si5351::set_freq_manual(uint64_t freq, uint64_t pll_freq, enum si5351_cl
 
     // Program both register sets, latch them with a PLL reset, then enable.
     set_ms(clk, ms_reg, int_mode, r_div, div_by_4);
+    if (io_error) return 1;
     set_pll(pll_freq, pll_assignment[clk]);
+    if (io_error) return 1;
     pll_reset(pll_assignment[clk]);
+    if (io_error) return 1;
     output_enable(clk, 1);
 
     return io_error ? 1 : 0;
@@ -572,6 +576,10 @@ void Si5351::set_ms(enum si5351_clock clk, struct Si5351RegSet ms_reg, uint8_t i
 
         // Register 44 for CLK0
         reg_val = si5351_read((SI5351_CLK0_PARAMETERS + 2) + (clk * 8));
+        if (io_error) {
+            delete[] params;
+            return;
+        }
         reg_val &= ~(0x03);
         temp = reg_val | ((uint8_t)((ms_reg.p1 >> 16) & 0x03));
         params[i++] = temp;
@@ -657,6 +665,7 @@ void Si5351::output_enable(enum si5351_clock clk, uint8_t enable) {
     uint8_t reg_val;
 
     reg_val = si5351_read(SI5351_OUTPUT_ENABLE_CTRL);
+    if (io_error) return;
 
     if (enable == 1) {
         reg_val &= ~(1 << (uint8_t)clk);
@@ -683,6 +692,7 @@ void Si5351::drive_strength(enum si5351_clock clk, enum si5351_drive drive) {
     const uint8_t mask = 0x03;
 
     reg_val = si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk);
+    if (io_error) return;
     reg_val &= ~(mask);
 
     switch (drive) {
@@ -818,6 +828,7 @@ void Si5351::set_ms_source(enum si5351_clock clk, enum si5351_pll pll) {
     uint8_t reg_val;
 
     reg_val = si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk);
+    if (io_error) return;
 
     if (pll == SI5351_PLLA) {
         reg_val &= ~(SI5351_CLK_PLL_SELECT);
@@ -843,6 +854,7 @@ void Si5351::set_ms_source(enum si5351_clock clk, enum si5351_pll pll) {
 void Si5351::set_int(enum si5351_clock clk, uint8_t enable) {
     uint8_t reg_val, original;
     original = reg_val = si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk);
+    if (io_error) return;
 
     if (enable == 1) {
         reg_val |= (SI5351_CLK_INTEGER_MODE);
@@ -1544,6 +1556,7 @@ void Si5351::ms_div(enum si5351_clock clk, uint8_t r_div, uint8_t div_by_4) {
     }
 
     reg_val = si5351_read(reg_addr);
+    if (io_error) return;
 
     if (clk <= (uint8_t)SI5351_CLK5) {
         // Clear the relevant bits

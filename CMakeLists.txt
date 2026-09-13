@@ -269,6 +269,12 @@ target_link_libraries(websdr.bin PRIVATE
 if(NATIVE_HARNESS)
     target_link_libraries(websdr.bin PRIVATE ${CRYPT_LIBRARY})
     target_compile_definitions(websdr.bin PUBLIC NATIVE_HARNESS)
+
+    add_executable(test_airband_si5351
+        tests/test_airband_si5351.cpp
+        si5351/si5351.cpp
+    )
+    target_include_directories(test_airband_si5351 PRIVATE "${UPSTREAM_DIR}")
 endif()
 
 if(ENABLE_HDFL)

@@ -137,8 +137,6 @@ TYPEREAL DC_offset_I, DC_offset_Q;
 
 #define WATERFALL_CALIBRATION_DEFAULT -13
 #define SMETER_CALIBRATION_DEFAULT    -13
-#define AIRBAND_FREQ_OFFSET_MIGRATION_KHZ 100.0
-
 static int snr_interval[] = { 0, 1, 4, 6, 24 };
 
 void update_freqs(bool* update_cfg) {
@@ -146,26 +144,11 @@ void update_freqs(bool* update_cfg) {
     ui_srate_kHz = round(ui_srate / kHz);
     freq_offset_kHz = cfg_default_float("freq_offset", 0, update_cfg);
     if (update_cfg != NULL && kiwi.airband) {
-        static const double known_airband_offsets_kHz[] = {
-            98304.0,
-            100761.6,
-            110592.0
-        };
-        double target_offset_kHz = adc_clock_nominal_hz() / kHz;
-        double closest_delta_kHz = AIRBAND_FREQ_OFFSET_MIGRATION_KHZ + 1;
-        for (unsigned i = 0; i < ARRAY_LEN(known_airband_offsets_kHz); i++) {
-            double delta_kHz = freq_offset_kHz - known_airband_offsets_kHz[i];
-            if (fabs(delta_kHz) < fabs(closest_delta_kHz))
-                closest_delta_kHz = delta_kHz;
-        }
-
-        // The old UI rounded 100.7616 MHz to 100762.0 kHz.
-        if (freq_offset_kHz == 100762.0)
-            closest_delta_kHz = 0;
-
-        if (fabs(closest_delta_kHz) <= AIRBAND_FREQ_OFFSET_MIGRATION_KHZ) {
+        double migrated_offset_kHz;
+        if (airband_clock_migrate_offset(
+            freq_offset_kHz, adc_clock_nominal_hz(), &migrated_offset_kHz)) {
             double previous_offset_kHz = freq_offset_kHz;
-            freq_offset_kHz = target_offset_kHz + closest_delta_kHz;
+            freq_offset_kHz = migrated_offset_kHz;
             if (freq_offset_kHz != previous_offset_kHz) {
                 cfg_set_float("freq_offset", freq_offset_kHz);
                 *update_cfg = true;

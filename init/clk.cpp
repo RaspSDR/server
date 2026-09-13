@@ -95,12 +95,66 @@ int airband_clock_effective_profile(int requested_profile, int snd_rate_index) {
     return -1;
 }
 
+bool airband_clock_migrate_offset(double current_offset_kHz, u4_t target_adc_hz,
+    double* migrated_offset_kHz) {
+    static const double known_airband_offsets_kHz[] = {
+        98304.0,
+        100761.6,
+        110592.0
+    };
+    const double migration_limit_kHz = 100.0;
+    double closest_delta_kHz = migration_limit_kHz + 1;
+
+    for (unsigned i = 0; i < ARRAY_LEN(known_airband_offsets_kHz); i++) {
+        double delta_kHz = current_offset_kHz - known_airband_offsets_kHz[i];
+        if (fabs(delta_kHz) < fabs(closest_delta_kHz))
+            closest_delta_kHz = delta_kHz;
+    }
+
+    // The old UI rounded 100.7616 MHz to 100762.0 kHz.
+    if (current_offset_kHz == 100762.0)
+        closest_delta_kHz = 0;
+
+    if (fabs(closest_delta_kHz) > migration_limit_kHz)
+        return false;
+
+    *migrated_offset_kHz = target_adc_hz / kHz + closest_delta_kHz;
+    return true;
+}
+
+#ifdef NATIVE_HARNESS
+static void airband_clock_self_test() {
+    assert(airband_clock_effective_profile(AIRBAND_ADC_CLOCK_98_304, 0) ==
+        AIRBAND_ADC_CLOCK_98_304);
+    assert(airband_clock_effective_profile(AIRBAND_ADC_CLOCK_98_304, 1) ==
+        AIRBAND_ADC_CLOCK_98_304);
+    assert(airband_clock_effective_profile(AIRBAND_ADC_CLOCK_98_304, 2) ==
+        AIRBAND_ADC_CLOCK_110_592);
+    assert(airband_clock_effective_profile(AIRBAND_ADC_CLOCK_110_592, 2) ==
+        AIRBAND_ADC_CLOCK_110_592);
+    assert(airband_clock_effective_profile(-1, 0) == -1);
+
+    double migrated;
+    assert(airband_clock_migrate_offset(100761.6, 98304000, &migrated));
+    assert(migrated == 98304.0);
+    assert(airband_clock_migrate_offset(100762.0, 110592000, &migrated));
+    assert(migrated == 110592.0);
+    assert(airband_clock_migrate_offset(110600.5, 98304000, &migrated));
+    assert(migrated == 98312.5);
+    assert(!airband_clock_migrate_offset(116000.0, 98304000, &migrated));
+}
+#endif
+
 u4_t adc_clock_nominal_hz() {
     return (u4_t) adc_clock_hz;
 }
 
 void clock_init() {
     bool err; // NB: all CFG_OPTIONAL because don't get defaulted early enough
+
+#ifdef NATIVE_HARNESS
+    airband_clock_self_test();
+#endif
 
     if (kiwi.airband) {
         clk.airband_profile_requested = kiwi.airband_adc_clock;

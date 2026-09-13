@@ -92,6 +92,8 @@ extern clk_t clk;
 const airband_clock_profile_t* airband_clock_profile(int profile);
 bool airband_clock_supports_rate(int profile, int snd_rate_index);
 int airband_clock_effective_profile(int requested_profile, int snd_rate_index);
+bool airband_clock_migrate_offset(double current_offset_kHz, u4_t target_adc_hz,
+    double* migrated_offset_kHz);
 u4_t adc_clock_nominal_hz();
 double adc_clock_system();
 void clock_manual_adj(int manual_adj);

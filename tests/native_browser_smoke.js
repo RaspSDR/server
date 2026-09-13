@@ -77,6 +77,101 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 width: window.spec.passband_canvas.width,
                 height: window.spec.passband_canvas.height
             },
+            squelchRecording: (() => {
+                const saved = {
+                    sndSend: window.snd_send,
+                    curMode: window.cur_mode,
+                    squelch: window.squelch,
+                    squelchTail: window.squelch_tail,
+                    recording: window.recording,
+                    recordingMeta: window.recording_meta,
+                    audioLastSq: window.audio_last_sq,
+                    audioModeIq: window.audio_mode_iq,
+                    audioData: Array.from(window.audio_data.slice(0, 512)),
+                    audioDataUnsquelched: Array.from(window.audio_data_unsquelched.slice(0, 512)),
+                    preBuf: window.kiwi.pre_buf,
+                    preData: window.kiwi.pre_data,
+                    preSize: window.kiwi.pre_size,
+                    preOff: window.kiwi.pre_off,
+                    preWrapped: window.kiwi.pre_wrapped,
+                    preCaptured: window.kiwi.pre_captured,
+                    prePingPong: window.kiwi.pre_ping_pong
+                };
+                try {
+                    let command;
+                    window.snd_send = value => { command = value; };
+                    window.cur_mode = 'am';
+                    window.squelch = 7;
+                    window.squelch_tail = 3;
+                    send_squelch();
+
+                    window.audio_mode_iq = false;
+                    window.audio_last_sq = true;
+                    window.recording = true;
+                    window.recording_meta = {
+                        buffers: [new ArrayBuffer(65536)],
+                        data: null,
+                        offset: 0,
+                        total_size: 0
+                    };
+                    window.recording_meta.data = new DataView(window.recording_meta.buffers[0]);
+                    window.kiwi.pre_size = 1536;
+                    window.kiwi.pre_buf = new ArrayBuffer(window.kiwi.pre_size);
+                    window.kiwi.pre_data = new DataView(window.kiwi.pre_buf);
+                    window.kiwi.pre_off = 0;
+                    window.kiwi.pre_wrapped = false;
+                    window.kiwi.pre_captured = false;
+                    window.kiwi.pre_ping_pong = 0;
+                    for (let i = 0; i < 512; i++)
+                        window.audio_data_unsquelched[i] = 1000 + i;
+                    audio_record(false);
+                    for (let i = 0; i < 512; i++)
+                        window.audio_data_unsquelched[i] = 2000 + i;
+                    audio_record(false);
+
+                    window.audio_last_sq = false;
+                    for (let i = 0; i < 512; i++)
+                        window.audio_data[i] = 3000 + i;
+                    audio_record(false);
+
+                    let preSequenceMatches = true;
+                    for (let i = 0; i < 768; i++) {
+                        const expected = (i < 256)? 1256 + i : 2000 + i - 256;
+                        if (window.recording_meta.data.getInt16(i * 2, true) !== expected)
+                            preSequenceMatches = false;
+                    }
+                    let currentSequenceMatches = true;
+                    for (let i = 0; i < 512; i++) {
+                        if (window.recording_meta.data.getInt16(1536 + i * 2, true) !== 3000 + i)
+                            currentSequenceMatches = false;
+                    }
+                    return {
+                        command,
+                        totalSize: window.recording_meta.total_size,
+                        preSequenceMatches,
+                        currentSequenceMatches,
+                        preCaptured: window.kiwi.pre_captured
+                    };
+                } finally {
+                    window.snd_send = saved.sndSend;
+                    window.cur_mode = saved.curMode;
+                    window.squelch = saved.squelch;
+                    window.squelch_tail = saved.squelchTail;
+                    window.recording = saved.recording;
+                    window.recording_meta = saved.recordingMeta;
+                    window.audio_last_sq = saved.audioLastSq;
+                    window.audio_mode_iq = saved.audioModeIq;
+                    window.audio_data.set(saved.audioData, 0);
+                    window.audio_data_unsquelched.set(saved.audioDataUnsquelched, 0);
+                    window.kiwi.pre_buf = saved.preBuf;
+                    window.kiwi.pre_data = saved.preData;
+                    window.kiwi.pre_size = saved.preSize;
+                    window.kiwi.pre_off = saved.preOff;
+                    window.kiwi.pre_wrapped = saved.preWrapped;
+                    window.kiwi.pre_captured = saved.preCaptured;
+                    window.kiwi.pre_ping_pong = saved.prePingPong;
+                }
+            })(),
             spectrumPassband: (() => {
                 const savedCenter = center_freq;
                 try {
@@ -135,6 +230,13 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             state.spectrumPassbandCanvas.width !== 1024 ||
             state.spectrumPassbandCanvas.height !== 200)
             throw new Error(`invalid spectrum passband canvas: ${JSON.stringify(state.spectrumPassbandCanvas)}`);
+        const recording = state.squelchRecording;
+        if (recording.command !== 'SET squelch=7 param=1.00' ||
+            recording.totalSize !== 2560 ||
+            !recording.preSequenceMatches ||
+            !recording.currentSequenceMatches ||
+            recording.preCaptured)
+            throw new Error(`invalid squelch recording periods: ${JSON.stringify(recording)}`);
         if (JSON.stringify(passband.visible) !== '{"left":400,"right":700,"width":300}' ||
             JSON.stringify(passband.clipped) !== '{"left":0,"right":100,"width":100}' ||
             JSON.stringify(passband.axisScaled) !== '{"left":900,"right":950,"width":50}' ||

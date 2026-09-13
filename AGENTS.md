@@ -228,6 +228,12 @@ and exercise the affected behavior through a real browser. For receiver or UI
 changes, confirm live sound and waterfall WebSockets, advancing waterfall
 data, and the specific modified controls or rendering paths.
 
+For admin settings marked as requiring restart, do not reboot the operating
+system during iterative testing. Stop the manually launched `websdr.bin`
+process, change the setting in the admin UI, and launch `/root/websdr.bin`
+again. This exercises the startup-time configuration path while preserving
+SSH and network state.
+
 The uploaded binary is temporary. It remains available only until the receiver
 reboots, at which point the RAM-disk contents are discarded and the normal
 production image repopulates `/root`. Do not describe this procedure as a

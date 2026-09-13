@@ -71,6 +71,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             waterfallLine: window.wf_canvas_actual_line,
             waterfallCanvases: window.wf_canvases.length,
             spaceWeather: w3_el('id-sw-data').textContent,
+            spectrumPassbandCanvas: {
+                present: !!window.spec.passband_canvas,
+                pointerEvents: window.spec.passband_canvas.style.pointerEvents,
+                width: window.spec.passband_canvas.width,
+                height: window.spec.passband_canvas.height
+            },
             spectrumPassband: (() => {
                 const savedCenter = center_freq;
                 try {
@@ -124,6 +130,11 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             throw new Error(`EiBi DX label layout changed: ${dxRows.eibiRows}`);
 
         const passband = state.spectrumPassband;
+        if (!state.spectrumPassbandCanvas.present ||
+            state.spectrumPassbandCanvas.pointerEvents !== 'none' ||
+            state.spectrumPassbandCanvas.width !== 1024 ||
+            state.spectrumPassbandCanvas.height !== 200)
+            throw new Error(`invalid spectrum passband canvas: ${JSON.stringify(state.spectrumPassbandCanvas)}`);
         if (JSON.stringify(passband.visible) !== '{"left":400,"right":700,"width":300}' ||
             JSON.stringify(passband.clipped) !== '{"left":0,"right":100,"width":100}' ||
             JSON.stringify(passband.axisScaled) !== '{"left":900,"right":950,"width":50}' ||

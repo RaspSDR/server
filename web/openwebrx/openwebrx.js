@@ -2370,6 +2370,13 @@ function init_wf_container()
 	spec.ctx.textBaseline = "middle";
 	spec.ctx.textAlign = "left";
 
+   spec.passband_canvas = create_canvas('id-spectrum-passband-canvas', wf_fft_size,
+      spec.height_spectrum_canvas, waterfall_width, spec.height_spectrum_canvas);
+	w3_el('id-spectrum-container').appendChild(spec.passband_canvas);
+	spec.passband_canvas.style.position = 'absolute';
+	spec.passband_canvas.style.pointerEvents = 'none';
+	spec.passband_ctx = spec.passband_canvas.ctx;
+
    spec.af_left = 50;
    spec.af_margins = spec.af_left * 2;
    spec.af_canvas = create_canvas('id-spectrum-af-canvas', wf_fft_size, spec.height_spectrum_canvas, waterfall_width - spec.af_margins, spec.height_spectrum_canvas);
@@ -3798,6 +3805,9 @@ var spec = {
    
    canvas: null,
    ctx: null,
+   passband_canvas: null,
+   passband_ctx: null,
+   passband_key: null,
    spectrum_image: null,
    colormap: null,
    colormap_transparent: null,
@@ -4008,6 +4018,31 @@ function spectrum_passband_px(demod, range, axis_width, clip_width)
    return { left:left, right:right, width:right-left };
 }
 
+function spectrum_passband_update()
+{
+   if (!spec.passband_ctx) return;
+
+   var clip_width = spec.canvas.width - 25;
+   var passband = (spec.source == spec.RF)?
+      spectrum_passband_px(demodulators[0], get_visible_freq_range(),
+         spec.canvas.width, clip_width) : null;
+   var key = passband?
+      passband.left +':'+ passband.right +':'+ spec.passband_canvas.height :
+      'clear';
+   if (key == spec.passband_key) return;
+
+   spec.passband_ctx.clearRect(0, 0, spec.passband_canvas.width, spec.passband_canvas.height);
+   if (passband && !(passband.left == 0 && passband.right == clip_width)) {
+      spec.passband_ctx.fillStyle = 'rgba(255, 255, 0, 0.15)';
+      spec.passband_ctx.fillRect(
+         passband.left, 0, passband.width, spec.passband_canvas.height);
+      spec.passband_ctx.fillStyle = 'yellow';
+      spec.passband_ctx.fillRect(passband.left, 0, 1, spec.passband_canvas.height);
+      spec.passband_ctx.fillRect(passband.right - 1, 0, 1, spec.passband_canvas.height);
+   }
+   spec.passband_key = key;
+}
+
 function spectrum_update(data)
 {
    // because of audio pipeline delay need to check
@@ -4191,18 +4226,7 @@ function spectrum_update(data)
       }
    }
 
-   // Show the receiver filter passband on the RF spectrum.
-   if (spec.source == spec.RF) {
-      var passband = spectrum_passband_px(
-         demodulators[0], get_visible_freq_range(), spec.canvas.width, sw);
-      if (passband) {
-         ctx.fillStyle = 'rgba(255, 255, 0, 0.15)';
-         ctx.fillRect(passband.left, 0, passband.width, sh);
-         ctx.fillStyle = 'yellow';
-         ctx.fillRect(passband.left, 0, 1, sh);
-         ctx.fillRect(passband.right - 1, 0, 1, sh);
-      }
-   }
+   spectrum_passband_update();
    
    // draw peak trace(s)
    for (trace = 0; trace < 2; trace++) {
@@ -4390,6 +4414,8 @@ function resize_wf_canvases()
 	canvas_phantom.style.left = zoom_value;
 
 	spec.canvas.style.width = new_width;
+	spec.passband_canvas.style.width = new_width;
+	spec.passband_key = null;
 
    // above width change clears canvas, so redraw
    if (wf.audioFFT_active && !kiwi_isMobile()) {

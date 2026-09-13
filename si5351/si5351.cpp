@@ -33,6 +33,8 @@
 #include "Wire.h"
 #include "ArduinoInterface.h"
 static ArduinoInterface I2C_Interface_Instance;
+#else
+#include <unistd.h>
 #endif
 
 #include "si5351.h"
@@ -92,9 +94,19 @@ bool Si5351::init(uint8_t xtal_load_c, uint32_t xo_freq, int32_t corr) {
     if (reg_val == 0) {
         // Wait for SYS_INIT flag to be clear, indicating that device is ready
         uint8_t status_reg = 0;
-        do {
+        int retries = 100;
+        while (retries-- > 0) {
             status_reg = si5351_read(SI5351_DEVICE_STATUS);
-        } while (status_reg >> 7 == 1);
+            if (io_error) return false;
+            if ((status_reg & SI5351_STATUS_SYS_INIT) == 0) break;
+#if defined(SI5351_ARDUINO)
+            delay(1);
+#else
+            usleep(1000);
+#endif
+        }
+        if (status_reg & SI5351_STATUS_SYS_INIT)
+            return false;
 
         // Set crystal load capacitance
         si5351_write(SI5351_CRYSTAL_LOAD, (xtal_load_c & SI5351_CRYSTAL_LOAD_MASK) | 0b00010010);

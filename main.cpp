@@ -233,7 +233,11 @@ int main(int argc, char* argv[]) {
         update_admcfg = true;
     }
     kiwi.snd_rate = admcfg_default_int("snd_rate", 0, &update_admcfg);
-    if (kiwi.snd_rate >= 4) { kiwi.snd_rate = 0; update_admcfg = true; }
+    if (kiwi.snd_rate >= 4 || (kiwi.airband && kiwi.snd_rate >= 3)) {
+        kiwi.snd_rate = 0;
+        admcfg_set_int("snd_rate", kiwi.snd_rate);
+        update_admcfg = true;
+    }
 
     if (update_admcfg) admcfg_save_json(cfg_adm.json); // during init doesn't conflict with admin cfg
 

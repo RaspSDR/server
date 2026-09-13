@@ -10,6 +10,23 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const errors = [];
 
+    const geolocationFixture = {
+        city: 'Test City',
+        country_name: 'Test Country',
+        country: 'Test Country',
+        region: 'Test Region',
+        regionName: 'Test Region'
+    };
+    await page.route('https://ipapi.co/json', route => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(geolocationFixture)
+    }));
+    await page.route('https://get.geojs.io/v1/ip/geo.json', route => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(geolocationFixture)
+    }));
+    await page.route('http://ip-api.com/json?fields=49177', route => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(geolocationFixture)
+    }));
+
     await page.route('https://services.swpc.noaa.gov/**', async route => {
         const path = new URL(route.request().url()).pathname;
         const fixtures = {

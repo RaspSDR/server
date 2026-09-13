@@ -151,7 +151,21 @@ static void test_profile(uint32_t adc_hz, uint32_t pll_hz,
     assert((bus.writes[0].value & 1) != 0);
 }
 
+static void test_init_failures() {
+    FakeI2C bus;
+    bus.regs[SI5351_DEVICE_STATUS] = SI5351_STATUS_SYS_INIT;
+    Si5351 stuck_clock(0x60, &bus);
+    assert(!stuck_clock.init(SI5351_CRYSTAL_LOAD_0PF, 24576000, 0));
+
+    FakeI2C read_error_bus;
+    read_error_bus.fail_read_on = 1;
+    Si5351 read_error_clock(0x60, &read_error_bus);
+    assert(!read_error_clock.init(SI5351_CRYSTAL_LOAD_0PF, 24576000, 0));
+    assert(read_error_clock.io_error_detected());
+}
+
 int main() {
+    test_init_failures();
     test_profile(98304000, 786432000, 32, 8);
     test_profile(110592000, 663552000, 27, 6);
     puts("airband Si5351 tests passed");

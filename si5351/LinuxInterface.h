@@ -44,13 +44,14 @@ public:
         return 0; // success
     }
 
-    uint8_t read(uint8_t i2c_dev_addr, uint8_t reg_addr) {
+    bool read(uint8_t i2c_dev_addr, uint8_t reg_addr, uint8_t* data) {
 
         int32_t result = i2c->read_byte(reg_addr);
         if (result < 0)
-            return 0;
+            return false;
 
-        return result;
+        *data = (uint8_t) result;
+        return true;
     }
 
     // Wire.endTransmission() result codes:

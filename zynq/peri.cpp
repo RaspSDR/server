@@ -61,8 +61,41 @@ void peri_init() {
         return;
     }
     else {
-        int ret = si5351->set_freq((uint64_t)(ADC_CLOCK_NOM * 100), SI5351_CLK0);
+        if (si5351->io_error_detected())
+            sys_panic("i2c si5351 initialization failed\n\n");
+
+        int ret;
+        if (kiwi.airband) {
+            const airband_clock_profile_t* profile =
+                airband_clock_profile(clk.airband_profile_effective);
+            assert(profile != NULL);
+            assert(profile->pll_hz == profile->adc_hz * profile->multisynth_div);
+            si5351->clear_io_error();
+            si5351->set_ms_source(SI5351_CLK0, SI5351_PLLB);
+            ret = si5351->set_freq_manual(
+                (uint64_t) profile->adc_hz * 100,
+                (uint64_t) profile->pll_hz * 100,
+                SI5351_CLK0);
+        } else {
+            ret = si5351->set_freq((uint64_t)(ADC_CLOCK_NOM * 100), SI5351_CLK0);
+        }
         si5351->drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);
+        if (ret != 0 || si5351->io_error_detected())
+            sys_panic("i2c si5351 ADC clock setup failed\n\n");
+
+        if (kiwi.airband) {
+            int retries;
+            for (retries = 0; retries < 10; retries++) {
+                usleep(10000);
+                si5351->update_status();
+                if (si5351->io_error_detected())
+                    sys_panic("i2c si5351 status read failed\n\n");
+                if (!si5351->dev_status.SYS_INIT && !si5351->dev_status.LOL_B)
+                    break;
+            }
+            if (retries == 10)
+                sys_panic("i2c si5351 ADC PLL failed to lock\n\n");
+        }
         printf("i2c si5351 initialized, error=%d\n", ret);
     }
 

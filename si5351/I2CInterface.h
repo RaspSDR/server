@@ -32,9 +32,9 @@ public:
 
     /**
      * Standard read operation.
-     * @return The received byte
+     * @return true on success
      */
-    virtual uint8_t read(uint8_t i2c_bus_addr, uint8_t addr) = 0;
+    virtual bool read(uint8_t i2c_bus_addr, uint8_t addr, uint8_t* data) = 0;
 
     /**
      * Standard write operation.

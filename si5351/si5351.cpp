@@ -61,6 +61,7 @@ Si5351::Si5351(uint8_t i2c_addr, I2CInterface* i2c) : i2c_bus_addr(i2c_addr),
 void Si5351::setup() {
 
     xtal_freq[0] = SI5351_XTAL_FREQ;
+    io_error = false;
 
     // Start by using XO ref osc as default for each PLL
     plla_ref_osc = SI5351_PLL_INPUT_XO;
@@ -441,16 +442,18 @@ uint8_t Si5351::set_freq_manual(uint64_t freq, uint64_t pll_freq, enum si5351_cl
 
     clk_freq[(uint8_t)clk] = freq;
 
-    set_pll(pll_freq, pll_assignment[clk]);
-
-    // Enable the output
-    output_enable(clk, 1);
+    // Keep the output disabled until the PLL and multisynth are configured.
+    output_enable(clk, 0);
 
     // Select the proper R div value
     r_div = select_r_div(&freq);
 
     // Calculate the synth parameters
     multisynth_calc(freq, pll_freq, &ms_reg);
+    if (ms_reg.p2 == 0) {
+        uint64_t divider = pll_freq / freq;
+        int_mode = ((pll_freq % freq) == 0 && (divider & 1) == 0);
+    }
 
     // If freq > 150 MHz, we need to use DIVBY4 and integer mode
     if (freq >= SI5351_MULTISYNTH_DIVBY4_FREQ * SI5351_FREQ_MULT) {
@@ -458,10 +461,13 @@ uint8_t Si5351::set_freq_manual(uint64_t freq, uint64_t pll_freq, enum si5351_cl
         int_mode = 1;
     }
 
-    // Set multisynth registers (MS must be set before PLL)
+    // Program both register sets, latch them with a PLL reset, then enable.
     set_ms(clk, ms_reg, int_mode, r_div, div_by_4);
+    set_pll(pll_freq, pll_assignment[clk]);
+    pll_reset(pll_assignment[clk]);
+    output_enable(clk, 1);
 
-    return 0;
+    return io_error ? 1 : 0;
 }
 
 /*
@@ -1217,15 +1223,30 @@ void Si5351::set_ref_freq(uint32_t ref_freq, enum si5351_pll_input ref_osc) {
 }
 
 uint8_t Si5351::si5351_write_bulk(uint8_t addr, uint8_t bytes, uint8_t* data) {
-    return i2c_interface->write_bulk(i2c_bus_addr, addr, bytes, data);
+    uint8_t rc = i2c_interface->write_bulk(i2c_bus_addr, addr, bytes, data);
+    if (rc != 0) io_error = true;
+    return rc;
 }
 
 uint8_t Si5351::si5351_write(uint8_t addr, uint8_t data) {
-    return i2c_interface->write(i2c_bus_addr, addr, data);
+    uint8_t rc = i2c_interface->write(i2c_bus_addr, addr, data);
+    if (rc != 0) io_error = true;
+    return rc;
 }
 
 uint8_t Si5351::si5351_read(uint8_t addr) {
-    return i2c_interface->read(i2c_bus_addr, addr);
+    uint8_t data = 0;
+    if (!i2c_interface->read(i2c_bus_addr, addr, &data))
+        io_error = true;
+    return data;
+}
+
+void Si5351::clear_io_error() {
+    io_error = false;
+}
+
+bool Si5351::io_error_detected() {
+    return io_error;
 }
 
 /*********************/

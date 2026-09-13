@@ -93,10 +93,10 @@ int32_t I2C::read_byte(uint8_t register_address) {
 
     count = read(_fd, buff, sizeof(buff));
     if (count < 0) {
-        return (errno);
+        return (-errno);
     }
     if (count != sizeof(buff))
-        return (0);
+        return (-ENXIO);
 
     return buff[0];
 }

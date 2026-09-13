@@ -216,6 +216,72 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             })()
         }));
 
+        const adminPage = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+        adminPage.on('console', message => {
+            if (message.type() === 'error')
+                errors.push(`admin console: ${message.text()}`);
+        });
+        adminPage.on('pageerror', error => errors.push(`admin page: ${error.message}`));
+        await adminPage.goto(new URL('admin', baseUrl).href,
+            { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await adminPage.waitForFunction(() => {
+            return typeof airband_adc_clock_effective === 'function' &&
+                window.adm && w3_el('id-airband-adc-clock-status');
+        }, null, { timeout: 30000 });
+        const airbandClockAdmin = await adminPage.evaluate(() => {
+            const saved = {
+                airband: adm.airband,
+                sndRate: adm.snd_rate,
+                clock: adm.airband_adc_clock
+            };
+            try {
+                adm.airband = true;
+                adm.airband_adc_clock = 0;
+                adm.snd_rate = 1;
+                airband_adc_clock_status();
+                const preferred = w3_el('id-airband-adc-clock-status').textContent;
+
+                adm.snd_rate = 2;
+                airband_adc_clock_status();
+                const forced = w3_el('id-airband-adc-clock-status').textContent;
+
+                adm.airband_adc_clock = 1;
+                airband_adc_clock_status();
+                const advanced = w3_el('id-airband-adc-clock-status').textContent;
+
+                adm.snd_rate = 2;
+                adm.airband_adc_clock = 1;
+                airband_rx_rate_cb('adm.snd_rate', 0, true);
+                airband_adc_clock_cb('adm.airband_adc_clock', 0, true);
+                const staleFirstIgnored =
+                    adm.snd_rate === 2 && adm.airband_adc_clock === 1;
+
+                adm.airband = false;
+                airband_adc_clock_status();
+                const disabled = w3_el('id-airband-adc-clock').disabled;
+
+                return {
+                    effective: [
+                        airband_adc_clock_effective(0, 0),
+                        airband_adc_clock_effective(0, 1),
+                        airband_adc_clock_effective(0, 2),
+                        airband_adc_clock_effective(1, 2)
+                    ],
+                    preferred,
+                    forced,
+                    advanced,
+                    staleFirstIgnored,
+                    disabled
+                };
+            } finally {
+                adm.airband = saved.airband;
+                adm.snd_rate = saved.sndRate;
+                adm.airband_adc_clock = saved.clock;
+                airband_adc_clock_status();
+            }
+        });
+        await adminPage.close();
+
         const dxRows = state.dxLabelRows;
         if (new Set(dxRows.rows.slice(0, 3)).size !== 3 ||
             dxRows.rows[3] !== dxRows.rows[0] ||
@@ -237,6 +303,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !recording.currentSequenceMatches ||
             recording.preCaptured)
             throw new Error(`invalid squelch recording periods: ${JSON.stringify(recording)}`);
+        if (airbandClockAdmin.effective.join(',') !== '0,0,1,1' ||
+            !airbandClockAdmin.preferred.includes('98.304-147.456 MHz') ||
+            !airbandClockAdmin.preferred.includes('Best rejection') ||
+            !airbandClockAdmin.forced.includes('36 kHz audio requires') ||
+            !airbandClockAdmin.advanced.includes('108-110.592 MHz is unavailable') ||
+            !airbandClockAdmin.staleFirstIgnored ||
+            !airbandClockAdmin.disabled)
+            throw new Error(`invalid airband clock admin UI: ${JSON.stringify(airbandClockAdmin)}`);
         if (JSON.stringify(passband.visible) !== '{"left":400,"right":700,"width":300}' ||
             JSON.stringify(passband.clipped) !== '{"left":0,"right":100,"width":100}' ||
             JSON.stringify(passband.axisScaled) !== '{"left":900,"right":950,"width":50}' ||

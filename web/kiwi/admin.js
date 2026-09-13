@@ -22,6 +22,11 @@ var admin = {
       '12kHz', '24kHz', '36kHz'
    ],
 
+   airband_adc_clock_s: [
+      '98.304 MHz (recommended)',
+      '110.592 MHz'
+   ],
+
    _last_: 0
 };
 
@@ -120,6 +125,7 @@ function status_user_kick_cb(id, idx)
 function control_html()
 {
    var init_ifrate = adm.snd_rate;
+   var airband_clock = isNumber(adm.airband_adc_clock)? adm.airband_adc_clock : 0;
 	var s1 =
 		'<hr>' +
 		w3_quarter('w3-valign', '',
@@ -133,7 +139,12 @@ function control_html()
             w3_switch_label('w3-center w3-restart', 'HF Bandwidth Selection', '32Mhz', '64Mhz', 'adm.narrowband', adm.narrowband, 'wf_narrowband_enabled_cb')
          ),
          w3_div('w3-center',
-            w3_select('w3-center w3-restart', 'RX Bandwidth', '', 'adm.snd_rate', init_ifrate, admin.c_rates, 'admin_select_cb'),
+            w3_select('w3-center w3-restart', 'RX Bandwidth', '', 'adm.snd_rate', init_ifrate, admin.c_rates, 'airband_rx_rate_cb'),
+            w3_divs('w3-restart w3-margin-T-8/',
+               w3_select('id-airband-adc-clock w3-width-auto', 'Airband ADC clock', '',
+                  'adm.airband_adc_clock', airband_clock, admin.airband_adc_clock_s, 'airband_adc_clock_cb'),
+               w3_div('id-airband-adc-clock-status w3-text-black w3-margin-T-4', '')
+            )
          ),
          w3_div('w3-center',
             w3_switch_label('w3-center w3-restart', 'Share WF channels with all users', 'Share', 'Exclusive', 'adm.wf_share', adm.wf_share, 'wf_share_enabled_cb')
@@ -261,6 +272,53 @@ function control_focus()
 {
 	w3_innerHTML('id-reason-disabled-preview', admin_preview_status_box('disabled_preview_1', cfg.reason_disabled));
 	w3_innerHTML('id-reason-kicked-preview', admin_preview_status_box('kicked_preview_1', cfg.reason_kicked));
+   airband_adc_clock_status();
+}
+
+function airband_adc_clock_effective(requested, snd_rate_idx)
+{
+   return (requested == 0 && snd_rate_idx == 2)? 1 : requested;
+}
+
+function airband_adc_clock_status()
+{
+   var el = w3_el('id-airband-adc-clock');
+   if (!el) return;
+
+   w3_disable(el, !adm.airband);
+   var requested = isNumber(adm.airband_adc_clock)? +adm.airband_adc_clock : 0;
+   var effective = airband_adc_clock_effective(requested, +adm.snd_rate);
+   var s;
+   if (!adm.airband) {
+      s = 'Used only in Air Band mode.';
+   } else
+   if (requested != effective) {
+      s = '<b>Effective: 110.592 MHz</b><br>36 kHz audio requires this clock.';
+   } else
+   if (effective == 0) {
+      s = '<b>Effective: 98.304 MHz</b><br>12/24 kHz; 98.304-147.456 MHz.<br>Best rejection of 88-108 MHz FM aliases.';
+   } else {
+      s = '<b>Effective: 110.592 MHz</b><br>12/24/36 kHz; 110.592-165.888 MHz.<br>108-110.592 MHz is unavailable.';
+   }
+   w3_innerHTML('id-airband-adc-clock-status', s);
+}
+
+function airband_rx_rate_cb(path, idx, first)
+{
+   if (!first) {
+      adm.snd_rate = +idx;
+      admin_select_cb(path, idx, first);
+   }
+   airband_adc_clock_status();
+}
+
+function airband_adc_clock_cb(path, idx, first)
+{
+   if (!first) {
+      adm.airband_adc_clock = +idx;
+      admin_select_cb(path, idx, first);
+   }
+   airband_adc_clock_status();
 }
 
 function server_enabled_cb(path, idx, first)
@@ -299,15 +357,20 @@ function airband_switch_cb(path, idx, first)
 	idx = +idx;
 	var enabled = (idx == 0);
 	console.log('airband_switch_cb: first='+ first +' enabled='+ enabled);
+   if (!first) adm.airband = enabled;
 	
 	admin_bool_cb(path, enabled, first);
 
-   if (enabled)
-	   admin_float_cb("freq_offset", 110592, first, [0,3]);
-   else
+   if (enabled) {
+      var effective = airband_adc_clock_effective(
+         isNumber(adm.airband_adc_clock)? +adm.airband_adc_clock : 0, +adm.snd_rate);
+	   admin_float_cb("freq_offset", effective? 110592 : 98304, first, [0,3]);
+   } else {
       admin_float_cb("freq_offset", "0", first, [0,3]);
+   }
 	//console.log('### config_freq_offset '+ path +'='+ val +' cfg.freq_offset='+ cfg.freq_offset);
 	kiwi_set_freq_offset(cfg.freq_offset);
+   airband_adc_clock_status();
 }
 
 function control_user_kick_cb(id, idx)

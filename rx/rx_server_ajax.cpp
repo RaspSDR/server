@@ -692,6 +692,8 @@ char* rx_server_ajax(struct mg_connection* mc, char* ip_forwarded) {
                  "ant_connected=%d\n"
                  "adc_ov=%u\n"
                  "clk_ext_gps=%d,%d\n"
+                 "adc_clk=%.6f\n"
+                 "airband_clk=%d,%d,%d\n"
                  "uptime=%d\n"
                  "gps_date=%d,%d\n"
                  "date=%s\n"
@@ -737,6 +739,9 @@ char* rx_server_ajax(struct mg_connection* mc, char* ip_forwarded) {
                  snr_all, snr_HF, ant_connected,
                  dpump.rx_adc_ovfl_cnt,
                  clk.ext_ADC_clk ? 1 : 0, clk.do_corrections,
+                 adc_clock_system() / MHz,
+                 clk.airband_profile_requested, clk.airband_profile_effective,
+                 clk.airband_profile_forced ? 1 : 0,
                  timer_sec(),
                  1, 1,
                  utc_ctime_r(buf),

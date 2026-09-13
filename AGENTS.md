@@ -203,9 +203,10 @@ The build script writes the target binary to `build/websdr.bin` in this
 checkout. The `file` output must identify a 32-bit ARM EABI5 executable using
 `/lib/ld-musl-armhf.so.1`.
 
-The target has limited storage. Do not retain, rename, or copy the installed
-`/root/websdr.bin` as a backup on the board. Stop the supervised service,
-remove the installed binary, and upload its replacement directly:
+The target has limited storage and `/root` is a RAM disk. Do not retain,
+rename, or copy the installed `/root/websdr.bin` as a backup on the board.
+Stop the supervised service, remove the installed binary, and upload its
+replacement directly:
 
 ```sh
 ssh root@web-888.local \
@@ -227,18 +228,22 @@ and exercise the affected behavior through a real browser. For receiver or UI
 changes, confirm live sound and waterfall WebSockets, advancing waterfall
 data, and the specific modified controls or rendering paths.
 
-After testing, stop the foreground process and return the receiver to
-supervised operation using the tested binary:
+The uploaded binary is temporary. It remains available only until the receiver
+reboots, at which point the RAM-disk contents are discarded and the normal
+production image repopulates `/root`. Do not describe this procedure as a
+persistent deployment.
+
+After testing, stop the foreground process. To continue running the temporary
+binary under supervision before a reboot, start `sdrd`:
 
 ```sh
 ssh root@web-888.local '/etc/init.d/sdrd start'
 ```
 
 Recheck the remote checksum, service status, process list, and `/status`
-version. Boot or service-management scripts may restore the SD-card-managed
-production image, so do not assume the manually tested binary remains active.
-If the production binary must be restored, use the SD-card-managed image or
-upload it again from the host; never keep a second binary on the ARM board.
+version. After any reboot, expect the temporary binary to be gone and verify
+that the production version is active. To test the private build again,
+repeat the stop, remove, upload, and foreground-run procedure.
 
 If the receiver reboots and its SSH host key changes, stop and independently
 verify the new fingerprint. Never disable strict host-key checking or remove

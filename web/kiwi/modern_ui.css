@@ -1,0 +1,253 @@
+/* Copyright (c) 2026 WEB-888 contributors */
+
+:root {
+   color-scheme: dark;
+   --ui-bg: #071014;
+   --ui-bg-raised: #0b171d;
+   --ui-surface: #102128;
+   --ui-surface-2: #142a32;
+   --ui-surface-3: #19343d;
+   --ui-border: #27434d;
+   --ui-border-strong: #38606d;
+   --ui-text: #eef7f8;
+   --ui-text-soft: #a9bec3;
+   --ui-text-muted: #718b91;
+   --ui-accent: #42d7e8;
+   --ui-accent-soft: rgba(66, 215, 232, 0.14);
+   --ui-success: #79e18b;
+   --ui-warning: #f7c75d;
+   --ui-danger: #ff786f;
+   --ui-focus: #8beaf4;
+   --ui-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+   --ui-radius-sm: 7px;
+   --ui-radius: 11px;
+   --ui-radius-lg: 16px;
+   --ui-control-height: 36px;
+   --ui-space-1: 4px;
+   --ui-space-2: 8px;
+   --ui-space-3: 12px;
+   --ui-space-4: 16px;
+   --ui-space-5: 24px;
+   --ui-motion-fast: 140ms;
+   --ui-font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+   --ui-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+:root[data-ui-theme="ember"] {
+   --ui-bg: #130d09;
+   --ui-bg-raised: #1c130e;
+   --ui-surface: #291b13;
+   --ui-surface-2: #342218;
+   --ui-surface-3: #432d1e;
+   --ui-border: #57402f;
+   --ui-border-strong: #785b40;
+   --ui-text: #fff7ee;
+   --ui-text-soft: #d5bfaa;
+   --ui-text-muted: #9e8169;
+   --ui-accent: #ffb454;
+   --ui-accent-soft: rgba(255, 180, 84, 0.15);
+   --ui-success: #9be073;
+   --ui-warning: #ffd56b;
+   --ui-danger: #ff8178;
+   --ui-focus: #ffd08f;
+}
+
+:root[data-ui-theme="daylight"] {
+   color-scheme: light;
+   --ui-bg: #e8f0f2;
+   --ui-bg-raised: #f7fbfc;
+   --ui-surface: #ffffff;
+   --ui-surface-2: #edf4f6;
+   --ui-surface-3: #dcebee;
+   --ui-border: #bfd1d6;
+   --ui-border-strong: #8facb3;
+   --ui-text: #10262c;
+   --ui-text-soft: #3e5c63;
+   --ui-text-muted: #6c878e;
+   --ui-accent: #007f91;
+   --ui-accent-soft: rgba(0, 127, 145, 0.12);
+   --ui-success: #16864a;
+   --ui-warning: #9a6500;
+   --ui-danger: #bd342f;
+   --ui-focus: #006e7d;
+   --ui-shadow: 0 18px 48px rgba(28, 60, 67, 0.16);
+}
+
+.ui-modern,
+.ui-modern body {
+   font-family: var(--ui-font);
+}
+
+.ui-modern body {
+   color: var(--ui-text);
+   background:
+      radial-gradient(circle at 20% -10%, var(--ui-accent-soft), transparent 30rem),
+      var(--ui-bg);
+}
+
+.ui-modern ::selection {
+   color: var(--ui-bg);
+   background: var(--ui-accent);
+}
+
+.ui-modern :where(button, input, select, textarea, a):focus-visible {
+   outline: 2px solid var(--ui-focus) !important;
+   outline-offset: 2px;
+}
+
+.ui-modern :where(button, input, select, textarea):disabled,
+.ui-modern .w3-disabled {
+   cursor: not-allowed !important;
+   opacity: 0.48 !important;
+}
+
+.ui-modern a {
+   color: var(--ui-accent);
+}
+
+.ui-modern .ui-theme-mount {
+   position: fixed;
+   right: 12px;
+   bottom: 10px;
+   z-index: 1060;
+}
+
+.ui-theme-picker {
+   display: inline-flex;
+   align-items: center;
+   gap: var(--ui-space-2);
+   min-height: var(--ui-control-height);
+   padding: 0 var(--ui-space-2) 0 var(--ui-space-3);
+   border: 1px solid var(--ui-border);
+   border-radius: 999px;
+   background: color-mix(in srgb, var(--ui-bg-raised) 92%, transparent);
+   color: var(--ui-text-muted);
+   box-shadow: var(--ui-shadow);
+   font-size: 11px;
+   font-weight: 700;
+   backdrop-filter: blur(14px);
+}
+
+.ui-theme-select {
+   height: 28px;
+   padding: 0 24px 0 9px;
+   border: 1px solid var(--ui-border);
+   border-radius: 999px;
+   background: var(--ui-surface);
+   color: var(--ui-text);
+   font-size: 11px;
+   font-weight: 700;
+   cursor: pointer;
+}
+
+.ui-modern .id-kiwi-msg-container {
+   min-height: 100dvh;
+   padding: clamp(20px, 6vw, 72px);
+   background:
+      radial-gradient(circle at 20% 0, var(--ui-accent-soft), transparent 28rem),
+      var(--ui-bg);
+}
+
+.ui-modern #id-kiwi-msg-logo-container {
+   max-width: 720px;
+   height: 60px;
+   margin: 0 auto;
+}
+
+.ui-modern #id-kiwi-msg {
+   float: none;
+   max-width: 720px;
+   margin: 16px auto;
+   padding: clamp(18px, 4vw, 32px);
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-lg);
+   background: var(--ui-bg-raised);
+   color: var(--ui-text);
+   box-shadow: var(--ui-shadow);
+   line-height: 1.55;
+}
+
+.ui-modern .ui-panel,
+.ui-modern .class-panel {
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-lg);
+   background: var(--ui-bg-raised);
+   color: var(--ui-text);
+   box-shadow: var(--ui-shadow);
+}
+
+.ui-modern .ui-card {
+   padding: var(--ui-space-4);
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius);
+   background: var(--ui-surface);
+}
+
+.ui-modern .ui-status {
+   display: flex;
+   align-items: center;
+   gap: var(--ui-space-2);
+   min-height: var(--ui-control-height);
+   padding: 0 var(--ui-space-3);
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius);
+   background: var(--ui-surface);
+   color: var(--ui-text-soft);
+}
+
+.ui-modern .ui-status-danger {
+   border-color: color-mix(in srgb, var(--ui-danger) 52%, var(--ui-border));
+   color: var(--ui-danger);
+}
+
+.ui-modern .ui-status-warning {
+   border-color: color-mix(in srgb, var(--ui-warning) 52%, var(--ui-border));
+   color: var(--ui-warning);
+}
+
+@media (max-width: 760px) {
+   :root {
+      --ui-control-height: 42px;
+      --ui-radius-lg: 14px;
+   }
+
+   .ui-modern .ui-theme-mount {
+      right: 8px;
+      bottom: 7px;
+   }
+
+   .ui-theme-picker {
+      width: 42px;
+      min-height: 34px;
+      padding: 0 6px;
+      overflow: hidden;
+   }
+
+   .ui-theme-picker-label {
+      display: none;
+   }
+
+   .ui-theme-select {
+      width: 28px;
+      padding: 0;
+      border: 0;
+      color: transparent;
+      background: var(--ui-accent);
+   }
+
+   .ui-theme-select option {
+      color: var(--ui-text);
+      background: var(--ui-surface);
+   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+   .ui-modern *,
+   .ui-modern *::before,
+   .ui-modern *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.001ms !important;
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+   }
+}

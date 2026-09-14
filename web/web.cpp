@@ -473,6 +473,7 @@ void reload_index_params() {
         "kiwi/w3_ext.css",
         "openwebrx/openwebrx.css",
         "kiwi/kiwi.css",
+        "kiwi/modern_ui.css",
         NULL
     };
 
@@ -489,6 +490,7 @@ void reload_index_params() {
         "kiwi/kiwi_ui.js",
         "kiwi/kiwi_map.js",
         "kiwi/w3_util.js",
+        "kiwi/modern_ui.js",
         "pkgs/w3/w3color.js",
         "kiwi/monitor.js",
         "openwebrx.js",

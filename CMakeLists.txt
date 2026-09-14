@@ -347,6 +347,7 @@ file(GLOB_RECURSE FILES_EMBED_JS RELATIVE ${UPSTREAM_DIR}/web
     ${UPSTREAM_DIR}/web/kiwi/kiwi_ui.js
     ${UPSTREAM_DIR}/web/kiwi/kiwi_util.js
     ${UPSTREAM_DIR}/web/kiwi/w3_util.js
+    ${UPSTREAM_DIR}/web/kiwi/modern_ui.js
     ${UPSTREAM_DIR}/web/kiwi/monitor.js
     ${UPSTREAM_DIR}/web/kiwi/kiwi_map.js
 
@@ -364,6 +365,7 @@ file(GLOB_RECURSE FILES_EMBED_CSS RELATIVE ${UPSTREAM_DIR}/web
     ${UPSTREAM_DIR}/web/kiwi/kiwi.css
     ${UPSTREAM_DIR}/web/pkgs/w3/w3.css
     ${UPSTREAM_DIR}/web/kiwi/w3_ext.css
+    ${UPSTREAM_DIR}/web/kiwi/modern_ui.css
     
     ${UPSTREAM_DIR}/web/extensions/*.css
     ${UPSTREAM_DIR}/web/pkgs/text-security/text-security-disc.css

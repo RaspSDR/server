@@ -729,6 +729,13 @@
    font-weight: 800;
 }
 
+.ui-modern .ui-admin-notice .ui-status {
+   display: inline-flex !important;
+   justify-content: center;
+   text-align: center;
+   vertical-align: middle;
+}
+
 .ui-modern .ui-admin-page {
    margin-top: var(--ui-space-3);
    padding: var(--ui-space-4);

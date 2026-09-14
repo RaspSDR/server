@@ -426,6 +426,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         });
         const extensionFocus = await page.evaluate(() => {
             const close = document.getElementById('id-ext-controls-close');
+            close?.focus();
             const expected = extint.return_focus?.id;
             const closeSemantics = {
                 tagName: close?.tagName,
@@ -662,10 +663,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             restartNotice: (() => {
                 const status = document.querySelector('.id-restart .ui-status');
                 const heading = status?.querySelector('h5');
+                const style = status? getComputedStyle(status) : null;
                 return {
                     danger: status?.classList.contains('ui-status-danger'),
                     fontSize: heading? parseFloat(getComputedStyle(heading).fontSize) : 0,
-                    text: heading?.textContent
+                    text: heading?.textContent,
+                    display: style?.display,
+                    alignItems: style?.alignItems,
+                    justifyContent: style?.justifyContent
                 };
             })(),
             keyboardNavigation: (() => {
@@ -776,6 +781,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !adminFoundation.restartNotice.danger ||
             adminFoundation.restartNotice.fontSize < 14 ||
             adminFoundation.restartNotice.text !== 'Restart required for changes to take effect' ||
+            adminFoundation.restartNotice.display !== 'flex' ||
+            adminFoundation.restartNotice.alignItems !== 'center' ||
+            adminFoundation.restartNotice.justifyContent !== 'center' ||
             !adminFoundation.keyboardNavigation.before ||
             adminFoundation.keyboardNavigation.before === adminFoundation.keyboardNavigation.after ||
             adminFoundation.keyboardNavigation.after !== adminFoundation.keyboardNavigation.focused)

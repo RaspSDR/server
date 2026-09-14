@@ -377,7 +377,7 @@ function wspr_controls_setup()
          ),
 
          w3_inline('w3-halign-space-between/',
-            w3_div('cl-wspr-pie|background-color:#575757',
+            w3_div('cl-wspr-pie|background-color:var(--ui-surface-2, #575757)',
                kiwi_pie('id-wspr-pie', wspr.pie_size, '#eeeeee', 'deepSkyBlue')
             ),
             w3_div('',
@@ -393,13 +393,13 @@ function wspr_controls_setup()
             w3_div('id-wspr-rgrid cl-wspr-text', 'reporter grid '+ grid)
          ),
       
-         w3_div('|background-color:lightGray; overflow:auto; width:100%; margin-top:5px; margin-bottom:0px; font-family:monospace; font-size:100%',
+         w3_div('|background-color:var(--ui-surface-2, lightGray); color:var(--ui-text, black); overflow:auto; width:100%; margin-top:5px; margin-bottom:0px; font-family:monospace; font-size:100%',
             '<pre style="display:inline"> UTC  dB   dT      Freq dF  Call   Grid    km  dBm</pre>'
             //                                                   dd  cccccc GGGG ddddd  nnn (n W)
          )
       ),
       
-		w3_div('id-wspr-decode|white-space:pre; background-color:white; overflow:scroll; height:100px; width:100%; margin-top:0px; font-family:monospace; font-size:100%')
+		w3_div('id-wspr-decode|white-space:pre; color:var(--ui-text, black); background-color:var(--ui-surface, white); overflow:scroll; height:100px; width:100%; margin-top:0px; font-family:monospace; font-size:100%')
 	);
 
 	ext_panel_show(controls_html, data_html, null);

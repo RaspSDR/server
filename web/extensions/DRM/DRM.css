@@ -4,7 +4,7 @@
     border-radius: 2px;
     margin: 0 2px;
     padding: 0 2px;
-    background-color: grey;
+    background-color: var(--ui-surface-2, grey);
 }
 
 .cl-drm-data {
@@ -12,7 +12,7 @@
     border-radius: 2px;
     margin: 0 6px 0 0;
     padding: 0 2px;
-    background-color: grey;
+    background-color: var(--ui-surface-2, grey);
 }
 
 .id-drm-options {
@@ -41,7 +41,8 @@
 
 .cl-drm-sched {
     position: absolute;
-    background-color: white;
+    background-color: var(--ui-surface, white);
+    color: var(--ui-text, black);
     /* font-size: 80%; */
 }
 
@@ -60,7 +61,7 @@
     position: absolute;
     z-index: 400;
     font-weight: bold;
-    color: black;
+    color: var(--ui-text, black);
     pointer-events: none;
 }
 
@@ -74,11 +75,11 @@
 
 .cl-drm-sched-hr {
     margin: 15.8px;
-    border-top: 1px solid black;
+    border-top: 1px solid var(--ui-border, black);
 }
 
 .cl-drm-sched-striped:nth-child(even) {
-    background-color: #f1f1f1
+    background-color: var(--ui-surface-2, #f1f1f1)
 }
 
 .id-drm-sched-time {
@@ -86,7 +87,7 @@
     width: 50px;
     height: 30px;
     border-radius: 15px;
-    background-color: Pink;
+    background-color: var(--ui-accent-soft, Pink);
     opacity: 0.75;
     display: inline;
     cursor: pointer;
@@ -97,8 +98,8 @@
     width: 100px;
     /* border-radius: 10px; */
     text-align: center;
-    color: black;
-    background-color: Pink;
+    color: var(--ui-accent, black);
+    background-color: var(--ui-accent-soft, Pink);
 }
 
 .cl-drm-slideshow-img {

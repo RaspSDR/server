@@ -6,7 +6,7 @@
 }
 
 .sw-label {
-   color: #aaa;
+   color: var(--ui-text-muted, #aaa);
 }
 
 .sw-value {
@@ -14,13 +14,13 @@
 }
 
 .sw-section-title {
-   color: #00bcd4;
+   color: var(--ui-accent, #00bcd4);
    font-weight: bold;
    margin: 8px 0 3px;
 }
 
 .sw-footer {
-   color: #bbb;
+   color: var(--ui-text-muted, #bbb);
    font-size: 9px;
    margin-top: 6px;
    text-align: right;

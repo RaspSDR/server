@@ -8,6 +8,23 @@
     left: 0;
 }
 
+.ui-hfdl-options {
+    padding: 10px;
+    border: 1px solid var(--ui-border, #465568);
+    border-radius: var(--ui-radius, 11px);
+    background: color-mix(in srgb, var(--ui-bg-raised, #11161d) 92%, transparent);
+    color: var(--ui-text, white);
+    box-shadow: var(--ui-shadow, 0 18px 48px rgba(0, 0, 0, 0.34));
+    backdrop-filter: blur(12px);
+}
+
+.ui-hfdl-filter-group {
+    padding: 8px;
+    border: 1px solid var(--ui-border, #465568);
+    background: var(--ui-surface-2, grey);
+    color: var(--ui-text, white);
+}
+
 .id-hfdl-AFT {
     height: auto !important;
     width: 17px !important;

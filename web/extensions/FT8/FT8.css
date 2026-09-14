@@ -6,6 +6,6 @@
 	margin-top: 5px;
 	margin-left: 5px;
 	text-align: center;
-	color: black;
-	background-color: lightGray;
+	color: var(--ui-text, black);
+	background-color: var(--ui-surface-2, lightGray);
 }

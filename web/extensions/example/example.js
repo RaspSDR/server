@@ -77,7 +77,7 @@ function example_controls_setup()
    var data_html =
       time_display_html('example') +
 
-      w3_div('id-example-data scale|left:150px; width:1024px; height:200px; background-color:white; position:relative;',
+      w3_div('id-example-data scale|left:150px; width:1024px; height:200px; color:var(--ui-text, black); background-color:var(--ui-surface, white); position:relative;',
       	'example extension HTML in ext-data-container'
       );
 

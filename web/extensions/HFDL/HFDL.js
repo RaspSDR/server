@@ -319,7 +319,7 @@ function hfdl_controls_setup()
          w3_div('|'+ wh +' position:absolute; z-index:0|id="id-hfdl-map"')
       ) +
       
-      w3_div('id-hfdl-options w3-display-right w3-text-white|top:230px; right:0px; width:250px; height:200px',
+      w3_div('id-hfdl-options w3-display-right ui-hfdl-options|top:230px; right:0px; width:250px; height:200px',
          w3_text('w3-text-aqua w3-bold', 'HFDL options'),
          w3_select('w3-margin-T-4 w3-width-auto '+ hfdl.sfmt, '', 'show', 'hfdl.show', hfdl.show, hfdl.show_s, 'hfdl_show_cb'),
          
@@ -336,7 +336,7 @@ function hfdl_controls_setup()
       );
 
 	var controls_html =
-		w3_div('id-hfdl-controls w3-text-white',
+		w3_div('id-hfdl-controls',
          w3_col_percent('w3-tspace-8 w3-valign/',
             w3_div('w3-medium w3-text-aqua', '<b>HFDL decoder</b>'), 25,
             w3_div('', 'From <b><a href="https://github.com/szpajder/dumphfdl" target="_blank">dumphfdl</a></b> by Tomasz Lemiech &copy;2021 GPL-3.0</b>')
@@ -347,7 +347,7 @@ function hfdl_controls_setup()
          ),
          
          w3_inline('w3-margin-T-16/w3-margin-between-16',
-            w3_inline('w3-valign-end w3-round-large w3-padding-small w3-text-white w3-grey/',
+            w3_inline('ui-hfdl-filter-group w3-valign-end w3-round-large/',
                w3_select(hfdl.sfmt, 'Display', '', 'hfdl.dsp', hfdl.dsp, hfdl.dsp_s, 'hfdl_display_cb'),
                w3_div('w3-margin-L-16',
                   w3_checkbox('/w3-label-inline w3-label-not-bold', 'Uplink', 'hfdl.uplink', hfdl.uplink, 'w3_bool_cb'),

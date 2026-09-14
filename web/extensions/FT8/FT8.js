@@ -127,7 +127,7 @@ function ft8_controls_setup()
    var data_html =
       time_display_html('ft8') +
       
-      w3_div('id-ft8-data|left:150px; width:1044px; height:300px; overflow:hidden; position:relative; background-color:mediumBlue;',
+      w3_div('id-ft8-data|left:150px; width:1044px; height:300px; overflow:hidden; position:relative; background-color:var(--ui-bg, mediumBlue);',
 			w3_div('id-ft8-console-msg w3-text-output w3-scroll-down w3-small w3-text-black|width:1024px; height:300px; position:absolute; overflow-x:hidden;',
 			   w3_code('id-ft8-console-msgs w3-text-output-striped/')
 			)

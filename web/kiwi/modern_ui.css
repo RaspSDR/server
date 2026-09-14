@@ -770,7 +770,7 @@
 }
 
 .ui-modern .ui-extension-content {
-   overflow: auto;
+   overflow: hidden;
    border-radius: calc(var(--ui-radius-lg) - 4px);
    color: var(--ui-text-soft);
    font-size: var(--ui-font-size-control);
@@ -953,7 +953,7 @@
    }
 
    .ui-modern .ui-extension-content {
-      padding-right: 2px;
+      padding-right: 0;
    }
 }
 

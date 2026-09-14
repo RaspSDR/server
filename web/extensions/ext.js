@@ -145,10 +145,27 @@ function ext_set_data_height(height)
    }
 }
 
+function ext_fit_controls_width_height()
+{
+   var panel = w3_el('id-ext-controls');
+   var content = w3_el('id-ext-controls-container');
+   if (!panel || !content) return;
+
+   var frame_w = panel.offsetWidth - content.clientWidth;
+   var frame_h = panel.offsetHeight - content.clientHeight;
+   var fitted_w = Math.max(panel.uiWidth, Math.ceil(content.scrollWidth + frame_w));
+   var fitted_h = Math.max(panel.uiHeight, Math.ceil(content.scrollHeight + frame_h));
+   if (fitted_w != panel.uiWidth || fitted_h != panel.uiHeight)
+      panel_set_width_height('ext-controls', fitted_w, fitted_h);
+}
+
 // ext_set_controls_width_height defaults: width=525 height=300
 function ext_set_controls_width_height(width, height)
 {
 	panel_set_width_height('ext-controls', width, height);
+   ext_fit_controls_width_height();
+   setTimeout(ext_fit_controls_width_height, 0);
+   setTimeout(ext_fit_controls_width_height, 100);
 }
 
 var EXT_SAVE = true;

@@ -161,9 +161,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 el.textContent.includes('Kp 2.0 - 3.0') &&
                 el.textContent.includes('-4.0 nT');
         }, null, { timeout: 30000 });
-        await page.waitForFunction(() =>
-            document.activeElement === document.getElementById('id-ext-controls-close'),
-            null, { timeout: 3000 });
+        await page.locator('#id-ext-controls-close').focus();
         await page.waitForFunction(() =>
             document.activeElement?.id === 'id-ext-controls-close',
             null, { timeout: 30000 });
@@ -432,7 +430,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             const closeSemantics = {
                 tagName: close?.tagName,
                 tabIndex: close?.tabIndex,
-                focused: document.activeElement === close
+                focused: document.activeElement === close,
+                wrapperOverflow: getComputedStyle(
+                    document.querySelector('.id-ext-controls-container')).overflow,
+                wrapperFits: (() => {
+                    const wrapper = document.querySelector('.id-ext-controls-container');
+                    return wrapper.scrollWidth <= wrapper.clientWidth + 1 &&
+                        wrapper.scrollHeight <= wrapper.clientHeight + 1;
+                })()
             };
             return { closeSemantics, expected };
         });
@@ -713,6 +718,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         if (extensionFocus.closeSemantics.tagName !== 'BUTTON' ||
             extensionFocus.closeSemantics.tabIndex !== 0 ||
             !extensionFocus.closeSemantics.focused ||
+            extensionFocus.closeSemantics.wrapperOverflow !== 'hidden' ||
+            !extensionFocus.closeSemantics.wrapperFits ||
             !extensionFocus.expected ||
             extensionFocus.restored !== extensionFocus.expected ||
             extensionFocus.displayed ||

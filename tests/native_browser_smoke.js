@@ -101,7 +101,17 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 window.wf_canvas_actual_line !== line;
         }, initialLine, { timeout: 30000 });
 
-        await page.evaluate(() => extint_open('space_weather'));
+        await page.evaluate(() => {
+            const focusReturn = document.createElement('button');
+            focusReturn.id = 'id-test-focus-return';
+            focusReturn.type = 'button';
+            focusReturn.textContent = 'focus return';
+            focusReturn.style.position = 'fixed';
+            focusReturn.style.left = '-10000px';
+            document.body.appendChild(focusReturn);
+            focusReturn.focus();
+            extint_open('space_weather');
+        });
         await page.waitForFunction(() => {
             const el = w3_el('id-sw-data');
             return el && el.textContent.includes('Solar flux') &&
@@ -289,8 +299,26 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     buttons: document.querySelectorAll('.ui-button').length,
                     fields: document.querySelectorAll('.ui-field').length,
                     panels: document.querySelectorAll('.class-panel').length
+                },
+                panelToggle: {
+                    role: document.getElementById('id-control-hide')?.getAttribute('role'),
+                    tabIndex: document.getElementById('id-control-hide')?.tabIndex,
+                    label: document.getElementById('id-control-hide')?.getAttribute('aria-label')
                 }
             };
+        });
+        const extensionFocus = await page.evaluate(() => {
+            const close = document.getElementById('id-ext-controls-close');
+            const expected = extint.return_focus?.id;
+            const closeSemantics = {
+                role: close?.getAttribute('role'),
+                tabIndex: close?.tabIndex,
+                focused: document.activeElement === close
+            };
+            extint_panel_hide();
+            const restored = document.activeElement?.id;
+            document.getElementById('id-test-focus-return')?.remove();
+            return { closeSemantics, expected, restored };
         });
         const receiverResponsive = [];
         for (const viewport of [
@@ -378,7 +406,21 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             shell: document.querySelector('.id-admin')?.classList.contains('ui-admin-shell'),
             nav: document.querySelector('.ui-admin-nav')?.getAttribute('role'),
             pages: document.querySelectorAll('.ui-admin-page[role="tabpanel"]').length,
-            title: document.querySelector('.ui-admin-titlebar h1')?.textContent
+            title: document.querySelector('.ui-admin-titlebar h1')?.textContent,
+            keyboardNavigation: (() => {
+                const before = document.querySelector('.ui-admin-nav [aria-selected="true"]');
+                before?.focus();
+                before?.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: 'ArrowRight',
+                    bubbles: true
+                }));
+                const after = document.querySelector('.ui-admin-nav [aria-selected="true"]');
+                return {
+                    before: before?.id,
+                    after: after?.id,
+                    focused: document.activeElement?.id
+                };
+            })()
         }));
         await adminPage.close();
 
@@ -394,8 +436,17 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.semanticShell.panels !== 'ASIDE' ||
             uiFoundation.hooks.buttons < 1 ||
             uiFoundation.hooks.fields < 1 ||
-            uiFoundation.hooks.panels < 4)
+            uiFoundation.hooks.panels < 4 ||
+            uiFoundation.panelToggle.role !== 'button' ||
+            uiFoundation.panelToggle.tabIndex !== 0 ||
+            uiFoundation.panelToggle.label !== 'Hide panel')
             throw new Error(`invalid modern UI foundation: ${JSON.stringify(uiFoundation)}`);
+        if (extensionFocus.closeSemantics.role !== 'button' ||
+            extensionFocus.closeSemantics.tabIndex !== 0 ||
+            !extensionFocus.closeSemantics.focused ||
+            !extensionFocus.expected ||
+            extensionFocus.restored !== extensionFocus.expected)
+            throw new Error(`invalid extension focus handling: ${JSON.stringify(extensionFocus)}`);
         for (const layout of receiverResponsive) {
             if (!layout.modern || layout.theme !== 'midnight' ||
                 layout.documentOverflow ||
@@ -407,7 +458,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminFoundation.nav !== 'tablist' ||
             adminFoundation.pages < 10 ||
             adminFoundation.title !== 'Administration' ||
-            adminFoundation.theme !== 'midnight')
+            adminFoundation.theme !== 'midnight' ||
+            !adminFoundation.keyboardNavigation.before ||
+            adminFoundation.keyboardNavigation.before === adminFoundation.keyboardNavigation.after ||
+            adminFoundation.keyboardNavigation.after !== adminFoundation.keyboardNavigation.focused)
             throw new Error(`invalid modern admin foundation: ${JSON.stringify(adminFoundation)}`);
         for (const layout of adminResponsive) {
             if (!layout.modern || layout.theme !== 'midnight' ||
@@ -456,7 +510,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         if (errors.length)
             throw new Error(errors.join('\n'));
 
-        console.log(JSON.stringify({ ...state, uiFoundation, receiverResponsive, adminFoundation, adminResponsive }));
+        console.log(JSON.stringify({
+            ...state, uiFoundation, extensionFocus, receiverResponsive, adminFoundation, adminResponsive
+        }));
     } finally {
         await browser.close();
     }

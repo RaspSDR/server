@@ -53,8 +53,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             const overlaps = (a, b) => !!a && !!b &&
                 a.left < b.right && a.right > b.left &&
                 a.top < b.bottom && a.bottom > b.top;
-            const themePicker = rect(document.querySelector('.ui-theme-picker'));
-            const control = rect(document.getElementById('id-control'));
+            const themePickerElement = document.querySelector('.ui-theme-picker');
+            const controlElement = document.getElementById('id-control');
+            const themePicker = rect(themePickerElement);
+            const control = rect(controlElement);
             return {
                 viewport: [window.innerWidth, window.innerHeight],
                 documentOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
@@ -65,7 +67,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 waterfall: bounds('id-waterfall-container'),
                 control,
                 themePicker,
-                themeControlOverlap: overlaps(themePicker, control),
+                themeControlOverlap: overlaps(themePicker, control) &&
+                    !controlElement?.contains(themePickerElement),
                 controlFitsViewport: !control ||
                     (control.left >= -1 && control.top >= -1 &&
                         control.right <= window.innerWidth + 1 &&
@@ -158,6 +161,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 el.textContent.includes('Kp 2.0 - 3.0') &&
                 el.textContent.includes('-4.0 nT');
         }, null, { timeout: 30000 });
+        await page.waitForFunction(() =>
+            document.activeElement === document.getElementById('id-ext-controls-close'),
+            null, { timeout: 3000 });
         await page.waitForFunction(() =>
             document.activeElement?.id === 'id-ext-controls-close',
             null, { timeout: 30000 });
@@ -306,8 +312,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     label.textContent = 'DX';
                     document.body.appendChild(label);
                     const labelHeight = label.getBoundingClientRect().height;
+                    const labelFontSize = parseFloat(getComputedStyle(label).fontSize);
                     label.remove();
-                    return { rows, eibiRows, labelHeight };
+                    return { rows, eibiRows, labelHeight, labelFontSize };
                 } finally {
                     cfg.dx_three_high = saved;
                 }
@@ -351,6 +358,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             select.dispatchEvent(new Event('change', { bubbles: true }));
             return {
                 selectPresent: !!select,
+                receiverThemeParent: select?.closest('.ui-theme-picker')?.parentElement?.id,
                 themeOptions: Array.from(select.options, option => option.value),
                 storedTheme: localStorage.getItem('web888_ui_theme'),
                 themes,
@@ -369,8 +377,24 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     tabIndex: document.getElementById('id-control-hide')?.tabIndex,
                     label: document.getElementById('id-control-hide')?.getAttribute('aria-label')
                 },
+                extensionOutput: (() => {
+                    const content = document.getElementById('id-ext-data-container');
+                    const output = document.createElement('div');
+                    output.className = 'w3-text-output';
+                    content.appendChild(output);
+                    document.body.appendChild(content);
+                    const style = getComputedStyle(output);
+                    const result = {
+                        color: style.color,
+                        background: style.backgroundColor,
+                        fontSize: parseFloat(style.fontSize)
+                    };
+                    output.remove();
+                    return result;
+                })(),
                 typography: {
                     panel: parseFloat(getComputedStyle(document.getElementById('id-control')).fontSize),
+                    stationName: parseFloat(getComputedStyle(document.getElementById('id-rx-title')).fontSize),
                     rf: parseFloat(getComputedStyle(document.getElementById('id-nav-optbar-rf')).fontSize),
                     wf: parseFloat(getComputedStyle(document.getElementById('id-nav-optbar-wf')).fontSize),
                     audio: parseFloat(getComputedStyle(document.getElementById('id-nav-optbar-audio')).fontSize),
@@ -423,6 +447,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             document.getElementById('id-test-focus-return')?.remove();
             return state;
         }));
+
+        await page.evaluate(() => w3_click_nav('optbar-rf', 'optbar'));
+
         const receiverResponsive = [];
         for (const viewport of [
             { width: 1440, height: 1000 },
@@ -431,6 +458,112 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             { width: 844, height: 390 }
         ])
             receiverResponsive.push(await responsiveState(page, viewport));
+
+        const panelToggle = { desktop: {}, phone: {}, readme: {} };
+        await page.setViewportSize({ width: 1440, height: 1000 });
+        await page.waitForTimeout(650);
+        await page.evaluate(() => mobile_scale_control_panel(ext_mobile_info(), false));
+        await page.locator('#id-control-hide').click();
+        await page.waitForTimeout(1100);
+        panelToggle.desktop.hidden = await page.evaluate(() => {
+            const panel = document.getElementById('id-control');
+            const panelRect = panel.getBoundingClientRect();
+            const show = document.getElementById('id-control-show');
+            const showRect = show.getBoundingClientRect();
+            return {
+                shown: panel.panelShown,
+                panelLeft: Math.round(panelRect.left),
+                viewportWidth: window.innerWidth,
+                hideDisplay: getComputedStyle(document.getElementById('id-control-hide')).display,
+                showDisplay: getComputedStyle(show).display,
+                showVisible: showRect.left >= 0 && showRect.right <= window.innerWidth
+            };
+        });
+        await page.locator('#id-control-show').click();
+        await page.waitForTimeout(1100);
+        panelToggle.desktop.shown = await page.evaluate(() => {
+            const panel = document.getElementById('id-control');
+            const rect = panel.getBoundingClientRect();
+            return {
+                shown: panel.panelShown,
+                left: Math.round(rect.left),
+                right: Math.round(rect.right),
+                viewportWidth: window.innerWidth,
+                hideDisplay: getComputedStyle(document.getElementById('id-control-hide')).display,
+                showDisplay: getComputedStyle(document.getElementById('id-control-show')).display
+            };
+        });
+
+        await page.evaluate(() => toggle_panel('id-readme', 1));
+        await page.waitForTimeout(1100);
+        await page.locator('#id-readme-hide').click();
+        await page.waitForTimeout(1100);
+        panelToggle.readme.hidden = await page.evaluate(() => {
+            const panel = document.getElementById('id-readme');
+            const panelRect = panel.getBoundingClientRect();
+            const show = document.getElementById('id-readme-show');
+            const showRect = show.getBoundingClientRect();
+            return {
+                shown: panel.panelShown,
+                panelRight: Math.round(panelRect.right),
+                hideDisplay: getComputedStyle(document.getElementById('id-readme-hide')).display,
+                showDisplay: getComputedStyle(show).display,
+                showVisible: showRect.left >= 0 && showRect.right <= window.innerWidth
+            };
+        });
+        await page.locator('#id-readme-show').click();
+        await page.waitForTimeout(1100);
+        panelToggle.readme.shown = await page.evaluate(() => {
+            const panel = document.getElementById('id-readme');
+            const rect = panel.getBoundingClientRect();
+            return {
+                shown: panel.panelShown,
+                left: Math.round(rect.left),
+                right: Math.round(rect.right),
+                viewportWidth: window.innerWidth,
+                hideDisplay: getComputedStyle(document.getElementById('id-readme-hide')).display,
+                showDisplay: getComputedStyle(document.getElementById('id-readme-show')).display
+            };
+        });
+
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.waitForTimeout(650);
+        await page.evaluate(() => {
+            const mobile = ext_mobile_info();
+            mobile_scale_control_panel(mobile, true);
+        });
+        await page.locator('#id-control-hide').click();
+        await page.waitForTimeout(1100);
+        panelToggle.phone.hidden = await page.evaluate(() => {
+            const panel = document.getElementById('id-control');
+            const panelRect = panel.getBoundingClientRect();
+            const show = document.getElementById('id-control-show');
+            const showRect = show.getBoundingClientRect();
+            return {
+                shown: panel.panelShown,
+                panelLeft: Math.round(panelRect.left),
+                viewportWidth: window.innerWidth,
+                hideDisplay: getComputedStyle(document.getElementById('id-control-hide')).display,
+                showDisplay: getComputedStyle(show).display,
+                showVisible: showRect.left >= 0 && showRect.right <= window.innerWidth
+            };
+        });
+        await page.locator('#id-control-show').click();
+        await page.waitForTimeout(1100);
+        panelToggle.phone.shown = await page.evaluate(() => {
+            const panel = document.getElementById('id-control');
+            const rect = panel.getBoundingClientRect();
+            return {
+                shown: panel.panelShown,
+                left: Math.round(rect.left),
+                right: Math.round(rect.right),
+                viewportWidth: window.innerWidth,
+                hideDisplay: getComputedStyle(document.getElementById('id-control-hide')).display,
+                showDisplay: getComputedStyle(document.getElementById('id-control-show')).display,
+                scaled: panel.panel_isScaled,
+                transform: panel.style.transform
+            };
+        });
         await page.setViewportSize({ width: 1440, height: 1000 });
 
         const adminPage = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
@@ -461,10 +594,16 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 adm.snd_rate = 2;
                 airband_adc_clock_status();
                 const forced = w3_el('id-airband-adc-clock-status').textContent;
+                const forcedDisabled = w3_el('id-airband-adc-clock').disabled;
+                const forcedValue = +w3_el('id-airband-adc-clock').value;
 
                 adm.airband_adc_clock = 1;
                 airband_adc_clock_status();
                 const advanced = w3_el('id-airband-adc-clock-status').textContent;
+
+                adm.snd_rate = 1;
+                airband_adc_clock_status();
+                const restoredEnabled = !w3_el('id-airband-adc-clock').disabled;
 
                 adm.snd_rate = 2;
                 adm.airband_adc_clock = 1;
@@ -486,7 +625,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     ],
                     preferred,
                     forced,
+                    forcedDisabled,
+                    forcedValue,
                     advanced,
+                    restoredEnabled,
                     staleFirstIgnored,
                     disabled
                 };
@@ -512,6 +654,15 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             title: document.querySelector('.ui-admin-titlebar h1')?.textContent,
             themeParent: document.querySelector('.ui-theme-picker')?.parentElement?.id,
             themePosition: getComputedStyle(document.querySelector('.ui-theme-picker')).position,
+            restartNotice: (() => {
+                const status = document.querySelector('.id-restart .ui-status');
+                const heading = status?.querySelector('h5');
+                return {
+                    danger: status?.classList.contains('ui-status-danger'),
+                    fontSize: heading? parseFloat(getComputedStyle(heading).fontSize) : 0,
+                    text: heading?.textContent
+                };
+            })(),
             keyboardNavigation: (() => {
                 const before = document.querySelector('.ui-admin-nav [aria-selected="true"]');
                 before?.focus();
@@ -531,6 +682,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
 
         if (!uiFoundation.selectPresent ||
             uiFoundation.storedTheme !== 'midnight' ||
+            uiFoundation.receiverThemeParent !== 'id-rf-theme-actions' ||
             JSON.stringify(uiFoundation.themes) !== JSON.stringify([
                 { theme: 'midnight', accent: '#58a6ff', mutedContrast: 6.84 },
                 { theme: 'ember', accent: '#e58a3a', mutedContrast: 6.3 }
@@ -546,6 +698,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.panelToggle.tabIndex !== 0 ||
             uiFoundation.panelToggle.label !== 'Hide panel' ||
             uiFoundation.typography.panel < 14 ||
+            uiFoundation.typography.stationName > 12 ||
             uiFoundation.typography.rf < 14 ||
             uiFoundation.typography.wf < 14 ||
             uiFoundation.typography.audio < 14 ||
@@ -565,6 +718,11 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             extensionFocus.displayed ||
             extensionFocus.panelVisible !== 'hidden')
             throw new Error(`invalid extension focus handling: ${JSON.stringify(extensionFocus)}`);
+        if (uiFoundation.extensionOutput.background === 'rgb(230, 230, 230)' ||
+            uiFoundation.extensionOutput.background === 'rgb(255, 255, 255)' ||
+            uiFoundation.extensionOutput.color === 'rgb(0, 0, 0)' ||
+            uiFoundation.extensionOutput.fontSize < 13)
+            throw new Error(`invalid extension output theme: ${JSON.stringify(uiFoundation.extensionOutput)}`);
         for (const layout of receiverResponsive) {
             if (!layout.modern || layout.theme !== 'midnight' ||
                 layout.documentOverflow ||
@@ -575,6 +733,32 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 layout.waterfall.width <= 0 || layout.waterfall.width > layout.viewport[0] + 2)
                 throw new Error(`invalid responsive receiver layout: ${JSON.stringify(layout)}`);
         }
+        const invalidPanelToggle = state =>
+            state.hidden.shown ||
+            state.hidden.panelLeft < state.hidden.viewportWidth - 10 ||
+            state.hidden.hideDisplay !== 'none' ||
+            state.hidden.showDisplay === 'none' ||
+            !state.hidden.showVisible ||
+            !state.shown.shown ||
+            state.shown.left < -12 ||
+            state.shown.right > state.shown.viewportWidth + 1 ||
+            state.shown.hideDisplay === 'none' ||
+            state.shown.showDisplay !== 'none';
+        if (invalidPanelToggle(panelToggle.desktop) ||
+            invalidPanelToggle(panelToggle.phone) ||
+            panelToggle.readme.hidden.shown ||
+            panelToggle.readme.hidden.panelRight > 10 ||
+            panelToggle.readme.hidden.hideDisplay !== 'none' ||
+            panelToggle.readme.hidden.showDisplay === 'none' ||
+            !panelToggle.readme.hidden.showVisible ||
+            !panelToggle.readme.shown.shown ||
+            panelToggle.readme.shown.left < 0 ||
+            panelToggle.readme.shown.right > panelToggle.readme.shown.viewportWidth + 1 ||
+            panelToggle.readme.shown.hideDisplay === 'none' ||
+            panelToggle.readme.shown.showDisplay !== 'none' ||
+            !panelToggle.phone.shown.scaled ||
+            !panelToggle.phone.shown.transform.startsWith('scale('))
+            throw new Error(`invalid control panel toggle: ${JSON.stringify(panelToggle)}`);
         if (!adminFoundation.shell ||
             adminFoundation.nav !== 'tablist' ||
             adminFoundation.pages < 10 ||
@@ -582,6 +766,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminFoundation.theme !== 'midnight' ||
             adminFoundation.themeParent !== 'id-admin-theme-actions' ||
             adminFoundation.themePosition !== 'static' ||
+            !adminFoundation.restartNotice.danger ||
+            adminFoundation.restartNotice.fontSize < 14 ||
+            adminFoundation.restartNotice.text !== 'Restart required for changes to take effect' ||
             !adminFoundation.keyboardNavigation.before ||
             adminFoundation.keyboardNavigation.before === adminFoundation.keyboardNavigation.after ||
             adminFoundation.keyboardNavigation.after !== adminFoundation.keyboardNavigation.focused)
@@ -595,7 +782,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         const dxRows = state.dxLabelRows;
         if (new Set(dxRows.rows.slice(0, 3)).size !== 3 ||
             dxRows.rows[3] !== dxRows.rows[0] ||
-            dxRows.rows[2] + dxRows.labelHeight > 70)
+            dxRows.rows[2] + dxRows.labelHeight > 70 ||
+            dxRows.labelFontSize > 10)
             throw new Error(`invalid three-row DX label layout: ${JSON.stringify(dxRows)}`);
         if (dxRows.eibiRows.join(',') !== '5,45,5')
             throw new Error(`EiBi DX label layout changed: ${dxRows.eibiRows}`);
@@ -617,7 +805,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !airbandClockAdmin.preferred.includes('98.304-147.456 MHz') ||
             !airbandClockAdmin.preferred.includes('Best rejection') ||
             !airbandClockAdmin.forced.includes('36 kHz audio requires') ||
+            !airbandClockAdmin.forcedDisabled ||
+            airbandClockAdmin.forcedValue !== 1 ||
             !airbandClockAdmin.advanced.includes('108-110.592 MHz is unavailable') ||
+            !airbandClockAdmin.restoredEnabled ||
             !airbandClockAdmin.staleFirstIgnored ||
             !airbandClockAdmin.disabled)
             throw new Error(`invalid airband clock admin UI: ${JSON.stringify(airbandClockAdmin)}`);
@@ -634,7 +825,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             throw new Error(errors.join('\n'));
 
         console.log(JSON.stringify({
-            ...state, uiFoundation, extensionFocus, receiverResponsive, adminFoundation, adminResponsive
+            ...state, uiFoundation, extensionFocus, receiverResponsive, panelToggle,
+            adminFoundation, adminResponsive
         }));
     } finally {
         await browser.close();

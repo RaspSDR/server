@@ -894,6 +894,11 @@ html, body
 	cursor: pointer;
 }
 
+.class-vis-button.class-vis-show
+{
+	display: none;
+}
+
 .class-panel-inner
 {
     position: relative;

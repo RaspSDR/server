@@ -439,9 +439,9 @@
 .ui-modern #id-rx-title {
    color: var(--ui-text);
    font-family: var(--ui-font);
-   font-size: 13px;
+   font-size: 12px;
    font-weight: 780;
-   letter-spacing: 0.02em;
+   letter-spacing: 0.01em;
 }
 
 .ui-modern #id-rx-desc,
@@ -575,6 +575,17 @@
    font-size: var(--ui-panel-label-size, var(--ui-font-size-label));
 }
 
+.ui-modern .ui-rf-theme-actions {
+   display: flex;
+   justify-content: flex-end;
+   margin: 6px 6px 4px 0;
+}
+
+.ui-modern .ui-rf-theme-actions .ui-theme-picker {
+   box-shadow: none;
+   backdrop-filter: none;
+}
+
 .ui-modern #id-select-band,
 .ui-modern #id-select-ext {
    min-height: var(--ui-panel-control-height, var(--ui-control-height));
@@ -627,6 +638,8 @@
 .ui-modern .cl-dx-label {
    border-color: var(--ui-border-strong);
    border-radius: 6px !important;
+   padding: 2px 3px;
+   font-size: 10px;
    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.26);
 }
 
@@ -712,7 +725,8 @@
 
 .ui-modern .ui-admin-notice h5 {
    margin: 0;
-   font-size: 12px;
+   font-size: 14px;
+   font-weight: 800;
 }
 
 .ui-modern .ui-admin-page {
@@ -762,6 +776,21 @@
    font-size: var(--ui-font-size-control);
    line-height: 1.45;
    scrollbar-color: var(--ui-border-strong) transparent;
+}
+
+.ui-modern .ui-extension-content .w3-text-output,
+.ui-modern #id-ext-data-container .w3-text-output {
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-surface) !important;
+   color: var(--ui-text) !important;
+   font-size: 13px !important;
+   scrollbar-color: var(--ui-border-strong) transparent;
+}
+
+.ui-modern .ui-extension-content .w3-text-output-striped pre:nth-child(even),
+.ui-modern #id-ext-data-container .w3-text-output-striped pre:nth-child(even) {
+   background: var(--ui-surface-2) !important;
 }
 
 .ui-modern #id-ext-controls-help {
@@ -870,7 +899,7 @@
    }
 
    .ui-modern #id-control {
-      right: 0 !important;
+      right: 0;
    }
 
    .ui-modern #id-optbar-content {

@@ -567,6 +567,7 @@ function toggle_panel(panel, set)
 	
 	// undo scaling before hide
 	if (panel == 'id-control' && divPanel.panel_isScaled == true && divPanel.panelShown) {
+	   divPanel.panel_restoreScale = true;
 	   mobile_scale_control_panel(null, false);
 	   //canvas_log('TogScale=>F'+ divPanel.style.left +':'+ divPanel.style.right);
 	   //canvas_log(divPanel.style.marginLeft +':'+ divPanel.style.marginRight);
@@ -589,8 +590,9 @@ function toggle_panel(panel, set)
 
 	// redo scaling after show
 	// (NB: divPanel.panelShown instead of !divPanel.panelShown due to ^= 1 above
-	if (panel == 'id-control' && divPanel.panel_isScaled == true && divPanel.panelShown) {
-	   mobile_scale_control_panel(null, true);
+	if (panel == 'id-control' && divPanel.panel_restoreScale == true && divPanel.panelShown) {
+	   mobile_scale_control_panel(ext_mobile_info(), true);
+	   divPanel.panel_restoreScale = false;
 	   //canvas_log('TogScale=>T'+ divPanel.style.left +':'+ divPanel.style.right);
 	   //canvas_log(divPanel.style.marginLeft +':'+ divPanel.style.marginRight);
 	}
@@ -10304,8 +10306,10 @@ function panels_setup()
          w3_slider('id-rf-attn w3-wheel', '', '', kiwi.rf_attn, -31.5, 0, 0.5, 'rf_attn_cb'), 60,
          w3_div('id-field-rf-attn class-slider'), 19
       ) +
+      w3_div('ui-rf-theme-actions||id="id-rf-theme-actions"') +
       w3_hr('|border-color:grey; margin:4px 6px 4px 0') +
       w3_div('id-optbar-rf-container');
+   modern_ui_mount('id-rf-theme-actions');
 
    // wf
 	w3_el("id-optbar-wf").innerHTML =

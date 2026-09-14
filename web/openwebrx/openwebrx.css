@@ -884,6 +884,16 @@ html, body
 	text-shadow: none;
 }
 
+.class-vis-button
+{
+	display: block;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+}
+
 .class-panel-inner
 {
     position: relative;

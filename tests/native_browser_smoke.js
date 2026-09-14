@@ -301,7 +301,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     panels: document.querySelectorAll('.class-panel').length
                 },
                 panelToggle: {
-                    role: document.getElementById('id-control-hide')?.getAttribute('role'),
+                    tagName: document.getElementById('id-control-hide')?.tagName,
                     tabIndex: document.getElementById('id-control-hide')?.tabIndex,
                     label: document.getElementById('id-control-hide')?.getAttribute('aria-label')
                 }
@@ -311,15 +311,23 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             const close = document.getElementById('id-ext-controls-close');
             const expected = extint.return_focus?.id;
             const closeSemantics = {
-                role: close?.getAttribute('role'),
+                tagName: close?.tagName,
                 tabIndex: close?.tabIndex,
                 focused: document.activeElement === close
             };
-            extint_panel_hide();
-            const restored = document.activeElement?.id;
-            document.getElementById('id-test-focus-return')?.remove();
-            return { closeSemantics, expected, restored };
+            return { closeSemantics, expected };
         });
+        await page.locator('#id-ext-controls-close').press('Enter');
+        await page.waitForTimeout(50);
+        Object.assign(extensionFocus, await page.evaluate(() => {
+            const state = {
+                restored: document.activeElement?.id,
+                displayed: extint.displayed,
+                panelVisible: getComputedStyle(document.getElementById('id-ext-controls')).visibility
+            };
+            document.getElementById('id-test-focus-return')?.remove();
+            return state;
+        }));
         const receiverResponsive = [];
         for (const viewport of [
             { width: 1440, height: 1000 },
@@ -437,15 +445,17 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.hooks.buttons < 1 ||
             uiFoundation.hooks.fields < 1 ||
             uiFoundation.hooks.panels < 4 ||
-            uiFoundation.panelToggle.role !== 'button' ||
+            uiFoundation.panelToggle.tagName !== 'BUTTON' ||
             uiFoundation.panelToggle.tabIndex !== 0 ||
             uiFoundation.panelToggle.label !== 'Hide panel')
             throw new Error(`invalid modern UI foundation: ${JSON.stringify(uiFoundation)}`);
-        if (extensionFocus.closeSemantics.role !== 'button' ||
+        if (extensionFocus.closeSemantics.tagName !== 'BUTTON' ||
             extensionFocus.closeSemantics.tabIndex !== 0 ||
             !extensionFocus.closeSemantics.focused ||
             !extensionFocus.expected ||
-            extensionFocus.restored !== extensionFocus.expected)
+            extensionFocus.restored !== extensionFocus.expected ||
+            extensionFocus.displayed ||
+            extensionFocus.panelVisible !== 'hidden')
             throw new Error(`invalid extension focus handling: ${JSON.stringify(extensionFocus)}`);
         for (const layout of receiverResponsive) {
             if (!layout.modern || layout.theme !== 'midnight' ||

@@ -4,8 +4,7 @@ var modern_ui = {
    storage_key: 'web888_ui_theme',
    themes: [
       { id:'midnight', label:'Midnight' },
-      { id:'ember', label:'Ember' },
-      { id:'daylight', label:'Daylight' }
+      { id:'ember', label:'Ember' }
    ]
 };
 

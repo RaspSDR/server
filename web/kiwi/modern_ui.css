@@ -58,28 +58,6 @@
    --ui-focus: #f0a563;
 }
 
-:root[data-ui-theme="daylight"] {
-   color-scheme: light;
-   --ui-bg: #f5f6f7;
-   --ui-bg-raised: #f8f9fa;
-   --ui-surface: #ffffff;
-   --ui-surface-2: #eef1f4;
-   --ui-surface-3: #e2e7ec;
-   --ui-border: #c5cdd5;
-   --ui-border-strong: #8d9aa6;
-   --ui-text: #1f2933;
-   --ui-text-soft: #465562;
-   --ui-text-muted: #5e6b78;
-   --ui-accent: #006c80;
-   --ui-accent-soft: rgba(0, 108, 128, 0.12);
-   --ui-success: #18794e;
-   --ui-warning: #805500;
-   --ui-danger: #b42318;
-   --ui-on-accent: #ffffff;
-   --ui-focus: #005f70;
-   --ui-shadow: 0 18px 48px rgba(31, 41, 51, 0.14);
-}
-
 .ui-modern,
 .ui-modern body {
    font-family: var(--ui-font);

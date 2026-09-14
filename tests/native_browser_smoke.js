@@ -316,7 +316,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 return (Math.max(first, second) + 0.05) /
                     (Math.min(first, second) + 0.05);
             };
-            for (const theme of ['midnight', 'ember', 'daylight']) {
+            for (const theme of ['midnight', 'ember']) {
                 select.value = theme;
                 select.dispatchEvent(new Event('change', { bubbles: true }));
                 const style = getComputedStyle(document.documentElement);
@@ -332,6 +332,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             select.dispatchEvent(new Event('change', { bubbles: true }));
             return {
                 selectPresent: !!select,
+                themeOptions: Array.from(select.options, option => option.value),
                 storedTheme: localStorage.getItem('web888_ui_theme'),
                 themes,
                 semanticShell: {
@@ -513,9 +514,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.storedTheme !== 'midnight' ||
             JSON.stringify(uiFoundation.themes) !== JSON.stringify([
                 { theme: 'midnight', accent: '#58a6ff', mutedContrast: 6.84 },
-                { theme: 'ember', accent: '#e58a3a', mutedContrast: 6.3 },
-                { theme: 'daylight', accent: '#006c80', mutedContrast: 5.45 }
+                { theme: 'ember', accent: '#e58a3a', mutedContrast: 6.3 }
             ]) ||
+            JSON.stringify(uiFoundation.themeOptions) !== JSON.stringify(['midnight', 'ember']) ||
             uiFoundation.semanticShell.header !== 'HEADER' ||
             uiFoundation.semanticShell.main !== 'MAIN' ||
             uiFoundation.semanticShell.panels !== 'ASIDE' ||

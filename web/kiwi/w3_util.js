@@ -1771,6 +1771,8 @@ function w3_click_nav(next_id, cb_next, cb_param)
 
 		   //console.log('w3_click_nav FOUND cur_id='+ cur_id);
 			w3_remove(el, 'w3int-cur-sel');
+			el.setAttribute('aria-selected', 'false');
+			el.setAttribute('tabindex', '-1');
 			w3_iterate_classList(el, function(s, i) {
 			   if (s.startsWith('id-nav-cb-'))
 			      cb_prev = s.substring(10);
@@ -1793,6 +1795,8 @@ function w3_click_nav(next_id, cb_next, cb_param)
    // make new nav item current and visible / focused
 	if (next_el) {
 		w3_add(next_el, 'w3int-cur-sel');
+		next_el.setAttribute('aria-selected', 'true');
+		next_el.setAttribute('tabindex', '0');
 	   w3_check_restart_reboot(next_el);
 	}
 
@@ -1814,10 +1818,11 @@ function w3int_anchor(psa, text, id, cb, isSelected)
    //console.log('w3int_anchor id='+ id +' cb='+ cb +' nav_cb='+ nav_cb);
 
 	// store id prefixed with 'id-nav-' so as not to collide with content container id prefixed with 'id-'
-	var attr = 'id="id-nav-'+ id +'" onclick="w3_click_nav('+ sq(id) +', '+ sq(cb) +')"';
+	var attr = 'id="id-nav-'+ id +'" role="tab" aria-selected="'+ (isSelected? 'true':'false') +'" ' +
+	   'tabindex="'+ (isSelected? '0':'-1') +'" onclick="w3_click_nav('+ sq(id) +', '+ sq(cb) +')"';
 	//console.log('w3int_anchor psa: '+ psa);
 	//console.log('w3int_anchor attr: '+ attr);
-   var p = w3_psa(psa, nav_cb + (isSelected? ' w3int-cur-sel':''), '', attr);
+   var p = w3_psa(psa, 'ui-tab '+ nav_cb + (isSelected? ' w3int-cur-sel':''), '', attr);
 //var p = w3_psa(psa, 'w3-show-inline '+ nav_cb + (isSelected? ' w3int-cur-sel':''), '', attr);
 	//console.log('w3int_anchor p: '+ p);
 	
@@ -1831,7 +1836,7 @@ function w3int_anchor(psa, text, id, cb, isSelected)
 
 function w3_navbar(psa)
 {
-   var p = w3_psa(psa, 'w3-navbar');
+   var p = w3_psa(psa, 'w3-navbar ui-tabs', '', 'role="tablist"');
 	var s = '<nav '+ p +'>';
 	var narg = arguments.length;
 		for (var i=1; i < narg; i++) {
@@ -1844,7 +1849,7 @@ function w3_navbar(psa)
 
 function w3_sidenav(psa)
 {
-   var p = w3_psa(psa, 'w3-sidenav w3-static w3-left w3-sidenav-full-height w3-light-grey');
+   var p = w3_psa(psa, 'w3-sidenav w3-static w3-left w3-sidenav-full-height w3-light-grey ui-sidenav');
 	var s = '<nav '+ p +'>';
 	var narg = arguments.length;
 		for (var i=1; i < narg; i++) {
@@ -1889,7 +1894,7 @@ function w3_label(psa, text, path, extension)
    
    var id = w3_add_id(path, '-label');    // so w3_set_label() can find label
 	//var inline = psa.includes('w3-label-inline');
-	var p = w3_psa(psa, id);
+	var p = w3_psa(psa, id +' ui-label');
 	var s = '<label '+ p +'>'+ text + extension +'</label>';
 	//var s = '<label '+ p +'>'+ text + extension + (inline? '':'<br>') +'</label>';
 	//console.log('LABEL: psa='+ psa +' text=<'+ text +'> s=<'+ s +'>');
@@ -2021,6 +2026,9 @@ function w3int_radio_click(ev, path, cb, cb_param)
 {
 	w3_radio_unhighlight(path);
 	w3_highlight(ev.currentTarget);
+	w3_iterate_classname(w3_add_id(path), function(el) {
+	   el.setAttribute('aria-checked', el == ev.currentTarget? 'true':'false');
+	});
 
 	var idx = -1;
 	w3_iterate_classname(w3_add_id(path), function(el, i) {
@@ -2045,7 +2053,7 @@ function w3_radio_btn(text, path, isSelected, save_cb, prop)
 	var prop = (arguments.length > 4)? arguments[4] : null;
 	var _class = ' id-'+ path + (isSelected? (' '+ w3_highlight_color) : '') + (prop? (' '+prop) : '');
 	var oc = 'onclick="w3int_radio_click(event, '+ sq(path) +', '+ sq(save_cb) +')"';
-	var s = '<button class="w3-btn w3-ext-btn'+ _class +'" '+ oc +'>'+ text +'</button>';
+	var s = '<button type="button" role="radio" class="w3-btn w3-ext-btn ui-button ui-radio'+ _class +'" '+ oc +'>'+ text +'</button>';
 	//console.log(s);
 	return s;
 }
@@ -2054,7 +2062,8 @@ function w3_radio_button(psa, text, path, isSelected, cb, cb_param)
 {
 	cb_param = cb_param || 0;
 	var onclick = cb? ('onclick="w3int_radio_click(event, '+ sq(path) +', '+ sq(cb) +', '+ sq(cb_param) +')"') : '';
-	var p = w3_psa(psa, w3_add_id(path) + (isSelected? (' '+ w3_highlight_color) : '') +' w3-btn w3-ext-btn', '', onclick);
+	var p = w3_psa(psa, w3_add_id(path) + (isSelected? (' '+ w3_highlight_color) : '') +' w3-btn w3-ext-btn ui-button ui-radio',
+	   '', 'type="button" role="radio" aria-checked="'+ (isSelected? 'true':'false') +'" '+ onclick);
 	var s = '<button '+ p +'>'+ text +'</button>';
 	//console.log(s);
 	return s;
@@ -2301,7 +2310,8 @@ function w3int_button(psa, path, text, cb, cb_param)
 	var noactive = psa.includes('w3-noactive')? ' class-button-noactive w3-ext-btn-noactive' : '';
    var psa3 = w3_psa3(psa);
    var psa_outer = w3_psa(psa3.left);
-	var psa_inner = w3_psa(psa3.right, path +' w3-btn w3-ext-btn'+ default_style + noactive, '', onclick);
+	var psa_inner = w3_psa(psa3.right, path +' w3-btn w3-ext-btn ui-button'+ default_style + noactive,
+	   '', 'type="button" '+ onclick);
    if (psa.includes('w3-dump')) {
       console.log('w3_button');
       console.log(psa3);
@@ -2631,9 +2641,9 @@ function w3_input(psa, label, path, val, cb, placeholder)
 
    var psa3 = w3_psa3(psa);
    if (dump) console.log(psa3);
-   var psa_outer = w3_psa(psa3.left, inline? 'w3-show-inline-new':'');
-   var psa_label = w3_psa_mix(psa3.middle, (label != '' && bold)? 'w3-bold':'');
-   var style = psa.includes('w3-no-styling')? '' : 'w3-input w3-border w3-hover-shadow';
+   var psa_outer = w3_psa(psa3.left, (inline? 'w3-show-inline-new ':'') +'ui-field');
+   var psa_label = w3_psa_mix(psa3.middle, ((label != '' && bold)? 'w3-bold ':'') +'ui-label');
+   var style = psa.includes('w3-no-styling')? '' : 'w3-input w3-border w3-hover-shadow ui-input';
 	var type = psa3.right.includes('type=')? '' : 'type="text"';
 	var psa_inner = w3_psa(psa3.right, w3_sb(id, style, label_spacing), '', w3_sb(type, phold));
 	if (dump) console.log('O:['+ psa_outer +'] L:['+ psa_label +'] I:['+ psa_inner +']');
@@ -2745,11 +2755,12 @@ function w3_textarea(psa, label, path, val, rows, cols, cb)
 	var val = val || '';
 	var bold = !psa.includes('w3-label-not-bold');
    var psa3 = w3_psa3(psa);
-   var psa_label = w3_psa_mix(psa3.middle, (label != '' && bold)? 'w3-bold':'');
-	var psa_inner = w3_psa(psa3.right, 'w3-input w3-border w3-hover-shadow '+ id + spacing, '', 'rows='+ dq(rows) +' cols='+ dq(cols));
+   var psa_label = w3_psa_mix(psa3.middle, ((label != '' && bold)? 'w3-bold ':'') +'ui-label');
+	var psa_inner = w3_psa(psa3.right, 'w3-input w3-border w3-hover-shadow ui-input ui-textarea '+ id + spacing,
+	   '', 'rows='+ dq(rows) +' cols='+ dq(cols));
 
 	var s =
-	   w3_div(psa3.left,
+	   w3_div(w3_psa_mix(psa3.left, 'ui-field'),
          w3_label(psa_label, label, path) +
 		   '<textarea '+ psa_inner + events +'>'+ val +'</textarea>'
 		);
@@ -2808,9 +2819,10 @@ function w3_checkbox(psa, label, path, checked, cb, cb_param)
 	var spacing = (label != '' && inline)? (left? ' w3-margin-L-8' : ' w3-margin-R-8') : '';
 
    var psa3 = w3_psa3(psa);
-   var psa_outer = w3_psa(psa3.left, inline? 'w3-show-inline-new':'');
-   var psa_label = w3_psa_mix(psa3.middle, (label != '' && bold)? 'w3-bold':'');
-	var psa_inner = w3_psa(psa3.right, 'w3-input w3-width-auto w3-border w3-pointer w3-hover-shadow '+ id + spacing, '', 'type="checkbox"');
+   var psa_outer = w3_psa(psa3.left, (inline? 'w3-show-inline-new ':'') +'ui-field ui-check');
+   var psa_label = w3_psa_mix(psa3.middle, ((label != '' && bold)? 'w3-bold ':'') +'ui-label');
+	var psa_inner = w3_psa(psa3.right,
+	   'w3-input w3-width-auto w3-border w3-pointer w3-hover-shadow ui-checkbox '+ id + spacing, '', 'type="checkbox"');
 
    var ls = w3_label(psa_label, label, path);
    var cs = '<input '+ psa_inner + checked_s + onchange +'>';
@@ -2897,9 +2909,9 @@ function w3int_select(psa, label, title, path, sel, opts_s, cb, cb_param)
 	var onchange = 'onchange="w3int_select_change(event, '+ sq(path) +', '+ sq(cb) +', '+ sq(cb_param) +')"';
 
    var psa3 = w3_psa3(psa);
-   var psa_outer = w3_psa(psa3.left, inline? 'w3-show-inline-new':'');
-   var psa_label = w3_psa_mix(psa3.middle, (label != '' && bold)? 'w3-bold':'');
-	var psa_inner = w3_psa(psa3.right, id +' w3-select-menu'+ spacing, '', onchange);
+   var psa_outer = w3_psa(psa3.left, (inline? 'w3-show-inline-new ':'') +'ui-field');
+   var psa_label = w3_psa_mix(psa3.middle, ((label != '' && bold)? 'w3-bold ':'') +'ui-label');
+	var psa_inner = w3_psa(psa3.right, id +' w3-select-menu ui-select'+ spacing, '', onchange);
 
 	var s =
 	   '<div '+ psa_outer +'>' +
@@ -3221,9 +3233,9 @@ function w3_slider(psa, label, path, val, min, max, step, cb, cb_param)
    }
 
    var psa3 = w3_psa3(psa);
-   var psa_outer = w3_psa(psa3.left, inline? 'w3-show-inline-new':'');
-   var psa_label = w3_psa_mix(psa3.middle, (label != '' && bold)? 'w3-bold':'');
-	var psa_inner = w3_psa(psa3.right, id + spacing, '', value +
+   var psa_outer = w3_psa(psa3.left, (inline? 'w3-show-inline-new ':'') +'ui-field ui-slider-field');
+   var psa_label = w3_psa_mix(psa3.middle, ((label != '' && bold)? 'w3-bold ':'') +'ui-label');
+	var psa_inner = w3_psa(psa3.right, id +' ui-slider'+ spacing, '', value +
       ' type="range" min='+ dq(min) +' max='+ dq(max) +' step='+ dq(step) + oc + os + ow);
 
 	var s = (label != '') ?
@@ -3287,7 +3299,7 @@ function w3_menu(psa, cb)
 
    var onclick = 'onclick="w3int_menu_onclick(event, '+ sq(id) +', '+ sq(cb) +')"' +
       ' oncontextmenu="w3int_menu_onclick(event, '+ sq(id) +', '+ sq(cb) +')"';
-	var p = w3_psa(psa, 'w3-menu w3-menu-container w3-round-large', '', onclick);
+	var p = w3_psa(psa, 'w3-menu w3-menu-container w3-round-large ui-menu', '', onclick);
    var s = '<div '+ p +'></div>';
    //console.log('w3_menu s='+ s);
    w3_el('id-w3-misc-container').innerHTML += s;

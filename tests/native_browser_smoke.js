@@ -10,6 +10,35 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const errors = [];
 
+    async function responsiveState(targetPage, viewport) {
+        await targetPage.setViewportSize(viewport);
+        await targetPage.waitForTimeout(150);
+        return targetPage.evaluate(() => {
+            const bounds = id => {
+                const el = document.getElementById(id);
+                if (!el)
+                    return null;
+                const rect = el.getBoundingClientRect();
+                return {
+                    left: Math.round(rect.left),
+                    right: Math.round(rect.right),
+                    width: Math.round(rect.width),
+                    height: Math.round(rect.height)
+                };
+            };
+            return {
+                viewport: [window.innerWidth, window.innerHeight],
+                documentOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
+                bodyOverflow: document.body.scrollWidth > window.innerWidth + 2,
+                theme: document.documentElement.dataset.uiTheme,
+                modern: document.documentElement.classList.contains('ui-modern'),
+                main: bounds('id-main-container'),
+                waterfall: bounds('id-waterfall-container'),
+                control: bounds('id-control')
+            };
+        });
+    }
+
     const geolocationFixture = {
         city: 'Test City',
         country_name: 'Test Country',
@@ -233,6 +262,46 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             })()
         }));
 
+        const uiFoundation = await page.evaluate(() => {
+            const select = document.getElementById('id-ui-theme-select');
+            const themes = [];
+            for (const theme of ['midnight', 'ember', 'daylight']) {
+                select.value = theme;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                themes.push({
+                    theme: document.documentElement.dataset.uiTheme,
+                    accent: getComputedStyle(document.documentElement)
+                        .getPropertyValue('--ui-accent').trim()
+                });
+            }
+            select.value = 'midnight';
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            return {
+                selectPresent: !!select,
+                storedTheme: localStorage.getItem('web888_ui_theme'),
+                themes,
+                semanticShell: {
+                    header: document.getElementById('id-top-container').tagName,
+                    main: document.getElementById('id-main-container').tagName,
+                    panels: document.getElementById('id-panels-container').tagName
+                },
+                hooks: {
+                    buttons: document.querySelectorAll('.ui-button').length,
+                    fields: document.querySelectorAll('.ui-field').length,
+                    panels: document.querySelectorAll('.class-panel').length
+                }
+            };
+        });
+        const receiverResponsive = [];
+        for (const viewport of [
+            { width: 1440, height: 1000 },
+            { width: 1024, height: 768 },
+            { width: 390, height: 844 },
+            { width: 844, height: 390 }
+        ])
+            receiverResponsive.push(await responsiveState(page, viewport));
+        await page.setViewportSize({ width: 1440, height: 1000 });
+
         const adminPage = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
         adminPage.on('console', message => {
             if (message.type() === 'error')
@@ -297,7 +366,54 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 airband_adc_clock_status();
             }
         });
+        const adminResponsive = [];
+        for (const viewport of [
+            { width: 1440, height: 1000 },
+            { width: 1024, height: 768 },
+            { width: 390, height: 844 }
+        ])
+            adminResponsive.push(await responsiveState(adminPage, viewport));
+        const adminFoundation = await adminPage.evaluate(() => ({
+            theme: document.documentElement.dataset.uiTheme,
+            shell: document.querySelector('.id-admin')?.classList.contains('ui-admin-shell'),
+            nav: document.querySelector('.ui-admin-nav')?.getAttribute('role'),
+            pages: document.querySelectorAll('.ui-admin-page[role="tabpanel"]').length,
+            title: document.querySelector('.ui-admin-titlebar h1')?.textContent
+        }));
         await adminPage.close();
+
+        if (!uiFoundation.selectPresent ||
+            uiFoundation.storedTheme !== 'midnight' ||
+            JSON.stringify(uiFoundation.themes) !== JSON.stringify([
+                { theme: 'midnight', accent: '#42d7e8' },
+                { theme: 'ember', accent: '#ffb454' },
+                { theme: 'daylight', accent: '#007f91' }
+            ]) ||
+            uiFoundation.semanticShell.header !== 'HEADER' ||
+            uiFoundation.semanticShell.main !== 'MAIN' ||
+            uiFoundation.semanticShell.panels !== 'ASIDE' ||
+            uiFoundation.hooks.buttons < 1 ||
+            uiFoundation.hooks.fields < 1 ||
+            uiFoundation.hooks.panels < 4)
+            throw new Error(`invalid modern UI foundation: ${JSON.stringify(uiFoundation)}`);
+        for (const layout of receiverResponsive) {
+            if (!layout.modern || layout.theme !== 'midnight' ||
+                layout.documentOverflow ||
+                !layout.main || !layout.waterfall ||
+                layout.waterfall.width <= 0 || layout.waterfall.width > layout.viewport[0] + 2)
+                throw new Error(`invalid responsive receiver layout: ${JSON.stringify(layout)}`);
+        }
+        if (!adminFoundation.shell ||
+            adminFoundation.nav !== 'tablist' ||
+            adminFoundation.pages < 10 ||
+            adminFoundation.title !== 'Administration' ||
+            adminFoundation.theme !== 'midnight')
+            throw new Error(`invalid modern admin foundation: ${JSON.stringify(adminFoundation)}`);
+        for (const layout of adminResponsive) {
+            if (!layout.modern || layout.theme !== 'midnight' ||
+                layout.documentOverflow)
+                throw new Error(`invalid responsive admin layout: ${JSON.stringify(layout)}`);
+        }
 
         const dxRows = state.dxLabelRows;
         if (new Set(dxRows.rows.slice(0, 3)).size !== 3 ||
@@ -340,7 +456,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         if (errors.length)
             throw new Error(errors.join('\n'));
 
-        console.log(JSON.stringify(state));
+        console.log(JSON.stringify({ ...state, uiFoundation, receiverResponsive, adminFoundation, adminResponsive }));
     } finally {
         await browser.close();
     }

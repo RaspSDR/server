@@ -92,3 +92,35 @@ Set `WEBSDR_HARNESS_PORT` to use a port other than 8073. The native harness
 does not start GPS, update, registration, LED, or other target-only services.
 DRM is excluded because its decoder processes depend on the target FDK-AAC
 runtime.
+
+## Modern web UI
+
+The browser UI uses a compatibility-first design system layered over the
+existing `w3_*` helpers. The implementation is intentionally framework-free so
+the receiver, admin interface, and extensions keep their existing callback,
+WebSocket, canvas, and embedded-asset behavior.
+
+- `web/kiwi/modern_ui.css` defines semantic design tokens and the shared
+  receiver, admin, extension, control, focus, and responsive styles.
+- `web/kiwi/modern_ui.js` applies and persists the selected color theme.
+- `web/kiwi/w3_util.js` emits stable `ui-*` component hooks while retaining the
+  legacy W3.CSS classes used by existing callers and external extensions.
+- `web/web.cpp` and `CMakeLists.txt` must both include any new UI asset so
+  development loading and release embedding stay consistent.
+
+The built-in themes are **Midnight** (default), **Ember**, and **Daylight**.
+They override semantic tokens through `data-ui-theme` on the document root.
+New themes should change tokens instead of adding theme-specific component
+markup. Spectrum and waterfall colormaps remain independent from the
+application theme.
+
+When changing the UI:
+
+1. Preserve existing element IDs, callback signatures, panel metadata, and
+   canvas sizing behavior.
+2. Prefer shared `ui-*` hooks or semantic tokens over page-specific color
+   overrides.
+3. Keep keyboard focus visible and respect `prefers-reduced-motion`.
+4. Run `npm run test:native-browser`. The smoke test checks all themes plus
+   desktop, tablet, phone portrait, and phone landscape receiver layouts, and
+   desktop/tablet/phone admin layouts.

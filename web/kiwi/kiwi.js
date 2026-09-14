@@ -2588,6 +2588,7 @@ function user_cb(obj)
 {
 	var id_prefix = kiwi.called_from_admin? 'id-admin-user-' : 'id-monitor-user-';
 	var host = kiwi_url_origin();
+	var active_users = 0;
 
 	obj.forEach(function(obj) {
 		//console.log(obj);
@@ -2628,6 +2629,7 @@ function user_cb(obj)
 			var id = kiwi_strip_tags(deco, '');
 			if (!kiwi.called_from_admin && id == '') id = '(no identity)';
 			if (id != '') id = '"'+ id + '"';
+			if (kiwi.called_from_admin) active_users++;
 			var g = (geoloc == '(null)' || geoloc == '')?
 			      (kiwi.called_from_admin? 'unknown location' : '')
 			   :
@@ -2721,6 +2723,12 @@ function user_cb(obj)
          kiwi.notify_seq = obj.ns;
       }
 	});
+
+	if (kiwi.called_from_admin) {
+	   var summary = w3_el('id-status-user-count');
+	   if (summary)
+	      summary.textContent = active_users +' of '+ rx_chans +' receiver channels active';
+	}
 	
 }
 

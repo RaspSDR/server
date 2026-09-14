@@ -652,6 +652,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             { width: 390, height: 844 }
         ])
             adminResponsive.push(await responsiveState(adminPage, viewport));
+        await adminPage.setViewportSize({ width: 1440, height: 1000 });
+        await adminPage.waitForFunction(() =>
+            document.getElementById('id-status-user-count')?.textContent.includes('receiver channels active'),
+            null, { timeout: 10000 });
         const adminFoundation = await adminPage.evaluate(() => ({
             theme: document.documentElement.dataset.uiTheme,
             shell: document.querySelector('.id-admin')?.classList.contains('ui-admin-shell'),
@@ -688,6 +692,22 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 };
             })()
         }));
+        const adminStatus = await adminPage.evaluate(() => {
+            const status = document.querySelector('.ui-admin-page.id-status[role="tabpanel"]');
+            const cards = Array.from(status?.querySelectorAll('.ui-admin-status-card') || []);
+            const grid = status?.querySelector('.ui-admin-status-grid');
+            const users = status?.querySelector('.ui-admin-status-users');
+            const gridTemplate = grid? getComputedStyle(grid).gridTemplateColumns : '';
+            return {
+                heading: status?.querySelector('.ui-admin-status-header h2')?.textContent,
+                cardTitles: cards.map(card => card.querySelector('h3')?.textContent),
+                gridTemplate,
+                twoColumnGrid: gridTemplate.startsWith('repeat(2,'),
+                userSummary: status?.querySelector('#id-status-user-count')?.textContent,
+                userRows: status?.querySelectorAll('.id-users-list > div').length || 0,
+                usersBorder: users? getComputedStyle(users).borderStyle : ''
+            };
+        });
         await adminPage.close();
 
         if (!uiFoundation.selectPresent ||
@@ -788,6 +808,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminFoundation.keyboardNavigation.before === adminFoundation.keyboardNavigation.after ||
             adminFoundation.keyboardNavigation.after !== adminFoundation.keyboardNavigation.focused)
             throw new Error(`invalid modern admin foundation: ${JSON.stringify(adminFoundation)}`);
+        if (adminStatus.heading !== 'System status' ||
+            !['Receiver', 'Signal & timing', 'Compute', 'Traffic', 'Nightly maintenance',
+                'Admin client', 'Realtime diagnostics'].every(title => adminStatus.cardTitles.includes(title)) ||
+            !adminStatus.twoColumnGrid ||
+            !adminStatus.userSummary?.includes('receiver channels active') ||
+            adminStatus.userRows < 1 ||
+            adminStatus.usersBorder === 'none')
+            throw new Error(`invalid modern admin status page: ${JSON.stringify(adminStatus)}`);
         for (const layout of adminResponsive) {
             if (!layout.modern || layout.theme !== 'midnight' ||
                 layout.documentOverflow || layout.themeControlOverlap)

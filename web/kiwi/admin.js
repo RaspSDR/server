@@ -35,58 +35,96 @@ var admin = {
 // status
 ////////////////////////////////
 
+function status_card(icon, title, description, content, classes)
+{
+   return '<section class="ui-admin-status-card '+ (classes || '') +'">' +
+      '<header class="ui-admin-status-card-header">' +
+         w3_icon('ui-admin-status-card-icon', icon, 18) +
+         '<div><h3>'+ title +'</h3><p>'+ description +'</p></div>' +
+      '</header>' +
+      '<div class="ui-admin-status-card-body">'+ content +'</div>' +
+   '</section>';
+}
+
 function status_html()
 {
    var s2 = admin_sdr_mode?
       (
-         w3_div('w3-container w3-section',
-            w3_text('w3-text-black',
-               'Your SDR <i>may</i> restart during the nightly update window for the following reasons. ' +
-               'The restart will not occur when there are active user connections. <br>' +
-               'But <b>will</b> occur if there are only "background" connections such as FT8/WSPR autorun, kiwirecorder (e.g. wsprdaemon) etc. <br>' +
-               'To prevent <i>any</i> restarts disable all of the restart sources listed below until all of the icons are grey in color.'
-            ),
-            w3_div('w3-container',
-               w3_inline('', w3_icon('id-rst-comm',  'fa-square', 16, 'grey'), w3_text('w3-margin-left w3-text-black', 'DX tab: Automatically download community database')),
-               w3_inline('', w3_icon('id-rst-swupd', 'fa-square', 16, 'grey'), w3_text('w3-margin-left w3-text-black', 'Update tab: Automatically install software updates')),
-               w3_inline('', w3_icon('id-rst-ipbl',  'fa-square', 16, 'grey'), w3_text('w3-margin-left w3-text-black', 'Network tab: Automatically download IP blacklist'))
-            )
-         ) +
-         '<hr>'
+         status_card('fa-clock-o', 'Nightly maintenance', 'What can restart the receiver automatically',
+            '<p class="ui-admin-status-copy">During the nightly update window, maintenance may restart the server when no interactive users are connected. ' +
+               'Background sessions such as FT8/WSPR autorun and kiwirecorder do not prevent a restart.</p>' +
+            '<div class="ui-admin-status-policy">' +
+               w3_inline('', w3_icon('id-rst-comm',  'fa-square', 16, 'grey'), w3_text('', 'Community DX database download')) +
+               w3_inline('', w3_icon('id-rst-swupd', 'fa-square', 16, 'grey'), w3_text('', 'Automatic software installation')) +
+               w3_inline('', w3_icon('id-rst-ipbl',  'fa-square', 16, 'grey'), w3_text('', 'IP blacklist download')) +
+            '</div>' +
+            '<p class="ui-admin-status-note">A colored indicator means that restart source is enabled. Disable all three to prevent automatic maintenance restarts.</p>',
+            'ui-admin-status-card-wide'
+         )
       ) : '';
 
    var s3 = admin_sdr_mode?
-		(
-         w3_div('id-msg-errors w3-container') + 
-         w3_div('w3-container w3-section',
-            w3_inline('',
-               w3_div('', 'Realtime response histograms:'),
-               w3_button('w3-padding-smaller w3-aqua|margin-left:10px', 'Reset', 'status_dpump_hist_reset_cb')
-            ),
-            w3_div('w3-container',
-               w3_div('id-status-dp-hist'),
-               w3_div('id-status-in-hist')
-            )
-         ) +
-         '<hr>'
+      (
+         status_card('fa-area-chart', 'Realtime diagnostics', 'Low-level stream health for troubleshooting',
+            w3_div('id-msg-errors ui-admin-status-diagnostic') +
+            '<div class="ui-admin-status-diagnostic-toolbar">' +
+               '<span>Response histograms</span>' +
+               w3_button('w3-aqua', 'Reset', 'status_dpump_hist_reset_cb') +
+            '</div>' +
+            w3_div('id-status-dp-hist ui-admin-status-diagnostic') +
+            w3_div('id-status-in-hist ui-admin-status-diagnostic'),
+            'ui-admin-status-card-wide ui-admin-status-card-advanced'
+         )
       ) : '';
-   
+
+   var receiver_card = status_card('fa-microchip', 'Receiver', 'Build, hardware identity and uptime',
+      w3_div('id-msg-config ui-admin-status-primary') +
+      w3_div('id-msg-debian ui-admin-status-secondary'),
+      ''
+   );
+
+   var health_card = status_card('fa-heartbeat', 'Signal & timing', 'RF environment and GPS discipline',
+      w3_div('id-msg-gps ui-admin-status-row') +
+      w3_div('id-msg-snr ui-admin-status-row'),
+      ''
+   );
+
+   var cpu_card = status_card('fa-tachometer', 'Compute', 'Processor load, temperature and clock',
+      w3_div('id-msg-stats-cpu ui-admin-status-primary'),
+      ''
+   );
+
+   var network_card = status_card('fa-exchange', 'Traffic', 'Current aggregate server throughput',
+      w3_div('id-msg-stats-xfer ui-admin-status-primary'),
+      ''
+   );
+
+   var client_card = status_card('fa-desktop', 'Admin client', 'Browser used for this management session',
+      w3_div('ui-admin-status-client', navigator.userAgent),
+      'ui-admin-status-card-wide ui-admin-status-card-muted'
+   );
+
 	var s =
       w3_div('id-status w3-hide',
-         '<hr>' +
-         w3_div('id-problems w3-container') +
-         w3_div('id-msg-config w3-container') +
-         w3_div('id-msg-debian w3-container') +
-         w3_div('id-msg-gps w3-container') +
-         w3_div('id-msg-snr w3-container') +
-         w3_div('w3-container', 'Browser: '+ navigator.userAgent) +
-         '<hr>' +
-         w3_div('id-msg-stats-cpu w3-container') +
-         w3_div('id-msg-stats-xfer w3-container') +
-         '<hr>' +
-         w3_div('id-users-list w3-container') +
-         '<hr>' +
-         s2 + s3
+         '<header class="ui-admin-status-header">' +
+            '<div><span>LIVE OPERATIONS</span><h2>System status</h2></div>' +
+            '<p>Receiver health, resource use and connected sessions update automatically.</p>' +
+         '</header>' +
+         w3_div('id-problems ui-admin-status-alerts') +
+         w3_div('ui-admin-status-grid',
+            receiver_card +
+            health_card +
+            cpu_card +
+            network_card
+         ) +
+         '<section class="ui-admin-status-users">' +
+            '<header><div><span>RECEIVER ACCESS</span><h2>Active sessions</h2></div>' +
+               '<strong id="id-status-user-count">Waiting for channel data</strong></header>' +
+            w3_div('id-users-list ui-admin-status-user-list') +
+         '</section>' +
+         '<div class="ui-admin-status-grid ui-admin-status-secondary-grid">' +
+            s2 + client_card + s3 +
+         '</div>'
       );
    
 	return s;

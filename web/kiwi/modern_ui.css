@@ -772,6 +772,217 @@
    box-shadow: none !important;
 }
 
+.ui-modern .ui-admin-status-header,
+.ui-modern .ui-admin-status-users > header {
+   display: flex;
+   justify-content: space-between;
+   align-items: end;
+   gap: var(--ui-space-4);
+}
+
+.ui-modern .ui-admin-status-header {
+   margin-bottom: var(--ui-space-4);
+}
+
+.ui-modern .ui-admin-status-header span,
+.ui-modern .ui-admin-status-users header span {
+   color: var(--ui-accent);
+   font-size: 10px;
+   font-weight: 800;
+   letter-spacing: 0.16em;
+}
+
+.ui-modern .ui-admin-status-header h2,
+.ui-modern .ui-admin-status-users h2 {
+   margin: 2px 0 0;
+   color: var(--ui-text);
+   font-size: 22px;
+   line-height: 1.15;
+}
+
+.ui-modern .ui-admin-status-header p {
+   max-width: 520px;
+   margin: 0;
+   color: var(--ui-text-muted);
+   text-align: right;
+}
+
+.ui-modern .ui-admin-status-alerts:empty {
+   display: none;
+}
+
+.ui-modern .ui-admin-status-alerts:not(:empty) {
+   margin-bottom: var(--ui-space-4);
+   padding: var(--ui-space-3);
+   border: 1px solid color-mix(in srgb, var(--ui-danger) 48%, var(--ui-border));
+   border-radius: var(--ui-radius);
+   background: color-mix(in srgb, var(--ui-danger) 10%, var(--ui-surface));
+   color: var(--ui-danger);
+}
+
+.ui-modern .ui-admin-status-grid {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-status-card,
+.ui-modern .ui-admin-status-users {
+   min-width: 0;
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius);
+   background: var(--ui-surface);
+}
+
+.ui-modern .ui-admin-status-card {
+   padding: var(--ui-space-4);
+}
+
+.ui-modern .ui-admin-status-card-wide {
+   grid-column: 1 / -1;
+}
+
+.ui-modern .ui-admin-status-card-header {
+   display: flex;
+   align-items: flex-start;
+   gap: var(--ui-space-3);
+   margin-bottom: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-status-card-icon {
+   display: grid;
+   flex: 0 0 36px;
+   width: 36px;
+   height: 36px;
+   place-items: center;
+   border-radius: 9px;
+   background: var(--ui-accent-soft);
+   color: var(--ui-accent);
+}
+
+.ui-modern .ui-admin-status-card h3 {
+   margin: 0;
+   color: var(--ui-text);
+   font-size: 15px;
+}
+
+.ui-modern .ui-admin-status-card-header p {
+   margin: 2px 0 0;
+   color: var(--ui-text-muted);
+   font-size: var(--ui-font-size-meta);
+}
+
+.ui-modern .ui-admin-status-card-body {
+   color: var(--ui-text-soft);
+   line-height: 1.55;
+}
+
+.ui-modern .ui-admin-status-primary {
+   color: var(--ui-text);
+   font-weight: 650;
+}
+
+.ui-modern .ui-admin-status-secondary,
+.ui-modern .ui-admin-status-row + .ui-admin-status-row {
+   margin-top: var(--ui-space-2);
+   color: var(--ui-text-muted);
+}
+
+.ui-modern .ui-admin-status-users {
+   margin: var(--ui-space-3) 0;
+   padding: var(--ui-space-4);
+}
+
+.ui-modern .ui-admin-status-users header {
+   align-items: center;
+   padding-bottom: var(--ui-space-3);
+   border-bottom: 1px solid var(--ui-border);
+}
+
+.ui-modern .ui-admin-status-users h2 {
+   font-size: 18px;
+}
+
+.ui-modern .ui-admin-status-users header strong {
+   color: var(--ui-success);
+   font-size: var(--ui-font-size-label);
+}
+
+.ui-modern .ui-admin-status-user-list {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: var(--ui-space-2);
+   padding-top: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-status-user-list > div {
+   min-width: 0;
+   padding: var(--ui-space-2) var(--ui-space-3);
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-bg-raised);
+}
+
+.ui-modern .ui-admin-status-user-list > div > div:nth-child(2) {
+   min-width: 0;
+   overflow-wrap: anywhere;
+}
+
+.ui-modern .ui-admin-status-secondary-grid {
+   grid-template-columns: minmax(0, 1fr);
+}
+
+.ui-modern .ui-admin-status-card-muted {
+   background: var(--ui-bg-raised);
+}
+
+.ui-modern .ui-admin-status-client,
+.ui-modern .ui-admin-status-diagnostic {
+   overflow-wrap: anywhere;
+   font-family: var(--ui-mono);
+   font-size: 12px;
+}
+
+.ui-modern .ui-admin-status-copy {
+   margin: 0 0 var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-status-policy {
+   display: grid;
+   grid-template-columns: repeat(3, minmax(0, 1fr));
+   gap: var(--ui-space-2);
+}
+
+.ui-modern .ui-admin-status-policy > div {
+   display: flex !important;
+   align-items: center;
+   gap: var(--ui-space-2);
+   padding: var(--ui-space-2) var(--ui-space-3);
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-bg-raised);
+}
+
+.ui-modern .ui-admin-status-note {
+   margin: var(--ui-space-3) 0 0;
+   color: var(--ui-text-muted);
+   font-size: var(--ui-font-size-meta);
+}
+
+.ui-modern .ui-admin-status-card-advanced {
+   border-style: dashed;
+}
+
+.ui-modern .ui-admin-status-diagnostic-toolbar {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   gap: var(--ui-space-3);
+   margin: var(--ui-space-3) 0 var(--ui-space-2);
+   color: var(--ui-text);
+   font-weight: 700;
+}
+
 .ui-modern .ui-extension-panel {
    border-color: color-mix(in srgb, var(--ui-accent) 28%, var(--ui-border));
 }
@@ -953,6 +1164,32 @@
       width: 100% !important;
       padding-right: 0 !important;
       padding-left: 0 !important;
+   }
+
+   .ui-modern .ui-admin-status-header,
+   .ui-modern .ui-admin-status-users > header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: var(--ui-space-2);
+   }
+
+   .ui-modern .ui-admin-status-header p {
+      text-align: left;
+   }
+
+   .ui-modern .ui-admin-status-grid,
+   .ui-modern .ui-admin-status-user-list,
+   .ui-modern .ui-admin-status-policy {
+      grid-template-columns: minmax(0, 1fr);
+   }
+
+   .ui-modern .ui-admin-status-card-wide {
+      grid-column: auto;
+   }
+
+   .ui-modern .ui-admin-status-card,
+   .ui-modern .ui-admin-status-users {
+      padding: var(--ui-space-3);
    }
 
    .ui-modern .ui-extension-panel {

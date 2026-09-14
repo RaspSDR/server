@@ -64,7 +64,7 @@ This file is part of OpenWebRX.
 
         <div class="id-kiwi-container" data-type="kiwi">
 
-            <div id="id-top-container">
+            <header id="id-top-container" class="ui-receiver-header">
                 <div id="id-top-photo-clip">
                     <div id="id-top-photo-spacer"></div>
                     <div id="id-top-photo">
@@ -98,9 +98,9 @@ This file is part of OpenWebRX.
                         <a id="id-rx-details-arrow-down" onclick="toggle_rx_photo();"><img src="gfx/openwebrx-bottom-arrow-hide.png" height="12" width="43" /></a>
                     </div>
                 </div>
-            </div>
+            </header>
 
-            <div id="id-main-container">
+            <main id="id-main-container" class="ui-receiver-stage">
 
                 <div id="id-non-waterfall-container">
                     <div id="id-ext-data-container">
@@ -134,7 +134,7 @@ This file is part of OpenWebRX.
                     <!-- add scaled canvas here by javascript -->
                 </div>
     
-                <div id="id-panels-container">
+                <aside id="id-panels-container" aria-label="Receiver panels">
                     <div id="id-news" class="class-panel" data-panel-name="news" data-panel-pos="right" data-panel-order="1" data-panel-size="495,60">
                         <div id="id-news-inner" class="class-panel-inner"></div>
                         <div id="id-news-vis" class="class-vis"></div>
@@ -156,10 +156,10 @@ This file is part of OpenWebRX.
                         <div id="id-msgs-vis" class="class-vis"></div>
                     </div>
                     -->
-                </div>
+                </aside>
 
                 <div class="id-w3-misc-container"></div>
-            </div>
+            </main>
         </div>
 	</body>
 </html>

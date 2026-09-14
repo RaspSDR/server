@@ -1818,7 +1818,7 @@ function w3int_anchor(psa, text, id, cb, isSelected)
    //console.log('w3int_anchor id='+ id +' cb='+ cb +' nav_cb='+ nav_cb);
 
 	// store id prefixed with 'id-nav-' so as not to collide with content container id prefixed with 'id-'
-	var attr = 'id="id-nav-'+ id +'" role="tab" aria-selected="'+ (isSelected? 'true':'false') +'" ' +
+	var attr = 'id="id-nav-'+ id +'" role="tab" aria-controls="id-'+ id +'" aria-selected="'+ (isSelected? 'true':'false') +'" ' +
 	   'tabindex="'+ (isSelected? '0':'-1') +'" onclick="w3_click_nav('+ sq(id) +', '+ sq(cb) +')"';
 	//console.log('w3int_anchor psa: '+ psa);
 	//console.log('w3int_anchor attr: '+ attr);

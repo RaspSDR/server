@@ -793,7 +793,8 @@ function ext_render_menus(ctx, ext_name, ctx_name)
 function ext_panel_init()
 {
    w3_el('id-panels-container').innerHTML +=
-      '<div id="id-ext-controls" class="class-panel" data-panel-name="ext-controls" data-panel-pos="bottom-left" data-panel-order="0" ' +
+      '<div id="id-ext-controls" class="class-panel ui-extension-panel" role="region" aria-label="Extension controls" ' +
+      'data-panel-name="ext-controls" data-panel-pos="bottom-left" data-panel-order="0" ' +
       'data-panel-size="'+ extint.default_w +','+ extint.default_h +'"></div>';
 
 	var el = w3_el('id-ext-data-container');
@@ -803,7 +804,7 @@ function ext_panel_init()
 
 	el = w3_el('id-ext-controls');
 	el.innerHTML =
-		w3_div('id-ext-controls-container w3-relative|width:100%;height:100%;') +
+		w3_div('id-ext-controls-container ui-extension-content w3-relative|width:100%;height:100%;') +
 		w3_div('id-ext-controls-vis class-vis') +
 		w3_div('id-ext-controls-help cl-ext-help',
 		   w3_button('id-ext-controls-help-btn w3-green w3-small w3-padding-small w3-disabled||onclick="extint_help_click()"', 'help')
@@ -868,6 +869,7 @@ function extint_panel_show(controls_html, data_html, show_func, hide_func, show_
    }
    
    var ext_name = extint.current_ext_name;
+   w3_el('id-ext-controls').setAttribute('aria-label', ext_name +' extension controls');
    el = w3_el('id-optbar-rf-container');
    if (extint.use_rf_tab.includes(ext_name)) {
       console.log('extint_panel_show: rf optbar '+ ext_name);

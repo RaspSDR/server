@@ -2880,37 +2880,38 @@ function admin_draw(sdr_mode)
 
 	ael.innerHTML =
 		w3_div('id-admin-header-container',
-			'<header class="w3-container w3-teal"><h5>Admin interface</h5></header>' +
-			w3_navbar('w3-border w3-light-grey', s) +
+			'<header class="ui-admin-titlebar"><div><span>WEB-888</span><h1>Administration</h1></div>' +
+			   '<div class="ui-admin-titlebar-status">Receiver configuration</div></header>' +
+			w3_navbar('ui-admin-nav', s) +
 	
-			w3_divs('id-confirm w3-hide/w3-valign',
-				'<header class="id-confirm-msg w3-show-inline-block w3-container w3-red"></header>' +
+			w3_divs('id-confirm w3-hide ui-admin-notice/w3-valign',
+				'<header class="id-confirm-msg w3-show-inline-block ui-status ui-status-danger"></header>' +
 				w3_div('w3-show-inline-block', w3_button('w3-green w3-margin-L-16', 'Confirm', 'control_confirm_cb')) +
 				w3_div('w3-show-inline-block', w3_button('w3-yellow w3-margin-L-16', 'Cancel', 'control_confirm_cancel_cb'))
 			) +
 			
-			w3_divs('id-restart w3-hide/w3-valign',
-				'<header class="w3-show-inline-block w3-container w3-red"><h5>Restart required for changes to take effect</h5></header>' +
+			w3_divs('id-restart w3-hide ui-admin-notice/w3-valign',
+				'<header class="w3-show-inline-block ui-status ui-status-warning"><h5>Restart required for changes to take effect</h5></header>' +
 				w3_div('w3-show-inline-block', w3_button('w3-green w3-margin-L-16', 'Web-888 server restart', 'admin_restart_now_cb')) +
 				w3_div('w3-show-inline-block', w3_button('w3-yellow w3-margin-L-16', 'Cancel', 'admin_restart_cancel_cb'))
 			) +
 			
-			w3_divs('id-reboot w3-hide/w3-valign',
-				'<header class="w3-show-inline-block w3-container w3-red"><h5>Reboot required for changes to take effect</h5></header>' +
+			w3_divs('id-reboot w3-hide ui-admin-notice/w3-valign',
+				'<header class="w3-show-inline-block ui-status ui-status-danger"><h5>Reboot required for changes to take effect</h5></header>' +
 				w3_div('w3-show-inline-block', w3_button('w3-green w3-margin-L-16', 'Web-888 reboot', 'admin_reboot_now_cb')) +
 				w3_div('w3-show-inline-block', w3_button('w3-yellow w3-margin-L-16', 'Cancel', 'admin_reboot_cancel_cb'))
 			) +
 			
-			w3_div('id-build-restart w3-valign w3-hide',
-				'<header class="w3-container w3-blue"><h5>Server will restart after build</h5></header>'
+			w3_div('id-build-restart w3-valign w3-hide ui-admin-notice',
+				'<header class="ui-status ui-status-warning"><h5>Server will restart after build</h5></header>'
 			) +
 
-			w3_div('id-build-reboot w3-valign w3-hide',
-				'<header class="w3-container w3-red"><h5>Web-888 will reboot after build</h5></header>'
+			w3_div('id-build-reboot w3-valign w3-hide ui-admin-notice',
+				'<header class="ui-status ui-status-danger"><h5>Web-888 will reboot after build</h5></header>'
 			) +
 
-			w3_div('id-admin-closed w3-valign w3-hide',
-				'<header class="w3-container w3-red"><h5>Warning: Admin connection closed</h5></header>'
+			w3_div('id-admin-closed w3-valign w3-hide ui-admin-notice',
+				'<header class="ui-status ui-status-danger"><h5>Warning: Admin connection closed</h5></header>'
 			)
 		);
 	
@@ -2941,6 +2942,17 @@ function admin_draw(sdr_mode)
 		security_html();
 
 	ael.innerHTML += s;
+	ael.classList.add('ui-admin-shell');
+	[
+	   'status', 'control', 'connect', 'config', 'webpage', 'sdr_hu', 'dx',
+	   'update', 'network', 'gps', 'log', 'console', 'extensions', 'security'
+	].forEach(function(id) {
+	   var section = w3_el(id);
+	   if (!section) return;
+	   section.classList.add('ui-admin-page');
+	   section.setAttribute('role', 'tabpanel');
+	   section.setAttribute('aria-labelledby', 'id-nav-'+ id);
+	});
 	log_setup();
 	stats_init();
 

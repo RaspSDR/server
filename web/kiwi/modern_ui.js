@@ -16,10 +16,7 @@ function modern_ui_theme_valid(theme)
 
 function modern_ui_stored_theme()
 {
-   var theme = null;
-   try {
-      theme = window.localStorage? localStorage.getItem(modern_ui.storage_key) : null;
-   } catch (ex) {}
+   var theme = kiwi_storeGet(modern_ui.storage_key, 'midnight');
    return modern_ui_theme_valid(theme)? theme : 'midnight';
 }
 
@@ -30,11 +27,7 @@ function modern_ui_set_theme(theme, persist)
    document.documentElement.classList.add('ui-modern');
    if (document.body) document.body.classList.add('ui-modern');
 
-   if (persist != false) {
-      try {
-         if (window.localStorage) localStorage.setItem(modern_ui.storage_key, theme);
-      } catch (ex) {}
-   }
+   if (persist != false) kiwi_storeSet(modern_ui.storage_key, theme);
 
    var select = document.getElementById('id-ui-theme-select');
    if (select && select.value != theme) select.value = theme;

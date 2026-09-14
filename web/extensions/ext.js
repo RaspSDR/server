@@ -869,6 +869,7 @@ function extint_panel_show(controls_html, data_html, show_func, hide_func, show_
    }
    
    var ext_name = extint.current_ext_name;
+   extint.return_focus = document.activeElement;
    w3_el('id-ext-controls').setAttribute('aria-label', ext_name +' extension controls');
    el = w3_el('id-optbar-rf-container');
    if (extint.use_rf_tab.includes(ext_name)) {
@@ -904,6 +905,8 @@ function extint_panel_show(controls_html, data_html, show_func, hide_func, show_
 	//el.style.top = px((extint.using_data_container? spec.height_spectrum_canvas : owrx.height_top_bar_parts) +157+10);
 	w3_visible(el, true);
 	el.panelShown = 1;
+	var close = w3_el('id-ext-controls-close');
+	if (close) close.focus();
    toggle_or_set_hide_panels(0);    // cancel panel hide mode
 
 	
@@ -957,6 +960,9 @@ function extint_panel_hide(skip_calling_hide_spec)
 
    extint.displayed = false;     // NB: must occur before freqset_select() below so closed_ext_input_still_holding_focus logic works
    freqset_select();
+   if (extint.return_focus && document.contains(extint.return_focus))
+      extint.return_focus.focus();
+   extint.return_focus = null;
 }
 
 function extint_help_click_now()

@@ -491,12 +491,17 @@ function init_panel_toggle(type, panel, scrollable, timeo, color)
 		var hide = rightSide? 'right':'left';
 		var show = rightSide? 'left':'right';
 		divVis.innerHTML =
-			'<a id="'+panel+'-hide" onclick="toggle_panel('+ sq(panel) +');"><img src="icons/hide'+ hide +'.24.png" width="24" height="24" /></a>' +
-			'<a id="'+panel+'-show" class="class-vis-show" onclick="toggle_panel('+ sq(panel) +');"><img src="icons/hide'+ show +'.24.png" width="24" height="24" /></a>';
+			'<a id="'+panel+'-hide" role="button" tabindex="0" aria-label="Hide panel" ' +
+			   'onclick="toggle_panel('+ sq(panel) +');" onkeydown="panel_toggle_keydown(event, '+ sq(panel) +');">' +
+			   '<img src="icons/hide'+ hide +'.24.png" alt="" width="24" height="24" /></a>' +
+			'<a id="'+panel+'-show" class="class-vis-show" role="button" tabindex="0" aria-label="Show panel" ' +
+			   'onclick="toggle_panel('+ sq(panel) +');" onkeydown="panel_toggle_keydown(event, '+ sq(panel) +');">' +
+			   '<img src="icons/hide'+ show +'.24.png" alt="" width="24" height="24" /></a>';
 	} else {		// ptype.POPUP or ptype:HIDE
 		divVis.innerHTML =
-			'<a id="'+panel+'-close" onclick="toggle_panel('+ sq(panel) +');">' +
-			   '<img id='+ dq(panel +'-close-img') +' src="icons/close.24.png" width="24" height="24" />' +
+			'<a id="'+panel+'-close" role="button" tabindex="0" aria-label="Close panel" ' +
+			   'onclick="toggle_panel('+ sq(panel) +');" onkeydown="panel_toggle_keydown(event, '+ sq(panel) +');">' +
+			   '<img id='+ dq(panel +'-close-img') +' src="icons/close.24.png" alt="" width="24" height="24" />' +
 			'</a>';
 	}
 
@@ -530,6 +535,13 @@ function init_panel_toggle(type, panel, scrollable, timeo, color)
 	}
 	
 	divPanel.init = true;
+}
+
+function panel_toggle_keydown(ev, panel)
+{
+   if (ev.key != 'Enter' && ev.key != ' ') return;
+   ev.preventDefault();
+   toggle_panel(panel);
 }
 
 function toggle_panel(panel, set)

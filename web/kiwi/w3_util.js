@@ -1819,7 +1819,8 @@ function w3int_anchor(psa, text, id, cb, isSelected)
 
 	// store id prefixed with 'id-nav-' so as not to collide with content container id prefixed with 'id-'
 	var attr = 'id="id-nav-'+ id +'" role="tab" aria-controls="id-'+ id +'" aria-selected="'+ (isSelected? 'true':'false') +'" ' +
-	   'tabindex="'+ (isSelected? '0':'-1') +'" onclick="w3_click_nav('+ sq(id) +', '+ sq(cb) +')"';
+	   'tabindex="'+ (isSelected? '0':'-1') +'" onclick="w3_click_nav('+ sq(id) +', '+ sq(cb) +')" ' +
+	   'onkeydown="w3int_nav_keydown(event)"';
 	//console.log('w3int_anchor psa: '+ psa);
 	//console.log('w3int_anchor attr: '+ attr);
    var p = w3_psa(psa, 'ui-tab '+ nav_cb + (isSelected? ' w3int-cur-sel':''), '', attr);
@@ -1832,6 +1833,26 @@ function w3int_anchor(psa, text, id, cb, isSelected)
 //var s = w3_div(p, text);
 	//console.log('w3int_anchor: '+ s);
 	return s;
+}
+
+function w3int_nav_keydown(ev)
+{
+   var delta = 0;
+   if (ev.key == 'ArrowRight' || ev.key == 'ArrowDown') delta = 1;
+   if (ev.key == 'ArrowLeft' || ev.key == 'ArrowUp') delta = -1;
+   if (!delta && ev.key != 'Home' && ev.key != 'End') return;
+
+   var nav = ev.currentTarget.parentNode;
+   if (!nav) return;
+   var tabs = nav.querySelectorAll('[role="tab"]');
+   if (!tabs.length) return;
+
+   var current = Array.prototype.indexOf.call(tabs, ev.currentTarget);
+   var next = (ev.key == 'Home')? 0 :
+      ((ev.key == 'End')? tabs.length - 1 : (current + delta + tabs.length) % tabs.length);
+   ev.preventDefault();
+   tabs[next].focus();
+   tabs[next].click();
 }
 
 function w3_navbar(psa)

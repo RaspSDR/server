@@ -110,9 +110,10 @@ WebSocket, canvas, and embedded-asset behavior.
 
 The built-in themes are **Midnight** (default), **Ember**, and **Daylight**.
 They override semantic tokens through `data-ui-theme` on the document root.
-New themes should change tokens instead of adding theme-specific component
-markup. Spectrum and waterfall colormaps remain independent from the
-application theme.
+Each uses neutral surfaces, one primary accent, and semantic status colors
+instead of the legacy per-control rainbow palette. New themes should change
+tokens instead of adding theme-specific component markup. Spectrum and
+waterfall colormaps remain independent from the application theme.
 
 When changing the UI:
 

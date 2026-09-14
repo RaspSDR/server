@@ -2881,7 +2881,10 @@ function admin_draw(sdr_mode)
 	ael.innerHTML =
 		w3_div('id-admin-header-container',
 			'<header class="ui-admin-titlebar"><div><span>WEB-888</span><h1>Administration</h1></div>' +
-			   '<div class="ui-admin-titlebar-status">Receiver configuration</div></header>' +
+			   '<div class="ui-admin-titlebar-actions">' +
+			      '<div class="ui-admin-titlebar-status">Receiver configuration</div>' +
+			      '<div id="id-admin-theme-actions"></div>' +
+			   '</div></header>' +
 			w3_navbar('ui-admin-nav', s) +
 	
 			w3_divs('id-confirm w3-hide ui-admin-notice/w3-valign',
@@ -2914,6 +2917,7 @@ function admin_draw(sdr_mode)
 				'<header class="ui-status ui-status-danger"><h5>Warning: Admin connection closed</h5></header>'
 			)
 		);
+	modern_ui_mount('id-admin-theme-actions');
 	
 	if (sdr_mode)
 	   s = status_html();

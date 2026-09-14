@@ -3789,11 +3789,20 @@ function mobile_scale_control_panel(mobile, doScale)
 
       // scale control panel up or down to fit width of all narrow screens
       var scale = mobile.width / el.uiWidth * 0.95;
+      var type_scale = Math.min(1.3, Math.max(1, 1 / scale));
+      el.style.setProperty('--ui-panel-font-size', (14 * type_scale).toFixed(2) +'px');
+      el.style.setProperty('--ui-panel-label-size', (13 * type_scale).toFixed(2) +'px');
+      el.style.setProperty('--ui-panel-small-size', (12 * type_scale).toFixed(2) +'px');
+      el.style.setProperty('--ui-panel-control-height', (38 * type_scale).toFixed(2) +'px');
       el.style.transform = 'scale('+ scale.toFixed(2) +')';
       el.style.transformOrigin = 'bottom right';
       owrx.rescale_cnt2++;
       //canvas_log2(mobile.width +':'+ mobile.height +' SCALE '+ scale.toFixed(2) +' '+ el.clientWidth +':'+ el.clientHeight);
    } else {
+      el.style.removeProperty('--ui-panel-font-size');
+      el.style.removeProperty('--ui-panel-label-size');
+      el.style.removeProperty('--ui-panel-small-size');
+      el.style.removeProperty('--ui-panel-control-height');
       el.style.transform = 'none';
       //canvas_log2(mobile.width +':'+ mobile.height +' NORM '+ el.clientWidth +':'+ el.clientHeight);
    }
@@ -10236,41 +10245,19 @@ function panels_setup()
 
 
    // optbar
-   var optbar_colors = [
-      'w3-green',
-      'w3-pink',
-      'w3-blue',
-      'w3-purple',
-      'w3-aqua',
-      'w3-yellow',
-      //'w3-grey-white',
-      'w3-black',
-      
-      // future use:
-      'w3-red',
-      'w3-amber',
-      'w3-green',
-      'w3-orange',
-      'w3-lime',
-      'w3-indigo',
-      'w3-brown',
-      'w3-teal'
-   ];
-	var ci = 0;
-	
 	//var psa1 = ' w3-center|width:15.2%';
 	var psa1 = ' w3-center|width:12.8%';
 	var psa2 = psa1 + ';margin-right:6px';
 	w3_el('id-optbar').innerHTML =
       w3_navbar('cl-optbar',
          // will call optbar_focus() optbar_blur() when navbar clicked
-         w3_navdef(optbar_colors[ci++] + psa2, 'RF', 'optbar-rf', 'optbar'),
-         w3_nav(optbar_colors[ci++] + psa2, 'WF', 'optbar-wf', 'optbar'),
-         w3_nav(optbar_colors[ci++] + psa2, 'Audio', 'optbar-audio', 'optbar'),
-         w3_nav(optbar_colors[ci++] + psa2, 'AGC', 'optbar-agc', 'optbar'),
-         w3_nav(optbar_colors[ci++] + psa2, 'User', 'optbar-users', 'optbar'),
-         w3_nav(optbar_colors[ci++] + psa2, 'Stat', 'optbar-status', 'optbar'),
-         w3_nav(optbar_colors[ci++] + psa1, 'Off', 'optbar-off', 'optbar')
+         w3_navdef(psa2, 'RF', 'optbar-rf', 'optbar'),
+         w3_nav(psa2, 'WF', 'optbar-wf', 'optbar'),
+         w3_nav(psa2, 'AUD', 'optbar-audio', 'optbar'),
+         w3_nav(psa2, 'AGC', 'optbar-agc', 'optbar'),
+         w3_nav(psa2, 'User', 'optbar-users', 'optbar'),
+         w3_nav(psa2, 'Stat', 'optbar-status', 'optbar'),
+         w3_nav(psa1, 'Off', 'optbar-off', 'optbar')
       );
 
 

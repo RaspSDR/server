@@ -39,10 +39,16 @@ function modern_ui_theme_cb(value)
    modern_ui_set_theme(value, true);
 }
 
-function modern_ui_mount()
+function modern_ui_mount(target_id)
 {
-   var mount = document.querySelector('[data-ui-theme-mount]');
-   if (!mount || document.getElementById('id-ui-theme-select')) return;
+   var mount = target_id? document.getElementById(target_id) : document.querySelector('[data-ui-theme-mount]');
+   if (!mount) return;
+
+   var picker = document.querySelector('.ui-theme-picker');
+   if (picker) {
+      mount.appendChild(picker);
+      return;
+   }
 
    var options = '';
    modern_ui.themes.forEach(function(theme) {
@@ -58,4 +64,4 @@ function modern_ui_mount()
 }
 
 modern_ui_set_theme(modern_ui_stored_theme(), false);
-document.addEventListener('DOMContentLoaded', modern_ui_mount);
+document.addEventListener('DOMContentLoaded', function() { modern_ui_mount(); });

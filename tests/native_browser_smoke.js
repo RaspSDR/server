@@ -26,6 +26,24 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     height: Math.round(rect.height)
                 };
             };
+            const rect = element => {
+                if (!element)
+                    return null;
+                const box = element.getBoundingClientRect();
+                return {
+                    left: Math.round(box.left),
+                    top: Math.round(box.top),
+                    right: Math.round(box.right),
+                    bottom: Math.round(box.bottom),
+                    width: Math.round(box.width),
+                    height: Math.round(box.height)
+                };
+            };
+            const overlaps = (a, b) => !!a && !!b &&
+                a.left < b.right && a.right > b.left &&
+                a.top < b.bottom && a.bottom > b.top;
+            const themePicker = rect(document.querySelector('.ui-theme-picker'));
+            const control = rect(document.getElementById('id-control'));
             return {
                 viewport: [window.innerWidth, window.innerHeight],
                 documentOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
@@ -34,7 +52,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 modern: document.documentElement.classList.contains('ui-modern'),
                 main: bounds('id-main-container'),
                 waterfall: bounds('id-waterfall-container'),
-                control: bounds('id-control')
+                control: bounds('id-control'),
+                themePicker,
+                themeControlOverlap: overlaps(themePicker, control)
             };
         });
     }
@@ -119,6 +139,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 el.textContent.includes('Kp 2.0 - 3.0') &&
                 el.textContent.includes('-4.0 nT');
         }, null, { timeout: 30000 });
+        await page.waitForFunction(() =>
+            document.activeElement?.id === 'id-ext-controls-close',
+            null, { timeout: 30000 });
 
         const state = await page.evaluate(() => ({
             title: document.title,
@@ -275,13 +298,34 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         const uiFoundation = await page.evaluate(() => {
             const select = document.getElementById('id-ui-theme-select');
             const themes = [];
+            const rgb = hex => {
+                const value = hex.replace('#', '');
+                return [0, 2, 4].map(offset => parseInt(value.slice(offset, offset + 2), 16));
+            };
+            const luminance = color => {
+                const values = rgb(color).map(value => {
+                    const channel = value / 255;
+                    return channel <= 0.03928 ? channel / 12.92 :
+                        Math.pow((channel + 0.055) / 1.055, 2.4);
+                });
+                return values[0] * 0.2126 + values[1] * 0.7152 + values[2] * 0.0722;
+            };
+            const contrast = (a, b) => {
+                const first = luminance(a);
+                const second = luminance(b);
+                return (Math.max(first, second) + 0.05) /
+                    (Math.min(first, second) + 0.05);
+            };
             for (const theme of ['midnight', 'ember', 'daylight']) {
                 select.value = theme;
                 select.dispatchEvent(new Event('change', { bubbles: true }));
+                const style = getComputedStyle(document.documentElement);
+                const muted = style.getPropertyValue('--ui-text-muted').trim();
+                const surface = style.getPropertyValue('--ui-surface').trim();
                 themes.push({
                     theme: document.documentElement.dataset.uiTheme,
-                    accent: getComputedStyle(document.documentElement)
-                        .getPropertyValue('--ui-accent').trim()
+                    accent: style.getPropertyValue('--ui-accent').trim(),
+                    mutedContrast: Number(contrast(muted, surface).toFixed(2))
                 });
             }
             select.value = 'midnight';
@@ -304,7 +348,38 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     tagName: document.getElementById('id-control-hide')?.tagName,
                     tabIndex: document.getElementById('id-control-hide')?.tabIndex,
                     label: document.getElementById('id-control-hide')?.getAttribute('aria-label')
-                }
+                },
+                typography: {
+                    panel: parseFloat(getComputedStyle(document.getElementById('id-control')).fontSize),
+                    rf: parseFloat(getComputedStyle(document.getElementById('id-nav-optbar-rf')).fontSize),
+                    wf: parseFloat(getComputedStyle(document.getElementById('id-nav-optbar-wf')).fontSize),
+                    audio: parseFloat(getComputedStyle(document.getElementById('id-nav-optbar-audio')).fontSize),
+                    agc: parseFloat(getComputedStyle(document.getElementById('id-nav-optbar-agc')).fontSize),
+                    select: parseFloat(getComputedStyle(document.getElementById('id-select-band')).fontSize),
+                    selectColor: getComputedStyle(document.getElementById('id-select-band')).color,
+                    selectBackground: getComputedStyle(document.getElementById('id-select-band')).backgroundColor
+                },
+                tabPalette: (() => {
+                    const tabs = ['rf', 'wf', 'audio', 'agc', 'users', 'status', 'off']
+                        .map(id => document.getElementById(`id-nav-optbar-${id}`))
+                        .filter(Boolean);
+                    const selected = tabs.find(tab => tab.classList.contains('w3int-cur-sel'));
+                    const sample = selected || tabs[0];
+                    const inactive = tabs.filter(tab => tab !== selected);
+                    const inactiveBackgrounds = Array.from(new Set(inactive.map(tab =>
+                        getComputedStyle(tab).backgroundColor)));
+                    if (!selected) sample.classList.add('w3int-cur-sel');
+                    const selectedBackground = getComputedStyle(sample).backgroundColor;
+                    if (!selected) sample.classList.remove('w3int-cur-sel');
+                    return {
+                        labels: tabs.map(tab => tab.textContent),
+                        legacyColorClasses: tabs.filter(tab =>
+                            Array.from(tab.classList).some(name =>
+                                /^w3-(green|pink|blue|purple|aqua|yellow|black)$/.test(name))).length,
+                        inactiveBackgrounds,
+                        selectedBackground
+                    };
+                })()
             };
         });
         const extensionFocus = await page.evaluate(() => {
@@ -415,6 +490,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             nav: document.querySelector('.ui-admin-nav')?.getAttribute('role'),
             pages: document.querySelectorAll('.ui-admin-page[role="tabpanel"]').length,
             title: document.querySelector('.ui-admin-titlebar h1')?.textContent,
+            themeParent: document.querySelector('.ui-theme-picker')?.parentElement?.id,
+            themePosition: getComputedStyle(document.querySelector('.ui-theme-picker')).position,
             keyboardNavigation: (() => {
                 const before = document.querySelector('.ui-admin-nav [aria-selected="true"]');
                 before?.focus();
@@ -435,9 +512,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         if (!uiFoundation.selectPresent ||
             uiFoundation.storedTheme !== 'midnight' ||
             JSON.stringify(uiFoundation.themes) !== JSON.stringify([
-                { theme: 'midnight', accent: '#42d7e8' },
-                { theme: 'ember', accent: '#ffb454' },
-                { theme: 'daylight', accent: '#007f91' }
+                { theme: 'midnight', accent: '#58a6ff', mutedContrast: 6.84 },
+                { theme: 'ember', accent: '#e58a3a', mutedContrast: 6.3 },
+                { theme: 'daylight', accent: '#006c80', mutedContrast: 5.45 }
             ]) ||
             uiFoundation.semanticShell.header !== 'HEADER' ||
             uiFoundation.semanticShell.main !== 'MAIN' ||
@@ -447,7 +524,18 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.hooks.panels < 4 ||
             uiFoundation.panelToggle.tagName !== 'BUTTON' ||
             uiFoundation.panelToggle.tabIndex !== 0 ||
-            uiFoundation.panelToggle.label !== 'Hide panel')
+            uiFoundation.panelToggle.label !== 'Hide panel' ||
+            uiFoundation.typography.panel < 14 ||
+            uiFoundation.typography.rf < 14 ||
+            uiFoundation.typography.wf < 14 ||
+            uiFoundation.typography.audio < 14 ||
+            uiFoundation.typography.agc < 14 ||
+            uiFoundation.typography.select < 14 ||
+            uiFoundation.typography.selectBackground === 'rgb(255, 255, 255)' ||
+            uiFoundation.tabPalette.labels[2] !== 'AUD' ||
+            uiFoundation.tabPalette.legacyColorClasses ||
+            uiFoundation.tabPalette.inactiveBackgrounds.length !== 1 ||
+            uiFoundation.tabPalette.selectedBackground === uiFoundation.tabPalette.inactiveBackgrounds[0])
             throw new Error(`invalid modern UI foundation: ${JSON.stringify(uiFoundation)}`);
         if (extensionFocus.closeSemantics.tagName !== 'BUTTON' ||
             extensionFocus.closeSemantics.tabIndex !== 0 ||
@@ -460,6 +548,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         for (const layout of receiverResponsive) {
             if (!layout.modern || layout.theme !== 'midnight' ||
                 layout.documentOverflow ||
+                layout.themeControlOverlap ||
                 !layout.main || !layout.waterfall ||
                 layout.waterfall.width <= 0 || layout.waterfall.width > layout.viewport[0] + 2)
                 throw new Error(`invalid responsive receiver layout: ${JSON.stringify(layout)}`);
@@ -469,13 +558,15 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminFoundation.pages < 10 ||
             adminFoundation.title !== 'Administration' ||
             adminFoundation.theme !== 'midnight' ||
+            adminFoundation.themeParent !== 'id-admin-theme-actions' ||
+            adminFoundation.themePosition !== 'static' ||
             !adminFoundation.keyboardNavigation.before ||
             adminFoundation.keyboardNavigation.before === adminFoundation.keyboardNavigation.after ||
             adminFoundation.keyboardNavigation.after !== adminFoundation.keyboardNavigation.focused)
             throw new Error(`invalid modern admin foundation: ${JSON.stringify(adminFoundation)}`);
         for (const layout of adminResponsive) {
             if (!layout.modern || layout.theme !== 'midnight' ||
-                layout.documentOverflow)
+                layout.documentOverflow || layout.themeControlOverlap)
                 throw new Error(`invalid responsive admin layout: ${JSON.stringify(layout)}`);
         }
 

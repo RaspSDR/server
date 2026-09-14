@@ -285,9 +285,11 @@ function airband_adc_clock_status()
    var el = w3_el('id-airband-adc-clock');
    if (!el) return;
 
-   w3_disable(el, !adm.airband);
    var requested = isNumber(adm.airband_adc_clock)? +adm.airband_adc_clock : 0;
    var effective = airband_adc_clock_effective(requested, +adm.snd_rate);
+   var forced = (+adm.snd_rate == 2);
+   el.value = effective;
+   w3_disable(el, !adm.airband || forced);
    var s;
    if (!adm.airband) {
       s = 'Used only in Air Band mode.';
@@ -2894,7 +2896,7 @@ function admin_draw(sdr_mode)
 			) +
 			
 			w3_divs('id-restart w3-hide ui-admin-notice/w3-valign',
-				'<header class="w3-show-inline-block ui-status ui-status-warning"><h5>Restart required for changes to take effect</h5></header>' +
+				'<header class="w3-show-inline-block ui-status ui-status-danger"><h5>Restart required for changes to take effect</h5></header>' +
 				w3_div('w3-show-inline-block', w3_button('w3-green w3-margin-L-16', 'Web-888 server restart', 'admin_restart_now_cb')) +
 				w3_div('w3-show-inline-block', w3_button('w3-yellow w3-margin-L-16', 'Cancel', 'admin_restart_cancel_cb'))
 			) +

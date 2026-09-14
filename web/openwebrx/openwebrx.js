@@ -3773,7 +3773,7 @@ function mobile_init()
          toggle_panel('id-control', 1);   // always show control panel on orientation change
       }
 
-      var doScale = (mobile.narrow && !mobile_laptop_test);
+      var doScale = ((mobile.narrow || mobile.height < el.offsetHeight) && !mobile_laptop_test);
       mobile_scale_control_panel(mobile, doScale);
 	}, 500);
 }
@@ -3787,13 +3787,16 @@ function mobile_scale_control_panel(mobile, doScale)
    if (doScale) {
       el.style.right = '0px';
 
-      // scale control panel up or down to fit width of all narrow screens
-      var scale = mobile.width / el.uiWidth * 0.95;
+      // Keep the entire panel visible on narrow screens and short landscape viewports.
+      var width_scale = mobile.width / el.uiWidth * 0.95;
+      var height_scale = mobile.height / el.offsetHeight * 0.96;
+      var scale = Math.min(1, width_scale, height_scale);
       var type_scale = Math.min(1.3, Math.max(1, 1 / scale));
       el.style.setProperty('--ui-panel-font-size', (14 * type_scale).toFixed(2) +'px');
       el.style.setProperty('--ui-panel-label-size', (13 * type_scale).toFixed(2) +'px');
       el.style.setProperty('--ui-panel-small-size', (12 * type_scale).toFixed(2) +'px');
       el.style.setProperty('--ui-panel-control-height', (38 * type_scale).toFixed(2) +'px');
+      scale = Math.min(scale, mobile.height / el.offsetHeight * 0.96);
       el.style.transform = 'scale('+ scale.toFixed(2) +')';
       el.style.transformOrigin = 'bottom right';
       owrx.rescale_cnt2++;

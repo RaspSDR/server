@@ -12,7 +12,18 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
 
     async function responsiveState(targetPage, viewport) {
         await targetPage.setViewportSize(viewport);
-        await targetPage.waitForTimeout(150);
+        await targetPage.waitForTimeout(650);
+        await targetPage.evaluate(() => {
+            if (typeof mobile_scale_control_panel !== 'function')
+                return;
+            const control = document.getElementById('id-control');
+            if (!control)
+                return;
+            const mobile = ext_mobile_info();
+            mobile_scale_control_panel(mobile,
+                mobile.narrow || mobile.height < control.offsetHeight);
+        });
+        await targetPage.waitForTimeout(50);
         return targetPage.evaluate(() => {
             const bounds = id => {
                 const el = document.getElementById(id);
@@ -52,9 +63,17 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 modern: document.documentElement.classList.contains('ui-modern'),
                 main: bounds('id-main-container'),
                 waterfall: bounds('id-waterfall-container'),
-                control: bounds('id-control'),
+                control,
                 themePicker,
-                themeControlOverlap: overlaps(themePicker, control)
+                themeControlOverlap: overlaps(themePicker, control),
+                controlFitsViewport: !control ||
+                    (control.left >= -1 && control.top >= -1 &&
+                        control.right <= window.innerWidth + 1 &&
+                        control.bottom <= window.innerHeight + 1),
+                compactThemeReadable: window.innerWidth > 760 ||
+                    (themePicker && themePicker.width >= 84 &&
+                        getComputedStyle(document.getElementById('id-ui-theme-select')).color !==
+                            'rgba(0, 0, 0, 0)')
             };
         });
     }
@@ -550,6 +569,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             if (!layout.modern || layout.theme !== 'midnight' ||
                 layout.documentOverflow ||
                 layout.themeControlOverlap ||
+                !layout.controlFitsViewport ||
+                !layout.compactThemeReadable ||
                 !layout.main || !layout.waterfall ||
                 layout.waterfall.width <= 0 || layout.waterfall.width > layout.viewport[0] + 2)
                 throw new Error(`invalid responsive receiver layout: ${JSON.stringify(layout)}`);

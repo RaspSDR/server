@@ -831,16 +831,16 @@
 
    .ui-modern .ui-theme-mount {
       top: 8px;
-      right: 52px;
+      right: 12px;
       bottom: auto;
       left: auto;
    }
 
    .ui-theme-picker {
-      width: 42px;
+      width: auto;
+      min-width: 96px;
       min-height: 34px;
-      padding: 0 6px;
-      overflow: hidden;
+      padding: 0 4px;
    }
 
    .ui-theme-picker-label {
@@ -848,11 +848,10 @@
    }
 
    .ui-theme-select {
-      width: 28px;
-      padding: 0;
-      border: 0;
-      color: transparent;
-      background: var(--ui-accent);
+      width: 100%;
+      min-width: 84px;
+      color: var(--ui-text);
+      background: var(--ui-surface);
    }
 
    .ui-theme-select option {

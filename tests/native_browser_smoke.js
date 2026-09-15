@@ -887,6 +887,18 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     .some(button => button.textContent.trim() === 'Connect')
             };
         });
+        await adminPage.locator('#id-nav-extensions').click();
+        await adminPage.waitForTimeout(100);
+        const adminExtensions = await adminPage.evaluate(() => {
+            const page = document.querySelector('.ui-admin-extensions');
+            return {
+                heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
+                sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
+                    heading => heading.textContent),
+                navigation: !!page.querySelector('.id-extensions-nav'),
+                configuration: !!page.querySelector('.id-extensions-config')
+            };
+        });
         await adminPage.setViewportSize({ width: 390, height: 844 });
         await adminPage.locator('#id-nav-extensions').click();
         await adminPage.waitForTimeout(100);
@@ -1082,6 +1094,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !adminConsole.terminal ||
             !adminConsole.connect)
             throw new Error(`invalid modern admin Console page: ${JSON.stringify(adminConsole)}`);
+        if (adminExtensions.heading !== 'Extensions' ||
+            adminExtensions.sections.join(',') !== 'Extension configuration' ||
+            !adminExtensions.navigation ||
+            !adminExtensions.configuration)
+            throw new Error(
+                `invalid modern admin Extensions page: ${JSON.stringify(adminExtensions)}`);
         if (adminExtensionsMobile.navDisplay !== 'flex' ||
             adminExtensionsMobile.navPosition !== 'static' ||
             !adminExtensionsMobile.navScrollable ||
@@ -1143,7 +1161,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
             panelToggle, adminFoundation, adminResponsive, adminControl, adminConnect, adminConfig,
             adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,
-            adminLog, adminConsole, adminExtensionsMobile
+            adminLog, adminConsole, adminExtensions, adminExtensionsMobile
         }));
     } finally {
         await browser.close();

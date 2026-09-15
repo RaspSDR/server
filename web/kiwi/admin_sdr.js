@@ -2742,12 +2742,19 @@ function band_svc_field_cb(path, val, first, a_cb)
 
 function extensions_html()
 {
-	var s =
-	w3_div('id-extensions w3-hide w3-section',
-      w3_sidenav('id-extensions-nav w3-margin-B-16'),
-		w3_div('id-extensions-config')
-	);
-	return s;
+   var manager =
+      w3_div('ui-admin-extensions-layout',
+         w3_sidenav('id-extensions-nav w3-margin-B-16'),
+         w3_div('id-extensions-config')
+      );
+   var content =
+      admin_page_header('FEATURES', 'Extensions',
+         'Choose an installed receiver extension and manage its availability and settings.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Extension configuration', 'Select an extension to review its receiver-facing behavior',
+            manager, 'ui-admin-section-wide') +
+      '</div>';
+	return w3_div('id-extensions w3-hide ui-admin-extensions', content);
 }
 
 function extensions_focus()

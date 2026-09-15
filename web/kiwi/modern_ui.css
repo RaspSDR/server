@@ -1005,6 +1005,15 @@
    flex-wrap: wrap;
 }
 
+.ui-modern .ui-admin-extensions-layout {
+   position: relative;
+   min-height: 480px;
+}
+
+.ui-modern .ui-admin-extensions .id-extensions-config {
+   min-width: 0;
+}
+
 .ui-modern .ui-admin-status-header,
 .ui-modern .ui-admin-status-users > header {
    display: flex;

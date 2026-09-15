@@ -772,6 +772,88 @@
    box-shadow: none !important;
 }
 
+.ui-modern .ui-admin-page-header {
+   display: flex;
+   justify-content: space-between;
+   align-items: end;
+   gap: var(--ui-space-4);
+   margin-bottom: var(--ui-space-4);
+}
+
+.ui-modern .ui-admin-page-header span {
+   color: var(--ui-accent);
+   font-size: 10px;
+   font-weight: 800;
+   letter-spacing: 0.16em;
+}
+
+.ui-modern .ui-admin-page-header h2 {
+   margin: 2px 0 0;
+   color: var(--ui-text);
+   font-size: 22px;
+   line-height: 1.15;
+}
+
+.ui-modern .ui-admin-page-header p {
+   max-width: 560px;
+   margin: 0;
+   color: var(--ui-text-muted);
+   text-align: right;
+}
+
+.ui-modern .ui-admin-section-grid {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-section {
+   min-width: 0;
+   padding: var(--ui-space-4);
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius);
+   background: var(--ui-surface);
+}
+
+.ui-modern .ui-admin-section-wide {
+   grid-column: 1 / -1;
+}
+
+.ui-modern .ui-admin-section > header {
+   margin-bottom: var(--ui-space-4);
+   padding-bottom: var(--ui-space-3);
+   border-bottom: 1px solid var(--ui-border);
+}
+
+.ui-modern .ui-admin-section > header h3 {
+   margin: 0;
+   color: var(--ui-text);
+   font-size: 16px;
+}
+
+.ui-modern .ui-admin-section > header p {
+   margin: 3px 0 0;
+   color: var(--ui-text-muted);
+   font-size: var(--ui-font-size-meta);
+}
+
+.ui-modern .ui-admin-section-body {
+   color: var(--ui-text-soft);
+}
+
+.ui-modern .ui-admin-section-body > hr:first-child,
+.ui-modern .ui-admin-section-body > hr:last-child {
+   display: none;
+}
+
+.ui-modern .ui-admin-control .ui-admin-section-body > .w3-row {
+   align-items: flex-start;
+}
+
+.ui-modern .ui-admin-control .ui-admin-section-body > .w3-row > .w3-col {
+   padding: var(--ui-space-2);
+}
+
 .ui-modern .ui-admin-status-header,
 .ui-modern .ui-admin-status-users > header {
    display: flex;
@@ -1167,28 +1249,33 @@
    }
 
    .ui-modern .ui-admin-status-header,
-   .ui-modern .ui-admin-status-users > header {
+   .ui-modern .ui-admin-status-users > header,
+   .ui-modern .ui-admin-page-header {
       align-items: flex-start;
       flex-direction: column;
       gap: var(--ui-space-2);
    }
 
-   .ui-modern .ui-admin-status-header p {
+   .ui-modern .ui-admin-status-header p,
+   .ui-modern .ui-admin-page-header p {
       text-align: left;
    }
 
    .ui-modern .ui-admin-status-grid,
    .ui-modern .ui-admin-status-user-list,
-   .ui-modern .ui-admin-status-policy {
+   .ui-modern .ui-admin-status-policy,
+   .ui-modern .ui-admin-section-grid {
       grid-template-columns: minmax(0, 1fr);
    }
 
-   .ui-modern .ui-admin-status-card-wide {
+   .ui-modern .ui-admin-status-card-wide,
+   .ui-modern .ui-admin-section-wide {
       grid-column: auto;
    }
 
    .ui-modern .ui-admin-status-card,
-   .ui-modern .ui-admin-status-users {
+   .ui-modern .ui-admin-status-users,
+   .ui-modern .ui-admin-section {
       padding: var(--ui-space-3);
    }
 

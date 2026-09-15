@@ -157,6 +157,22 @@ function status_user_kick_cb(id, idx)
 	ext_send('SET user_kick='+ idx);
 }
 
+function admin_page_header(eyebrow, title, description)
+{
+   return '<header class="ui-admin-page-header">' +
+      '<div><span>'+ eyebrow +'</span><h2>'+ title +'</h2></div>' +
+      '<p>'+ description +'</p>' +
+   '</header>';
+}
+
+function admin_section(title, description, content, classes)
+{
+   return '<section class="ui-admin-section '+ (classes || '') +'">' +
+      '<header><h3>'+ title +'</h3><p>'+ description +'</p></header>' +
+      '<div class="ui-admin-section-body">'+ content +'</div>' +
+   '</section>';
+}
+
 ////////////////////////////////
 // control
 ////////////////////////////////
@@ -303,7 +319,18 @@ function control_html()
 		) +
 		'<hr>';
 
-   return w3_div('id-control w3-text-teal w3-hide', s1 + (admin_sdr_mode? (s2 + s3) : ''));
+   var content =
+      admin_page_header('OPERATIONS', 'Receiver control',
+         'Manage receiver mode, user access, service availability and operating limits.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Receiver & service', 'Restart actions and radio hardware behavior', s1) +
+         (admin_sdr_mode?
+            admin_section('Access & availability', 'Control who can connect and what resources are exposed', s2) +
+            admin_section('Limits & monitoring', 'Connection policy, camping and SNR measurements', s3,
+               'ui-admin-section-wide')
+         : '') +
+      '</div>';
+   return w3_div('id-control w3-text-teal w3-hide ui-admin-control', content);
 }
 
 function control_focus()

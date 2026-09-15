@@ -749,6 +749,18 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 usersBorder: users? getComputedStyle(users).borderStyle : ''
             };
         });
+        await adminPage.locator('#id-nav-control').click();
+        await adminPage.waitForTimeout(100);
+        const adminControl = await adminPage.evaluate(() => {
+            const page = document.querySelector('.ui-admin-control');
+            const rect = page.getBoundingClientRect();
+            return {
+                heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
+                sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
+                    heading => heading.textContent),
+                fits: rect.left >= -1 && rect.right <= window.innerWidth + 1
+            };
+        });
         await adminPage.setViewportSize({ width: 390, height: 844 });
         await adminPage.locator('#id-nav-extensions').click();
         await adminPage.waitForTimeout(100);
@@ -885,6 +897,11 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminStatus.userRows < 1 ||
             adminStatus.usersBorder === 'none')
             throw new Error(`invalid modern admin status page: ${JSON.stringify(adminStatus)}`);
+        if (adminControl.heading !== 'Receiver control' ||
+            adminControl.sections.join(',') !==
+                'Receiver & service,Access & availability,Limits & monitoring' ||
+            !adminControl.fits)
+            throw new Error(`invalid modern admin control page: ${JSON.stringify(adminControl)}`);
         if (adminExtensionsMobile.navDisplay !== 'flex' ||
             adminExtensionsMobile.navPosition !== 'static' ||
             !adminExtensionsMobile.navScrollable ||
@@ -944,7 +961,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
 
         console.log(JSON.stringify({
             ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
-            panelToggle, adminFoundation, adminResponsive, adminExtensionsMobile
+            panelToggle, adminFoundation, adminResponsive, adminControl, adminExtensionsMobile
         }));
     } finally {
         await browser.close();

@@ -1309,7 +1309,19 @@ function network_html()
       ) +
       '<hr>';
 
-	return w3_div('id-network w3-hide', s1 + s2 + s3 + s4);
+   var content =
+      admin_page_header('CONNECTIVITY', 'Network',
+         'Configure receiver addressing, external reachability and network access controls.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Interface & addressing', 'Ports, NAT, Wi-Fi, DHCP and static IP settings', s1,
+            'ui-admin-section-wide') +
+         admin_section('Reachability', 'Inspect the active interface and test public access', s2,
+            'ui-admin-section-wide') +
+         admin_section('MQTT', 'Publish receiver information to an MQTT broker', s3) +
+         admin_section('Access controls', 'Manage duplicate connections and IP blacklists', s4,
+            'ui-admin-section-wide') +
+      '</div>';
+	return w3_div('id-network w3-hide ui-admin-network', content);
 }
 
 function network_ssl_container_init()

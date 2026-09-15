@@ -943,6 +943,20 @@
    flex-wrap: wrap;
 }
 
+.ui-modern .ui-admin-network .ui-admin-section-body > .w3-container {
+   padding-right: 0;
+   padding-left: 0;
+}
+
+.ui-modern .ui-admin-network .w3-halign-space-between {
+   gap: var(--ui-space-3);
+   flex-wrap: wrap;
+}
+
+.ui-modern .ui-admin-network textarea {
+   max-width: 100%;
+}
+
 .ui-modern .ui-admin-status-header,
 .ui-modern .ui-admin-status-users > header {
    display: flex;

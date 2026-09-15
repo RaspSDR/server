@@ -478,6 +478,34 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         ])
             receiverResponsive.push(await responsiveState(page, viewport));
 
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.selectOption('#id-select-ext', { label: 'FAX' });
+        await page.waitForFunction(() => extint.current_ext_name === 'FAX' &&
+            document.querySelector('.id-fax-controls'));
+        await page.waitForTimeout(250);
+        const faxMobile = await page.evaluate(() => {
+            const viewportWidth = window.innerWidth;
+            const panel = document.getElementById('id-ext-controls').getBoundingClientRect();
+            const close = document.getElementById('id-ext-controls-close').getBoundingClientRect();
+            const data = document.querySelector('.id-fax-data');
+            const dataRect = data.getBoundingClientRect();
+            const actionRows = Array.from(
+                document.querySelectorAll('.id-fax-controls .w3-show-inline-new'));
+            return {
+                documentOverflow: document.documentElement.scrollWidth > viewportWidth + 1,
+                panel: { left: panel.left, right: panel.right, width: panel.width },
+                close: { left: close.left, right: close.right, width: close.width, height: close.height },
+                data: {
+                    left: dataRect.left,
+                    right: dataRect.right,
+                    width: dataRect.width,
+                    overflowX: getComputedStyle(data).overflowX
+                },
+                actionOverflow: actionRows.some(row => row.scrollWidth > row.clientWidth + 1)
+            };
+        });
+        await page.locator('#id-ext-controls-close').click();
+
         const panelToggle = { desktop: {}, phone: {}, readme: {} };
         await page.setViewportSize({ width: 1440, height: 1000 });
         await page.waitForTimeout(650);
@@ -721,6 +749,24 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 usersBorder: users? getComputedStyle(users).borderStyle : ''
             };
         });
+        await adminPage.setViewportSize({ width: 390, height: 844 });
+        await adminPage.locator('#id-nav-extensions').click();
+        await adminPage.waitForTimeout(100);
+        const adminExtensionsMobile = await adminPage.evaluate(() => {
+            const nav = document.querySelector('.id-extensions-nav');
+            const config = document.querySelector('.id-extensions-config');
+            const selected = nav?.querySelector('.w3int-cur-sel');
+            const configRect = config?.getBoundingClientRect();
+            return {
+                navDisplay: nav? getComputedStyle(nav).display : '',
+                navPosition: nav? getComputedStyle(nav).position : '',
+                navScrollable: !!nav && nav.scrollWidth >= nav.clientWidth,
+                selectedReadable: !!selected && selected.getBoundingClientRect().width >=
+                    selected.scrollWidth - 1,
+                configFits: !!configRect && configRect.left >= -1 &&
+                    configRect.right <= window.innerWidth + 1
+            };
+        });
         await adminPage.close();
 
         if (!uiFoundation.selectPresent ||
@@ -780,6 +826,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 layout.waterfall.width <= 0 || layout.waterfall.width > layout.viewport[0] + 2)
                 throw new Error(`invalid responsive receiver layout: ${JSON.stringify(layout)}`);
         }
+        if (faxMobile.documentOverflow ||
+            faxMobile.panel.left < -1 || faxMobile.panel.right > 391 ||
+            faxMobile.close.left < -1 || faxMobile.close.right > 391 ||
+            faxMobile.close.width < 32 || faxMobile.close.height < 32 ||
+            faxMobile.data.left < -1 || faxMobile.data.right > 391 ||
+            faxMobile.data.overflowX !== 'auto' ||
+            faxMobile.actionOverflow)
+            throw new Error(`invalid FAX mobile layout: ${JSON.stringify(faxMobile)}`);
         const invalidPanelToggle = state =>
             state.hidden.shown ||
             state.hidden.panelLeft < state.hidden.viewportWidth - 10 ||
@@ -831,6 +885,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminStatus.userRows < 1 ||
             adminStatus.usersBorder === 'none')
             throw new Error(`invalid modern admin status page: ${JSON.stringify(adminStatus)}`);
+        if (adminExtensionsMobile.navDisplay !== 'flex' ||
+            adminExtensionsMobile.navPosition !== 'static' ||
+            !adminExtensionsMobile.navScrollable ||
+            !adminExtensionsMobile.selectedReadable ||
+            !adminExtensionsMobile.configFits)
+            throw new Error(`invalid admin extensions mobile layout: ${JSON.stringify(adminExtensionsMobile)}`);
         for (const layout of adminResponsive) {
             if (!layout.modern || layout.theme !== 'midnight' ||
                 layout.documentOverflow || layout.themeControlOverlap)
@@ -883,8 +943,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             throw new Error(errors.join('\n'));
 
         console.log(JSON.stringify({
-            ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, panelToggle,
-            adminFoundation, adminResponsive
+            ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
+            panelToggle, adminFoundation, adminResponsive, adminExtensionsMobile
         }));
     } finally {
         await browser.close();

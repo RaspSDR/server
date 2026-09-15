@@ -325,7 +325,8 @@ function fax_controls_setup()
    
    // no dynamic resize used because id-fax-data uses left:0 and the canvas begins at the window left edge
 
-   ext_set_controls_width_height(550, 200);
+   var controls_w = kiwi_isMobile()? Math.max(320, window.innerWidth - 12) : 550;
+   ext_set_controls_width_height(controls_w, 200);
 	fax.saved_setup = ext_save_setup();
 	ext_set_mode('usb');
    

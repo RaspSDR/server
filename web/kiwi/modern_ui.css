@@ -1192,12 +1192,77 @@
       padding: var(--ui-space-3);
    }
 
+   .ui-modern .id-extensions-nav {
+      position: static !important;
+      display: flex;
+      width: 100%;
+      height: auto;
+      gap: var(--ui-space-1);
+      margin-bottom: var(--ui-space-3) !important;
+      padding-bottom: var(--ui-space-1);
+      overflow-x: auto;
+      background: transparent;
+      scrollbar-width: thin;
+   }
+
+   .ui-modern .id-extensions-nav a {
+      flex: 0 0 auto;
+      min-height: var(--ui-control-height);
+      padding: 8px 12px;
+      border: 1px solid var(--ui-border) !important;
+      border-radius: var(--ui-radius-sm);
+   }
+
+   .ui-modern .id-extensions-config {
+      margin-left: 0;
+   }
+
+   .ui-modern .id-extensions-config > div {
+      width: 100% !important;
+   }
+
+   .ui-modern .id-fax-data {
+      width: 100% !important;
+      max-width: 100vw;
+      overflow-x: auto !important;
+   }
+
+   .ui-modern .id-fax-controls .w3-show-inline-new {
+      flex-wrap: wrap;
+      row-gap: var(--ui-space-2);
+   }
+
+   .ui-modern .id-fax-controls .w3-margin-between-16 {
+      margin-left: 0;
+      margin-right: var(--ui-space-2);
+   }
+
+   .ui-modern .id-ext-controls-vis .class-vis-button {
+      display: grid;
+      min-width: 36px;
+      min-height: 36px;
+      padding: 6px;
+      place-items: center;
+   }
+
+   .ui-modern .id-ext-controls-vis {
+      right: 0 !important;
+      left: auto !important;
+      top: 8px !important;
+   }
+
    .ui-modern .ui-extension-panel {
       border-radius: 13px;
    }
 
    .ui-modern .ui-extension-content {
       padding-right: 0;
+   }
+}
+
+@media (max-height: 420px) and (orientation: landscape) {
+   .ui-modern #id-select-ext {
+      max-width: 82px;
    }
 }
 

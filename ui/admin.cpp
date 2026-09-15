@@ -168,7 +168,14 @@ static void console_task(void* param) {
     int i, n, err;
 
     char* args[] = { (char*)"/bin/sh", (char*)"--login", NULL };
-    scall("forkpty", (c->console_child_pid = forkpty(&c->master_pty_fd, NULL, NULL, NULL)));
+    struct winsize ws, *wsp = NULL;
+    if (c->console_rows > 0 && c->console_cols > 0) {
+        memset(&ws, 0, sizeof(ws));
+        ws.ws_row = c->console_rows;
+        ws.ws_col = c->console_cols;
+        wsp = &ws;
+    }
+    scall("forkpty", (c->console_child_pid = forkpty(&c->master_pty_fd, NULL, NULL, wsp)));
 
     if (c->console_child_pid == 0) { // child
         // terminate when parent exits
@@ -1037,8 +1044,11 @@ void c2s_admin(void* param) {
             int rows, cols;
             i = sscanf(cmd, "SET console_rows_cols=%d,%d", &rows, &cols);
             if (i == 2) {
+                conn->console_rows = rows;
+                conn->console_cols = cols;
                 if (conn->master_pty_fd > 0) {
                     struct winsize ws;
+                    memset(&ws, 0, sizeof(ws));
                     ws.ws_row = rows;
                     ws.ws_col = cols;
                     // printf("console rows=%d cols=%d\n", rows, cols);

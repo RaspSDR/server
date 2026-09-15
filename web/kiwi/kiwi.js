@@ -1316,8 +1316,9 @@ function kiwi_output_msg(id, id_scroll, p)
       p.ESC = 1;
       p.CSI = 2;
       p.NON_CSI = 3;
+      p.OSC = 4;
       p.NOSHIFT_MODE = true;
-      p.esc = { s: '', state: p.NONE };
+      p.esc = { s: '', state: p.NONE, osc_esc: false };
       p.sgr = { span:0, bright:0, fg:null, bg:null };
       p.return_pending = false;
       p.must_scroll_down = false;
@@ -1334,6 +1335,8 @@ function kiwi_output_msg(id, id_scroll, p)
       // char-oriented
       p.nrows = p.rows;
       p.r = p.c = 1;
+      p.saved_r = p.saved_c = 1;
+      p.saved_ccol = 1;
       p.margin_set = false;
       p.margin_top = 1;
       p.margin_bottom = p.nrows;    // initial value until changed by setting margins
@@ -1436,11 +1439,11 @@ function kiwi_output_msg(id, id_scroll, p)
 		
       // scroll text up
 		if (c == '\n' && p.isAltBuf) {
-		   if (p.margin_set) {
-		      if (p.r < p.nrows) {
+		   if (p.margin_set && p.r >= p.margin_top && p.r <= p.margin_bottom) {
+		      if (p.r < p.margin_bottom) {
                p.r++; p.c = 1;
                dirty();
-               result = '\\n row++ ('+ p.r +'('+ p.nrows +'),'+ p.c +')';
+               result = '\\n row++ ('+ p.r +'('+ p.margin_bottom +'),'+ p.c +')';
             } else {
                //var save_r = p.r, save_c = p.c;
                move_in_display(p.margin_top, p.margin_top + 1, p.margin_bottom, +1);
@@ -1456,6 +1459,15 @@ function kiwi_output_msg(id, id_scroll, p)
          if (dbg) console.log('scroll text up FIN: '+ p.r +' '+ p.c +' '+ p.r_cursor +' '+ p.c_cursor +' '+ result);
       } else
       
+		if (c == '\r') {
+         result = 'carriage return';
+		   if (p.isAltBuf) {
+            dirty(); p.c = 1; dirty();
+		   } else {
+            p.ccol = 1;
+         }
+		} else
+
 		if (c == '\b') {
          result = 'backspace (arrow left)';
 		   if (p.isAltBuf) {
@@ -1511,6 +1523,16 @@ function kiwi_output_msg(id, id_scroll, p)
 	   //    Nf seq                        ESC 0x20-2f    space !"#$%&'()*+,-./
 	   // (     select char set G0
 		
+      if (p.esc.state == p.OSC) {
+         if (c == '\x07' || (p.esc.osc_esc && c == '\\')) {
+            p.esc.state = p.NONE;
+            p.esc.osc_esc = false;
+         } else {
+            p.esc.osc_esc = (c == '\x1b');
+         }
+         continue;
+      } else
+
 		if (c == '\x1b') {      // esc = ^[ = 0x1b = 033 = 27.
 		   p.esc.s = '';
 		   p.esc.state = p.ESC;
@@ -1529,6 +1551,11 @@ function kiwi_output_msg(id, id_scroll, p)
          if (p.esc.state == p.ESC) {
             if (c == '[') {
                p.esc.state = p.CSI;
+            } else
+            if (c == ']') {
+               p.esc.s = c;
+               p.esc.state = p.OSC;
+               p.esc.osc_esc = false;
             } else {
                p.esc.state = p.NON_CSI;
                switch (c) {
@@ -1664,11 +1691,11 @@ function kiwi_output_msg(id, id_scroll, p)
                   }
                } else
                
-               if (c == 'H') {      // cursor position
+               if (c == 'H' || c == 'f') {      // cursor position
                   result = 'move '+ n1 +','+ n2;
                   if (p.isAltBuf) {
                      if (w3_clamp3(n1, 0, p.nrows)) {
-                        dirty(); p.r = n1; p.c = n2; dirty();
+                        dirty(); p.r = n1; p.c = w3_clamp(n2, 1, p.cols); dirty();
                      }
                   } else {
                      error = 1;
@@ -1691,10 +1718,16 @@ function kiwi_output_msg(id, id_scroll, p)
                if (c == 'G') {      // cursor horizontal absolute
                   result = 'move col '+ n1;
                   if (p.isAltBuf) {
-                     p.c = n1; dirty();
+                     p.c = w3_clamp(n1, 1, p.cols); dirty();
                   } else {
                      error = 1;
                   }
+               } else
+
+               if (c == 'n' && n1 == 6) {
+                  if (p.isAltBuf && isAdmin())
+                     ext_send('SET console_w2c='+ encodeURIComponent('\x1b['+ p.r +';'+ p.c +'R'));
+                  result = 'report cursor position';
                } else
 		      
 		         // see: pubs.opengroup.org/onlinepubs/7908799/xcurses/terminfo.html
@@ -1908,45 +1941,71 @@ function kiwi_output_msg(id, id_scroll, p)
                // set top and bottom margin, defaults: top = 1, bottom = lines-per-screen
                // AKA: change scroll region
                if (c == 'r' && p.isAltBuf) {
-                  if (dbg) console.log('margin set: PREV p.nrows='+ p.nrows +' NEW p.nrows='+ n2);
-                  p.margin_top = n1;
-                  p.margin_bottom = n2;
-                  p.margin_set = true;
-                  p.nrows = n2;
-                  result = 'set margins, top='+ n1 +', bottom/nrows='+ n2;
+                  var reset_margins = (second == 'r');
+                  p.margin_top = reset_margins? 1 : w3_clamp(n1, 1, p.nrows);
+                  p.margin_bottom = reset_margins? p.nrows : w3_clamp(n2, p.margin_top, p.nrows);
+                  p.margin_set = !(p.margin_top == 1 && p.margin_bottom == p.nrows);
+                  result = 'set margins, top='+ p.margin_top +', bottom='+ p.margin_bottom;
                } else
                
                // pan down (text moves up)
                if (c == 'S' && p.isAltBuf) {
+                  n1 = Math.min(n1, p.margin_bottom - p.margin_top + 1);
+                  var save_r = p.r, save_c = p.c;
+                  var save_insertMode = p.insertMode;
+                  p.insertMode = false;
                   move_in_display(p.margin_top, p.margin_top + n1, p.margin_bottom, +1);
-                  if (p.r < p.nrows) {
-                     p.r++;
-                     erase_in_display(p.r, p.margin_bottom, 1, p.cols);
-                  }
+                  erase_in_display(p.margin_bottom - n1 + 1, p.margin_bottom, 1, p.cols);
                   p.insertMode = save_insertMode;
-                  p.r = p.c = 1; dirty();    // reset cursor
+                  p.r = save_r; p.c = save_c; dirty();
                   result = 'pan down '+ n1;
                } else
                
                // pan up (text moves down)
                if (c == 'T' && p.isAltBuf) {
+                  n1 = Math.min(n1, p.margin_bottom - p.margin_top + 1);
+                  var save_r = p.r, save_c = p.c;
                   var save_insertMode = p.insertMode;
                   p.insertMode = false;
                   move_in_display(p.margin_bottom, p.margin_bottom - n1, p.margin_top, -1);
                   erase_in_display(p.margin_top, p.margin_top + n1 - 1, 1, p.cols);
                   p.insertMode = save_insertMode;
-                  p.r = p.c = 1; dirty();    // reset cursor
+                  p.r = save_r; p.c = save_c; dirty();
                   result = 'pan up '+ n1;
                } else
                
                // delete line(s)
                if (c == 'M' && p.isAltBuf) {
+                  if (p.r < p.margin_top || p.r > p.margin_bottom) {
+                     result = 'delete line(s) outside margin';
+                  } else {
+                  n1 = Math.min(n1, p.margin_bottom - p.r + 1);
+                  var save_r = p.r, save_c = p.c;
                   var save_insertMode = p.insertMode;
                   p.insertMode = false;
-                  move_in_display(p.r, p.r + 1, p.r + n1, +1);
-                  erase_in_display(p.r + n1, p.r + n1, 1, p.cols);
+                  move_in_display(p.r, p.r + n1, p.margin_bottom, +1);
+                  erase_in_display(p.margin_bottom - n1 + 1, p.margin_bottom, 1, p.cols);
                   p.insertMode = save_insertMode;
+                  p.r = save_r; p.c = save_c; dirty();
                   result = 'delete line(s) '+ n1;
+                  }
+               } else
+
+               // insert line(s)
+               if (c == 'L' && p.isAltBuf) {
+                  if (p.r < p.margin_top || p.r > p.margin_bottom) {
+                     result = 'insert line(s) outside margin';
+                  } else {
+                  n1 = Math.min(n1, p.margin_bottom - p.r + 1);
+                  var save_r = p.r, save_c = p.c;
+                  var save_insertMode = p.insertMode;
+                  p.insertMode = false;
+                  move_in_display(p.margin_bottom, p.margin_bottom - n1, p.r, -1);
+                  erase_in_display(p.r, p.r + n1 - 1, 1, p.cols);
+                  p.insertMode = save_insertMode;
+                  p.r = save_r; p.c = save_c; dirty();
+                  result = 'insert line(s) '+ n1;
+                  }
                } else
                
                // set lines per page (ignored currently)
@@ -1956,35 +2015,74 @@ function kiwi_output_msg(id, id_scroll, p)
 
                if (c == 'A') {   // actual
                   if (p.isAltBuf) {
-                     if (p.r > 1) { dirty(); p.r--; dirty(); }
-                     result = 'arrow up';
+                     dirty(); p.r = w3_clamp(p.r - n1, 1, p.nrows); dirty();
+                     result = 'arrow up '+ n1;
                   } else {
                   }
                } else
                if (c == 'B') {   // done via esc[#d
                   if (p.isAltBuf) {
-                     if (p.r < p.nrows) { dirty(); p.r++; dirty(); }
-                     result = 'arrow down';
+                     dirty(); p.r = w3_clamp(p.r + n1, 1, p.nrows); dirty();
+                     result = 'arrow down '+ n1;
                   } else {
                   }
                } else
+               if (c == 'E') {
+                  if (p.isAltBuf) {
+                     dirty();
+                     p.r = w3_clamp(p.r + n1, 1, p.nrows);
+                     p.c = 1;
+                     dirty();
+                  }
+                  result = 'next line '+ n1;
+               } else
+               if (c == 'F') {
+                  if (p.isAltBuf) {
+                     dirty();
+                     p.r = w3_clamp(p.r - n1, 1, p.nrows);
+                     p.c = 1;
+                     dirty();
+                  }
+                  result = 'previous line '+ n1;
+               } else
                if (c == 'C') {
                   if (p.isAltBuf) {
-                     if (p.c < p.cols) { dirty(); p.c++; }
+                     dirty(); p.c = w3_clamp(p.c + n1, 1, p.cols);
                   } else {
                      if (dbg) console.log('ARROW RIGHT col='+ p.ccol +'/'+ p.line.length +
                         ' '+ sq(p.line[p.ccol]) +' '+ line_s());
                      if (p.ccol < p.line.length)
                         p.ccol++;
                   }
-                  result = 'arrow right';
+                  result = 'arrow right '+ n1;
                } else
                if (c == 'D') {
                   if (p.isAltBuf) {
-                     if (p.c > 1) { dirty(); p.c--; }
-                     result = 'arrow left';
+                     dirty(); p.c = w3_clamp(p.c - n1, 1, p.cols);
+                     result = 'arrow left '+ n1;
                   } else {
                   }
+               } else
+
+               if (c == 's') {
+                  if (p.isAltBuf) {
+                     p.saved_r = p.r; p.saved_c = p.c;
+                  } else {
+                     p.saved_ccol = p.ccol;
+                  }
+                  result = 'save cursor';
+               } else
+
+               if (c == 'u') {
+                  if (p.isAltBuf) {
+                     dirty();
+                     p.r = w3_clamp(p.saved_r, 1, p.nrows);
+                     p.c = w3_clamp(p.saved_c, 1, p.cols);
+                     dirty();
+                  } else {
+                     p.ccol = Math.max(1, p.saved_ccol);
+                  }
+                  result = 'restore cursor';
                } else
                
                {
@@ -2032,8 +2130,25 @@ function kiwi_output_msg(id, id_scroll, p)
                // i.e. arrow keys interpreted as cursor movement
                case '=': result = 'keypad application mode'; break;
             
-               case '7': result = 'save cursor'; break;
-               case '8': result = 'restore cursor'; break;
+               case '7':
+                  if (p.isAltBuf) {
+                     p.saved_r = p.r; p.saved_c = p.c;
+                  } else {
+                     p.saved_ccol = p.ccol;
+                  }
+                  result = 'save cursor';
+                  break;
+               case '8':
+                  if (p.isAltBuf) {
+                     dirty();
+                     p.r = w3_clamp(p.saved_r, 1, p.nrows);
+                     p.c = w3_clamp(p.saved_c, 1, p.cols);
+                     dirty();
+                  } else {
+                     p.ccol = Math.max(1, p.saved_ccol);
+                  }
+                  result = 'restore cursor';
+                  break;
             
                case 'c': result = 'reset initial state (nop)'; break;
             

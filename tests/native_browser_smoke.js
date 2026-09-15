@@ -887,6 +887,55 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     .some(button => button.textContent.trim() === 'Connect')
             };
         });
+        const consoleOpenOrder = await adminPage.evaluate(() => {
+            const originalSend = window.ext_send;
+            const originalOpen = admin.console_open;
+            const sent = [];
+            window.ext_send = command => sent.push(command);
+            admin.console_open = false;
+            console_connect_cb();
+            admin.console_open = originalOpen;
+            window.ext_send = originalSend;
+            return {
+                sizeFirst: sent[0]?.startsWith('SET console_rows_cols=') &&
+                    sent[1] === 'SET console_open',
+                sent
+            };
+        });
+        const consoleANSI = await adminPage.evaluate(() => {
+            const output = document.createElement('div');
+            output.id = 'id-test-console-output';
+            const scroll = document.createElement('div');
+            scroll.id = 'id-test-console-scroll';
+            scroll.appendChild(output);
+            document.body.appendChild(scroll);
+
+            const state = { rows: 6, cols: 20, show_cursor: false };
+            const send = text => {
+                state.s = encodeURIComponent(text);
+                kiwi_output_msg(output.id, scroll.id, state);
+            };
+            send('\x1b[?1049h\x1b[2J');
+            send('\x1b[3;3HA\x1b[4CB');
+            const countedMove = state.screen[3][3] === 'A' && state.screen[3][8] === 'B';
+            send('\x1b[2;2HX\x1b7\x1b[5;10H\x1b8Y');
+            const savedCursor = state.screen[2][2] === 'X' && state.screen[2][3] === 'Y';
+            send('\x1b[2;5r\x1b[4;6H\x1b[1TZ');
+            const scrollCursor = state.r === 4 && state.screen[4][6] === 'Z' &&
+                state.nrows === state.rows && state.margin_bottom === 5;
+            send('\x1b[r');
+            const marginReset = !state.margin_set && state.margin_top === 1 &&
+                state.margin_bottom === state.rows;
+            send('\x1b[1;1H\x1b]0;ignored title\x07Q');
+            const oscConsumed = state.screen[1][1] === 'Q' && state.screen[1][2] === ' ';
+            send('\x1b[3;12Htail\r\x1b[4drow');
+            const carriageReturn = state.screen[4].slice(1, 4).join('') === 'row';
+
+            scroll.remove();
+            return {
+                countedMove, savedCursor, scrollCursor, marginReset, oscConsumed, carriageReturn
+            };
+        });
         await adminPage.locator('#id-nav-extensions').click();
         await adminPage.waitForTimeout(100);
         const adminExtensions = await adminPage.evaluate(() => {
@@ -1106,6 +1155,15 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !adminConsole.terminal ||
             !adminConsole.connect)
             throw new Error(`invalid modern admin Console page: ${JSON.stringify(adminConsole)}`);
+        if (!consoleOpenOrder.sizeFirst)
+            throw new Error(`invalid console open order: ${JSON.stringify(consoleOpenOrder)}`);
+        if (!consoleANSI.countedMove ||
+            !consoleANSI.savedCursor ||
+            !consoleANSI.scrollCursor ||
+            !consoleANSI.marginReset ||
+            !consoleANSI.oscConsumed ||
+            !consoleANSI.carriageReturn)
+            throw new Error(`invalid console ANSI handling: ${JSON.stringify(consoleANSI)}`);
         if (adminExtensions.heading !== 'Extensions' ||
             adminExtensions.sections.join(',') !== 'Extension configuration' ||
             !adminExtensions.navigation ||
@@ -1180,7 +1238,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
             panelToggle, adminFoundation, adminResponsive, adminControl, adminConnect, adminConfig,
             adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,
-            adminLog, adminConsole, adminExtensions, adminSecurity, adminExtensionsMobile
+            adminLog, adminConsole, consoleOpenOrder, consoleANSI, adminExtensions, adminSecurity,
+            adminExtensionsMobile
         }));
     } finally {
         await browser.close();

@@ -108,6 +108,7 @@ typedef struct conn_st {
     // set only in STREAM_ADMIN
     int log_last_sent, log_last_not_shown;
     int master_pty_fd, console_child_pid;
+    int console_rows, console_cols;
     int console_task_id;
 #define N_OOB_BUF 256
     int oob_w, oob_r;

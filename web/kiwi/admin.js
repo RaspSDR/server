@@ -2689,15 +2689,18 @@ function console_calc_rows_cols(init)
       //console_nv('$console_calc_rows_cols', {init}, {rows}, {cols});
       //kiwi_trace('$');
       kiwi_clearTimeout(admin.resize_timeout);
-      admin.resize_timeout = setTimeout(
-         function() {
-            admin.console.resized = true;
-            // let server-side know so it can send a TIOCSWINSZ to libcurses et al
-            ext_send('SET console_rows_cols='+ rows +','+ cols);
-            admin.console.rows = rows;
-            admin.console.cols = cols;
-         }, init? 1:1000
-      );
+      var update_size = function() {
+         admin.console.resized = true;
+         // let server-side know so it can send a TIOCSWINSZ to libcurses et al
+         ext_send('SET console_rows_cols='+ rows +','+ cols);
+         admin.console.rows = rows;
+         admin.console.cols = cols;
+      };
+      if (init) {
+         update_size();
+      } else {
+         admin.resize_timeout = setTimeout(update_size, 1000);
+      }
    }
 }
 
@@ -2706,8 +2709,8 @@ function console_connect_cb(id)
    //console.log('console_connect_cb id='+ id);
    if (admin.console_open) return;
    
-	ext_send('SET console_open');
    console_calc_rows_cols(1);
+	ext_send('SET console_open');
    console_is_char_oriented();
    admin.console_open = true;
 }
@@ -2718,8 +2721,8 @@ function console_cmd_cb(id, cb_param)
    var delay = 1;
    
    if (!admin.console_open) {
-	   ext_send('SET console_open');
       console_calc_rows_cols(1);
+	   ext_send('SET console_open');
       console_is_char_oriented();
       admin.console_open = true;
       delay = 1000;

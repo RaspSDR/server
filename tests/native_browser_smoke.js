@@ -822,6 +822,19 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     .filter(id => document.getElementById(id)).length
             };
         });
+        await adminPage.locator('#id-nav-update').click();
+        await adminPage.waitForTimeout(100);
+        const adminUpdate = await adminPage.evaluate(() => {
+            const page = document.querySelector('.ui-admin-update');
+            return {
+                heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
+                sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
+                    heading => heading.textContent),
+                statusHook: !!page.querySelector('.id-msg-update'),
+                actionButtons: Array.from(page.querySelectorAll('button'))
+                    .filter(button => ['Check now', 'Install now'].includes(button.textContent.trim())).length
+            };
+        });
         await adminPage.setViewportSize({ width: 390, height: 844 });
         await adminPage.locator('#id-nav-extensions').click();
         await adminPage.waitForTimeout(100);
@@ -989,6 +1002,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !adminDX.labelList ||
             adminDX.searchFields !== 3)
             throw new Error(`invalid modern admin DX page: ${JSON.stringify(adminDX)}`);
+        if (adminUpdate.heading !== 'Updates' ||
+            adminUpdate.sections.join(',') !==
+                'Update status,Automatic updates,Manual actions,Release channel' ||
+            !adminUpdate.statusHook ||
+            adminUpdate.actionButtons !== 2)
+            throw new Error(`invalid modern admin Update page: ${JSON.stringify(adminUpdate)}`);
         if (adminExtensionsMobile.navDisplay !== 'flex' ||
             adminExtensionsMobile.navPosition !== 'static' ||
             !adminExtensionsMobile.navScrollable ||
@@ -1049,7 +1068,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         console.log(JSON.stringify({
             ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
             panelToggle, adminFoundation, adminResponsive, adminControl, adminConnect, adminConfig,
-            adminWebpage, adminPublic, adminDX, adminExtensionsMobile
+            adminWebpage, adminPublic, adminDX, adminUpdate, adminExtensionsMobile
         }));
     } finally {
         await browser.close();

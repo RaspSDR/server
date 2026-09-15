@@ -1027,44 +1027,53 @@ function connect_proxy_server_cb(path, val)
 
 function update_html()
 {
-	var s =
-	w3_div('id-update w3-hide',
-		'<hr>' +
-		w3_div('id-msg-update w3-container') +
+   var status = w3_div('id-msg-update w3-container');
 
-		'<hr>' +
-		w3_div('w3-margin-bottom',
-         w3_half('w3-container', 'w3-text-teal',
-            w3_switch_label('w3-label-inline w3-label-left', 'Automatically check for software updates?', 'Yes', 'No', 'adm.update_check', adm.update_check, 'admin_radio_YN_cb'),
-            w3_switch_label('w3-label-inline w3-label-left', 'Automatically install software updates?', 'Yes', 'No', 'adm.update_install', adm.update_install, 'admin_radio_YN_cb')
-         ),
-         w3_half('w3-container w3-tspace-16', 'w3-text-teal',
-            w3_div('',
-               w3_select('/w3-label-inline/w3-width-auto', 'After a restart', '', 'adm.restart_update', adm.restart_update, restart_update_u, 'admin_select_cb')
-            )
+   var policy =
+      w3_div('w3-text-teal',
+         w3_switch_label('w3-label-inline w3-label-left', 'Automatically check for software updates?',
+            'Yes', 'No', 'adm.update_check', adm.update_check, 'admin_radio_YN_cb'),
+         w3_switch_label('w3-label-inline w3-label-left', 'Automatically install software updates?',
+            'Yes', 'No', 'adm.update_install', adm.update_install, 'admin_radio_YN_cb'),
+         w3_div('w3-margin-T-16',
+            w3_select('/w3-label-inline/w3-width-auto', 'After a restart', '', 'adm.restart_update',
+               adm.restart_update, restart_update_u, 'admin_select_cb')
          )
-		) +
+      );
 
-		w3_half('w3-container', 'w3-text-teal',
-			w3_div('w3-valign',
-				'<b>Check for software update </b> ' +
-				w3_button('w3-aqua w3-margin', 'Check now', 'update_check_now_cb')
-			),
-			w3_div('w3-valign',
-				'<b>Force software reinstall </b> ' +
-				w3_button('w3-aqua w3-margin', 'Install now', 'update_build_now_cb')
-			)
-		) +
+   var actions =
+      w3_div('w3-text-teal',
+         w3_div('w3-valign',
+            '<b>Check for software update </b> ' +
+            w3_button('w3-aqua w3-margin', 'Check now', 'update_check_now_cb')
+         ),
+         w3_div('w3-valign',
+            '<b>Force software reinstall </b> ' +
+            w3_button('w3-aqua w3-margin', 'Install now', 'update_build_now_cb')
+         )
+      );
 
-      w3_divs('w3-container',
-         w3_switch_label('w3-label-inline w3-label-left', 'Update Channel', 'Alpha', 'Stable', 'adm.update_channel', adm.update_channel, 'admin_radio_YN_cb'),
-         w3_text('w3-bold w3-text-black',
-		   'Set to Alpha if you want to test the latest release, which may contains bugs. In worse case, you may lose your customization settings. <br>' +
-		   'Set to Stable if you want to play safe.'
-				)
-      )
-	);
-	return s;
+   var channel =
+      w3_divs('w3-text-teal',
+         w3_switch_label('w3-label-inline w3-label-left', 'Update channel', 'Alpha', 'Stable',
+            'adm.update_channel', adm.update_channel, 'admin_radio_YN_cb'),
+         w3_text('w3-text-black',
+            'Stable is recommended for normal operation. Alpha provides early access to the latest release ' +
+            'and may contain bugs or affect customization settings.')
+      );
+
+   var content =
+      admin_page_header('SOFTWARE', 'Updates',
+         'Choose how the receiver discovers, installs and tests new software releases.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Update status', 'Current check, installation and restart activity', status,
+            'ui-admin-section-wide') +
+         admin_section('Automatic updates', 'Set the routine update and post-restart policy', policy) +
+         admin_section('Manual actions', 'Check for a release or reinstall the current software', actions) +
+         admin_section('Release channel', 'Balance stability against early access to changes', channel,
+            'ui-admin-section-wide') +
+      '</div>';
+	return w3_div('id-update w3-hide ui-admin-update', content);
 }
 
 var restart_update_u = { 0: 'install updates', 1: 'delay updates until overnight' };

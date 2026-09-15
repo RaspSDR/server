@@ -537,6 +537,10 @@
    border-top: 1px solid var(--ui-border);
 }
 
+.ui-modern .id-vol-comp {
+   column-gap: 6px;
+}
+
 .ui-modern .class-button,
 .ui-modern .class-button-small,
 .ui-modern .id-control-zoom img {

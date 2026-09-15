@@ -24,6 +24,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 mobile.narrow || mobile.height < control.offsetHeight);
         });
         await targetPage.waitForTimeout(50);
+        await targetPage.evaluate(() =>
+            w3_el('id-nav-optbar-audio')?.click());
+        await targetPage.waitForTimeout(50);
         return targetPage.evaluate(() => {
             const bounds = id => {
                 const el = document.getElementById(id);
@@ -53,6 +56,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             const overlaps = (a, b) => !!a && !!b &&
                 a.left < b.right && a.right > b.left &&
                 a.top < b.bottom && a.bottom > b.top;
+            w3_hide2('id-vol');
+            w3_hide2('id-pan');
+            w3_hide2('id-vol-comp', false);
+            const audioRow = w3_el('id-vol-comp');
+            const deEmphasis = rect(audioRow?.querySelector('.id-deemp:not(.w3-hide)'));
+            const compression = rect(audioRow?.querySelector('.id-button-compression'));
+            audio_panner_ui_init();
+            w3_el('id-nav-optbar-rf')?.click();
             const themePickerElement = document.querySelector('.ui-theme-picker');
             const controlElement = document.getElementById('id-control');
             const themePicker = rect(themePickerElement);
@@ -73,6 +84,13 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     (control.left >= -1 && control.top >= -1 &&
                         control.right <= window.innerWidth + 1 &&
                         control.bottom <= window.innerHeight + 1),
+                audioControls: {
+                    deEmphasis,
+                    compression,
+                    overlap: overlaps(deEmphasis, compression),
+                    gap: deEmphasis && compression?
+                        Math.round(compression.left - deEmphasis.right) : null
+                },
                 compactThemeReadable: window.innerWidth > 760 ||
                     (themePicker && themePicker.width >= 84 &&
                         getComputedStyle(document.getElementById('id-ui-theme-select')).color !==
@@ -1116,6 +1134,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 layout.documentOverflow ||
                 layout.themeControlOverlap ||
                 !layout.controlFitsViewport ||
+                !layout.audioControls.deEmphasis ||
+                !layout.audioControls.compression ||
+                layout.audioControls.overlap ||
+                layout.audioControls.gap < 4 ||
                 !layout.compactThemeReadable ||
                 !layout.main || !layout.waterfall ||
                 layout.waterfall.width <= 0 || layout.waterfall.width > layout.viewport[0] + 2)

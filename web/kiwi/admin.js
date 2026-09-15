@@ -46,6 +46,141 @@ function status_card(icon, title, description, content, classes)
    '</section>';
 }
 
+var status_runtime_history = [];
+
+function status_runtime_histogram(values, buckets, label)
+{
+   var grouped = [];
+   var stride = Math.max(1, Math.ceil(values.length / buckets));
+   for (var i = 0; i < values.length; i += stride) {
+      var total = 0;
+      for (var j = i; j < Math.min(i + stride, values.length); j++)
+         total += +values[j] || 0;
+      grouped.push(total);
+   }
+
+   var max = Math.max.apply(null, grouped.concat([1]));
+   var bars = '';
+   for (var i = 0; i < grouped.length; i++) {
+      var value = grouped[i];
+      var height = value? Math.max(5, Math.sqrt(value / max) * 100) : 2;
+      var tone = (i >= grouped.length * 0.75)? ' is-danger' :
+         ((i >= grouped.length * 0.5)? ' is-warning' : '');
+      var first = i * stride;
+      var last = Math.min((i + 1) * stride - 1, values.length - 1);
+      bars += '<i class="'+ tone +'" style="height:'+ height.toFixed(1) +
+         '%" title="Queue depth '+ first + (last == first? '' : '-'+ last) +
+         ': '+ value.toUnits() +' samples"></i>';
+   }
+
+   return '<div class="ui-admin-runtime-histogram" role="img" aria-label="'+ label +'">' +
+      '<div class="ui-admin-runtime-histogram-bars">'+ bars +'</div>' +
+      '<div class="ui-admin-runtime-histogram-axis"><span>0</span><span>Queue depth</span>' +
+         '<span>'+ (values.length - 1) +'</span></div>' +
+   '</div>';
+}
+
+function status_runtime_sparkline(values)
+{
+   var width = 320, height = 64;
+   var max = Math.max.apply(null, values.concat([1]));
+   var points = values.map(function(value, i) {
+      var x = values.length == 1? width : i * width / (values.length - 1);
+      var y = height - (+value || 0) * (height - 4) / max - 2;
+      return x.toFixed(1) +','+ y.toFixed(1);
+   }).join(' ');
+   if (values.length == 1) points = '0,'+ points.split(',')[1] +' '+ points;
+   return '<svg class="ui-admin-runtime-sparkline" viewBox="0 0 '+ width +' '+ height +
+      '" preserveAspectRatio="none" role="img" aria-label="Recent total network throughput">' +
+      '<polyline points="'+ points +'"></polyline></svg>';
+}
+
+function status_runtime_update(o)
+{
+   var el = w3_el('id-status-runtime-cpu');
+   if (!el || !o || !o.cu || !o.cs || !o.ci) return;
+
+   var cpu_rows = '';
+   for (var i = 0; i < o.cu.length; i++) {
+      var user = w3_clamp(+o.cu[i] || 0, 0, 100);
+      var system = w3_clamp(+o.cs[i] || 0, 0, 100);
+      var idle = w3_clamp(+o.ci[i] || 0, 0, 100);
+      var used = w3_clamp(user + system, 0, 100);
+      cpu_rows += '<div class="ui-admin-runtime-cpu-row">' +
+         '<span>CPU '+ i +'</span>' +
+         '<div class="ui-admin-runtime-cpu-bar" title="User '+ user +
+            '%, system '+ system +'%, idle '+ idle +'%">' +
+            '<i class="is-user" style="width:'+ user +'%"></i>' +
+            '<i class="is-system" style="width:'+ system +'%"></i>' +
+         '</div><strong>'+ used.toFixed(0) +'%</strong></div>';
+   }
+
+   var temp = +o.cc || 0;
+   var temp_percent = w3_clamp(temp / 85 * 100, 0, 100);
+   var temp_tone = temp >= 70? ' is-danger' : (temp >= 61? ' is-warning' : '');
+   var freq = (+o.cf >= 1000)? (+o.cf / 1000).toFixed(1) +' GHz' :
+      (+o.cf? (+o.cf).toFixed(0) +' MHz' : 'Unavailable');
+   el.innerHTML =
+      '<div class="ui-admin-runtime-cpu-list">'+ cpu_rows +'</div>' +
+      '<div class="ui-admin-runtime-readouts">' +
+         '<div><span>Temperature</span><strong>'+ (temp? temp.toFixed(0) +' °C' : 'Unavailable') +
+            '</strong><div class="ui-admin-runtime-gauge"><i class="'+ temp_tone +
+            '" style="width:'+ temp_percent.toFixed(1) +'%"></i></div></div>' +
+         '<div><span>Clock</span><strong>'+ freq +'</strong><small>Current CPU frequency</small></div>' +
+      '</div>';
+
+   var audio = +o.ac || 0;
+   var waterfall = +o.wc || 0;
+   var http = +o.ah || 0;
+   var total = Math.max(+o.as || 0, audio + waterfall + http);
+   var scale = total || 1;
+   status_runtime_history.push(total);
+   if (status_runtime_history.length > 60) status_runtime_history.shift();
+   w3_innerHTML('id-status-runtime-traffic',
+      '<div class="ui-admin-runtime-throughput-total"><strong>'+ total.toFixed(0) +
+         ' kB/s</strong><span>'+ (total * 8).toFixed(0) +' kbps total outbound</span></div>' +
+      '<div class="ui-admin-runtime-throughput-bar" aria-label="Traffic composition">' +
+         '<i class="is-audio" style="width:'+ (audio / scale * 100).toFixed(1) +
+            '%" title="Audio '+ audio.toFixed(0) +' kB/s"></i>' +
+         '<i class="is-waterfall" style="width:'+ (waterfall / scale * 100).toFixed(1) +
+            '%" title="Waterfall '+ waterfall.toFixed(0) +' kB/s"></i>' +
+         '<i class="is-http" style="width:'+ (http / scale * 100).toFixed(1) +
+            '%" title="HTTP '+ http.toFixed(0) +' kB/s"></i>' +
+      '</div>' +
+      '<div class="ui-admin-runtime-legend">' +
+         '<span class="is-audio">Audio <strong>'+ audio.toFixed(0) +'</strong></span>' +
+         '<span class="is-waterfall">Waterfall <strong>'+ waterfall.toFixed(0) +'</strong></span>' +
+         '<span class="is-http">HTTP <strong>'+ http.toFixed(0) +'</strong></span>' +
+      '</div>' +
+      status_runtime_sparkline(status_runtime_history) +
+      '<div class="ui-admin-runtime-sparkline-label"><span>Up to 10 minutes</span>' +
+         '<span>10-second samples</span></div>'
+   );
+
+   var diagnostics = [
+      ['Dropped audio', o.ad],
+      ['Active-client underruns', o.au],
+      ['Active-client sequence errors', o.ae],
+      ['Datapump resets', o.ar]
+   ];
+   var counters = diagnostics.map(function(metric) {
+      var value = +metric[1] || 0;
+      return '<div class="'+ (value? 'has-warning' : '') +'"><span>'+ metric[0] +
+         '</span><strong>'+ value.toUnits() +'</strong></div>';
+   }).join('');
+   w3_innerHTML('id-status-runtime-diagnostics',
+      '<div class="ui-admin-runtime-counters">'+ counters +'</div>' +
+      '<div class="ui-admin-runtime-histograms">' +
+         '<div><h4>Datapump response backlog</h4><p>How many receiver buffers were pending when the datapump ran.</p>' +
+            status_runtime_histogram(o.ap || [], 16, 'Datapump response backlog distribution') +
+         '</div>' +
+         '<div><h4>Sound input queue occupancy</h4><p>How deeply received samples accumulated before processing.</p>' +
+            status_runtime_histogram(o.ai || [], 16, 'Sound input queue occupancy distribution') +
+         '</div>' +
+      '</div>'
+   );
+}
+
 function status_html()
 {
    var s2 = admin_sdr_mode?
@@ -63,20 +198,6 @@ function status_html()
          )
       ) : '';
 
-   var s3 = admin_sdr_mode?
-      (
-         status_card('fa-area-chart', 'Realtime diagnostics', 'Low-level stream health for troubleshooting',
-            w3_div('id-msg-errors ui-admin-status-diagnostic') +
-            '<div class="ui-admin-status-diagnostic-toolbar">' +
-               '<span>Response histograms</span>' +
-               w3_button('w3-aqua', 'Reset', 'status_dpump_hist_reset_cb') +
-            '</div>' +
-            w3_div('id-status-dp-hist ui-admin-status-diagnostic') +
-            w3_div('id-status-in-hist ui-admin-status-diagnostic'),
-            'ui-admin-status-card-wide ui-admin-status-card-advanced'
-         )
-      ) : '';
-
    var receiver_card = status_card('fa-microchip', 'Receiver', 'Build, hardware identity and uptime',
       w3_div('id-msg-config ui-admin-status-primary') +
       w3_div('id-msg-debian ui-admin-status-secondary'),
@@ -89,15 +210,27 @@ function status_html()
       ''
    );
 
-   var cpu_card = status_card('fa-tachometer', 'Compute', 'Processor load, temperature and clock',
-      w3_div('id-msg-stats-cpu ui-admin-status-primary'),
-      ''
-   );
-
-   var network_card = status_card('fa-exchange', 'Traffic', 'Current aggregate server throughput',
-      w3_div('id-msg-stats-xfer ui-admin-status-primary'),
-      ''
-   );
+   var runtime_card = admin_sdr_mode?
+      status_card('fa-dashboard', 'Runtime health',
+         'Processor load, outbound data flow and realtime pipeline stability',
+         '<div class="ui-admin-runtime-grid">' +
+            '<section class="ui-admin-runtime-panel"><header><h4>Compute load</h4>' +
+               '<span>Per-core utilization</span></header>' +
+               w3_div('id-status-runtime-cpu', 'Waiting for processor data') +
+            '</section>' +
+            '<section class="ui-admin-runtime-panel"><header><h4>Network output</h4>' +
+               '<span>Traffic mix and recent trend</span></header>' +
+               w3_div('id-status-runtime-traffic', 'Waiting for traffic data') +
+            '</section>' +
+            '<section class="ui-admin-runtime-panel ui-admin-runtime-panel-wide">' +
+               '<header><div><h4>Realtime pipeline</h4><span>Queue pressure and delivery faults</span></div>' +
+                  w3_button('w3-aqua', 'Reset queue stats', 'status_dpump_hist_reset_cb') +
+               '</header>' +
+               w3_div('id-status-runtime-diagnostics', 'Waiting for pipeline data') +
+            '</section>' +
+         '</div>',
+         'ui-admin-status-card-wide ui-admin-status-runtime'
+      ) : '';
 
    var client_card = status_card('fa-desktop', 'Admin client', 'Browser used for this management session',
       w3_div('ui-admin-status-client', navigator.userAgent),
@@ -114,8 +247,7 @@ function status_html()
          w3_div('ui-admin-status-grid',
             receiver_card +
             health_card +
-            cpu_card +
-            network_card
+            runtime_card
          ) +
          '<section class="ui-admin-status-users">' +
             '<header><div><span>RECEIVER ACCESS</span><h2>Active sessions</h2></div>' +
@@ -123,7 +255,7 @@ function status_html()
             w3_div('id-users-list ui-admin-status-user-list') +
          '</section>' +
          '<div class="ui-admin-status-grid ui-admin-status-secondary-grid">' +
-            s2 + client_card + s3 +
+            s2 + client_card +
          '</div>'
       );
    

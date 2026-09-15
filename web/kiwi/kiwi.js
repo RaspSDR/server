@@ -3228,6 +3228,7 @@ function kiwi_msg(param, ws)
 				}
 
 				admin_stats_cb(o.ad, o.au, o.ae, o.ar, o.an, o.ap, o.an2, o.ai);
+				w3_call('status_runtime_update', o);
 				w3_call('config_status_cb', o);
 				time_display_cb(o);
 			}

@@ -738,6 +738,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             const cards = Array.from(status?.querySelectorAll('.ui-admin-status-card') || []);
             const grid = status?.querySelector('.ui-admin-status-grid');
             const users = status?.querySelector('.ui-admin-status-users');
+            const runtime = status?.querySelector('.ui-admin-status-runtime');
             const gridTemplate = grid? getComputedStyle(grid).gridTemplateColumns : '';
             return {
                 heading: status?.querySelector('.ui-admin-status-header h2')?.textContent,
@@ -746,7 +747,20 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 twoColumnGrid: gridTemplate.startsWith('repeat(2,'),
                 userSummary: status?.querySelector('#id-status-user-count')?.textContent,
                 userRows: status?.querySelectorAll('.id-users-list > div').length || 0,
-                usersBorder: users? getComputedStyle(users).borderStyle : ''
+                usersBorder: users? getComputedStyle(users).borderStyle : '',
+                runtime: {
+                    panels: runtime?.querySelectorAll('.ui-admin-runtime-panel').length || 0,
+                    cpuRows: runtime?.querySelectorAll('.ui-admin-runtime-cpu-row').length || 0,
+                    trafficSegments:
+                        runtime?.querySelectorAll('.ui-admin-runtime-throughput-bar i').length || 0,
+                    sparkline: !!runtime?.querySelector('.ui-admin-runtime-sparkline polyline'),
+                    counters: runtime?.querySelectorAll('.ui-admin-runtime-counters > div').length || 0,
+                    histograms: runtime?.querySelectorAll('.ui-admin-runtime-histogram').length || 0,
+                    histogramBars:
+                        runtime?.querySelectorAll('.ui-admin-runtime-histogram-bars i').length || 0,
+                    resetButton: Array.from(runtime?.querySelectorAll('button') || [])
+                        .some(button => button.textContent.trim() === 'Reset queue stats')
+                }
             };
         });
         await adminPage.locator('#id-nav-control').click();
@@ -1159,12 +1173,22 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminFoundation.keyboardNavigation.after !== adminFoundation.keyboardNavigation.focused)
             throw new Error(`invalid modern admin foundation: ${JSON.stringify(adminFoundation)}`);
         if (adminStatus.heading !== 'System status' ||
-            !['Receiver', 'Signal & timing', 'Compute', 'Traffic', 'Nightly maintenance',
-                'Admin client', 'Realtime diagnostics'].every(title => adminStatus.cardTitles.includes(title)) ||
+            !['Receiver', 'Signal & timing', 'Runtime health', 'Nightly maintenance',
+                'Admin client'].every(title => adminStatus.cardTitles.includes(title)) ||
+            ['Compute', 'Traffic', 'Realtime diagnostics']
+                .some(title => adminStatus.cardTitles.includes(title)) ||
             !adminStatus.twoColumnGrid ||
             !adminStatus.userSummary?.includes('receiver channels active') ||
             adminStatus.userRows < 1 ||
-            adminStatus.usersBorder === 'none')
+            adminStatus.usersBorder === 'none' ||
+            adminStatus.runtime.panels !== 3 ||
+            adminStatus.runtime.cpuRows < 1 ||
+            adminStatus.runtime.trafficSegments !== 3 ||
+            !adminStatus.runtime.sparkline ||
+            adminStatus.runtime.counters !== 4 ||
+            adminStatus.runtime.histograms !== 2 ||
+            adminStatus.runtime.histogramBars < 32 ||
+            !adminStatus.runtime.resetButton)
             throw new Error(`invalid modern admin status page: ${JSON.stringify(adminStatus)}`);
         if (adminControl.heading !== 'Receiver control' ||
             adminControl.sections.join(',') !==

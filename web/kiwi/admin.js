@@ -180,28 +180,52 @@ function control_html()
 {
    var init_ifrate = adm.snd_rate;
    var airband_clock = isNumber(adm.airband_adc_clock)? adm.airband_adc_clock : 0;
-	var s1 =
-		'<hr>' +
-		w3_quarter('w3-valign', '',
-         w3_div('',
-            w3_div('',
-               w3_button('w3-aqua w3-margin', 'Web-888 server restart', 'control_restart_cb'),
-               w3_button('w3-blue w3-margin', 'Web-888 reboot', 'control_reboot_cb')
-            )
-         ),
-         w3_div('w3-center',
-            w3_switch_label('w3-center w3-restart', 'HF Bandwidth Selection', '32Mhz', '64Mhz', 'adm.narrowband', adm.narrowband, 'wf_narrowband_enabled_cb')
-         ),
-         w3_div('w3-center',
-            w3_select('w3-center w3-restart', 'RX Bandwidth', '', 'adm.snd_rate', init_ifrate, admin.c_rates, 'airband_rx_rate_cb'),
-            w3_divs('w3-restart w3-margin-T-8/',
-               w3_select('id-airband-adc-clock w3-width-auto', 'Airband ADC clock', '',
-                  'adm.airband_adc_clock', airband_clock, admin.airband_adc_clock_s, 'airband_adc_clock_cb'),
-               w3_div('id-airband-adc-clock-status w3-text-black w3-margin-T-4', '')
-            )
-         ),
-         w3_div('w3-center',
-            w3_switch_label('w3-center w3-restart', 'Share WF channels with all users', 'Share', 'Exclusive', 'adm.wf_share', adm.wf_share, 'wf_share_enabled_cb')
+   var service =
+      w3_div('ui-admin-control-actions',
+         w3_div('ui-admin-control-action',
+            w3_div('ui-admin-control-action-copy',
+               w3_div('ui-admin-control-action-title', 'Server process') +
+               w3_div('ui-admin-control-action-desc',
+                  'Restart the receiver software without rebooting the operating system.')
+            ) +
+            w3_button('ui-admin-control-action-button w3-aqua', 'Restart server',
+               'control_restart_cb')
+         ) +
+         w3_div('ui-admin-control-action',
+            w3_div('ui-admin-control-action-copy',
+               w3_div('ui-admin-control-action-title', 'Receiver device') +
+               w3_div('ui-admin-control-action-desc',
+                  'Reboot the complete Web-888 device and all receiver services.')
+            ) +
+            w3_button('ui-admin-control-action-button w3-blue', 'Reboot device',
+               'control_reboot_cb')
+         )
+      );
+
+   var radio =
+      w3_div('ui-admin-control-fields',
+         w3_div('ui-admin-control-field w3-restart',
+            w3_div('ui-admin-control-field-title', 'HF frequency range') +
+            w3_div('ui-admin-control-field-desc',
+               'Select the FPGA firmware range used for HF reception.') +
+            w3_switch_label('w3-center', '', '32 MHz', '64 MHz',
+               'adm.narrowband', adm.narrowband, 'wf_narrowband_enabled_cb')
+         ) +
+         w3_div('ui-admin-control-field w3-restart',
+            w3_div('ui-admin-control-field-title', 'Receiver bandwidth') +
+            w3_div('ui-admin-control-field-desc',
+               'Select the receiver sample-rate bandwidth.') +
+            w3_select('w3-center', '', '', 'adm.snd_rate', init_ifrate,
+               admin.c_rates, 'airband_rx_rate_cb')
+         ) +
+         w3_div('ui-admin-control-field w3-restart',
+            w3_div('ui-admin-control-field-title', 'Airband ADC clock') +
+            w3_div('ui-admin-control-field-desc',
+               'Choose the ADC reference used for Airband mode.') +
+            w3_select('id-airband-adc-clock w3-width-auto', '', '',
+               'adm.airband_adc_clock', airband_clock, admin.airband_adc_clock_s,
+               'airband_adc_clock_cb') +
+            w3_div('id-airband-adc-clock-status ui-admin-control-field-status', '')
          )
       );
 
@@ -214,54 +238,68 @@ function control_html()
    for (var i = 1; i <= rx_chans; i++)
       ext_api_chans_u[i] = i.toFixed(0);
 
-	var s2 =
-		'<hr>' +
-		w3_third('w3-container w3-valign', '',
-         w3_divs('',
-            w3_inline('w3-halign-space-around/',
-               w3_switch_label('w3-center', 'Enable user<br>connections?', 'Yes', 'No', 'adm.server_enabled', adm.server_enabled, 'server_enabled_cb'),
+   var availability =
+      w3_div('ui-admin-control-fields',
+         w3_div('ui-admin-control-field',
+            w3_div('ui-admin-control-field-title', 'Receiver connections') +
+            w3_div('ui-admin-control-field-desc',
+               'Allow new users to connect to the receiver.') +
+            w3_switch_label('w3-center', '', 'Yes', 'No',
+               'adm.server_enabled', adm.server_enabled, 'server_enabled_cb')
+         ) +
+         w3_div('ui-admin-control-field w3-restart',
+            w3_div('ui-admin-control-field-title', 'User-selectable band mode') +
+            w3_div('ui-admin-control-field-desc',
+               'Expose the Airband/HF mode selector to receiver users.') +
+            w3_switch_label('w3-center', '', 'Air', 'HF',
+               'adm.airband', adm.airband, 'airband_switch_cb')
+         ) +
+         w3_div('ui-admin-control-field w3-restart',
+            w3_div('ui-admin-control-field-title', 'Waterfall channel assignment') +
+            w3_div('ui-admin-control-field-desc',
+               'Share waterfall channels between users or reserve one per session.') +
+            w3_switch_label('w3-center', '', 'Share', 'Exclusive',
+               'adm.wf_share', adm.wf_share, 'wf_share_enabled_cb')
+         ) +
+         w3_div('ui-admin-control-field w3-restart',
+            w3_div('ui-admin-control-field-title', 'Waterfall and spectrum') +
+            w3_div('ui-admin-control-field-desc',
+               'Disable visual data streams to reduce Internet bandwidth usage.') +
+            w3_switch_label('w3-center', '', 'Disable', 'Enable',
+               'cfg.no_wf', cfg.no_wf, 'admin_radio_YN_cb')
+         ) +
+         w3_div('ui-admin-control-field ui-admin-control-field-wide',
+            w3_div('ui-admin-control-field-title', 'External application capacity') +
+            w3_div('ui-admin-control-field-desc',
+               'Limit simultaneous channels used by non-Kiwi clients such as kiwirecorder. ' +
+               'This overrides the matching TDoA setting.') +
+            w3_select('w3-width-auto', '', '', 'ext_api_nchans', ext_api_nchans,
+               ext_api_chans_u, 'admin_select_cb')
+         )
+      );
 
-               w3_switch_label('w3-center w3-restart', 'Switch between<br>HF or Air Band', 'Air', 'HF', 'adm.airband', adm.airband, 'airband_switch_cb'),
-         
-               w3_divs('w3-center/w3-margin-T-8',
-                  w3_div('', '<b>Close all active<br>user connections</b>'),
-                  w3_button('w3-red', 'Kick', 'control_user_kick_cb')
-               )
-            )
-         ),
-
-         w3_divs('/w3-center w3-tspace-8',
-            w3_select('w3-width-auto', 'Number of simultaneous channels available<br>for connection by non-Kiwi apps',
-               '', 'ext_api_nchans', ext_api_nchans, ext_api_chans_u, 'admin_select_cb'),
-            w3_div('w3-text-black',
-               'If you want to limit incoming connections from <br> non-Kiwi apps like kiwirecorder set this value. <br>' +
-               'This overrides similar value in TDoA extension settings.'
-            )
-         ),
-
-			w3_divs('w3-restart/w3-tspace-8',
-            w3_switch_label('w3-center', 'Disable waterfalls/spectrum?', 'Yes', 'No', 'cfg.no_wf', cfg.no_wf, 'admin_radio_YN_cb'),
-				w3_text('w3-text-black w3-center',
-				   'Set "yes" to save Internet bandwidth by preventing <br>' +
-				   'the waterfall and spectrum from being displayed.'
-				)
-			)
-		) +
-
-      w3_half('w3-margin-top', 'w3-container',
-         w3_div('',
-            w3_input_get('', 'Reason if disabled', 'reason_disabled', 'reason_cb', '', 'will be shown to users attempting to connect'),
-            w3_divs('w3-margin-top/',
-               '<label><b>Disabled reason HTML preview</b></label>',
-               w3_div('id-reason-disabled-preview w3-text-black w3-background-pale-aqua', '')
-            )
-         ),
-         w3_div('',
-            w3_input_get('', 'Reason if kicked', 'reason_kicked', 'reason_cb', '', 'will be shown to users when kicked'),
-            w3_divs('w3-margin-top/',
-               '<label><b>Kicked reason HTML preview</b></label>',
-               w3_div('id-reason-kicked-preview w3-text-black w3-background-pale-aqua', '')
-            )
+   var sessions =
+      w3_div('ui-admin-control-session-action',
+         w3_div('ui-admin-control-action-copy',
+            w3_div('ui-admin-control-action-title', 'Active receiver sessions') +
+            w3_div('ui-admin-control-action-desc',
+               'Disconnect every user currently connected to the receiver.')
+         ) +
+         w3_button('ui-admin-control-action-button w3-red', 'Kick all users',
+            'control_user_kick_cb')
+      ) +
+      w3_div('ui-admin-control-messages',
+         w3_div('ui-admin-control-message',
+            w3_input_get('', 'Message shown when receiver access is disabled',
+               'reason_disabled', 'reason_cb', '', 'shown to users attempting to connect') +
+            w3_div('id-reason-disabled-preview ui-admin-control-message-preview ' +
+               'w3-text-black w3-background-pale-aqua', '')
+         ) +
+         w3_div('ui-admin-control-message',
+            w3_input_get('', 'Message shown after users are disconnected',
+               'reason_kicked', 'reason_cb', '', 'shown to users when kicked') +
+            w3_div('id-reason-kicked-preview ui-admin-control-message-preview ' +
+               'w3-text-black w3-background-pale-aqua', '')
          )
       );
 	
@@ -271,62 +309,99 @@ function control_html()
    for (var i = 1; i <= max_camp; i++)
       n_camp_u[i] = i.toFixed(0);
    var snr_interval_u = [ 'disable', 'hourly', '4 hours', '6 hours', '24 hours' ];
-   var snr_interval = [ 0, 1, 4, 6, 24 ];
-
-	var s3 =
-		'<hr>' +
-		w3_third('w3-margin-bottom w3-text-teal', 'w3-container',
-			w3_div('',
-				w3_input_get('', 'Inactivity time limit (min, 0 = no limit)', 'inactivity_timeout_mins', 'admin_int_cb'),
-				w3_div('w3-text-black', 'Connections from the local network are exempt.')
-			),
-			w3_div('',
-				w3_input_get('', '24hr per-IP addr time limit (min, 0 = no limit)', 'ip_limit_mins', 'admin_int_cb'),
-				w3_div('w3-text-black', 'Connections from the local network are exempt.')
-			),
-			w3_div('',
-				w3_input_get('', 'Time limit exemption password', 'adm.tlimit_exempt_pwd', 'w3_string_set_cfg_cb'),
+   var tlimit_help =
 				w3_div('w3-text-black', 'Password users can give to override time limits. <br> To specify in URL: web-888.local:8073/?pwd=<i>password</i>')
-			)
-		) +
+         ;
 
-		'<hr>' +
-		w3_third('w3-margin-bottom w3-text-teal', 'w3-container',
-         w3_divs('w3-restart/w3-center w3-tspace-8',
-            w3_select('w3-width-auto', 'Number of audio campers per channel', '', 'n_camp', n_camp, n_camp_u, 'admin_select_cb'),
-            w3_div('w3-text-black',
-               'Reduce this value if your SDR is experiencing <br>' +
-               'performance problems from too many audio campers.'
-            )
-         ),
-         
-			w3_divs('/w3-center w3-tspace-8',
-            w3_select('w3-width-auto', 'SNR measurement interval', '', 'cfg.snr_meas_interval_hrs', cfg.snr_meas_interval_hrs, snr_interval_u, 'admin_select_cb'),
-				w3_text('w3-text-black w3-center',
-				   'Enables automatic sampling of <br>' +
-				   'signal-to-noise ratio (SNR) at the specified interval. <br>' +
-				   'Access SNR data in JSON format using <br>' +
-				   'URL of the form: <i>my_sdr:8073/snr</i>'
-				)
-			),
-			
-			w3_divs('/w3-tspace-8',
-            //w3_switch_label('w3-center', 'Timestamp SNR with local time?', 'Yes', 'No', 'cfg.snr_local_time', cfg.snr_local_time, 'admin_radio_YN_cb')
-            w3_checkbox_get_param('//w3-label-inline w3-restart', 'Non native connections can preempt autorun processes', 'any_preempt_autorun', 'admin_bool_cb', true),
-            w3_checkbox_get_param('//w3-label-inline', 'Timestamp SNR with local time', 'snr_local_time', 'admin_bool_cb', true),
-            w3_button('w3-aqua w3-margin-T-16', 'Measure SNR now', 'control_snr_measure_cb')
+   var limits =
+      w3_div('ui-admin-control-fields',
+         w3_div('ui-admin-control-field',
+            w3_input_get('', 'Inactivity limit (minutes, 0 = no limit)',
+               'inactivity_timeout_mins', 'admin_int_cb') +
+            w3_div('ui-admin-control-field-desc',
+               'Connections from the local network are exempt.')
+         ) +
+         w3_div('ui-admin-control-field',
+            w3_input_get('', 'Per-IP daily limit (minutes, 0 = no limit)',
+               'ip_limit_mins', 'admin_int_cb') +
+            w3_div('ui-admin-control-field-desc',
+               'Connections from the local network are exempt.')
+         ) +
+         w3_div('ui-admin-control-field ui-admin-control-field-wide',
+            w3_input_get('', 'Time-limit exemption password',
+               'adm.tlimit_exempt_pwd', 'w3_string_set_cfg_cb') +
+            w3_div('ui-admin-control-field-desc', tlimit_help)
          )
-		) +
-		'<hr>';
+      );
+
+   var capacity =
+      w3_div('ui-admin-control-fields ui-admin-control-fields-single',
+         w3_div('ui-admin-control-field w3-restart',
+            w3_select('w3-width-auto', 'Audio campers per receiver channel', '',
+               'n_camp', n_camp, n_camp_u, 'admin_select_cb') +
+            w3_div('ui-admin-control-field-desc',
+               'Reduce this value if audio monitoring causes receiver performance problems.')
+         ) +
+         w3_div('ui-admin-control-field w3-restart',
+            w3_checkbox_get_param('//w3-label-inline',
+               'Allow non-native connections to preempt autorun processes',
+               'any_preempt_autorun', 'admin_bool_cb', true)
+         )
+      );
+
+   var monitoring =
+      w3_div('ui-admin-control-monitoring',
+         w3_div('ui-admin-control-fields',
+            w3_div('ui-admin-control-field',
+               w3_select('w3-width-auto', 'Automatic measurement interval', '',
+                  'cfg.snr_meas_interval_hrs', cfg.snr_meas_interval_hrs,
+                  snr_interval_u, 'admin_select_cb') +
+               w3_div('ui-admin-control-field-desc',
+                  'Samples receiver signal-to-noise ratio and publishes the data at /snr.')
+            ) +
+            w3_div('ui-admin-control-field',
+               w3_checkbox_get_param('//w3-label-inline',
+                  'Timestamp SNR measurements with local time',
+                  'snr_local_time', 'admin_bool_cb', true)
+            )
+         ) +
+         w3_div('ui-admin-control-session-action',
+            w3_div('ui-admin-control-action-copy',
+               w3_div('ui-admin-control-action-title', 'On-demand measurement') +
+               w3_div('ui-admin-control-action-desc',
+                  'Run an SNR measurement now instead of waiting for the schedule.')
+            ) +
+            w3_button('ui-admin-control-action-button w3-aqua', 'Measure SNR now',
+               'control_snr_measure_cb')
+         )
+      );
 
    var content =
       admin_page_header('OPERATIONS', 'Receiver control',
-         'Manage receiver mode, user access, service availability and operating limits.') +
+         'Manage receiver operation, access, capacity and measurement policy.') +
       '<div class="ui-admin-section-grid">' +
-         admin_section('Receiver & service', 'Restart actions and radio hardware behavior', s1) +
+         admin_section('Service lifecycle',
+            'Restart receiver software or reboot the complete device.',
+            service, 'ui-admin-section-wide') +
          (admin_sdr_mode?
-            admin_section('Access & availability', 'Control who can connect and what resources are exposed', s2) +
-            admin_section('Limits & monitoring', 'Connection policy, camping and SNR measurements', s3,
+            admin_section('Radio configuration',
+               'Configure receiver frequency range, bandwidth and Airband clock.',
+               radio) +
+            admin_section('Listener availability',
+               'Control new connections and the receiver resources exposed to clients.',
+               availability) +
+            admin_section('Session management',
+               'Disconnect active users and maintain the messages shown when access ends.',
+               sessions, 'ui-admin-section-wide') +
+            admin_section('Connection time limits',
+               'Limit inactive sessions and daily usage by client IP address.',
+               limits) +
+            admin_section('Receiver capacity',
+               'Control audio monitoring capacity and autorun channel preemption.',
+               capacity) +
+            admin_section('SNR monitoring',
+               'Schedule automatic SNR measurements or run one immediately.',
+               monitoring,
                'ui-admin-section-wide')
          : '') +
       '</div>';

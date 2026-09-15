@@ -636,11 +636,29 @@
 }
 
 .ui-modern .cl-dx-label {
-   border-color: var(--ui-border-strong);
-   border-radius: 6px !important;
-   padding: 2px 3px;
-   font-size: 10px;
+   min-height: 0;
+   border: 1px solid #111 !important;
+   border-radius: 0 !important;
+   padding: 1px 2px !important;
+   background: var(--dx-label-bg) !important;
+   color: #111 !important;
+   font-size: 9px !important;
+   line-height: 1.25;
    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.26);
+}
+
+.ui-modern .cl-dx-label:hover {
+   border-color: #111 !important;
+   background: var(--dx-label-bg) !important;
+   color: #111 !important;
+}
+
+.ui-modern .cl-dx-label.cl-dx-label-filtered {
+   border-style: dashed !important;
+}
+
+.ui-modern .cl-dx-label.cl-dx-label-ext {
+   border-right-width: 4px !important;
 }
 
 .ui-modern .id-kiwi-container[data-type="admin"] {
@@ -849,12 +867,94 @@
    display: none;
 }
 
-.ui-modern .ui-admin-control .ui-admin-section-body > .w3-row {
-   align-items: flex-start;
+.ui-modern .ui-admin-control-actions,
+.ui-modern .ui-admin-control-fields,
+.ui-modern .ui-admin-control-messages {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: var(--ui-space-3);
 }
 
-.ui-modern .ui-admin-control .ui-admin-section-body > .w3-row > .w3-col {
-   padding: var(--ui-space-2);
+.ui-modern .ui-admin-control-action,
+.ui-modern .ui-admin-control-session-action {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: var(--ui-space-4);
+   min-width: 0;
+   padding: var(--ui-space-3);
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-bg-raised);
+}
+
+.ui-modern .ui-admin-control-action-copy {
+   min-width: 0;
+}
+
+.ui-modern .ui-admin-control-action-title,
+.ui-modern .ui-admin-control-field-title {
+   color: var(--ui-text);
+   font-weight: 700;
+}
+
+.ui-modern .ui-admin-control-action-desc,
+.ui-modern .ui-admin-control-field-desc,
+.ui-modern .ui-admin-control-field-status {
+   margin-top: 3px;
+   color: var(--ui-text-muted);
+   font-size: var(--ui-font-size-meta);
+   line-height: 1.35;
+}
+
+.ui-modern .ui-admin-control-action-button {
+   flex: 0 0 148px;
+   min-height: var(--ui-control-height);
+   margin: 0 !important;
+}
+
+.ui-modern .ui-admin-control-field {
+   display: flex;
+   flex-direction: column;
+   justify-content: flex-start;
+   min-width: 0;
+   padding: var(--ui-space-3);
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-bg-raised);
+}
+
+.ui-modern .ui-admin-control-field-wide {
+   grid-column: 1 / -1;
+}
+
+.ui-modern .ui-admin-control-fields-single {
+   grid-template-columns: 1fr;
+}
+
+.ui-modern .ui-admin-control-field > :last-child:not(.ui-admin-control-field-desc) {
+   margin-top: auto;
+   padding-top: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-control-field .w3-label-inline {
+   margin-top: 0 !important;
+}
+
+.ui-modern .ui-admin-control-session-action {
+   margin-bottom: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-control-message {
+   min-width: 0;
+}
+
+.ui-modern .ui-admin-control-message-preview {
+   margin-top: var(--ui-space-2);
+}
+
+.ui-modern .ui-admin-control-monitoring > .ui-admin-control-session-action {
+   margin: var(--ui-space-3) 0 0;
 }
 
 .ui-modern .ui-admin-connect .id-admin-nav-dom {
@@ -1438,6 +1538,27 @@
    .ui-modern .ui-admin-status-policy,
    .ui-modern .ui-admin-section-grid {
       grid-template-columns: minmax(0, 1fr);
+   }
+
+   .ui-modern .ui-admin-control-actions,
+   .ui-modern .ui-admin-control-fields,
+   .ui-modern .ui-admin-control-messages {
+      grid-template-columns: minmax(0, 1fr);
+   }
+
+   .ui-modern .ui-admin-control-field-wide {
+      grid-column: auto;
+   }
+
+   .ui-modern .ui-admin-control-action,
+   .ui-modern .ui-admin-control-session-action {
+      align-items: stretch;
+      flex-direction: column;
+   }
+
+   .ui-modern .ui-admin-control-action-button {
+      flex-basis: auto;
+      width: 100%;
    }
 
    .ui-modern .ui-admin-status-card-wide,

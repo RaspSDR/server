@@ -754,11 +754,29 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         const adminControl = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-control');
             const rect = page.getBoundingClientRect();
+            const buttons = Array.from(page.querySelectorAll('button'));
+            const buttonSection = label => {
+                const button = buttons.find(button => button.textContent.trim() === label);
+                return button?.closest('.ui-admin-section')?.querySelector('h3')?.textContent;
+            };
+            const lifecycleButtons = buttons.filter(button =>
+                ['Restart server', 'Reboot device'].includes(button.textContent.trim()));
             return {
                 heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
                 sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
                     heading => heading.textContent),
-                fits: rect.left >= -1 && rect.right <= window.innerWidth + 1
+                fits: rect.left >= -1 && rect.right <= window.innerWidth + 1,
+                actionSections: {
+                    restart: buttonSection('Restart server'),
+                    reboot: buttonSection('Reboot device'),
+                    kick: buttonSection('Kick all users'),
+                    measure: buttonSection('Measure SNR now')
+                },
+                lifecycleAligned: lifecycleButtons.length === 2 &&
+                    Math.abs(lifecycleButtons[0].getBoundingClientRect().width -
+                        lifecycleButtons[1].getBoundingClientRect().width) <= 1 &&
+                    Math.abs(lifecycleButtons[0].getBoundingClientRect().top -
+                        lifecycleButtons[1].getBoundingClientRect().top) <= 1
             };
         });
         await adminPage.locator('#id-nav-connect').click();
@@ -978,6 +996,26 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             };
         });
         await adminPage.setViewportSize({ width: 390, height: 844 });
+        await adminPage.locator('#id-nav-control').click();
+        await adminPage.waitForTimeout(100);
+        const adminControlMobile = await adminPage.evaluate(() => {
+            const page = document.querySelector('.ui-admin-control');
+            const actionCards = Array.from(page.querySelectorAll('.ui-admin-control-action'));
+            const rect = page.getBoundingClientRect();
+            return {
+                fits: rect.left >= -1 && rect.right <= window.innerWidth + 1,
+                actionColumns: actionCards.length >= 2 &&
+                    Math.abs(actionCards[0].getBoundingClientRect().left -
+                        actionCards[1].getBoundingClientRect().left) <= 1,
+                fullWidthButtons: actionCards.every(card => {
+                    const button = card.querySelector('button');
+                    const style = getComputedStyle(card);
+                    const innerWidth = card.getBoundingClientRect().width -
+                        parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+                    return Math.abs(button.getBoundingClientRect().width - innerWidth) <= 2;
+                })
+            };
+        });
         await adminPage.locator('#id-nav-extensions').click();
         await adminPage.waitForTimeout(100);
         const adminExtensionsMobile = await adminPage.evaluate(() => {
@@ -1130,9 +1168,20 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             throw new Error(`invalid modern admin status page: ${JSON.stringify(adminStatus)}`);
         if (adminControl.heading !== 'Receiver control' ||
             adminControl.sections.join(',') !==
-                'Receiver & service,Access & availability,Limits & monitoring' ||
-            !adminControl.fits)
+                'Service lifecycle,Radio configuration,Listener availability,' +
+                'Session management,Connection time limits,Receiver capacity,SNR monitoring' ||
+            !adminControl.fits ||
+            adminControl.actionSections.restart !== 'Service lifecycle' ||
+            adminControl.actionSections.reboot !== 'Service lifecycle' ||
+            adminControl.actionSections.kick !== 'Session management' ||
+            adminControl.actionSections.measure !== 'SNR monitoring' ||
+            !adminControl.lifecycleAligned)
             throw new Error(`invalid modern admin control page: ${JSON.stringify(adminControl)}`);
+        if (!adminControlMobile.fits ||
+            !adminControlMobile.actionColumns ||
+            !adminControlMobile.fullWidthButtons)
+            throw new Error(
+                `invalid modern mobile admin control page: ${JSON.stringify(adminControlMobile)}`);
         if (adminConnect.heading !== 'Internet access' ||
             adminConnect.sections.join(',') !==
                 'Public address,Busy-server redirect,Dynamic DNS,Reverse proxy' ||
@@ -1284,7 +1333,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             panelToggle, adminFoundation, adminResponsive, adminControl, adminConnect, adminConfig,
             adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,
             adminLog, adminConsole, consoleOpenOrder, consoleANSI, adminExtensions, adminSecurity,
-            adminExtensionsMobile, adminScrollDesktop, adminScrollMobile
+            adminControlMobile, adminExtensionsMobile, adminScrollDesktop, adminScrollMobile
         }));
     } finally {
         await browser.close();

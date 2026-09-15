@@ -916,6 +916,20 @@
    border-radius: var(--ui-radius-sm);
 }
 
+.ui-modern .ui-admin-dx .ui-admin-section-body > .w3-container,
+.ui-modern .ui-admin-dx .id-dx-list-container,
+.ui-modern .ui-admin-dx .id-dx-type-container,
+.ui-modern .ui-admin-dx .id-band-bar-container,
+.ui-modern .ui-admin-dx .id-band-svc-container {
+   margin-right: 0!important;
+   margin-left: 0!important;
+}
+
+.ui-modern .ui-admin-dx .ui-admin-section-body > .w3-halign-space-between {
+   gap: var(--ui-space-3);
+   flex-wrap: wrap;
+}
+
 .ui-modern .ui-admin-status-header,
 .ui-modern .ui-admin-status-users > header {
    display: flex;

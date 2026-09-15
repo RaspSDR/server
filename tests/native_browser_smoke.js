@@ -809,6 +809,19 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 registrationStatus: !!page.querySelector('.id-kiwisdr_com-reg-status')
             };
         });
+        await adminPage.locator('#id-nav-dx').click();
+        await adminPage.waitForTimeout(700);
+        const adminDX = await adminPage.evaluate(() => {
+            const page = document.querySelector('.ui-admin-dx');
+            return {
+                heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
+                sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
+                    heading => heading.textContent),
+                labelList: !!page.querySelector('.id-dx-list'),
+                searchFields: ['id-dx.o.search_f', 'id-dx.o.search_i', 'id-dx.o.search_n']
+                    .filter(id => document.getElementById(id)).length
+            };
+        });
         await adminPage.setViewportSize({ width: 390, height: 844 });
         await adminPage.locator('#id-nav-extensions').click();
         await adminPage.waitForTimeout(100);
@@ -971,6 +984,11 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 'Directory registration,Station identity & coverage' ||
             !adminPublic.registrationStatus)
             throw new Error(`invalid modern admin public page: ${JSON.stringify(adminPublic)}`);
+        if (adminDX.heading !== 'DX labels & bands' ||
+            adminDX.sections.join(',') !== 'Label database,Stored labels,Band presentation' ||
+            !adminDX.labelList ||
+            adminDX.searchFields !== 3)
+            throw new Error(`invalid modern admin DX page: ${JSON.stringify(adminDX)}`);
         if (adminExtensionsMobile.navDisplay !== 'flex' ||
             adminExtensionsMobile.navPosition !== 'static' ||
             !adminExtensionsMobile.navScrollable ||
@@ -1031,7 +1049,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         console.log(JSON.stringify({
             ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
             panelToggle, adminFoundation, adminResponsive, adminControl, adminConnect, adminConfig,
-            adminWebpage, adminPublic, adminExtensionsMobile
+            adminWebpage, adminPublic, adminDX, adminExtensionsMobile
         }));
     } finally {
         await browser.close();

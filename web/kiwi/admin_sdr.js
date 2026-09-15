@@ -1245,6 +1245,9 @@ function dx_html()
 
 	if (kiwi_isMobile())
 	   return w3_div('id-dx w3-hide', w3_div('w3-container w3-margin-top', 'Not available on mobile devices.'));
+
+   var header = admin_page_header('DIRECTORY', 'DX labels & bands',
+      'Manage station markers, community data and the band menus shown on the receiver.');
 	
    var s2 =
       w3_inline('/w3-margin-top',
@@ -1285,7 +1288,11 @@ function dx_html()
 	      w3_div('id-dx-list-msg w3-margin-T-8 w3-padding w3-red w3-hide');
 
 	if (abort) {
-	   return w3_div('id-dx w3-hide', w3_div('w3-container w3-margin-top', s2));
+	   return w3_div('id-dx w3-hide ui-admin-dx',
+	      header + '<div class="ui-admin-section-grid">' +
+	         admin_section('Label database', 'Select and synchronize the source used for DX labels', s2,
+	            'ui-admin-section-wide') +
+	      '</div>');
 	}
 	
 	// one-time conversion of kiwi.config/config.js bands[] to dx_config.json configuration file
@@ -1437,7 +1444,18 @@ function dx_html()
          w3_div('id-band-svc-list w3-margin-bottom w3-padding-B-8 w3-black-box w3-scroll-y|height:'+ vh)
       );
 
-	return w3_div('id-dx w3-hide', s1 + s2 + w3_div('id-dx-stored', s3 + s4 + s5 + s6));
+   var content =
+      header +
+      s1 +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Label database', 'Select and synchronize the source used for DX labels', s2,
+            'ui-admin-section-wide') +
+         admin_section('Stored labels', 'Search, import, export and edit receiver station markers', s3,
+            'ui-admin-section-wide') +
+         admin_section('Band presentation', 'Configure label types, band bars and service menus', s4 + s5 + s6,
+            'ui-admin-section-wide') +
+      '</div>';
+	return w3_div('id-dx w3-hide ui-admin-dx', content);
 }
 
 function dx_convert_label_foff_cb(path, idx)

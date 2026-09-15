@@ -644,9 +644,12 @@
 }
 
 .ui-modern .id-kiwi-container[data-type="admin"] {
-   min-height: 100dvh;
-   height: auto;
-   overflow: auto;
+   min-height: 0;
+   height: 100dvh;
+   overflow-x: hidden;
+   overflow-y: auto;
+   overscroll-behavior-y: contain;
+   scrollbar-gutter: stable;
    background: var(--ui-bg);
    color: var(--ui-text);
 }

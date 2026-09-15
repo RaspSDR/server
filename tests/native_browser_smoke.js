@@ -847,6 +847,23 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 blacklistStatus: !!page.querySelector('.id-ip-blacklist-status')
             };
         });
+        const adminScrollDesktop = await adminPage.evaluate(() => {
+            const container = document.querySelector('.id-kiwi-container[data-type="admin"]');
+            const header = document.querySelector('.id-admin-header-container');
+            container.scrollTop = 0;
+            const headerTop = header.getBoundingClientRect().top;
+            const maxScroll = container.scrollHeight - container.clientHeight;
+            container.scrollTop = maxScroll;
+            const result = {
+                overflowY: getComputedStyle(container).overflowY,
+                viewportHeight: container.clientHeight === window.innerHeight,
+                maxScroll,
+                reachedBottom: Math.abs(container.scrollTop - maxScroll) <= 1,
+                stickyHeader: Math.abs(header.getBoundingClientRect().top - headerTop) <= 1
+            };
+            container.scrollTop = 0;
+            return result;
+        });
         await adminPage.locator('#id-nav-gps').click();
         await adminPage.waitForTimeout(200);
         const adminGPS = await adminPage.evaluate(() => {
@@ -977,6 +994,21 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 configFits: !!configRect && configRect.left >= -1 &&
                     configRect.right <= window.innerWidth + 1
             };
+        });
+        await adminPage.locator('#id-nav-network').click();
+        await adminPage.waitForTimeout(100);
+        const adminScrollMobile = await adminPage.evaluate(() => {
+            const container = document.querySelector('.id-kiwi-container[data-type="admin"]');
+            const maxScroll = container.scrollHeight - container.clientHeight;
+            container.scrollTop = maxScroll;
+            const result = {
+                overflowY: getComputedStyle(container).overflowY,
+                viewportHeight: container.clientHeight === window.innerHeight,
+                maxScroll,
+                reachedBottom: Math.abs(container.scrollTop - maxScroll) <= 1
+            };
+            container.scrollTop = 0;
+            return result;
         });
         await adminPage.close();
 
@@ -1139,6 +1171,19 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !adminNetwork.networkStatus ||
             !adminNetwork.blacklistStatus)
             throw new Error(`invalid modern admin Network page: ${JSON.stringify(adminNetwork)}`);
+        for (const [name, scroll] of [
+            ['desktop', adminScrollDesktop],
+            ['mobile', adminScrollMobile]
+        ]) {
+            if (scroll.overflowY !== 'auto' ||
+                !scroll.viewportHeight ||
+                scroll.maxScroll <= 0 ||
+                !scroll.reachedBottom)
+                throw new Error(`invalid admin ${name} scrolling: ${JSON.stringify(scroll)}`);
+        }
+        if (!adminScrollDesktop.stickyHeader)
+            throw new Error(
+                `invalid sticky admin header: ${JSON.stringify(adminScrollDesktop)}`);
         if (adminGPS.heading !== 'GPS' ||
             adminGPS.sections.join(',') !== 'Receiver solution,Satellite channels' ||
             !adminGPS.infoTable ||
@@ -1239,7 +1284,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             panelToggle, adminFoundation, adminResponsive, adminControl, adminConnect, adminConfig,
             adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,
             adminLog, adminConsole, consoleOpenOrder, consoleANSI, adminExtensions, adminSecurity,
-            adminExtensionsMobile
+            adminExtensionsMobile, adminScrollDesktop, adminScrollMobile
         }));
     } finally {
         await browser.close();

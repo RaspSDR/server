@@ -893,6 +893,19 @@
    padding: var(--ui-space-2);
 }
 
+.ui-modern .ui-admin-webpage :where(
+   .id-webpage-title-preview,
+   .id-webpage-owner-info-preview,
+   .id-webpage-status-preview) {
+   min-height: 44px;
+   padding: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-webpage .ui-admin-section-body > .w3-container {
+   padding-right: 0;
+   padding-left: 0;
+}
+
 .ui-modern .ui-admin-status-header,
 .ui-modern .ui-admin-status-users > header {
    display: flex;

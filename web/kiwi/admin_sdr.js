@@ -798,7 +798,18 @@ function webpage_html()
 		) +
 		'<hr>';
 
-   return w3_div('id-webpage w3-text-teal w3-hide', s1 + s2 + s3);
+   var content =
+      admin_page_header('PRESENTATION', 'Receiver webpage',
+         'Customize the public identity, location, imagery and browser metadata shown to listeners.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Titles & messages', 'Top-bar identity, owner information and listener status text', s1,
+            'ui-admin-section-wide') +
+         admin_section('Location & station photo', 'Map metadata and the image presented on the receiver page', s2,
+            'ui-admin-section-wide') +
+         admin_section('Delivery & custom markup', 'Browser caching and optional HTML head additions', s3,
+            'ui-admin-section-wide') +
+      '</div>';
+   return w3_div('id-webpage w3-text-teal w3-hide ui-admin-webpage', content);
 }
 
 function webpage_input_grid(path, val)

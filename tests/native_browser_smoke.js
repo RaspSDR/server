@@ -761,6 +761,19 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 fits: rect.left >= -1 && rect.right <= window.innerWidth + 1
             };
         });
+        await adminPage.locator('#id-nav-connect').click();
+        await adminPage.waitForTimeout(100);
+        const adminConnect = await adminPage.evaluate(() => {
+            const page = document.querySelector('.ui-admin-connect');
+            const selector = page.querySelector('.id-admin-nav-dom');
+            return {
+                heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
+                sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
+                    heading => heading.textContent),
+                selectorDisplay: getComputedStyle(selector).display,
+                selectorPosition: getComputedStyle(selector).position
+            };
+        });
         await adminPage.setViewportSize({ width: 390, height: 844 });
         await adminPage.locator('#id-nav-extensions').click();
         await adminPage.waitForTimeout(100);
@@ -902,6 +915,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 'Receiver & service,Access & availability,Limits & monitoring' ||
             !adminControl.fits)
             throw new Error(`invalid modern admin control page: ${JSON.stringify(adminControl)}`);
+        if (adminConnect.heading !== 'Internet access' ||
+            adminConnect.sections.join(',') !==
+                'Public address,Busy-server redirect,Dynamic DNS,Reverse proxy' ||
+            adminConnect.selectorDisplay !== 'flex' ||
+            adminConnect.selectorPosition !== 'static')
+            throw new Error(`invalid modern admin connect page: ${JSON.stringify(adminConnect)}`);
         if (adminExtensionsMobile.navDisplay !== 'flex' ||
             adminExtensionsMobile.navPosition !== 'static' ||
             !adminExtensionsMobile.navScrollable ||
@@ -961,7 +980,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
 
         console.log(JSON.stringify({
             ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
-            panelToggle, adminFoundation, adminResponsive, adminControl, adminExtensionsMobile
+            panelToggle, adminFoundation, adminResponsive, adminControl, adminConnect,
+            adminExtensionsMobile
         }));
     } finally {
         await browser.close();

@@ -854,6 +854,37 @@
    padding: var(--ui-space-2);
 }
 
+.ui-modern .ui-admin-connect .id-admin-nav-dom {
+   position: static !important;
+   display: flex;
+   width: 100%;
+   height: auto;
+   gap: var(--ui-space-1);
+   margin: 0 0 var(--ui-space-3);
+   padding: var(--ui-space-1);
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius);
+   background: var(--ui-bg-raised);
+   overflow-x: auto;
+}
+
+.ui-modern .ui-admin-connect .id-admin-nav-dom a {
+   flex: 1 0 auto;
+   min-height: var(--ui-control-height);
+   padding: 9px 12px;
+   border: 1px solid transparent !important;
+   border-radius: var(--ui-radius-sm);
+   text-align: center;
+}
+
+.ui-modern .ui-admin-connect .id-admin-nav-dom + div {
+   padding-left: 0 !important;
+}
+
+.ui-modern .ui-admin-connect .ui-admin-section-body > .w3-tspace-8 {
+   margin-top: 0;
+}
+
 .ui-modern .ui-admin-status-header,
 .ui-modern .ui-admin-status-users > header {
    display: flex;
@@ -1290,6 +1321,10 @@
       overflow-x: auto;
       background: transparent;
       scrollbar-width: thin;
+   }
+
+   .ui-modern .ui-admin-connect .id-admin-nav-dom a {
+      flex: 0 0 auto;
    }
 
    .ui-modern .id-extensions-nav a {

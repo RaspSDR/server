@@ -701,7 +701,18 @@ function connect_html()
 		) +
 		'<hr>';
 
-	return w3_div('id-connect w3-text-teal w3-hide', s1 + s2 + s3 + s4);
+   var content =
+      admin_page_header('CONNECTIVITY', 'Internet access',
+         'Choose the public address for this receiver and configure failover, dynamic DNS or reverse proxy access.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Public address', 'Select the address listeners use to reach this receiver', s1,
+            'ui-admin-section-wide') +
+         admin_section('Busy-server redirect', 'Send new listeners to another receiver when all channels are occupied', s2,
+            'ui-admin-section-wide') +
+         admin_section('Dynamic DNS', 'Keep a noip.com hostname synchronized with the public address', s3) +
+         admin_section('Reverse proxy', 'Reach the receiver when direct inbound connections are unavailable', s4) +
+      '</div>';
+	return w3_div('id-connect w3-text-teal w3-hide ui-admin-connect', content);
 }
 
 function connect_focus()

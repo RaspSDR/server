@@ -295,7 +295,22 @@ function config_html()
 		) +
 		'<hr>';
 
-	return w3_div('id-config w3-hide', s1 + s2 + s3 + s4 + s6 + s7);
+   var content =
+      admin_page_header('RECEIVER', 'Configuration',
+         'Set startup defaults, signal processing behavior, calibration and hardware interfaces.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Startup defaults', 'Initial tuning, display range and regional band plan', s1,
+            'ui-admin-section-wide') +
+         admin_section('Default passbands', 'Define filter edges, center and width for each demodulation mode', s2,
+            'ui-admin-section-wide') +
+         admin_section('Display & calibration', 'Frequency presentation, S-meter and waterfall behavior', s3,
+            'ui-admin-section-wide') +
+         admin_section('External interfaces', 'CAT reporting and RF attenuator access policy', s4) +
+         admin_section('Clocking', 'External reference and GPS correction behavior', s6) +
+         admin_section('ADC behavior', 'Dithering, gain and GPS discipline', s7,
+            'ui-admin-section-wide') +
+      '</div>';
+	return w3_div('id-config w3-hide ui-admin-config', content);
 }
 
 function config_mode_cb(path, idx, first)

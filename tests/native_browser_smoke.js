@@ -860,6 +860,20 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 skyCanvas: !!page.querySelector('#id-gps-azel-canvas')
             };
         });
+        await adminPage.locator('#id-nav-log').click();
+        await adminPage.waitForTimeout(100);
+        const adminLog = await adminPage.evaluate(() => {
+            const page = document.querySelector('.ui-admin-log');
+            return {
+                heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
+                sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
+                    heading => heading.textContent),
+                output: !!page.querySelector('.id-log-msg'),
+                actions: Array.from(page.querySelectorAll('button'))
+                    .filter(button => ['Log state', 'Log IP blacklist', 'Clear Histogram']
+                        .includes(button.textContent.trim())).length
+            };
+        });
         await adminPage.setViewportSize({ width: 390, height: 844 });
         await adminPage.locator('#id-nav-extensions').click();
         await adminPage.waitForTimeout(100);
@@ -1045,6 +1059,11 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !adminGPS.channelTable ||
             !adminGPS.skyCanvas)
             throw new Error(`invalid modern admin GPS page: ${JSON.stringify(adminGPS)}`);
+        if (adminLog.heading !== 'Server log' ||
+            adminLog.sections.join(',') !== 'Log controls,Recent activity' ||
+            !adminLog.output ||
+            adminLog.actions !== 3)
+            throw new Error(`invalid modern admin Log page: ${JSON.stringify(adminLog)}`);
         if (adminExtensionsMobile.navDisplay !== 'flex' ||
             adminExtensionsMobile.navPosition !== 'static' ||
             !adminExtensionsMobile.navScrollable ||
@@ -1106,7 +1125,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
             panelToggle, adminFoundation, adminResponsive, adminControl, adminConnect, adminConfig,
             adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,
-            adminExtensionsMobile
+            adminLog, adminExtensionsMobile
         }));
     } finally {
         await browser.close();

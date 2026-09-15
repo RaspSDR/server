@@ -972,6 +972,19 @@
    height: auto;
 }
 
+.ui-modern .ui-admin-log .w3-halign-space-between,
+.ui-modern .ui-admin-log-actions {
+   gap: var(--ui-space-2);
+   flex-wrap: wrap;
+}
+
+.ui-modern .ui-admin-log .id-log-msg {
+   margin-top: 0;
+   max-width: 100%;
+   overflow: auto;
+   border-radius: var(--ui-radius-sm);
+}
+
 .ui-modern .ui-admin-status-header,
 .ui-modern .ui-admin-status-users > header {
    display: flex;

@@ -2298,24 +2298,28 @@ var nlog = 256;
 
 function log_html()
 {
-	var s =
-	w3_div('id-log w3-text-teal w3-hide',
-		'<hr>'+
-		w3_div('w3-container',
-		   w3_inline('w3-valign w3-halign-space-between/',
-		      w3_div('',
-               w3_label('w3-show-inline', 'Web-888 server log (scrollable list, first and last set of messages)'),
-               w3_button('w3-aqua|margin-left:10px', 'Log state', 'log_state_cb'),
-               w3_button('w3-aqua|margin-left:10px', 'Log IP blacklist', 'log_blacklist_cb'),
-               w3_button('w3-blue|margin-left:10px', 'Clear Histogram', 'log_clear_hist_cb')
-            ),
-            w3_switch_label('w3-label-inline w3-label-left', 'Log connections from local ip addresses?',
-               'Yes', 'No', 'adm.log_local_ip', adm.log_local_ip, 'admin_radio_YN_cb')
+   var controls =
+      w3_inline('w3-valign w3-halign-space-between/',
+         w3_div('ui-admin-log-actions',
+            w3_button('w3-aqua', 'Log state', 'log_state_cb'),
+            w3_button('w3-aqua|margin-left:10px', 'Log IP blacklist', 'log_blacklist_cb'),
+            w3_button('w3-blue|margin-left:10px', 'Clear Histogram', 'log_clear_hist_cb')
          ),
-			w3_div('id-log-msg w3-margin-T-8 w3-text-output w3-small w3-text-black', '')
-		)
-	);
-	return s;
+         w3_switch_label('w3-label-inline w3-label-left', 'Log connections from local IP addresses?',
+            'Yes', 'No', 'adm.log_local_ip', adm.log_local_ip, 'admin_radio_YN_cb')
+      );
+
+   var output = w3_div('id-log-msg w3-text-output w3-small w3-text-black', '');
+   var content =
+      admin_page_header('DIAGNOSTICS', 'Server log',
+         'Inspect recent server events and request focused state or blacklist diagnostics.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Log controls', 'Choose local logging and request additional diagnostic entries', controls,
+            'ui-admin-section-wide') +
+         admin_section('Recent activity', 'Scrollable first and latest server log messages', output,
+            'ui-admin-section-wide') +
+      '</div>';
+	return w3_div('id-log w3-text-teal w3-hide ui-admin-log', content);
 }
 
 function log_setup()

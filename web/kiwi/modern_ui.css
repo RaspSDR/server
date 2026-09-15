@@ -906,6 +906,16 @@
    padding-left: 0;
 }
 
+.ui-modern .ui-admin-public .id-kiwisdr_com-reg-status-container {
+   margin-top: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-public .id-kiwisdr_com-reg-status {
+   min-height: 36px;
+   padding: var(--ui-space-2) var(--ui-space-3);
+   border-radius: var(--ui-radius-sm);
+}
+
 .ui-modern .ui-admin-status-header,
 .ui-modern .ui-admin-status-users > header {
    display: flex;

@@ -1081,7 +1081,16 @@ function kiwi_reg_html()
       ) +
       '<hr>';
 
-	return w3_div('id-sdr_hu w3-text-teal w3-hide', s1 + s2);
+   var content =
+      admin_page_header('DISCOVERY', 'Public listing',
+         'Control directory registration and the station metadata shown to prospective listeners.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Directory registration', 'Enable listing and monitor the registration response', s1,
+            'ui-admin-section-wide') +
+         admin_section('Station identity & coverage', 'Describe the receiver, antenna, location and tuning range', s2,
+            'ui-admin-section-wide') +
+      '</div>';
+	return w3_div('id-sdr_hu w3-text-teal w3-hide ui-admin-public', content);
 }
 
 function kiwisdr_com_register_cb(path, idx, first)

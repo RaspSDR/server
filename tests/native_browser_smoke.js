@@ -1311,7 +1311,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         if (new Set(dxRows.rows.slice(0, 3)).size !== 3 ||
             dxRows.rows[3] !== dxRows.rows[0] ||
             dxRows.rows[2] + dxRows.labelHeight > 70 ||
-            dxRows.labelFontSize > 10)
+            dxRows.labelFontSize > 17)
             throw new Error(`invalid three-row DX label layout: ${JSON.stringify(dxRows)}`);
         if (dxRows.eibiRows.join(',') !== '5,45,5')
             throw new Error(`EiBi DX label layout changed: ${dxRows.eibiRows}`);

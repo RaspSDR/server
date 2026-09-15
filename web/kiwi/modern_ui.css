@@ -639,11 +639,12 @@
    min-height: 0;
    border: 1px solid #111 !important;
    border-radius: 0 !important;
-   padding: 1px 2px !important;
+   padding: 0 2px !important;
    background: var(--dx-label-bg) !important;
    color: #111 !important;
-   font-size: 9px !important;
-   line-height: 1.25;
+   font-size: 17px !important;
+   font-weight: 300 !important;
+   line-height: 1;
    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.26);
 }
 

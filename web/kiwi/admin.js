@@ -2403,64 +2403,68 @@ function console_html()
    admin.console.always_char_oriented = admin.console.isMobile? false : true;
    //admin.console.always_char_oriented = false;
 
-	var s =
-	w3_div('id-console w3-margin-top w3-text-teal w3-hide',
-		w3_div('w3-container',
-		   w3_div('',
-            w3_label('w3-show-inline', 'Alipne Linux console'),
-            w3_button('w3-aqua|margin-left:10px', 'Connect', 'console_connect_cb'),
+   var actions =
+      w3_div('ui-admin-console-actions',
+         w3_button('w3-aqua', 'Connect', 'console_connect_cb'),
+         w3_button('w3-aqua', 'htop', 'console_cmd_cb', 'console_input_cb|TERM=xterm htop'),
+         w3_button('w3-yellow', 'disk free', 'console_cmd_cb',
+            'console_input_cb|df -H /media/mmcblk0p1'),
+         w3_button('w3-aqua', 'enable hotspot', 'console_cmd_cb',
+            'console_input_cb|/root/wifi/hotspot.sh'),
+         w3_button('w3-blue', 'ping DNS', 'console_cmd_cb',
+            'console_input_cb|ping -c3 1.1.1.1; ping -c3 8.8.8.8'),
+         w3_button('w3-blue', 'ping rx-888', 'console_cmd_cb',
+            'console_input_cb|ping -c3 www.rx-888.com')
+      );
 
+   var terminal =
+      w3_div('id-console-msg w3-text-output w3-scroll-always-y w3-scroll-down w3-small w3-text-black',
+         '<pre><code id="id-console-msgs"></code></pre>'
+      );
 
-            w3_button('w3-aqua|margin-left:16px', 'htop', 'console_cmd_cb', 'console_input_cb|TERM=xterm htop'),
-            
-            w3_button('w3-yellow|margin-left:16px', 'disk free', 'console_cmd_cb', 'console_input_cb|df -H /media/mmcblk0p1'),
-
-            w3_button('w3-aqua|margin-left:16px', 'enable hotspot', 'console_cmd_cb', 'console_input_cb|/root/wifi/hotspot.sh'),
-
-            w3_button('w3-blue|margin-left:16px', 'ping DNS', 'console_cmd_cb',
-               'console_input_cb|ping -c3 1.1.1.1; ping -c3 8.8.8.8'),
-
-            w3_button('w3-blue|margin-left:16px', 'ping rx-888', 'console_cmd_cb',
-               'console_input_cb|ping -c3 www.rx-888.com')
-         ),
-         
-			w3_div('id-console-msg w3-margin-T-8 w3-text-output w3-scroll-always-y w3-scroll-down w3-small w3-text-black|background-color:#a8a8a8',
-			   '<pre><code id="id-console-msgs"></code></pre>'
-			),
-			
-			admin.console.always_char_oriented?
-            w3_text('id-console-debug w3-text-black w3-margin-T-8',
-               kiwi_isWindows()?
-                  'Windows: Type <x1>control-v</x1> twice (quickly) for clipboard paste. Once to get a normal <x1>control-v</x1>. ' +
-                  'Control-w alternatives: nano <x1>fn-f6</x1>, bash <x1>esc</x1> <x1>control-h</x1>'
-               :
-                  'Mac: Type <x1>command-v</x1> for clipboard paste.'
-            )
-			:
-            w3_div('id-console-line',
-               admin.console.isMobile?
-                  w3_inline('w3-margin-T-8 w3-halign-space-between/',
-                     w3_input('w3-width-half//id-console-line-input w3-input-any-key', '', 'console_input', '',
-                        'console_input_cb|console_key_cb', 'enter shell command'),
-                     w3_inline('w3-margin-R-16/',
-                        w3_button('w3-yellow', 'Send ^C', 'console_ctrl_button_cb', 'c'),
-                        w3_button('w3-blue|margin-left:10px', 'Send ^D', 'console_ctrl_button_cb', 'd'),
-                        w3_button('w3-red|margin-left:10px', 'Send ^\\', 'console_ctrl_button_cb', '\x3c'),
-                        w3_button('w3-blue|margin-left:10px', 'Send ^P', 'console_ctrl_button_cb', 'p'),
-                        w3_button('w3-blue|margin-left:10px', 'Send ^N', 'console_ctrl_button_cb', 'n')
-                     )
+   var input =
+      admin.console.always_char_oriented?
+         w3_text('id-console-debug w3-text-black',
+            kiwi_isWindows()?
+               'Windows: Type <x1>control-v</x1> twice (quickly) for clipboard paste. Once to get a normal <x1>control-v</x1>. ' +
+               'Control-w alternatives: nano <x1>fn-f6</x1>, bash <x1>esc</x1> <x1>control-h</x1>'
+            :
+               'Mac: Type <x1>command-v</x1> for clipboard paste.'
+         )
+      :
+         w3_div('id-console-line',
+            admin.console.isMobile?
+               w3_inline('w3-halign-space-between/',
+                  w3_input('w3-width-half//id-console-line-input w3-input-any-key', '', 'console_input', '',
+                     'console_input_cb|console_key_cb', 'enter shell command'),
+                  w3_inline('ui-admin-console-keys/',
+                     w3_button('w3-yellow', 'Send ^C', 'console_ctrl_button_cb', 'c'),
+                     w3_button('w3-blue', 'Send ^D', 'console_ctrl_button_cb', 'd'),
+                     w3_button('w3-red', 'Send ^\\', 'console_ctrl_button_cb', '\x3c'),
+                     w3_button('w3-blue', 'Send ^P', 'console_ctrl_button_cb', 'p'),
+                     w3_button('w3-blue', 'Send ^N', 'console_ctrl_button_cb', 'n')
                   )
-               :
-                  w3_div('w3-margin-T-8',
-                     w3_input('id-console-line-input w3-input-any-key', '', 'console_input', '',
-                        'console_input_cb|console_key_cb', 'enter shell command'),
-                     w3_text('id-console-debug w3-text-black w3-margin-T-8',
-                        'Control characters (^C, ^D, ^\\) and empty lines may now be typed directly into shell command field.')
-                  )
-            )
-		)
-	);
-	return s;
+               )
+            :
+               w3_div('',
+                  w3_input('id-console-line-input w3-input-any-key', '', 'console_input', '',
+                     'console_input_cb|console_key_cb', 'enter shell command'),
+                  w3_text('id-console-debug w3-text-black w3-margin-T-8',
+                     'Control characters (^C, ^D, ^\\) and empty lines may now be typed directly into shell command field.')
+               )
+         );
+
+   var content =
+      admin_page_header('SYSTEM', 'Console',
+         'Open an Alpine Linux shell for targeted receiver diagnostics and maintenance.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Session & shortcuts', 'Connect to the shell or run a common diagnostic command', actions,
+            'ui-admin-section-wide') +
+         admin_section('Terminal', 'Interactive shell output', terminal, 'ui-admin-section-wide') +
+         admin_section('Input', 'Keyboard and clipboard guidance for this device', input,
+            'ui-admin-section-wide') +
+      '</div>';
+	return w3_div('id-console w3-text-teal w3-hide ui-admin-console', content);
 }
 
 function console_is_char_oriented(is_char_oriented)

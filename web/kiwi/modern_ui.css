@@ -985,6 +985,26 @@
    border-radius: var(--ui-radius-sm);
 }
 
+.ui-modern .ui-admin-console-actions,
+.ui-modern .ui-admin-console-keys {
+   display: flex;
+   gap: var(--ui-space-2);
+   flex-wrap: wrap;
+}
+
+.ui-modern .ui-admin-console .id-console-msg {
+   margin-top: 0;
+   max-width: 100%;
+   overflow: auto;
+   border-radius: var(--ui-radius-sm);
+   background: #a8a8a8;
+}
+
+.ui-modern .ui-admin-console .w3-halign-space-between {
+   gap: var(--ui-space-3);
+   flex-wrap: wrap;
+}
+
 .ui-modern .ui-admin-status-header,
 .ui-modern .ui-admin-status-users > header {
    display: flex;

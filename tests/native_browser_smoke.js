@@ -899,6 +899,18 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 configuration: !!page.querySelector('.id-extensions-config')
             };
         });
+        await adminPage.locator('#id-nav-security').click();
+        await adminPage.waitForTimeout(100);
+        const adminSecurity = await adminPage.evaluate(() => {
+            const page = document.querySelector('.ui-admin-security');
+            return {
+                heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
+                sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
+                    heading => heading.textContent),
+                userPassword: !!document.getElementById('id-adm.user_password'),
+                adminPassword: !!document.getElementById('id-adm.admin_password')
+            };
+        });
         await adminPage.setViewportSize({ width: 390, height: 844 });
         await adminPage.locator('#id-nav-extensions').click();
         await adminPage.waitForTimeout(100);
@@ -1100,6 +1112,13 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !adminExtensions.configuration)
             throw new Error(
                 `invalid modern admin Extensions page: ${JSON.stringify(adminExtensions)}`);
+        if (adminSecurity.heading !== 'Security' ||
+            adminSecurity.sections.join(',') !==
+                'Passwords & listener access,Privileged & shared access,Admin session resilience' ||
+            !adminSecurity.userPassword ||
+            !adminSecurity.adminPassword)
+            throw new Error(
+                `invalid modern admin Security page: ${JSON.stringify(adminSecurity)}`);
         if (adminExtensionsMobile.navDisplay !== 'flex' ||
             adminExtensionsMobile.navPosition !== 'static' ||
             !adminExtensionsMobile.navScrollable ||
@@ -1161,7 +1180,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
             panelToggle, adminFoundation, adminResponsive, adminControl, adminConnect, adminConfig,
             adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,
-            adminLog, adminConsole, adminExtensions, adminExtensionsMobile
+            adminLog, adminConsole, adminExtensions, adminSecurity, adminExtensionsMobile
         }));
     } finally {
         await browser.close();

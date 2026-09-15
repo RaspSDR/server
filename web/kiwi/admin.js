@@ -2904,7 +2904,21 @@ function security_html()
 		) +
 		'<hr>';
 
-	return w3_div('id-security w3-hide', s1 + s2 + s3);
+   var content =
+      admin_page_header('ACCESS', 'Security',
+         'Protect listener, administrator and console access while controlling shared service data.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Passwords & listener access',
+            'Set listener and administrator credentials, local auto-login and open channels', s1,
+            'ui-admin-section-wide') +
+         admin_section('Privileged & shared access',
+            'Restrict the system console and control GPS timestamp participation', s2,
+            'ui-admin-section-wide') +
+         admin_section('Admin session resilience',
+            'Choose how the admin interface responds when the server connection is lost', s3,
+            'ui-admin-section-wide') +
+      '</div>';
+	return w3_div('id-security w3-hide ui-admin-security', content);
 }
 
 function security_focus(id)

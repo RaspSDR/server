@@ -1138,7 +1138,7 @@ function drm_mobile_controls_setup(mobile)
       console.log('DRM mobile ext-controls-close panelShown='+ w3_el('id-ext-controls').panelShown);
 	};
 
-   w3_create_attribute('id-ext-controls-close-img', 'src', 'icons/close.black.24.png');
+   w3_create_attribute('id-ext-controls-close-img', 'src', 'icons/close.24.png');
    drm.last_mobile = {};   // force rescale first time
    drm.rescale_cnt = drm.rescale_cnt2 = 0;
    drm.fit = '';

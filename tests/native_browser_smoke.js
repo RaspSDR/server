@@ -424,6 +424,19 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 })()
             };
         });
+        const drmThemeAssets = await page.evaluate(async () => {
+            const [script, stylesheet] = await Promise.all([
+                fetch('extensions/DRM/DRM.js').then(response => response.text()),
+                fetch('extensions/DRM/DRM.css').then(response => response.text())
+            ]);
+            return {
+                lightCloseIcon: script.includes("icons/close.24.png") &&
+                    !script.includes("icons/close.black.24.png"),
+                themedScheduleMarker:
+                    stylesheet.includes('background-color: var(--ui-border-strong, black)') &&
+                    stylesheet.includes('opacity: 0.55')
+            };
+        });
         const extensionFocus = await page.evaluate(() => {
             const close = document.getElementById('id-ext-controls-close');
             close?.focus();
@@ -740,6 +753,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.tabPalette.inactiveBackgrounds.length !== 1 ||
             uiFoundation.tabPalette.selectedBackground === uiFoundation.tabPalette.inactiveBackgrounds[0])
             throw new Error(`invalid modern UI foundation: ${JSON.stringify(uiFoundation)}`);
+        if (!drmThemeAssets.lightCloseIcon || !drmThemeAssets.themedScheduleMarker)
+            throw new Error(`invalid DRM theme assets: ${JSON.stringify(drmThemeAssets)}`);
         if (extensionFocus.closeSemantics.tagName !== 'BUTTON' ||
             extensionFocus.closeSemantics.tabIndex !== 0 ||
             !extensionFocus.closeSemantics.focused ||
@@ -868,7 +883,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             throw new Error(errors.join('\n'));
 
         console.log(JSON.stringify({
-            ...state, uiFoundation, extensionFocus, receiverResponsive, panelToggle,
+            ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, panelToggle,
             adminFoundation, adminResponsive
         }));
     } finally {

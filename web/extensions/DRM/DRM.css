@@ -33,8 +33,8 @@
     position: absolute;
     width: 2px;
     height: 100%;
-    background-color: black;
-    opacity: 0.1;
+    background-color: var(--ui-border-strong, black);
+    opacity: 0.55;
     z-index: 100;
     pointer-events: none;
 }

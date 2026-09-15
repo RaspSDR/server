@@ -957,6 +957,21 @@
    max-width: 100%;
 }
 
+.ui-modern .ui-admin-gps .ui-admin-section-body {
+   overflow-x: auto;
+}
+
+.ui-modern .ui-admin-gps-channel-layout {
+   gap: var(--ui-space-4);
+   align-items: flex-start;
+}
+
+.ui-modern .ui-admin-gps canvas {
+   display: block;
+   max-width: 100%;
+   height: auto;
+}
+
 .ui-modern .ui-admin-status-header,
 .ui-modern .ui-admin-status-users > header {
    display: flex;

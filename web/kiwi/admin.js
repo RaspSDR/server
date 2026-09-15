@@ -1878,14 +1878,14 @@ var _gps = {
 
 function gps_html()
 {
-	var s =
-	w3_div('id-gps w3-hide|line-height:1.5',
-		w3_div('w3-container w3-section w3-card-8 w3-round-xlarge w3-pale-blue',
-			w3_table('id-gps-info w3-table-6-8')
-		) +
+   var solution =
+      w3_div('id-gps-summary',
+         w3_table('id-gps-info w3-table-6-8')
+      );
 
-	   w3_div('w3-valign',
-         w3_div('id-gps-channels w3-container w3-section w3-card-8 w3-round-xlarge w3-pale-blue|width:100%',
+   var channels =
+      w3_div('w3-valign ui-admin-gps-channel-layout',
+         w3_div('id-gps-channels|width:100%',
             w3_table('id-gps-ch w3-table-6-8 w3-striped')
          ),
          w3_div('id-gps-azel-container w3-hide',
@@ -1893,9 +1893,18 @@ function gps_html()
                '<canvas id="id-gps-azel-canvas" width="400" height="400"></canvas>'
             )
          )
-		)
-	);
-	return s;
+      );
+
+   var content =
+      admin_page_header('TIMING', 'GPS',
+         'Monitor receiver position, timing solution and per-satellite tracking quality.') +
+      '<div class="ui-admin-section-grid">' +
+         admin_section('Receiver solution', 'Fix state, clock correction and reported position', solution,
+            'ui-admin-section-wide') +
+         admin_section('Satellite channels', 'Tracking state, signal strength and sky history', channels,
+            'ui-admin-section-wide') +
+      '</div>';
+	return w3_div('id-gps w3-hide ui-admin-gps|line-height:1.5', content);
 }
 
 function gps_acq_cb(path, val, first)

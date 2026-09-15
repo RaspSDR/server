@@ -847,6 +847,19 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 blacklistStatus: !!page.querySelector('.id-ip-blacklist-status')
             };
         });
+        await adminPage.locator('#id-nav-gps').click();
+        await adminPage.waitForTimeout(200);
+        const adminGPS = await adminPage.evaluate(() => {
+            const page = document.querySelector('.ui-admin-gps');
+            return {
+                heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
+                sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
+                    heading => heading.textContent),
+                infoTable: !!page.querySelector('.id-gps-info'),
+                channelTable: !!page.querySelector('.id-gps-ch'),
+                skyCanvas: !!page.querySelector('#id-gps-azel-canvas')
+            };
+        });
         await adminPage.setViewportSize({ width: 390, height: 844 });
         await adminPage.locator('#id-nav-extensions').click();
         await adminPage.waitForTimeout(100);
@@ -1026,6 +1039,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !adminNetwork.networkStatus ||
             !adminNetwork.blacklistStatus)
             throw new Error(`invalid modern admin Network page: ${JSON.stringify(adminNetwork)}`);
+        if (adminGPS.heading !== 'GPS' ||
+            adminGPS.sections.join(',') !== 'Receiver solution,Satellite channels' ||
+            !adminGPS.infoTable ||
+            !adminGPS.channelTable ||
+            !adminGPS.skyCanvas)
+            throw new Error(`invalid modern admin GPS page: ${JSON.stringify(adminGPS)}`);
         if (adminExtensionsMobile.navDisplay !== 'flex' ||
             adminExtensionsMobile.navPosition !== 'static' ||
             !adminExtensionsMobile.navScrollable ||
@@ -1086,7 +1105,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         console.log(JSON.stringify({
             ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
             panelToggle, adminFoundation, adminResponsive, adminControl, adminConnect, adminConfig,
-            adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminExtensionsMobile
+            adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,
+            adminExtensionsMobile
         }));
     } finally {
         await browser.close();

@@ -276,6 +276,8 @@ the existing `known_hosts` entry merely to continue a test.
 - When changing web assets, rebuild so the minified copies and embedded
   `edata_*.cpp` inputs are regenerated; never edit generated copies in
   `build/htdoc/`.
+- When CSS or JavaScript code is changed, run the complete native browser
+  smoke test with `npm run test:native-browser` before committing the change.
 - Do not modify vendored or submodule code unless the task specifically
   requires it. Keep such changes isolated from first-party changes.
 - Do not commit binaries, debug symbols, generated configuration, downloaded

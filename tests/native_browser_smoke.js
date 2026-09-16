@@ -372,9 +372,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     mutedContrast: Number(contrast(muted, surface).toFixed(2)),
                     modern: document.documentElement.classList.contains('ui-modern'),
                     classic: document.documentElement.classList.contains('ui-classic'),
-                    pickerRightGap: Number(
-                        (actions.getBoundingClientRect().right -
-                            picker.getBoundingClientRect().right).toFixed(1))
+                    actionsDisplay: getComputedStyle(actions).display,
+                    actionsJustify: getComputedStyle(actions).justifyContent
                 });
             }
             select.value = 'midnight';
@@ -448,24 +447,27 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     });
                 })(),
                 controlFocus: (() => {
-                    const selectors = [
-                        '#id-select-band',
-                        '#id-select-ext',
-                        '#id-optbar-wf select.ui-select',
-                        '#id-optbar-audio select.ui-select'
+                    const controls = [
+                        { selector: '#id-select-band' },
+                        { selector: '#id-select-ext' },
+                        { selector: '.id-optbar-wf select.ui-select', nav: 'id-nav-optbar-wf' },
+                        { selector: '.id-optbar-audio select.ui-select', nav: 'id-nav-optbar-audio' }
                     ];
-                    return selectors.map(selector => {
-                        const element = document.querySelector(selector);
+                    const result = controls.map(control => {
+                        if (control.nav) document.getElementById(control.nav).click();
+                        const element = document.querySelector(control.selector);
                         element?.focus();
                         const style = element? getComputedStyle(element) : null;
                         return {
-                            selector,
+                            selector: control.selector,
                             exists: !!element,
                             height: element?.getBoundingClientRect().height || 0,
                             outlineOffset: style?.outlineOffset,
                             focused: document.activeElement === element
                         };
                     });
+                    document.getElementById('id-nav-optbar-rf').click();
+                    return result;
                 })(),
                 step9_10: (() => {
                     const cell = w3_el('id-9-10-cell');
@@ -1295,11 +1297,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.receiverThemeParent !== 'id-rf-theme-actions' ||
             JSON.stringify(uiFoundation.themes) !== JSON.stringify([
                 { theme: 'midnight', accent: '#58a6ff', mutedContrast: 6.84,
-                    modern: true, classic: false, pickerRightGap: 6 },
+                    modern: true, classic: false, actionsDisplay: 'flex',
+                    actionsJustify: 'flex-end' },
                 { theme: 'ember', accent: '#e58a3a', mutedContrast: 6.3,
-                    modern: true, classic: false, pickerRightGap: 6 },
+                    modern: true, classic: false, actionsDisplay: 'flex',
+                    actionsJustify: 'flex-end' },
                 { theme: 'classic', accent: '#2196f3', mutedContrast: 7.46,
-                    modern: false, classic: true, pickerRightGap: 6 }
+                    modern: false, classic: true, actionsDisplay: 'flex',
+                    actionsJustify: 'flex-end' }
             ]) ||
             JSON.stringify(uiFoundation.themeOptions) !== JSON.stringify(['midnight', 'ember', 'classic']) ||
             uiFoundation.semanticShell.header !== 'HEADER' ||

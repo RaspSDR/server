@@ -1396,7 +1396,8 @@
 
 .ui-modern #id-select-band,
 .ui-modern #id-select-ext {
-   min-height: var(--ui-panel-control-height, var(--ui-control-height));
+   height: calc(var(--ui-panel-control-height, var(--ui-control-height)) - 4px);
+   min-height: calc(var(--ui-panel-control-height, var(--ui-control-height)) - 4px);
    border: 1px solid var(--ui-border);
    border-radius: var(--ui-radius-sm);
    background: var(--ui-surface);

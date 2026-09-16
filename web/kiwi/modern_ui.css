@@ -1958,6 +1958,23 @@
    flex-wrap: wrap;
 }
 
+.ui-modern .ui-admin-update-actions {
+   display: grid;
+   gap: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-update-action {
+   display: grid;
+   grid-template-columns: minmax(0, 1fr) 112px;
+   align-items: center;
+   gap: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-update-action button {
+   width: 112px;
+   margin: 0 !important;
+}
+
 .ui-modern .ui-admin-network .ui-admin-section-body > .w3-container {
    padding-right: 0;
    padding-left: 0;
@@ -2785,6 +2802,14 @@
 
    .ui-modern .ui-admin-control-action-button {
       flex-basis: auto;
+      width: 100%;
+   }
+
+   .ui-modern .ui-admin-update-action {
+      grid-template-columns: minmax(0, 1fr);
+   }
+
+   .ui-modern .ui-admin-update-action button {
       width: 100%;
    }
 

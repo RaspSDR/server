@@ -907,6 +907,23 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 }
             };
         });
+        await adminPage.locator('#id-nav-update').click();
+        const adminUpgrade = await adminPage.evaluate(() => {
+            const rows = Array.from(document.querySelectorAll('.ui-admin-update-action'));
+            return rows.map(row => {
+                const button = row.querySelector('button');
+                const rowRect = row.getBoundingClientRect();
+                const buttonRect = button.getBoundingClientRect();
+                return {
+                    display: getComputedStyle(row).display,
+                    buttonWidth: buttonRect.width,
+                    rightGap: rowRect.right - buttonRect.right,
+                    centerDelta: Math.abs(
+                        (rowRect.top + rowRect.height / 2) -
+                        (buttonRect.top + buttonRect.height / 2))
+                };
+            });
+        });
         await adminPage.locator('#id-nav-control').click();
         await adminPage.waitForTimeout(100);
         const adminControl = await adminPage.evaluate(() => {
@@ -1452,6 +1469,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminStatus.runtime.histogramBars < 32 ||
             !adminStatus.runtime.resetButton)
             throw new Error(`invalid modern admin status page: ${JSON.stringify(adminStatus)}`);
+        if (adminUpgrade.length !== 2 ||
+            adminUpgrade.some(row => row.display !== 'grid' ||
+                Math.abs(row.buttonWidth - 112) > 1 ||
+                Math.abs(row.rightGap) > 1 ||
+                row.centerDelta > 1))
+            throw new Error(`invalid admin upgrade actions: ${JSON.stringify(adminUpgrade)}`);
         if (adminControl.heading !== 'Receiver control' ||
             adminControl.sections.join(',') !==
                 'Service lifecycle,Radio configuration,Listener availability,' +

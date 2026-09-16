@@ -1254,13 +1254,13 @@ function update_html()
       );
 
    var actions =
-      w3_div('w3-text-teal',
-         w3_div('w3-valign',
-            '<b>Check for software update </b> ' +
+      w3_div('w3-text-teal ui-admin-update-actions',
+         w3_div('w3-valign ui-admin-update-action',
+            '<b>Check for software update</b>' +
             w3_button('w3-aqua w3-margin', 'Check now', 'update_check_now_cb')
          ),
-         w3_div('w3-valign',
-            '<b>Force software reinstall </b> ' +
+         w3_div('w3-valign ui-admin-update-action',
+            '<b>Force software reinstall</b>' +
             w3_button('w3-aqua w3-margin', 'Install now', 'update_build_now_cb')
          )
       );

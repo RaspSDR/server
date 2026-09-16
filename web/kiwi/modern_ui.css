@@ -328,7 +328,7 @@
    margin-top: 0;
 }
 
-.ui-classic #id-proxy-hdr {
+.ui-classic .ui-admin-connect .id-proxy-hdr {
    background: #fff !important;
    color: #00695c !important;
 }
@@ -1795,6 +1795,11 @@
 
 .ui-modern .ui-admin-connect .ui-admin-section-body > .w3-tspace-8 {
    margin-top: 0;
+}
+
+.ui-modern .ui-admin-connect .id-proxy-hdr {
+   background: var(--ui-surface) !important;
+   color: var(--ui-accent) !important;
 }
 
 .ui-modern .ui-admin-duc {

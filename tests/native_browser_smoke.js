@@ -874,12 +874,16 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 statusDisplay: getComputedStyle(document.querySelector(
                     '.ui-admin-duc-status')).display,
                 proxyHeaderColor: getComputedStyle(
-                    document.getElementById('id-proxy-hdr')).color,
+                    document.querySelector('.ui-admin-connect .id-proxy-hdr')).color,
                 proxyHeaderBackground: getComputedStyle(
-                    document.getElementById('id-proxy-hdr')).backgroundColor
+                    document.querySelector('.ui-admin-connect .id-proxy-hdr')).backgroundColor
             };
             select.value = 'midnight';
             select.dispatchEvent(new Event('change', { bubbles: true }));
+            state.connect.modernProxyHeaderColor = getComputedStyle(
+                document.querySelector('.ui-admin-connect .id-proxy-hdr')).color;
+            state.connect.modernProxyHeaderBackground = getComputedStyle(
+                document.querySelector('.ui-admin-connect .id-proxy-hdr')).backgroundColor;
             return state;
         });
         const adminStatus = await adminPage.evaluate(() => {
@@ -1441,7 +1445,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminClassic.connect.actionDisplay !== 'flex' ||
             adminClassic.connect.statusDisplay !== 'grid' ||
             adminClassic.connect.proxyHeaderColor !== 'rgb(0, 105, 92)' ||
-            adminClassic.connect.proxyHeaderBackground !== 'rgb(255, 255, 255)')
+            adminClassic.connect.proxyHeaderBackground !== 'rgb(255, 255, 255)' ||
+            adminClassic.connect.modernProxyHeaderColor !== 'rgb(88, 166, 255)' ||
+            adminClassic.connect.modernProxyHeaderBackground !== 'rgb(23, 29, 37)')
             throw new Error(`invalid classic admin theme: ${JSON.stringify(adminClassic)}`);
         if (adminClassicMobile.control.sectionColumns !== '390px' ||
             adminClassicMobile.control.actionColumns !== '358px' ||

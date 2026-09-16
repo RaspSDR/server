@@ -364,12 +364,17 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 const style = getComputedStyle(document.documentElement);
                 const muted = style.getPropertyValue('--ui-text-muted').trim();
                 const surface = style.getPropertyValue('--ui-surface').trim();
+                const picker = select.closest('.ui-theme-picker');
+                const actions = picker.parentElement;
                 themes.push({
                     theme: document.documentElement.dataset.uiTheme,
                     accent: style.getPropertyValue('--ui-accent').trim(),
                     mutedContrast: Number(contrast(muted, surface).toFixed(2)),
                     modern: document.documentElement.classList.contains('ui-modern'),
-                    classic: document.documentElement.classList.contains('ui-classic')
+                    classic: document.documentElement.classList.contains('ui-classic'),
+                    pickerRightGap: Number(
+                        (actions.getBoundingClientRect().right -
+                            picker.getBoundingClientRect().right).toFixed(1))
                 });
             }
             select.value = 'midnight';
@@ -1285,9 +1290,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.storedTheme !== 'midnight' ||
             uiFoundation.receiverThemeParent !== 'id-rf-theme-actions' ||
             JSON.stringify(uiFoundation.themes) !== JSON.stringify([
-                { theme: 'midnight', accent: '#58a6ff', mutedContrast: 6.84, modern: true, classic: false },
-                { theme: 'ember', accent: '#e58a3a', mutedContrast: 6.3, modern: true, classic: false },
-                { theme: 'classic', accent: '#2196f3', mutedContrast: 7.46, modern: false, classic: true }
+                { theme: 'midnight', accent: '#58a6ff', mutedContrast: 6.84,
+                    modern: true, classic: false, pickerRightGap: 6 },
+                { theme: 'ember', accent: '#e58a3a', mutedContrast: 6.3,
+                    modern: true, classic: false, pickerRightGap: 6 },
+                { theme: 'classic', accent: '#2196f3', mutedContrast: 7.46,
+                    modern: false, classic: true, pickerRightGap: 6 }
             ]) ||
             JSON.stringify(uiFoundation.themeOptions) !== JSON.stringify(['midnight', 'ember', 'classic']) ||
             uiFoundation.semanticShell.header !== 'HEADER' ||

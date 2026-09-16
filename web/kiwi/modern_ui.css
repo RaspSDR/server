@@ -116,6 +116,12 @@
    font-weight: normal;
 }
 
+.ui-classic .ui-rf-theme-actions {
+   display: flex;
+   justify-content: flex-end;
+   margin: 6px 6px 4px 0;
+}
+
 .ui-classic .id-kiwi-container[data-type="admin"] {
    min-height: 100%;
    height: 100%;

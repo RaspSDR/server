@@ -1970,6 +1970,23 @@
    flex-wrap: wrap;
 }
 
+.ui-modern .ui-admin-update-policy {
+   display: grid;
+   gap: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-update-policy-row > div {
+   display: grid;
+   grid-template-columns: minmax(0, 1fr) auto;
+   align-items: center;
+   gap: var(--ui-space-3);
+   width: 100%;
+}
+
+.ui-modern .ui-admin-update-policy-row .w3-margin-L-8 {
+   margin-left: 0 !important;
+}
+
 .ui-modern .ui-admin-update-actions {
    display: grid;
    gap: var(--ui-space-3);

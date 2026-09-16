@@ -1242,11 +1242,15 @@ function update_html()
    var status = w3_div('id-msg-update w3-container');
 
    var policy =
-      w3_div('w3-text-teal',
-         w3_switch_label('w3-label-inline w3-label-left', 'Automatically check for software updates?',
-            'Yes', 'No', 'adm.update_check', adm.update_check, 'admin_radio_YN_cb'),
-         w3_switch_label('w3-label-inline w3-label-left', 'Automatically install software updates?',
-            'Yes', 'No', 'adm.update_install', adm.update_install, 'admin_radio_YN_cb'),
+      w3_div('w3-text-teal ui-admin-update-policy',
+         w3_div('ui-admin-update-policy-row',
+            w3_switch_label('w3-label-inline w3-label-left', 'Automatically check for software updates?',
+               'Yes', 'No', 'adm.update_check', adm.update_check, 'admin_radio_YN_cb')
+         ),
+         w3_div('ui-admin-update-policy-row',
+            w3_switch_label('w3-label-inline w3-label-left', 'Automatically install software updates?',
+               'Yes', 'No', 'adm.update_install', adm.update_install, 'admin_radio_YN_cb')
+         ),
          w3_div('w3-margin-T-16',
             w3_select('/w3-label-inline/w3-width-auto', 'After a restart', '', 'adm.restart_update',
                adm.restart_update, restart_update_u, 'admin_select_cb')

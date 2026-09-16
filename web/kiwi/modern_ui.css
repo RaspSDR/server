@@ -558,6 +558,14 @@
       background var(--ui-motion-fast);
 }
 
+.ui-modern .class-button,
+.ui-modern .class-button-small,
+.ui-modern #id-control .ui-tab {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+}
+
 .ui-modern .class-button {
    min-height: var(--ui-panel-control-height, var(--ui-control-height));
 }
@@ -991,6 +999,115 @@
 
 .ui-modern .ui-admin-connect .ui-admin-section-body > .w3-tspace-8 {
    margin-top: 0;
+}
+
+.ui-modern .ui-admin-duc {
+   display: grid;
+   gap: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-duc-guide,
+.ui-modern .ui-admin-duc-group,
+.ui-modern .ui-admin-duc-status {
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-bg-raised);
+}
+
+.ui-modern .ui-admin-duc-guide {
+   display: flex;
+   align-items: baseline;
+   gap: var(--ui-space-2);
+   padding: var(--ui-space-3);
+   color: var(--ui-text-muted);
+   font-size: var(--ui-font-size-meta);
+   line-height: 1.45;
+}
+
+.ui-modern .ui-admin-duc-guide strong {
+   flex: 0 0 auto;
+   color: var(--ui-warning);
+}
+
+.ui-modern .ui-admin-duc-group {
+   padding: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-duc-group-heading {
+   margin-bottom: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-duc-group-heading > :first-child {
+   color: var(--ui-text);
+   font-weight: 750;
+}
+
+.ui-modern .ui-admin-duc-group-heading > :last-child {
+   margin-top: 2px;
+   color: var(--ui-text-muted);
+   font-size: var(--ui-font-size-meta);
+}
+
+.ui-modern .ui-admin-duc-fields,
+.ui-modern .ui-admin-duc-controls {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-duc-host {
+   grid-column: 1 / -1;
+}
+
+.ui-modern .ui-admin-duc-control {
+   display: flex;
+   align-items: center;
+   min-width: 0;
+   min-height: 64px;
+   padding: var(--ui-space-2) var(--ui-space-3);
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-surface);
+}
+
+.ui-modern .ui-admin-duc-control > div {
+   width: 100%;
+}
+
+.ui-modern .ui-admin-duc-action {
+   display: flex;
+   align-items: center;
+   gap: var(--ui-space-3);
+   margin-top: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-duc-action button {
+   flex: 0 0 auto;
+   margin: 0 !important;
+}
+
+.ui-modern .ui-admin-duc-action > :last-child {
+   color: var(--ui-text-muted);
+   font-size: var(--ui-font-size-meta);
+   line-height: 1.4;
+}
+
+.ui-modern .ui-admin-duc-status {
+   display: grid;
+   grid-template-columns: auto minmax(0, 1fr);
+   align-items: center;
+   gap: var(--ui-space-3);
+   padding: var(--ui-space-3);
+}
+
+.ui-modern .ui-admin-duc-status > :first-child {
+   color: var(--ui-text);
+   font-weight: 700;
+}
+
+.ui-modern .ui-admin-duc-status .id-net-duc-status {
+   min-height: 36px;
+   padding: var(--ui-space-2) var(--ui-space-3);
 }
 
 .ui-modern .ui-admin-config .ui-admin-section-body > .w3-text-teal.w3-bold {
@@ -1844,12 +1961,30 @@
 
    .ui-modern .ui-admin-control-actions,
    .ui-modern .ui-admin-control-fields,
-   .ui-modern .ui-admin-control-messages {
+   .ui-modern .ui-admin-control-messages,
+   .ui-modern .ui-admin-duc-fields,
+   .ui-modern .ui-admin-duc-controls {
       grid-template-columns: minmax(0, 1fr);
    }
 
    .ui-modern .ui-admin-control-field-wide {
       grid-column: auto;
+   }
+
+   .ui-modern .ui-admin-duc-host {
+      grid-column: auto;
+   }
+
+   .ui-modern .ui-admin-duc-guide,
+   .ui-modern .ui-admin-duc-action,
+   .ui-modern .ui-admin-duc-status {
+      align-items: stretch;
+      grid-template-columns: minmax(0, 1fr);
+      flex-direction: column;
+   }
+
+   .ui-modern .ui-admin-duc-action button {
+      width: 100%;
    }
 
    .ui-modern .ui-admin-control-action,

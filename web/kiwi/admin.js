@@ -801,47 +801,52 @@ function connect_html()
 
    var s3 =
 		'<hr>' +
-		w3_divs('/w3-tspace-8',
-         w3_div('w3-container w3-valign',
-            '<header class="w3-container w3-yellow"><h6>' +
-            'Please read these instructions before use: ' +
-            '<a href="http://www.rx-888.com/web/guide/admin/connect.html" target="_blank">dynamic DNS update client (DUC)</a>' +
-            '</h6></header>'
+		w3_div('ui-admin-duc',
+         w3_div('ui-admin-duc-guide',
+            '<strong>Setup guide</strong>' +
+            '<span>Configure a noip.com DDNS key before enabling the update client. ' +
+            '<a href="http://www.rx-888.com/web/guide/admin/connect.html" target="_blank">Read the DUC instructions</a>.</span>'
          ),
 
-			w3_col_percent('w3-text-teal/w3-container',
-			   w3_div('w3-text-teal w3-bold', 'Dynamic DNS update client (DUC) configuration'), 50,
-				w3_div('w3-text-teal w3-bold w3-center w3-light-grey', 'DDNS Key at noip.com'), 50
+         w3_div('ui-admin-duc-group',
+            w3_div('ui-admin-duc-group-heading',
+               w3_div('', 'No-IP account'),
+               w3_div('', 'Credentials and hostname associated with your DDNS key')
+            ),
+            w3_div('ui-admin-duc-fields',
+               w3_input_get('', 'Username or email', 'adm.duc_user', 'w3_string_set_cfg_cb', '', 'required'),
+               w3_input_get('', 'Password', 'adm.duc_pass', 'w3_string_set_cfg_cb', '', 'required'),
+               w3_div('ui-admin-duc-host',
+                  w3_input_get('', 'Host', 'adm.duc_host', 'connect_DUC_host_cb', '', 'required')
+               )
+            )
+         ),
+
+         w3_div('ui-admin-duc-group',
+            w3_div('ui-admin-duc-group-heading',
+               w3_div('', 'Update client'),
+               w3_div('', 'Choose the refresh interval and control the local DUC process')
+            ),
+            w3_div('ui-admin-duc-controls',
+               w3_div('ui-admin-duc-control',
+                  w3_switch_label('', 'Enable at startup', 'Yes', 'No', 'adm.duc_enable', adm.duc_enable,
+                     'connect_DUC_enabled_cb')
+               ),
+               w3_div('ui-admin-duc-control',
+                  w3_select('w3-width-auto', 'Update interval', '', 'adm.duc_update', adm.duc_update,
+                     duc_update_i, 'admin_select_cb')
+               )
+            ),
+            w3_div('ui-admin-duc-action',
+               w3_button('w3-aqua', 'Start or restart DUC', 'connect_DUC_start_cb'),
+               w3_div('', 'Run this after changing the credentials or hostname to test the new settings.')
+            )
+         ),
+
+         w3_div('ui-admin-duc-status',
+            w3_div('', 'Status'),
+				w3_div('id-net-duc-status w3-text-black w3-background-pale-aqua', '')
 			),
-			
-			w3_col_percent('w3-text-teal/w3-container',
-				w3_div(), 50,
-				w3_input_get('', 'Username or email', 'adm.duc_user', 'w3_string_set_cfg_cb', '', 'required'), 25,
-				w3_input_get('', 'Password', 'adm.duc_pass', 'w3_string_set_cfg_cb', '', 'required'), 25
-			),
-			
-			w3_col_percent('w3-text-teal/w3-container',
-				w3_switch_label('w3-center', 'Enable DUC at startup?', 'Yes', 'No', 'adm.duc_enable', adm.duc_enable, 'connect_DUC_enabled_cb'
-				), 20,
-				
-				w3_div('w3-center',
-				   w3_select('w3-width-auto', 'Update', '', 'adm.duc_update', adm.duc_update, duc_update_i, 'admin_select_cb')
-				), 10,
-				
-				w3_div('w3-center w3-tspace-8',
-					w3_button('w3-aqua', 'Click to (re)start DUC', 'connect_DUC_start_cb'),
-					w3_div('w3-text-black',
-						'After changing username or password click to test changes.'
-					)
-				), 20,
-				
-				w3_input_get('', 'Host', 'adm.duc_host', 'connect_DUC_host_cb', '', 'required'), 50
-			),
-			
-			w3_div('w3-container',
-            w3_label('w3-show-inline-block w3-margin-R-16 w3-text-teal', 'Status:') +
-				w3_div('id-net-duc-status w3-show-inline-block w3-text-black w3-background-pale-aqua', '')
-			)
 		);
 
    var s4 =

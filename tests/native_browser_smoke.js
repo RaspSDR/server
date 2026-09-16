@@ -419,6 +419,53 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     selectColor: getComputedStyle(document.getElementById('id-select-band')).color,
                     selectBackground: getComputedStyle(document.getElementById('id-select-band')).backgroundColor
                 },
+                controlAlignment: (() => {
+                    const buttons = Array.from(document.querySelectorAll('#id-control .class-button'));
+                    return [
+                        ['AM', buttons.find(element => element.textContent.trim() === 'AM')],
+                        ['SAM', buttons.find(element => element.textContent.trim() === 'SAM')],
+                        ['RF', document.getElementById('id-nav-optbar-rf')],
+                        ['WF', document.getElementById('id-nav-optbar-wf')],
+                        ['AUD', document.getElementById('id-nav-optbar-audio')],
+                        ['More', buttons.find(element => element.textContent.trim() === 'More')]
+                    ].map(([text, element]) => {
+                        if (!element)
+                            return { text, missing: true };
+                        const style = getComputedStyle(element);
+                        return {
+                            text,
+                            display: style.display,
+                            alignItems: style.alignItems,
+                            justifyContent: style.justifyContent
+                        };
+                    });
+                })(),
+                step9_10: (() => {
+                    const cell = w3_el('id-9-10-cell');
+                    const button = w3_el('id-button-9-10');
+                    const savedFrequency = freq_displayed_Hz;
+                    const savedMode = cur_mode;
+                    freq_displayed_Hz = 6000000;
+                    cur_mode = 'am';
+                    freq_step_update_ui(true);
+                    const band = find_band(freq_displayed_Hz);
+                    const before = button.textContent;
+                    const beforeStep = freq_step_amount(band).step_Hz;
+                    button.click();
+                    const after = button.textContent;
+                    const afterStep = freq_step_amount(band).step_Hz;
+                    button.click();
+                    const enabled = !cell.classList.contains('w3-disabled');
+                    freq_displayed_Hz = savedFrequency;
+                    cur_mode = savedMode;
+                    freq_step_update_ui(true);
+                    return {
+                        enabled,
+                        before,
+                        after,
+                        steps: [beforeStep, afterStep].sort((a, b) => a - b)
+                    };
+                })(),
                 tabPalette: (() => {
                     const tabs = ['rf', 'wf', 'audio', 'agc', 'users', 'status', 'off']
                         .map(id => document.getElementById(`id-nav-optbar-${id}`))
@@ -816,12 +863,27 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         const adminConnect = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-connect');
             const selector = page.querySelector('.id-admin-nav-dom');
+            const dynamicDns = Array.from(page.querySelectorAll('.ui-admin-section'))
+                .find(section => section.querySelector('h3')?.textContent === 'Dynamic DNS');
+            const ducFields = dynamicDns.querySelector('.ui-admin-duc-fields');
+            const ducControls = dynamicDns.querySelector('.ui-admin-duc-controls');
+            const startButton = Array.from(dynamicDns.querySelectorAll('button'))
+                .find(button => button.textContent.trim() === 'Start or restart DUC');
             return {
                 heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
                 sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
                     heading => heading.textContent),
                 selectorDisplay: getComputedStyle(selector).display,
-                selectorPosition: getComputedStyle(selector).position
+                selectorPosition: getComputedStyle(selector).position,
+                dynamicDns: {
+                    groups: dynamicDns.querySelectorAll('.ui-admin-duc-group').length,
+                    fieldColumns: getComputedStyle(ducFields).gridTemplateColumns,
+                    controlColumns: getComputedStyle(ducControls).gridTemplateColumns,
+                    hostWide: getComputedStyle(
+                        dynamicDns.querySelector('.ui-admin-duc-host')).gridColumnEnd === '-1',
+                    actionButton: !!startButton,
+                    status: !!dynamicDns.querySelector('.ui-admin-duc-status .id-net-duc-status')
+                }
             };
         });
         await adminPage.locator('#id-nav-config').click();
@@ -1107,6 +1169,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.typography.agc < 14 ||
             uiFoundation.typography.select < 14 ||
             uiFoundation.typography.selectBackground === 'rgb(255, 255, 255)' ||
+            uiFoundation.controlAlignment.some(control =>
+                control.missing ||
+                control.display !== 'flex' && control.display !== 'inline-flex' ||
+                control.alignItems !== 'center' ||
+                control.justifyContent !== 'center') ||
+            !uiFoundation.step9_10.enabled ||
+            uiFoundation.step9_10.before === uiFoundation.step9_10.after ||
+            uiFoundation.step9_10.steps.join(',') !== '9000,10000' ||
             uiFoundation.tabPalette.labels[2] !== 'AUD' ||
             uiFoundation.tabPalette.legacyColorClasses ||
             uiFoundation.tabPalette.inactiveBackgrounds.length !== 1 ||
@@ -1232,8 +1302,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminConnect.sections.join(',') !==
                 'Public address,Busy-server redirect,Dynamic DNS,Reverse proxy' ||
             adminConnect.selectorDisplay !== 'flex' ||
-            adminConnect.selectorPosition !== 'static')
-            throw new Error(`invalid modern admin connect page: ${JSON.stringify(adminConnect)}`);
+            adminConnect.selectorPosition !== 'static' ||
+            adminConnect.dynamicDns.groups !== 2 ||
+            !adminConnect.dynamicDns.fieldColumns.includes(' ') ||
+            !adminConnect.dynamicDns.controlColumns.includes(' ') ||
+            !adminConnect.dynamicDns.hostWide ||
+            !adminConnect.dynamicDns.actionButton ||
+            !adminConnect.dynamicDns.status)
+            throw new Error(`invalid modern admin Connect page: ${JSON.stringify(adminConnect)}`);
         if (adminConfig.heading !== 'Configuration' ||
             adminConfig.sections.join(',') !==
                 'Startup defaults,Default passbands,Display & calibration,External interfaces,Clocking,ADC behavior' ||

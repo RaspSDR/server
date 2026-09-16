@@ -492,6 +492,30 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                         document.getElementById(selectedOptbar).click();
                     return result;
                 })(),
+                optbarScroll: (() => {
+                    const selectedOptbar = document.querySelector(
+                        '.id-optbar .w3int-cur-sel')?.id;
+                    const area = document.querySelector('.id-optbar-content');
+                    const tabs = ['rf', 'wf', 'audio', 'agc', 'users', 'status'];
+                    const states = tabs.map(tab => {
+                        document.getElementById('id-nav-optbar-'+ tab).click();
+                        area.scrollTop = area.scrollHeight;
+                        const style = getComputedStyle(area);
+                        const state = {
+                            tab,
+                            overflowY: style.overflowY,
+                            scrollbarWidth: style.scrollbarWidth,
+                            scrollbarGutter: style.scrollbarGutter,
+                            scrollable: area.scrollHeight > area.clientHeight,
+                            scrolled: area.scrollTop > 0
+                        };
+                        area.scrollTop = 0;
+                        return state;
+                    });
+                    if (selectedOptbar)
+                        document.getElementById(selectedOptbar).click();
+                    return states;
+                })(),
                 step9_10: (() => {
                     const cell = w3_el('id-9-10-cell');
                     const button = w3_el('id-button-9-10');
@@ -1395,6 +1419,15 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.wfFilterRow.selectPaddingLeft > 6 ||
             uiFoundation.wfFilterRow.selectPaddingRight > 18)
             throw new Error(`invalid WF filter row: ${JSON.stringify(uiFoundation.wfFilterRow)}`);
+        if (uiFoundation.optbarScroll.some(tab =>
+            tab.overflowY !== 'auto' ||
+            tab.scrollbarWidth !== 'thin' ||
+            !tab.scrollbarGutter.startsWith('stable')) ||
+            ['wf', 'audio', 'agc'].some(name => {
+                const tab = uiFoundation.optbarScroll.find(entry => entry.tab === name);
+                return !tab?.scrollable || !tab.scrolled;
+            }))
+            throw new Error(`invalid optbar scrolling: ${JSON.stringify(uiFoundation.optbarScroll)}`);
         for (const layout of receiverResponsive) {
             if (!layout.modern || layout.theme !== 'midnight' ||
                 layout.documentOverflow ||

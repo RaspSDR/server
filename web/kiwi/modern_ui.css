@@ -1305,6 +1305,33 @@
    border-radius: var(--ui-radius);
 }
 
+.ui-modern .id-optbar-content {
+   overflow-x: hidden;
+   overflow-y: auto;
+   overscroll-behavior-y: contain;
+   scrollbar-width: thin;
+   scrollbar-color: var(--ui-border-strong) var(--ui-bg-raised);
+   scrollbar-gutter: stable;
+}
+
+.ui-modern .id-optbar-content::-webkit-scrollbar {
+   width: 10px;
+}
+
+.ui-modern .id-optbar-content::-webkit-scrollbar-track {
+   background: var(--ui-bg-raised);
+}
+
+.ui-modern .id-optbar-content::-webkit-scrollbar-thumb {
+   border: 2px solid var(--ui-bg-raised);
+   border-radius: 999px;
+   background: var(--ui-border-strong);
+}
+
+.ui-modern .id-optbar-content::-webkit-scrollbar-thumb:hover {
+   background: var(--ui-accent);
+}
+
 .ui-modern #id-optbar-content {
    margin-top: var(--ui-space-2) !important;
    padding: var(--ui-space-2);

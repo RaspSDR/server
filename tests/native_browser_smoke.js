@@ -820,6 +820,32 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 histogramHeight: parseFloat(getComputedStyle(
                     document.querySelector('.ui-admin-runtime-histogram-bars')).height)
             };
+            document.getElementById('id-nav-control').click();
+            state.control = {
+                sectionColumns: getComputedStyle(document.querySelector(
+                    '.ui-admin-control .ui-admin-section-grid')).gridTemplateColumns,
+                actionColumns: getComputedStyle(document.querySelector(
+                    '.ui-admin-control-actions')).gridTemplateColumns,
+                actionDisplay: getComputedStyle(document.querySelector(
+                    '.ui-admin-control-action')).display,
+                fieldColumns: getComputedStyle(document.querySelector(
+                    '.ui-admin-control-fields')).gridTemplateColumns,
+                sessionDisplay: getComputedStyle(document.querySelector(
+                    '.ui-admin-control-session-action')).display
+            };
+            document.getElementById('id-nav-connect').click();
+            state.connect = {
+                selectorDisplay: getComputedStyle(document.querySelector(
+                    '.ui-admin-connect .id-admin-nav-dom')).display,
+                fieldColumns: getComputedStyle(document.querySelector(
+                    '.ui-admin-duc-fields')).gridTemplateColumns,
+                controlColumns: getComputedStyle(document.querySelector(
+                    '.ui-admin-duc-controls')).gridTemplateColumns,
+                actionDisplay: getComputedStyle(document.querySelector(
+                    '.ui-admin-duc-action')).display,
+                statusDisplay: getComputedStyle(document.querySelector(
+                    '.ui-admin-duc-status')).display
+            };
             select.value = 'midnight';
             select.dispatchEvent(new Event('change', { bubbles: true }));
             return state;
@@ -1153,6 +1179,38 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     configRect.right <= window.innerWidth + 1
             };
         });
+        const adminClassicMobile = await adminPage.evaluate(() => {
+            modern_ui_set_theme('classic', false);
+            document.getElementById('id-nav-control').click();
+            const controlAction = document.querySelector('.ui-admin-control-action');
+            const controlButton = controlAction.querySelector('button');
+            const controlStyle = getComputedStyle(controlAction);
+            const controlInnerWidth = controlAction.getBoundingClientRect().width -
+                    parseFloat(controlStyle.paddingLeft) - parseFloat(controlStyle.paddingRight);
+            const control = {
+                    sectionColumns: getComputedStyle(document.querySelector(
+                        '.ui-admin-control .ui-admin-section-grid')).gridTemplateColumns,
+                    actionColumns: getComputedStyle(document.querySelector(
+                        '.ui-admin-control-actions')).gridTemplateColumns,
+                    actionDirection: controlStyle.flexDirection,
+                    fullWidthButton: Math.abs(
+                        controlButton.getBoundingClientRect().width - controlInnerWidth) <= 2
+            };
+            document.getElementById('id-nav-connect').click();
+            const connect = {
+                    selectorDisplay: getComputedStyle(document.querySelector(
+                        '.ui-admin-connect .id-admin-nav-dom')).display,
+                    fieldColumns: getComputedStyle(document.querySelector(
+                        '.ui-admin-duc-fields')).gridTemplateColumns,
+                    controlColumns: getComputedStyle(document.querySelector(
+                        '.ui-admin-duc-controls')).gridTemplateColumns,
+                    actionDirection: getComputedStyle(document.querySelector(
+                        '.ui-admin-duc-action')).flexDirection,
+                    documentOverflow: document.documentElement.scrollWidth > window.innerWidth + 2
+            };
+            modern_ui_set_theme('midnight', false);
+            return { control, connect };
+        });
         await adminPage.locator('#id-nav-network').click();
         await adminPage.waitForTimeout(100);
         const adminScrollMobile = await adminPage.evaluate(() => {
@@ -1302,8 +1360,31 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !adminClassic.statusColumns.includes('px') ||
             !adminClassic.runtimeColumns.includes('px') ||
             adminClassic.cpuRowDisplay !== 'grid' ||
-            adminClassic.histogramHeight < 90)
+            adminClassic.histogramHeight < 90 ||
+            !adminClassic.control.sectionColumns.includes('px') ||
+            !adminClassic.control.actionColumns.includes('px') ||
+            adminClassic.control.actionDisplay !== 'flex' ||
+            !adminClassic.control.fieldColumns.includes('px') ||
+            adminClassic.control.sessionDisplay !== 'flex' ||
+            adminClassic.connect.selectorDisplay !== 'flex' ||
+            !adminClassic.connect.fieldColumns.includes('px') ||
+            !adminClassic.connect.controlColumns.includes('px') ||
+            adminClassic.connect.actionDisplay !== 'flex' ||
+            adminClassic.connect.statusDisplay !== 'grid')
             throw new Error(`invalid classic admin theme: ${JSON.stringify(adminClassic)}`);
+        if (adminClassicMobile.control.sectionColumns !== '390px' ||
+            adminClassicMobile.control.actionColumns !== '358px' ||
+            adminClassicMobile.control.actionDirection !== 'column' ||
+            !adminClassicMobile.control.fullWidthButton ||
+            adminClassicMobile.connect.selectorDisplay !== 'flex' ||
+            !adminClassicMobile.connect.fieldColumns.endsWith('px') ||
+            adminClassicMobile.connect.fieldColumns.includes(' ') ||
+            !adminClassicMobile.connect.controlColumns.endsWith('px') ||
+            adminClassicMobile.connect.controlColumns.includes(' ') ||
+            adminClassicMobile.connect.actionDirection !== 'column' ||
+            adminClassicMobile.connect.documentOverflow)
+            throw new Error(
+                `invalid classic mobile admin pages: ${JSON.stringify(adminClassicMobile)}`);
         if (adminStatus.heading !== 'System status' ||
             !['Receiver', 'Signal & timing', 'Runtime health', 'Nightly maintenance',
                 'Admin client'].every(title => adminStatus.cardTitles.includes(title)) ||
@@ -1495,7 +1576,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             panelToggle, adminFoundation, adminClassic, adminResponsive, adminControl, adminConnect, adminConfig,
             adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,
             adminLog, adminConsole, consoleOpenOrder, consoleANSI, adminExtensions, adminSecurity,
-            adminControlMobile, adminExtensionsMobile, adminScrollDesktop, adminScrollMobile
+            adminControlMobile, adminExtensionsMobile, adminClassicMobile,
+            adminScrollDesktop, adminScrollMobile
         }));
     } finally {
         await browser.close();

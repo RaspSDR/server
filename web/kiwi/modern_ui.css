@@ -208,6 +208,216 @@
    box-shadow: none;
 }
 
+.ui-classic .ui-admin-control .ui-admin-section-grid {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ui-classic .ui-admin-control .ui-admin-section-wide {
+   grid-column: 1 / -1;
+}
+
+.ui-classic .ui-admin-control-actions,
+.ui-classic .ui-admin-control-fields,
+.ui-classic .ui-admin-control-messages {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: 8px;
+}
+
+.ui-classic .ui-admin-control-action,
+.ui-classic .ui-admin-control-session-action {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 16px;
+   min-width: 0;
+   padding: 8px;
+   background: #f1f1f1;
+}
+
+.ui-classic .ui-admin-control-action-copy,
+.ui-classic .ui-admin-control-message {
+   min-width: 0;
+}
+
+.ui-classic .ui-admin-control-action-title,
+.ui-classic .ui-admin-control-field-title {
+   color: #009688;
+   font-weight: bold;
+}
+
+.ui-classic .ui-admin-control-action-desc,
+.ui-classic .ui-admin-control-field-desc,
+.ui-classic .ui-admin-control-field-status {
+   margin-top: 3px;
+   color: #555;
+   font-size: 12px;
+   line-height: 1.35;
+}
+
+.ui-classic .ui-admin-control-action-button {
+   flex: 0 0 138px;
+   margin: 0 !important;
+}
+
+.ui-classic .ui-admin-control-field {
+   display: flex;
+   flex-direction: column;
+   min-width: 0;
+   padding: 8px;
+   background: #f1f1f1;
+}
+
+.ui-classic .ui-admin-control-field-wide {
+   grid-column: 1 / -1;
+}
+
+.ui-classic .ui-admin-control-fields-single {
+   grid-template-columns: minmax(0, 1fr);
+}
+
+.ui-classic .ui-admin-control-field > :last-child:not(.ui-admin-control-field-desc) {
+   margin-top: auto;
+   padding-top: 8px;
+}
+
+.ui-classic .ui-admin-control-session-action {
+   margin-bottom: 8px;
+}
+
+.ui-classic .ui-admin-control-message-preview {
+   min-height: 36px;
+   margin-top: 8px;
+   padding: 8px;
+}
+
+.ui-classic .ui-admin-control-monitoring > .ui-admin-control-session-action {
+   margin-top: 8px;
+}
+
+.ui-classic .ui-admin-connect .id-admin-nav-dom {
+   position: static !important;
+   display: flex;
+   width: 100%;
+   height: auto;
+   margin: 0 0 8px;
+   border-bottom: 1px solid #ccc;
+   overflow-x: auto;
+}
+
+.ui-classic .ui-admin-connect .id-admin-nav-dom a {
+   flex: 1 0 auto;
+   padding: 8px 12px;
+   text-align: center;
+}
+
+.ui-classic .ui-admin-connect .id-admin-nav-dom + div {
+   padding-left: 0 !important;
+}
+
+.ui-classic .ui-admin-connect .ui-admin-section-body > .w3-tspace-8 {
+   margin-top: 0;
+}
+
+.ui-classic .ui-admin-duc {
+   display: grid;
+   gap: 8px;
+}
+
+.ui-classic .ui-admin-duc-guide {
+   display: flex;
+   align-items: baseline;
+   gap: 8px;
+   padding: 8px;
+   background: #fff3cd;
+}
+
+.ui-classic .ui-admin-duc-guide strong {
+   flex: 0 0 auto;
+   color: #b36b00;
+}
+
+.ui-classic .ui-admin-duc-group {
+   padding: 8px;
+   background: #f1f1f1;
+}
+
+.ui-classic .ui-admin-duc-group-heading {
+   margin-bottom: 8px;
+}
+
+.ui-classic .ui-admin-duc-group-heading > :first-child {
+   color: #009688;
+   font-weight: bold;
+}
+
+.ui-classic .ui-admin-duc-group-heading > :last-child {
+   margin-top: 2px;
+   color: #555;
+   font-size: 12px;
+}
+
+.ui-classic .ui-admin-duc-fields,
+.ui-classic .ui-admin-duc-controls {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: 8px;
+}
+
+.ui-classic .ui-admin-duc-host {
+   grid-column: 1 / -1;
+}
+
+.ui-classic .ui-admin-duc-control {
+   display: flex;
+   align-items: center;
+   min-width: 0;
+   min-height: 54px;
+   padding: 6px 8px;
+   background: #fff;
+}
+
+.ui-classic .ui-admin-duc-control > div {
+   width: 100%;
+}
+
+.ui-classic .ui-admin-duc-action {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   margin-top: 8px;
+}
+
+.ui-classic .ui-admin-duc-action button {
+   flex: 0 0 auto;
+   margin: 0 !important;
+}
+
+.ui-classic .ui-admin-duc-action > :last-child {
+   color: #555;
+   font-size: 12px;
+}
+
+.ui-classic .ui-admin-duc-status {
+   display: grid;
+   grid-template-columns: auto minmax(0, 1fr);
+   align-items: center;
+   gap: 8px;
+   padding: 8px;
+   background: #f1f1f1;
+}
+
+.ui-classic .ui-admin-duc-status > :first-child {
+   color: #009688;
+   font-weight: bold;
+}
+
+.ui-classic .ui-admin-duc-status .id-net-duc-status {
+   min-height: 32px;
+   padding: 6px 8px;
+}
+
 .ui-classic .ui-admin-status-header,
 .ui-classic .ui-admin-status-users > header {
    display: flex;
@@ -559,6 +769,41 @@
 }
 
 @media (max-width: 760px) {
+   .ui-classic .ui-admin-control .ui-admin-section-grid,
+   .ui-classic .ui-admin-control-actions,
+   .ui-classic .ui-admin-control-fields,
+   .ui-classic .ui-admin-control-messages,
+   .ui-classic .ui-admin-duc-fields,
+   .ui-classic .ui-admin-duc-controls {
+      grid-template-columns: minmax(0, 1fr);
+   }
+
+   .ui-classic .ui-admin-control .ui-admin-section-wide,
+   .ui-classic .ui-admin-control-field-wide,
+   .ui-classic .ui-admin-duc-host {
+      grid-column: auto;
+   }
+
+   .ui-classic .ui-admin-control-action,
+   .ui-classic .ui-admin-control-session-action,
+   .ui-classic .ui-admin-duc-guide,
+   .ui-classic .ui-admin-duc-action,
+   .ui-classic .ui-admin-duc-status {
+      align-items: stretch;
+      grid-template-columns: minmax(0, 1fr);
+      flex-direction: column;
+   }
+
+   .ui-classic .ui-admin-control-action-button,
+   .ui-classic .ui-admin-duc-action button {
+      flex-basis: auto;
+      width: 100%;
+   }
+
+   .ui-classic .ui-admin-connect .id-admin-nav-dom a {
+      flex: 0 0 auto;
+   }
+
    .ui-classic .ui-admin-status-header,
    .ui-classic .ui-admin-status-users > header {
       align-items: flex-start;

@@ -322,6 +322,11 @@
    margin-top: 0;
 }
 
+.ui-classic .ui-admin-connect #id-proxy-hdr {
+   background: #fff !important;
+   color: #00695c !important;
+}
+
 .ui-classic .ui-admin-duc {
    display: grid;
    gap: 8px;

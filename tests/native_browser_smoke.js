@@ -811,7 +811,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 rootModern: document.documentElement.classList.contains('ui-modern'),
                 bodyClassic: document.body.classList.contains('ui-classic'),
                 titleDisplay: getComputedStyle(document.querySelector('.ui-admin-titlebar > div:first-child')).display,
+                titlebarPosition: getComputedStyle(document.querySelector('.ui-admin-titlebar')).position,
                 pickerPosition: getComputedStyle(document.querySelector('.ui-theme-picker')).position,
+                pickerTop: document.querySelector('.ui-theme-picker').getBoundingClientRect().top,
+                pickerRight: document.querySelector('.ui-theme-picker').getBoundingClientRect().right,
                 pageBorderRadius: getComputedStyle(page).borderRadius,
                 pageBoxShadow: getComputedStyle(page).boxShadow,
                 statusColumns: getComputedStyle(document.querySelector('.ui-admin-status-grid')).gridTemplateColumns,
@@ -1196,6 +1199,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     fullWidthButton: Math.abs(
                         controlButton.getBoundingClientRect().width - controlInnerWidth) <= 2
             };
+            const picker = document.querySelector('.ui-theme-picker').getBoundingClientRect();
             document.getElementById('id-nav-connect').click();
             const connect = {
                     selectorDisplay: getComputedStyle(document.querySelector(
@@ -1209,7 +1213,15 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     documentOverflow: document.documentElement.scrollWidth > window.innerWidth + 2
             };
             modern_ui_set_theme('midnight', false);
-            return { control, connect };
+            return {
+                control,
+                connect,
+                picker: {
+                    top: picker.top,
+                    right: picker.right,
+                    viewportWidth: window.innerWidth
+                }
+            };
         });
         await adminPage.locator('#id-nav-network').click();
         await adminPage.waitForTimeout(100);
@@ -1354,7 +1366,11 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminClassic.rootModern ||
             !adminClassic.bodyClassic ||
             adminClassic.titleDisplay !== 'none' ||
+            adminClassic.titlebarPosition !== 'static' ||
             adminClassic.pickerPosition !== 'static' ||
+            adminClassic.pickerTop < 0 ||
+            adminClassic.pickerTop > 8 ||
+            adminClassic.pickerRight > 1432 ||
             adminClassic.pageBorderRadius !== '0px' ||
             adminClassic.pageBoxShadow !== 'none' ||
             !adminClassic.statusColumns.includes('px') ||
@@ -1382,7 +1398,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !adminClassicMobile.connect.controlColumns.endsWith('px') ||
             adminClassicMobile.connect.controlColumns.includes(' ') ||
             adminClassicMobile.connect.actionDirection !== 'column' ||
-            adminClassicMobile.connect.documentOverflow)
+            adminClassicMobile.connect.documentOverflow ||
+            adminClassicMobile.picker.top < 0 ||
+            adminClassicMobile.picker.top > 8 ||
+            adminClassicMobile.picker.right > adminClassicMobile.picker.viewportWidth - 8)
             throw new Error(
                 `invalid classic mobile admin pages: ${JSON.stringify(adminClassicMobile)}`);
         if (adminStatus.heading !== 'System status' ||

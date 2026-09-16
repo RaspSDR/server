@@ -128,16 +128,18 @@
    width: 100%;
    min-height: 100%;
    margin: 0;
-   padding: 0 0 48px;
+   padding: 0;
    color: #009688;
 }
 
 .ui-classic .ui-admin-titlebar {
-   position: fixed;
-   z-index: 1060;
-   left: 8px;
-   bottom: 8px;
+   position: static;
+   display: flex;
+   justify-content: flex-end;
+   min-height: 40px;
    margin: 0;
+   padding: 4px 8px;
+   border-bottom: 1px solid #ddd;
 }
 
 .ui-classic .ui-admin-titlebar > div:first-child,

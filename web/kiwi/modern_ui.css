@@ -1365,6 +1365,18 @@
    font-size: var(--ui-panel-label-size, var(--ui-font-size-label));
 }
 
+.ui-modern #id-control :where(input, select, button, a):focus {
+   outline-offset: -2px;
+}
+
+.ui-modern #id-control select.ui-select,
+.ui-modern #id-select-band,
+.ui-modern #id-select-ext {
+   height: calc(var(--ui-panel-control-height, var(--ui-control-height)) - 4px);
+   min-height: calc(var(--ui-panel-control-height, var(--ui-control-height)) - 4px);
+   box-sizing: border-box;
+}
+
 .ui-modern .ui-rf-theme-actions {
    display: flex;
    justify-content: flex-end;

@@ -442,12 +442,32 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                         };
                     });
                 })(),
+                controlFocus: (() => {
+                    const selectors = [
+                        '#id-select-band',
+                        '#id-select-ext',
+                        '#id-optbar-wf select.ui-select',
+                        '#id-optbar-audio select.ui-select'
+                    ];
+                    return selectors.map(selector => {
+                        const element = document.querySelector(selector);
+                        element?.focus();
+                        const style = element? getComputedStyle(element) : null;
+                        return {
+                            selector,
+                            exists: !!element,
+                            height: element?.getBoundingClientRect().height || 0,
+                            outlineOffset: style?.outlineOffset,
+                            focused: document.activeElement === element
+                        };
+                    });
+                })(),
                 step9_10: (() => {
                     const cell = w3_el('id-9-10-cell');
                     const button = w3_el('id-button-9-10');
                     const savedFrequency = freq_displayed_Hz;
                     const savedMode = cur_mode;
-                    freq_displayed_Hz = 6000000;
+                    freq_displayed_Hz = 1000000;
                     cur_mode = 'am';
                     freq_step_update_ui(true);
                     const band = find_band(freq_displayed_Hz);
@@ -847,7 +867,11 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 actionDisplay: getComputedStyle(document.querySelector(
                     '.ui-admin-duc-action')).display,
                 statusDisplay: getComputedStyle(document.querySelector(
-                    '.ui-admin-duc-status')).display
+                    '.ui-admin-duc-status')).display,
+                proxyHeaderColor: getComputedStyle(document.querySelector(
+                    '.ui-admin-connect #id-proxy-hdr')).color,
+                proxyHeaderBackground: getComputedStyle(document.querySelector(
+                    '.ui-admin-connect #id-proxy-hdr')).backgroundColor
             };
             select.value = 'midnight';
             select.dispatchEvent(new Event('change', { bubbles: true }));
@@ -1296,6 +1320,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.extensionOutput.color === 'rgb(0, 0, 0)' ||
             uiFoundation.extensionOutput.fontSize < 13)
             throw new Error(`invalid extension output theme: ${JSON.stringify(uiFoundation.extensionOutput)}`);
+        if (uiFoundation.controlFocus.some(control =>
+            !control.exists || !control.focused || control.height > 34 ||
+            parseFloat(control.outlineOffset) >= 0))
+            throw new Error(`invalid control focus geometry: ${JSON.stringify(uiFoundation.controlFocus)}`);
         for (const layout of receiverResponsive) {
             if (!layout.modern || layout.theme !== 'midnight' ||
                 layout.documentOverflow ||
@@ -1386,7 +1414,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !adminClassic.connect.fieldColumns.includes('px') ||
             !adminClassic.connect.controlColumns.includes('px') ||
             adminClassic.connect.actionDisplay !== 'flex' ||
-            adminClassic.connect.statusDisplay !== 'grid')
+            adminClassic.connect.statusDisplay !== 'grid' ||
+            adminClassic.connect.proxyHeaderColor !== 'rgb(0, 105, 92)' ||
+            adminClassic.connect.proxyHeaderBackground !== 'rgb(255, 255, 255)')
             throw new Error(`invalid classic admin theme: ${JSON.stringify(adminClassic)}`);
         if (adminClassicMobile.control.sectionColumns !== '390px' ||
             adminClassicMobile.control.actionColumns !== '358px' ||

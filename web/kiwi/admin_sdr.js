@@ -232,15 +232,15 @@ function config_html()
    // but don't move it without leaving an explanation since old forum posts may refer to it as being here
    var s6 =
 		'<hr>' +
-		w3_third('w3-margin-bottom w3-text-teal', 'w3-container',
+		w3_div('w3-margin-bottom w3-text-teal',
 			w3_divs('w3-restart w3-center w3-tspace-8',
             w3_switch_label('w3-center', 'External Reference clock?', 'Yes', 'No', 'ext_ADC_clk', cfg.ext_ADC_clk, 'config_ext_clk_sel_cb'),
 				w3_text('w3-text-black', 'Set when external 10.000 MHz <br> clock connected to ext clk connector/pad.')
-			),
+			) +
          w3_divs('w3-restart w3-tspace-8',
             w3_input('', 'External output clock frequency (enter in Hz)', 'ext_ADC_freq', cfg.ext_ADC_freq, 'config_ext_freq_cb'),
                         w3_text('w3-text-black', 'Set clock frequency to output. 0 to disable. <br> Disabled when External Reference clock is enabled')
-         ),
+         ) +
 			w3_divs('w3-restart/w3-center w3-tspace-8',
             w3_select('', 'GPS correction of ADC clock', '', 'cfg.ADC_clk2_corr', cfg.ADC_clk2_corr, admin_sdr.ADC_clk2_corr_s, 'admin_select_cb'),
 				w3_text('w3-text-black w3-center',

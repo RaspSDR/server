@@ -760,6 +760,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 errors.push(`admin console: ${message.text()}`);
         });
         adminPage.on('pageerror', error => errors.push(`admin page: ${error.message}`));
+        const clickAdminNav = id =>
+            adminPage.evaluate(navId => document.getElementById(navId).click(), id);
         await adminPage.goto(new URL('admin', baseUrl).href,
             { waitUntil: 'domcontentloaded', timeout: 30000 });
         await adminPage.waitForFunction(() => {
@@ -965,7 +967,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 }
             };
         });
-        await adminPage.locator('#id-nav-update').click();
+        await clickAdminNav('id-nav-update');
         const adminUpgrade = await adminPage.evaluate(() => {
             const rows = Array.from(document.querySelectorAll('.ui-admin-update-action'));
             const actions = rows.map(row => {
@@ -990,7 +992,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 });
             return { actions, policyControls };
         });
-        await adminPage.locator('#id-nav-control').click();
+        await clickAdminNav('id-nav-control');
         await adminPage.waitForTimeout(100);
         const adminControl = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-control');
@@ -1020,7 +1022,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                         lifecycleButtons[1].getBoundingClientRect().top) <= 1
             };
         });
-        await adminPage.locator('#id-nav-connect').click();
+        await clickAdminNav('id-nav-connect');
         await adminPage.waitForTimeout(100);
         const adminConnect = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-connect');
@@ -1048,18 +1050,43 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 }
             };
         });
-        await adminPage.locator('#id-nav-config').click();
+        await clickAdminNav('id-nav-config');
         await adminPage.waitForTimeout(100);
         const adminConfig = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-config');
+            const section = title => Array.from(page.querySelectorAll('.ui-admin-section'))
+                .find(item => item.querySelector('h3')?.textContent === title);
+            const clockingRows = Array.from(section('Clocking')
+                ?.querySelector('.ui-admin-section-body > div')?.children || []);
+            const adcDescriptions = Array.from(section('ADC behavior')
+                ?.querySelectorAll('.ui-admin-section-body > .w3-row > .w3-col .w3-text-black') || []);
+            const slider = className => {
+                const input = page.querySelector(`input[type="range"].${className}`);
+                return input && {
+                    type: input.type,
+                    min: input.min,
+                    max: input.max,
+                    step: input.step
+                };
+            };
             return {
                 heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
                 sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
                     heading => heading.textContent),
-                fields: page.querySelectorAll('.ui-field').length
+                fields: page.querySelectorAll('.ui-field').length,
+                clockingOverlap: clockingRows.some((row, index) =>
+                    index && row.getBoundingClientRect().top <
+                        clockingRows[index - 1].getBoundingClientRect().bottom),
+                adcCentered: adcDescriptions.length === 3 &&
+                    adcDescriptions.every(row => getComputedStyle(row).textAlign === 'center'),
+                sliders: {
+                    sMeter: slider('id-S_meter_cal'),
+                    waterfall: slider('id-waterfall_cal'),
+                    identLength: slider('id-ident_len')
+                }
             };
         });
-        await adminPage.locator('#id-nav-webpage').click();
+        await clickAdminNav('id-nav-webpage');
         await adminPage.waitForTimeout(100);
         const adminWebpage = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-webpage');
@@ -1072,7 +1099,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 ).length
             };
         });
-        await adminPage.locator('#id-nav-sdr_hu').click();
+        await clickAdminNav('id-nav-sdr_hu');
         await adminPage.waitForTimeout(100);
         const adminPublic = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-public');
@@ -1083,7 +1110,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 registrationStatus: !!page.querySelector('.id-kiwisdr_com-reg-status')
             };
         });
-        await adminPage.locator('#id-nav-dx').click();
+        await clickAdminNav('id-nav-dx');
         await adminPage.waitForTimeout(700);
         const adminDX = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-dx');
@@ -1096,7 +1123,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     .filter(id => document.getElementById(id)).length
             };
         });
-        await adminPage.locator('#id-nav-update').click();
+        await clickAdminNav('id-nav-update');
         await adminPage.waitForTimeout(100);
         const adminUpdate = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-update');
@@ -1109,7 +1136,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     .filter(button => ['Check now', 'Install now'].includes(button.textContent.trim())).length
             };
         });
-        await adminPage.locator('#id-nav-network').click();
+        await clickAdminNav('id-nav-network');
         await adminPage.waitForTimeout(100);
         const adminNetwork = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-network');
@@ -1138,7 +1165,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             container.scrollTop = 0;
             return result;
         });
-        await adminPage.locator('#id-nav-gps').click();
+        await clickAdminNav('id-nav-gps');
         await adminPage.waitForTimeout(200);
         const adminGPS = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-gps');
@@ -1151,7 +1178,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 skyCanvas: !!page.querySelector('#id-gps-azel-canvas')
             };
         });
-        await adminPage.locator('#id-nav-log').click();
+        await clickAdminNav('id-nav-log');
         await adminPage.waitForTimeout(100);
         const adminLog = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-log');
@@ -1165,7 +1192,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                         .includes(button.textContent.trim())).length
             };
         });
-        await adminPage.locator('#id-nav-console').click();
+        await clickAdminNav('id-nav-console');
         await adminPage.waitForTimeout(100);
         const adminConsole = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-console');
@@ -1227,7 +1254,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 countedMove, savedCursor, scrollCursor, marginReset, oscConsumed, carriageReturn
             };
         });
-        await adminPage.locator('#id-nav-extensions').click();
+        await clickAdminNav('id-nav-extensions');
         await adminPage.waitForTimeout(100);
         const adminExtensions = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-extensions');
@@ -1239,7 +1266,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 configuration: !!page.querySelector('.id-extensions-config')
             };
         });
-        await adminPage.locator('#id-nav-security').click();
+        await clickAdminNav('id-nav-security');
         await adminPage.waitForTimeout(100);
         const adminSecurity = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-security');
@@ -1252,7 +1279,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             };
         });
         await adminPage.setViewportSize({ width: 390, height: 844 });
-        await adminPage.locator('#id-nav-control').click();
+        await clickAdminNav('id-nav-control');
         await adminPage.waitForTimeout(100);
         const adminControlMobile = await adminPage.evaluate(() => {
             const page = document.querySelector('.ui-admin-control');
@@ -1272,7 +1299,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 })
             };
         });
-        await adminPage.locator('#id-nav-extensions').click();
+        await clickAdminNav('id-nav-extensions');
         await adminPage.waitForTimeout(100);
         const adminExtensionsMobile = await adminPage.evaluate(() => {
             const nav = document.querySelector('.id-extensions-nav');
@@ -1330,7 +1357,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 }
             };
         });
-        await adminPage.locator('#id-nav-network').click();
+        await clickAdminNav('id-nav-network');
         await adminPage.waitForTimeout(100);
         const adminScrollMobile = await adminPage.evaluate(() => {
             const container = document.querySelector('.id-kiwi-container[data-type="admin"]');
@@ -1600,7 +1627,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         if (adminConfig.heading !== 'Configuration' ||
             adminConfig.sections.join(',') !==
                 'Startup defaults,Default passbands,Display & calibration,External interfaces,Clocking,ADC behavior' ||
-            adminConfig.fields < 20)
+            adminConfig.fields < 20 ||
+            adminConfig.clockingOverlap ||
+            !adminConfig.adcCentered ||
+            JSON.stringify(adminConfig.sliders) !== JSON.stringify({
+                sMeter: { type: 'range', min: '-50', max: '50', step: '1' },
+                waterfall: { type: 'range', min: '-50', max: '50', step: '1' },
+                identLength: { type: 'range', min: '16', max: '64', step: '1' }
+            }))
             throw new Error(`invalid modern admin config page: ${JSON.stringify(adminConfig)}`);
         if (adminWebpage.heading !== 'Receiver webpage' ||
             adminWebpage.sections.join(',') !==

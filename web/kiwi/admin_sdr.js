@@ -173,7 +173,7 @@ function config_html()
          )
 		) +
 		w3_third('w3-margin-bottom w3-text-teal', 'w3-container',
-			w3_input_get('', 'S-meter calibration (dB)', 'S_meter_cal', 'admin_int_cb'),
+			w3_slider_get_param('', 'S-meter calibration', 'S_meter_cal', -50, 50, 1, 'config_calibration_cb'),
 			w3_divs('/w3-center',
             w3_slider('', 'S-meter OV', 'cfg.S_meter_OV_counts', cfg.S_meter_OV_counts, 0, 15, 1, 'config_OV_counts_cb'),
             w3_text('w3-text-black',
@@ -191,7 +191,7 @@ function config_html()
          )
 		) +
 		w3_third('w3-margin-bottom w3-text-teal', 'w3-container',
-			w3_input_get('', 'Waterfall calibration (dB)', 'waterfall_cal', 'admin_int_cb'),
+			w3_slider_get_param('', 'Waterfall calibration', 'waterfall_cal', -50, 50, 1, 'config_calibration_cb'),
 			w3_div('w3-center w3-tspace-8',
 				w3_select('w3-width-auto', 'ITU region', '', 'init.ITU_region', init_ITU_region, ITU_region_i, 'admin_select_cb'),
 				w3_div('w3-text-black',
@@ -199,7 +199,7 @@ function config_html()
 				)
 			),
 			w3_div('w3-center w3-tspace-8',
-			   w3_input_get('', 'Name/callsign input field max length (16-64)', 'ident_len', 'config_ident_len_cb'),
+			   w3_slider_get_param('', 'Name/callsign input field max length', 'ident_len', 16, 64, 1, 'config_ident_len_cb'),
 				w3_div('w3-text-black',
 					'Used to limit the number of characters a user can enter into the name/callsign field at the top-right of the page.'
 				)
@@ -257,15 +257,15 @@ function config_html()
 		w3_third('w3-margin-bottom w3-text-teal', 'w3-container',
 			w3_divs('w3-center w3-tspace-8',
             w3_switch_label('w3-center', 'Enable ADC dithering?', 'Yes', 'No', 'adc_dither', cfg.adc_dither, 'config_adc_dither_cb'),
-				w3_text('w3-text-black', 'Helps to improve the linearity and dynamic range <br> but adding a small amount of noise')
+				w3_text('w3-text-black w3-center', 'Helps to improve the linearity and dynamic range <br> but adding a small amount of noise')
 			),
          w3_divs('w3-center w3-tspace-8',
             w3_switch_label('w3-center', 'Enable ADC PGA?', 'Yes', 'No', 'adc_pga', cfg.adc_pga, 'config_adc_pga_cb'),
-				w3_text('w3-text-black', 'Increase the gain of the input signal.')
+				w3_text('w3-text-black w3-center', 'Increase the gain of the input signal.')
          ),
          w3_divs('w3-center w3-tspace-8',
             w3_switch_label('w3-center', 'Correct ADC Clock by GPS PPS?', 'Yes', 'No', 'adm.gps_corr', adm.gps_corr, 'admin_radio_YN_cb'),
-				w3_text('w3-text-black', 'Correct ADC Clock to the desired frequency.')
+				w3_text('w3-text-black w3-center', 'Correct ADC Clock to the desired frequency.')
          )
       ) +
       '<hr>';
@@ -603,12 +603,20 @@ function config_zoom_cb(path, val, first)
    w3_show_hide('id-zoom-error', !ok);
 }
 
-function config_ident_len_cb(path, val, first)
+function config_calibration_cb(path, val, complete, first)
+{
+   val = +val;
+   admin_int_cb(path, val, first);
+   w3_set_label((path == 'S_meter_cal'? 'S-meter' : 'Waterfall') +' calibration: '+ val +' dB', path);
+}
+
+function config_ident_len_cb(path, val, complete, first)
 {
    val = +val;
    if (val < 16) val = 16;
    if (val > 64) val = 64;
    admin_int_cb(path, val, first);
+   w3_set_label('Name/callsign input field max length: '+ val, path);
 }
 
 function config_rf_attn_cb(path, val, complete, first)

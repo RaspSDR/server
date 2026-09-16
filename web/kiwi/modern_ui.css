@@ -328,7 +328,7 @@
    margin-top: 0;
 }
 
-.ui-classic .ui-admin-connect #id-proxy-hdr {
+.ui-classic #id-proxy-hdr {
    background: #fff !important;
    color: #00695c !important;
 }

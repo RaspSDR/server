@@ -873,10 +873,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     '.ui-admin-duc-action')).display,
                 statusDisplay: getComputedStyle(document.querySelector(
                     '.ui-admin-duc-status')).display,
-                proxyHeaderColor: getComputedStyle(document.querySelector(
-                    '.ui-admin-connect #id-proxy-hdr')).color,
-                proxyHeaderBackground: getComputedStyle(document.querySelector(
-                    '.ui-admin-connect #id-proxy-hdr')).backgroundColor
+                proxyHeaderColor: getComputedStyle(
+                    document.getElementById('id-proxy-hdr')).color,
+                proxyHeaderBackground: getComputedStyle(
+                    document.getElementById('id-proxy-hdr')).backgroundColor
             };
             select.value = 'midnight';
             select.dispatchEvent(new Event('change', { bubbles: true }));

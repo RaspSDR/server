@@ -447,6 +447,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     });
                 })(),
                 controlFocus: (() => {
+                    const selectedOptbar = document.querySelector(
+                        '.id-optbar .w3int-cur-sel')?.id;
                     const controls = [
                         { selector: '#id-select-band' },
                         { selector: '#id-select-ext' },
@@ -466,7 +468,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                             focused: document.activeElement === element
                         };
                     });
-                    document.getElementById('id-nav-optbar-rf').click();
+                    if (selectedOptbar)
+                        document.getElementById(selectedOptbar).click();
                     return result;
                 })(),
                 step9_10: (() => {

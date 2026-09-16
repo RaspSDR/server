@@ -10347,7 +10347,7 @@ function panels_setup()
          ), 16
       ) +
 
-      w3_inline('w3-halign-space-between w3-margin-T-2/',
+      w3_inline('ui-wf-filter-row w3-halign-space-between w3-margin-T-2/',
          w3_select('w3-text-red||title="colormap selection"', '', 'color<br>map', 'wf.cmap', wf.cmap, kiwi.cmap_s, 'wf_cmap_cb'),
          w3_select('w3-text-red||title="aperture selection"', '', 'aper', 'wf.aper', wf.aper, kiwi.aper_s, 'wf_aper_cb'),
          w3_select('w3-text-red||title="waterfall filter selection"', '', 'wf', 'wf_filter', wf_filter, wf_sp_menu_s, 'wf_sp_menu_cb', 1),

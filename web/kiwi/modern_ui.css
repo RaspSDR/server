@@ -1405,6 +1405,32 @@
    font-size: var(--ui-panel-font-size, var(--ui-font-size-control));
 }
 
+.ui-modern .ui-wf-filter-row {
+   display: grid;
+   grid-template-columns: minmax(0, 1.15fr) repeat(3, minmax(0, 1fr)) 20px auto;
+   align-items: center;
+   gap: 4px;
+}
+
+.ui-modern .ui-wf-filter-row > div {
+   min-width: 0;
+}
+
+.ui-modern .ui-wf-filter-row .ui-select {
+   width: 100%;
+   min-width: 0;
+   padding-right: 18px;
+   padding-left: 6px;
+   font-size: var(--ui-panel-small-size, var(--ui-font-size-meta));
+}
+
+.ui-modern .ui-wf-filter-row .ui-button {
+   min-width: 0;
+   padding-right: 8px;
+   padding-left: 8px;
+   font-size: var(--ui-panel-small-size, var(--ui-font-size-meta));
+}
+
 .ui-modern .cl-closer-spaced-label-text {
    line-height: 1.35;
 }

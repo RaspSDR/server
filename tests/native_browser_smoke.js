@@ -472,6 +472,26 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                         document.getElementById(selectedOptbar).click();
                     return result;
                 })(),
+                wfFilterRow: (() => {
+                    const selectedOptbar = document.querySelector(
+                        '.id-optbar .w3int-cur-sel')?.id;
+                    document.getElementById('id-nav-optbar-wf').click();
+                    const row = document.querySelector('.ui-wf-filter-row');
+                    const children = Array.from(row.children);
+                    const rects = children.map(element => element.getBoundingClientRect());
+                    const selectStyle = getComputedStyle(row.querySelector('select'));
+                    const result = {
+                        display: getComputedStyle(row).display,
+                        gaps: rects.slice(1).map((rect, index) =>
+                            Number((rect.left - rects[index].right).toFixed(1))),
+                        selectFontSize: parseFloat(selectStyle.fontSize),
+                        selectPaddingLeft: parseFloat(selectStyle.paddingLeft),
+                        selectPaddingRight: parseFloat(selectStyle.paddingRight)
+                    };
+                    if (selectedOptbar)
+                        document.getElementById(selectedOptbar).click();
+                    return result;
+                })(),
                 step9_10: (() => {
                     const cell = w3_el('id-9-10-cell');
                     const button = w3_el('id-button-9-10');
@@ -1369,6 +1389,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !control.exists || !control.focused || control.height > 34 ||
             parseFloat(control.outlineOffset) >= 0))
             throw new Error(`invalid control focus geometry: ${JSON.stringify(uiFoundation.controlFocus)}`);
+        if (uiFoundation.wfFilterRow.display !== 'grid' ||
+            uiFoundation.wfFilterRow.gaps.some(gap => gap < 3.5) ||
+            uiFoundation.wfFilterRow.selectFontSize > 12 ||
+            uiFoundation.wfFilterRow.selectPaddingLeft > 6 ||
+            uiFoundation.wfFilterRow.selectPaddingRight > 18)
+            throw new Error(`invalid WF filter row: ${JSON.stringify(uiFoundation.wfFilterRow)}`);
         for (const layout of receiverResponsive) {
             if (!layout.modern || layout.theme !== 'midnight' ||
                 layout.documentOverflow ||

@@ -813,7 +813,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 titleDisplay: getComputedStyle(document.querySelector('.ui-admin-titlebar > div:first-child')).display,
                 pickerPosition: getComputedStyle(document.querySelector('.ui-theme-picker')).position,
                 pageBorderRadius: getComputedStyle(page).borderRadius,
-                pageBoxShadow: getComputedStyle(page).boxShadow
+                pageBoxShadow: getComputedStyle(page).boxShadow,
+                statusColumns: getComputedStyle(document.querySelector('.ui-admin-status-grid')).gridTemplateColumns,
+                runtimeColumns: getComputedStyle(document.querySelector('.ui-admin-runtime-grid')).gridTemplateColumns,
+                cpuRowDisplay: getComputedStyle(document.querySelector('.ui-admin-runtime-cpu-row')).display,
+                histogramHeight: parseFloat(getComputedStyle(
+                    document.querySelector('.ui-admin-runtime-histogram-bars')).height)
             };
             select.value = 'midnight';
             select.dispatchEvent(new Event('change', { bubbles: true }));
@@ -1293,7 +1298,11 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminClassic.titleDisplay !== 'none' ||
             adminClassic.pickerPosition !== 'static' ||
             adminClassic.pageBorderRadius !== '0px' ||
-            adminClassic.pageBoxShadow !== 'none')
+            adminClassic.pageBoxShadow !== 'none' ||
+            !adminClassic.statusColumns.includes('px') ||
+            !adminClassic.runtimeColumns.includes('px') ||
+            adminClassic.cpuRowDisplay !== 'grid' ||
+            adminClassic.histogramHeight < 90)
             throw new Error(`invalid classic admin theme: ${JSON.stringify(adminClassic)}`);
         if (adminStatus.heading !== 'System status' ||
             !['Receiver', 'Signal & timing', 'Runtime health', 'Nightly maintenance',

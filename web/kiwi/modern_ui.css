@@ -208,6 +208,382 @@
    box-shadow: none;
 }
 
+.ui-classic .ui-admin-status-header,
+.ui-classic .ui-admin-status-users > header {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 16px;
+   padding: 16px;
+}
+
+.ui-classic .ui-admin-status-header {
+   border-bottom: 1px solid #ddd;
+}
+
+.ui-classic .ui-admin-status-header span,
+.ui-classic .ui-admin-status-users header span {
+   font-size: 12px;
+}
+
+.ui-classic .ui-admin-status-header h2,
+.ui-classic .ui-admin-status-users h2 {
+   margin: 2px 0 0;
+   font-size: 24px;
+   font-weight: normal;
+}
+
+.ui-classic .ui-admin-status-header p {
+   margin: 0;
+   color: #555;
+}
+
+.ui-classic .ui-admin-status-alerts:empty {
+   display: none;
+}
+
+.ui-classic .ui-admin-status-alerts:not(:empty) {
+   margin: 8px 16px;
+   padding: 8px;
+   color: #f44336;
+}
+
+.ui-classic .ui-admin-status-grid {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ui-classic .ui-admin-status-card {
+   min-width: 0;
+}
+
+.ui-classic .ui-admin-status-card-wide {
+   grid-column: 1 / -1;
+}
+
+.ui-classic .ui-admin-status-card-header {
+   display: flex;
+   align-items: flex-start;
+   gap: 10px;
+   margin-bottom: 8px;
+}
+
+.ui-classic .ui-admin-status-card-icon {
+   flex: 0 0 20px;
+   color: #009688;
+   text-align: center;
+}
+
+.ui-classic .ui-admin-status-card h3,
+.ui-classic .ui-admin-runtime-panel h4 {
+   margin: 0;
+   color: #009688;
+   font-weight: normal;
+}
+
+.ui-classic .ui-admin-status-card-header p,
+.ui-classic .ui-admin-runtime-panel header span,
+.ui-classic .ui-admin-runtime-sparkline-label,
+.ui-classic .ui-admin-runtime-histograms p {
+   margin: 2px 0 0;
+   color: #555;
+   font-size: 12px;
+}
+
+.ui-classic .ui-admin-status-card-body {
+   color: #000;
+   line-height: 1.35;
+}
+
+.ui-classic .ui-admin-status-secondary,
+.ui-classic .ui-admin-status-row + .ui-admin-status-row {
+   margin-top: 6px;
+}
+
+.ui-classic .ui-admin-status-users {
+   padding: 0;
+   border-top: 1px solid #ddd;
+   border-bottom: 1px solid #ddd;
+}
+
+.ui-classic .ui-admin-status-users > header {
+   padding-bottom: 8px;
+}
+
+.ui-classic .ui-admin-status-users header strong {
+   color: #4caf50;
+}
+
+.ui-classic .ui-admin-status-user-list {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: 1px;
+   padding: 0 16px 16px;
+}
+
+.ui-classic .ui-admin-status-user-list > div {
+   min-width: 0;
+   padding: 6px 8px;
+   background: #f1f1f1;
+}
+
+.ui-classic .ui-admin-status-user-list > div > div:nth-child(2),
+.ui-classic .ui-admin-status-client {
+   min-width: 0;
+   overflow-wrap: anywhere;
+}
+
+.ui-classic .ui-admin-status-policy {
+   display: grid;
+   grid-template-columns: repeat(3, minmax(0, 1fr));
+   gap: 8px;
+}
+
+.ui-classic .ui-admin-status-policy > div {
+   display: flex !important;
+   align-items: center;
+   gap: 6px;
+   padding: 6px 8px;
+   background: #f1f1f1;
+}
+
+.ui-classic .ui-admin-status-copy {
+   margin: 0 0 8px;
+}
+
+.ui-classic .ui-admin-status-note {
+   margin: 8px 0 0;
+   color: #555;
+   font-size: 12px;
+}
+
+.ui-classic .ui-admin-runtime-grid {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: 16px;
+}
+
+.ui-classic .ui-admin-runtime-panel {
+   padding: 8px 0;
+}
+
+.ui-classic .ui-admin-runtime-panel + .ui-admin-runtime-panel {
+   border-top: 0;
+}
+
+.ui-classic .ui-admin-runtime-panel-wide {
+   grid-column: 1 / -1;
+}
+
+.ui-classic .ui-admin-runtime-panel > header,
+.ui-classic .ui-admin-runtime-throughput-total {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 12px;
+   margin-bottom: 8px;
+}
+
+.ui-classic .ui-admin-runtime-cpu-list {
+   display: grid;
+   gap: 5px;
+}
+
+.ui-classic .ui-admin-runtime-cpu-row {
+   display: grid;
+   grid-template-columns: 44px minmax(80px, 1fr) 38px;
+   align-items: center;
+   gap: 8px;
+   font-size: 12px;
+}
+
+.ui-classic .ui-admin-runtime-cpu-row strong {
+   text-align: right;
+}
+
+.ui-classic .ui-admin-runtime-cpu-bar,
+.ui-classic .ui-admin-runtime-gauge,
+.ui-classic .ui-admin-runtime-throughput-bar {
+   display: flex;
+   height: 10px;
+   background: #ddd;
+   overflow: hidden;
+}
+
+.ui-classic .ui-admin-runtime-cpu-bar i,
+.ui-classic .ui-admin-runtime-gauge i,
+.ui-classic .ui-admin-runtime-throughput-bar i {
+   display: block;
+   height: 100%;
+}
+
+.ui-classic .ui-admin-runtime-cpu-bar .is-user,
+.ui-classic .ui-admin-runtime-throughput-bar .is-audio {
+   background: #2196f3;
+}
+
+.ui-classic .ui-admin-runtime-cpu-bar .is-system,
+.ui-classic .ui-admin-runtime-throughput-bar .is-http {
+   background: #ff9800;
+}
+
+.ui-classic .ui-admin-runtime-gauge i,
+.ui-classic .ui-admin-runtime-throughput-bar .is-waterfall {
+   background: #4caf50;
+}
+
+.ui-classic .ui-admin-runtime-gauge i.is-warning {
+   background: #ff9800;
+}
+
+.ui-classic .ui-admin-runtime-gauge i.is-danger {
+   background: #f44336;
+}
+
+.ui-classic .ui-admin-runtime-readouts {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: 8px;
+   margin-top: 8px;
+}
+
+.ui-classic .ui-admin-runtime-readouts > div,
+.ui-classic .ui-admin-runtime-counters > div {
+   padding: 6px 8px;
+   background: #f1f1f1;
+}
+
+.ui-classic .ui-admin-runtime-readouts span,
+.ui-classic .ui-admin-runtime-readouts small,
+.ui-classic .ui-admin-runtime-counters span {
+   display: block;
+   color: #555;
+   font-size: 12px;
+}
+
+.ui-classic .ui-admin-runtime-readouts strong,
+.ui-classic .ui-admin-runtime-counters strong {
+   display: block;
+}
+
+.ui-classic .ui-admin-runtime-throughput-total strong {
+   font-size: 20px;
+}
+
+.ui-classic .ui-admin-runtime-throughput-bar {
+   height: 14px;
+}
+
+.ui-classic .ui-admin-runtime-legend,
+.ui-classic .ui-admin-runtime-sparkline-label {
+   display: flex;
+   justify-content: space-between;
+   gap: 12px;
+   margin-top: 5px;
+}
+
+.ui-classic .ui-admin-runtime-legend span {
+   display: flex;
+   align-items: center;
+   gap: 4px;
+}
+
+.ui-classic .ui-admin-runtime-sparkline {
+   display: block;
+   width: 100%;
+   height: 64px;
+   border-bottom: 1px solid #999;
+   background: #f1f1f1;
+}
+
+.ui-classic .ui-admin-runtime-sparkline polyline {
+   fill: none;
+   stroke: #2196f3;
+   stroke-width: 2;
+   vector-effect: non-scaling-stroke;
+}
+
+.ui-classic .ui-admin-runtime-counters {
+   display: grid;
+   grid-template-columns: repeat(4, minmax(0, 1fr));
+   gap: 8px;
+   margin-bottom: 12px;
+}
+
+.ui-classic .ui-admin-runtime-counters strong {
+   color: #4caf50;
+   font-size: 18px;
+}
+
+.ui-classic .ui-admin-runtime-counters .has-warning strong {
+   color: #ff9800;
+}
+
+.ui-classic .ui-admin-runtime-histograms {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: 16px;
+}
+
+.ui-classic .ui-admin-runtime-histogram-bars {
+   display: grid;
+   grid-auto-flow: column;
+   grid-auto-columns: minmax(3px, 1fr);
+   align-items: end;
+   height: 92px;
+   gap: 2px;
+   padding: 8px 8px 0;
+   border: 1px solid #999;
+   border-bottom: 0;
+   background: #f1f1f1;
+}
+
+.ui-classic .ui-admin-runtime-histogram-bars i {
+   min-height: 2px;
+   background: #2196f3;
+}
+
+.ui-classic .ui-admin-runtime-histogram-bars i.is-warning {
+   background: #ff9800;
+}
+
+.ui-classic .ui-admin-runtime-histogram-bars i.is-danger {
+   background: #f44336;
+}
+
+.ui-classic .ui-admin-runtime-histogram-axis {
+   display: flex;
+   justify-content: space-between;
+   color: #555;
+   font-size: 10px;
+}
+
+@media (max-width: 760px) {
+   .ui-classic .ui-admin-status-header,
+   .ui-classic .ui-admin-status-users > header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 6px;
+   }
+
+   .ui-classic .ui-admin-status-grid,
+   .ui-classic .ui-admin-status-user-list,
+   .ui-classic .ui-admin-status-policy,
+   .ui-classic .ui-admin-runtime-grid,
+   .ui-classic .ui-admin-runtime-histograms {
+      grid-template-columns: minmax(0, 1fr);
+   }
+
+   .ui-classic .ui-admin-status-card-wide,
+   .ui-classic .ui-admin-runtime-panel-wide {
+      grid-column: auto;
+   }
+
+   .ui-classic .ui-admin-runtime-counters {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+   }
+}
+
 .ui-modern,
 .ui-modern body {
    font-family: var(--ui-font);

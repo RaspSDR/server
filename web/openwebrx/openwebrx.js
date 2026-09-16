@@ -6274,20 +6274,14 @@ var up_down = {
 
 var NDB_400_1000_mode = 1;		// special 400/1000 step mode for NDB band
 
-function freq_step_is_swbc(b)
-{
-   var ITU_region = cfg.init.ITU_region + 1;
-   var ham_80m_swbc_75m_overlap = (ITU_region == 2 && b && b.name == '75m');
-   var svc = b? band_svc_lookup(b.svc) : null;
-   return svc && svc.o.name.includes('Broadcast') && !ham_80m_swbc_75m_overlap;
-}
-
 // nearest appropriate boundary (1, 5 or 9/10 kHz depending on band & mode)
 function freq_step_amount(b)
 {
    var kmode = ext_mode(cur_mode);
 	var step_Hz = kmode.SSB_CW? 1000 : 5000;
 	var s = kmode.SSB_CW? ' 1k default' : ' 5k default';
+   var ITU_region = cfg.init.ITU_region + 1;
+   var ham_80m_swbc_75m_overlap = (ITU_region == 2 && b && b.name == '75m');
 
 	if (b && b.name == 'NDB') {
 		if (kmode.CW) {
@@ -6302,10 +6296,11 @@ function freq_step_amount(b)
 		}
 		s = ' LW/MW';
 	} else {
-      if (freq_step_is_swbc(b)) {
+	   var svc = b? band_svc_lookup(b.svc) : null;
+      if (svc && svc.o.name.includes('Broadcast') && !ham_80m_swbc_75m_overlap) {      // SWBC bands
          if (kmode.AM_SAx_IQ_DRM) {
-            step_Hz = step_9_10? 9000 : 10000;
-            s = ' SWBC 9/10k';
+            step_Hz = 5000;
+            s = ' SWBC 5k';
             //console.log('SFT-CLICK SWBC');
          }
       } else
@@ -6388,8 +6383,7 @@ function freq_step_update_ui(force)
 	//console.log("freq_step_update_ui: lm="+freq_step_last_mode+' cm='+cur_mode);
 	if (!force && freq_step_last_mode == cur_mode && freq_step_last_band == b) return;
 
-	var show_9_10 = (b && (b.name == 'LW' || b.name == 'MW' || freq_step_is_swbc(b)) &&
-	   ext_mode(cur_mode).AM_SAx_IQ_DRM)? true:false;
+	var show_9_10 = (b && (b.name == 'LW' || b.name == 'MW') && ext_mode(cur_mode).AM_SAx_IQ_DRM)? true:false;
 	
 	if (kiwi_isMobile()) {
 	   w3_hide2('id-9-10-cell', !show_9_10);

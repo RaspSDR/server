@@ -58,6 +58,156 @@
    --ui-focus: #f0a563;
 }
 
+:root[data-ui-theme="classic"] {
+   color-scheme: light;
+   --ui-bg: #ffffff;
+   --ui-bg-raised: #f1f1f1;
+   --ui-surface: #ffffff;
+   --ui-surface-2: #e7e7e7;
+   --ui-surface-3: #ccc;
+   --ui-border: #ccc;
+   --ui-border-strong: #999;
+   --ui-text: #000000;
+   --ui-text-soft: #333333;
+   --ui-text-muted: #555555;
+   --ui-accent: #2196f3;
+   --ui-accent-soft: rgba(33, 150, 243, 0.12);
+   --ui-success: #4caf50;
+   --ui-warning: #ff9800;
+   --ui-danger: #f44336;
+   --ui-on-accent: #ffffff;
+   --ui-focus: #2196f3;
+   --ui-shadow: none;
+   --ui-radius-sm: 0;
+   --ui-radius: 0;
+   --ui-radius-lg: 0;
+   --ui-control-height: 34px;
+   --ui-font: Arial, Helvetica, sans-serif;
+}
+
+.ui-classic .ui-theme-mount {
+   position: fixed;
+   left: 8px;
+   bottom: 8px;
+   z-index: 1060;
+}
+
+.ui-classic .ui-theme-picker {
+   min-height: 32px;
+   padding: 2px 4px 2px 8px;
+   border-color: #999;
+   border-radius: 0;
+   background: #f1f1f1;
+   color: #333;
+   box-shadow: none;
+   font-family: Arial, Helvetica, sans-serif;
+   font-weight: normal;
+   backdrop-filter: none;
+}
+
+.ui-classic .ui-theme-select {
+   height: 26px;
+   padding: 0 4px;
+   border-color: #999;
+   border-radius: 0;
+   background: #fff;
+   color: #000;
+   font-family: Arial, Helvetica, sans-serif;
+   font-weight: normal;
+}
+
+.ui-classic .id-kiwi-container[data-type="admin"] {
+   min-height: 100%;
+   height: 100%;
+   overflow: auto;
+   background: #fff;
+   color: #000;
+}
+
+.ui-classic .ui-admin-shell {
+   width: 100%;
+   min-height: 100%;
+   margin: 0;
+   padding: 0 0 48px;
+   color: #009688;
+}
+
+.ui-classic .ui-admin-titlebar {
+   position: fixed;
+   z-index: 1060;
+   left: 8px;
+   bottom: 8px;
+   margin: 0;
+}
+
+.ui-classic .ui-admin-titlebar > div:first-child,
+.ui-classic .ui-admin-titlebar-status {
+   display: none;
+}
+
+.ui-classic .ui-admin-titlebar-actions {
+   display: block;
+}
+
+.ui-classic .ui-admin-page {
+   margin: 0;
+   padding: 0;
+   border: 0;
+   background: transparent;
+   color: #009688 !important;
+   box-shadow: none;
+}
+
+.ui-classic .ui-admin-page-header,
+.ui-classic .ui-admin-section > header {
+   display: none;
+}
+
+.ui-classic .ui-admin-section-grid,
+.ui-classic .ui-admin-status-grid,
+.ui-classic .ui-admin-status-user-list,
+.ui-classic .ui-admin-status-policy,
+.ui-classic .ui-admin-runtime-grid,
+.ui-classic .ui-admin-runtime-histograms {
+   display: block;
+}
+
+.ui-classic .ui-admin-section,
+.ui-classic .ui-admin-status-card,
+.ui-classic .ui-admin-status-users,
+.ui-classic .ui-admin-runtime-panel {
+   margin: 0;
+   padding: 8px 16px;
+   border: 0;
+   border-radius: 0;
+   background: transparent;
+}
+
+.ui-classic .ui-admin-section + .ui-admin-section,
+.ui-classic .ui-admin-status-card + .ui-admin-status-card,
+.ui-classic .ui-admin-runtime-panel + .ui-admin-runtime-panel {
+   border-top: 1px solid #ddd;
+}
+
+.ui-classic .ui-admin-control-action,
+.ui-classic .ui-admin-control-session-action,
+.ui-classic .ui-admin-control-field,
+.ui-classic .ui-admin-duc-guide,
+.ui-classic .ui-admin-duc-group,
+.ui-classic .ui-admin-duc-status,
+.ui-classic .ui-admin-duc-control {
+   border: 0;
+   border-radius: 0;
+   background: transparent;
+}
+
+.ui-classic .ui-admin-notice {
+   margin-top: 0;
+   border: 0;
+   border-radius: 0;
+   box-shadow: none;
+}
+
 .ui-modern,
 .ui-modern body {
    font-family: var(--ui-font);

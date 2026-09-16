@@ -358,7 +358,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 return (Math.max(first, second) + 0.05) /
                     (Math.min(first, second) + 0.05);
             };
-            for (const theme of ['midnight', 'ember']) {
+            for (const theme of ['midnight', 'ember', 'classic']) {
                 select.value = theme;
                 select.dispatchEvent(new Event('change', { bubbles: true }));
                 const style = getComputedStyle(document.documentElement);
@@ -367,7 +367,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 themes.push({
                     theme: document.documentElement.dataset.uiTheme,
                     accent: style.getPropertyValue('--ui-accent').trim(),
-                    mutedContrast: Number(contrast(muted, surface).toFixed(2))
+                    mutedContrast: Number(contrast(muted, surface).toFixed(2)),
+                    modern: document.documentElement.classList.contains('ui-modern'),
+                    classic: document.documentElement.classList.contains('ui-classic')
                 });
             }
             select.value = 'midnight';
@@ -798,6 +800,25 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 };
             })()
         }));
+        const adminClassic = await adminPage.evaluate(() => {
+            const select = document.getElementById('id-ui-theme-select');
+            select.value = 'classic';
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            const page = document.querySelector('.ui-admin-page');
+            const state = {
+                theme: document.documentElement.dataset.uiTheme,
+                rootClassic: document.documentElement.classList.contains('ui-classic'),
+                rootModern: document.documentElement.classList.contains('ui-modern'),
+                bodyClassic: document.body.classList.contains('ui-classic'),
+                titleDisplay: getComputedStyle(document.querySelector('.ui-admin-titlebar > div:first-child')).display,
+                pickerPosition: getComputedStyle(document.querySelector('.ui-theme-picker')).position,
+                pageBorderRadius: getComputedStyle(page).borderRadius,
+                pageBoxShadow: getComputedStyle(page).boxShadow
+            };
+            select.value = 'midnight';
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            return state;
+        });
         const adminStatus = await adminPage.evaluate(() => {
             const status = document.querySelector('.ui-admin-page.id-status[role="tabpanel"]');
             const cards = Array.from(status?.querySelectorAll('.ui-admin-status-card') || []);
@@ -1148,10 +1169,11 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.storedTheme !== 'midnight' ||
             uiFoundation.receiverThemeParent !== 'id-rf-theme-actions' ||
             JSON.stringify(uiFoundation.themes) !== JSON.stringify([
-                { theme: 'midnight', accent: '#58a6ff', mutedContrast: 6.84 },
-                { theme: 'ember', accent: '#e58a3a', mutedContrast: 6.3 }
+                { theme: 'midnight', accent: '#58a6ff', mutedContrast: 6.84, modern: true, classic: false },
+                { theme: 'ember', accent: '#e58a3a', mutedContrast: 6.3, modern: true, classic: false },
+                { theme: 'classic', accent: '#2196f3', mutedContrast: 7.46, modern: false, classic: true }
             ]) ||
-            JSON.stringify(uiFoundation.themeOptions) !== JSON.stringify(['midnight', 'ember']) ||
+            JSON.stringify(uiFoundation.themeOptions) !== JSON.stringify(['midnight', 'ember', 'classic']) ||
             uiFoundation.semanticShell.header !== 'HEADER' ||
             uiFoundation.semanticShell.main !== 'MAIN' ||
             uiFoundation.semanticShell.panels !== 'ASIDE' ||
@@ -1264,6 +1286,15 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminFoundation.keyboardNavigation.before === adminFoundation.keyboardNavigation.after ||
             adminFoundation.keyboardNavigation.after !== adminFoundation.keyboardNavigation.focused)
             throw new Error(`invalid modern admin foundation: ${JSON.stringify(adminFoundation)}`);
+        if (adminClassic.theme !== 'classic' ||
+            !adminClassic.rootClassic ||
+            adminClassic.rootModern ||
+            !adminClassic.bodyClassic ||
+            adminClassic.titleDisplay !== 'none' ||
+            adminClassic.pickerPosition !== 'static' ||
+            adminClassic.pageBorderRadius !== '0px' ||
+            adminClassic.pageBoxShadow !== 'none')
+            throw new Error(`invalid classic admin theme: ${JSON.stringify(adminClassic)}`);
         if (adminStatus.heading !== 'System status' ||
             !['Receiver', 'Signal & timing', 'Runtime health', 'Nightly maintenance',
                 'Admin client'].every(title => adminStatus.cardTitles.includes(title)) ||
@@ -1452,7 +1483,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
 
         console.log(JSON.stringify({
             ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
-            panelToggle, adminFoundation, adminResponsive, adminControl, adminConnect, adminConfig,
+            panelToggle, adminFoundation, adminClassic, adminResponsive, adminControl, adminConnect, adminConfig,
             adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,
             adminLog, adminConsole, consoleOpenOrder, consoleANSI, adminExtensions, adminSecurity,
             adminControlMobile, adminExtensionsMobile, adminScrollDesktop, adminScrollMobile

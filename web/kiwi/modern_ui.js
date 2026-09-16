@@ -4,7 +4,8 @@ var modern_ui = {
    storage_key: 'web888_ui_theme',
    themes: [
       { id:'midnight', label:'Midnight' },
-      { id:'ember', label:'Ember' }
+      { id:'ember', label:'Ember' },
+      { id:'classic', label:'Classic' }
    ]
 };
 
@@ -23,8 +24,13 @@ function modern_ui_set_theme(theme, persist)
 {
    if (!modern_ui_theme_valid(theme)) theme = 'midnight';
    document.documentElement.setAttribute('data-ui-theme', theme);
-   document.documentElement.classList.add('ui-modern');
-   if (document.body) document.body.classList.add('ui-modern');
+   var classic = theme == 'classic';
+   document.documentElement.classList.toggle('ui-modern', !classic);
+   document.documentElement.classList.toggle('ui-classic', classic);
+   if (document.body) {
+      document.body.classList.toggle('ui-modern', !classic);
+      document.body.classList.toggle('ui-classic', classic);
+   }
 
    if (persist != false) kiwi_storeSet(modern_ui.storage_key, theme);
 

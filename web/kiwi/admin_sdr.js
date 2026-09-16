@@ -259,11 +259,11 @@ function config_html()
             w3_switch_label('w3-center', 'Enable ADC dithering?', 'Yes', 'No', 'adc_dither', cfg.adc_dither, 'config_adc_dither_cb'),
 				w3_text('w3-text-black', 'Helps to improve the linearity and dynamic range <br> but adding a small amount of noise')
 			),
-         w3_divs('w3-tspace-8',
+         w3_divs('w3-center w3-tspace-8',
             w3_switch_label('w3-center', 'Enable ADC PGA?', 'Yes', 'No', 'adc_pga', cfg.adc_pga, 'config_adc_pga_cb'),
 				w3_text('w3-text-black', 'Increase the gain of the input signal.')
          ),
-         w3_divs('w3-tspace-8',
+         w3_divs('w3-center w3-tspace-8',
             w3_switch_label('w3-center', 'Correct ADC Clock by GPS PPS?', 'Yes', 'No', 'adm.gps_corr', adm.gps_corr, 'admin_radio_YN_cb'),
 				w3_text('w3-text-black', 'Correct ADC Clock to the desired frequency.')
          )

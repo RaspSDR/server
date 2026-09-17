@@ -16,6 +16,9 @@
    --ui-accent-soft: rgba(88, 166, 255, 0.14);
    --ui-success: #7ee2a8;
    --ui-warning: #e5b454;
+   --ui-warning-surface: #2b2416;
+   --ui-warning-border: #8a692e;
+   --ui-warning-text: #f2d28b;
    --ui-danger: #ff8e86;
    --ui-on-accent: #07111d;
    --ui-focus: #79b8ff;
@@ -53,6 +56,9 @@
    --ui-accent-soft: rgba(229, 138, 58, 0.15);
    --ui-success: #91d49e;
    --ui-warning: #e0b15b;
+   --ui-warning-surface: #302315;
+   --ui-warning-border: #8d612a;
+   --ui-warning-text: #f0ce8c;
    --ui-danger: #f18d83;
    --ui-on-accent: #1c0e04;
    --ui-focus: #f0a563;
@@ -74,6 +80,9 @@
    --ui-accent-soft: rgba(33, 150, 243, 0.12);
    --ui-success: #4caf50;
    --ui-warning: #ff9800;
+   --ui-warning-surface: #fff4ce;
+   --ui-warning-border: #c47a00;
+   --ui-warning-text: #5f3b00;
    --ui-danger: #f44336;
    --ui-on-accent: #ffffff;
    --ui-focus: #2196f3;
@@ -214,6 +223,55 @@
    border: 0;
    border-radius: 0;
    box-shadow: none;
+}
+
+.ui-admin-warning {
+   display: flex;
+   align-items: flex-start;
+   gap: var(--ui-space-2);
+   width: 100%;
+   margin: 0;
+   padding: var(--ui-space-3);
+   box-sizing: border-box;
+   border: 1px solid var(--ui-warning-border);
+   border-left-width: 4px;
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-warning-surface);
+   color: var(--ui-warning-text);
+   font-family: var(--ui-font);
+   font-size: var(--ui-font-size-label);
+   line-height: var(--ui-line-height);
+}
+
+.ui-admin-warning::before {
+   content: "!";
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   flex: 0 0 20px;
+   width: 20px;
+   height: 20px;
+   border-radius: 50%;
+   background: var(--ui-warning);
+   color: var(--ui-bg);
+   font-weight: 900;
+   line-height: 1;
+}
+
+.ui-admin-warning h5,
+.ui-admin-warning h6 {
+   margin: 0;
+   color: inherit;
+   font: inherit;
+}
+
+.ui-admin-warning a {
+   color: inherit;
+   font-weight: 800;
+}
+
+.ui-admin-warning-compact {
+   padding: var(--ui-space-2) var(--ui-space-3);
 }
 
 .ui-classic .ui-admin-control .ui-admin-section-grid {

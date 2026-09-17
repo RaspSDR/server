@@ -21,7 +21,7 @@
 .cl-cws-wpm,
 .cl-cws-text
 {
-    color: var(--ui-text, white);
+    color: var(--ui-text);
 }
 
 .cl-cws-data
@@ -33,16 +33,16 @@
 
 .cl-cws-row
 {
-    color: var(--ui-text, black);
-    background: var(--ui-surface, white);
+    color: var(--ui-text);
+    background: var(--ui-surface);
 }
 
 .cl-cws-row td
 {
-    border-bottom: 1px solid var(--ui-border, #303b49);
+    border-bottom: 1px solid var(--ui-border);
 }
 
 .cl-cws-row-alt
 {
-    background: var(--ui-surface-2, #E0FFE0);
+    background: var(--ui-surface-2);
 }

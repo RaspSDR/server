@@ -565,6 +565,62 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 })()
             };
         });
+        const extensionThemes = await page.evaluate(async () => {
+            const select = document.getElementById('id-ui-theme-select');
+            const content = document.querySelector('.id-ext-controls-container');
+            const fixture = document.createElement('div');
+            fixture.id = 'id-extension-theme-fixture';
+            fixture.innerHTML =
+                '<h3 class="ui-extension-heading">Extension heading</h3>' +
+                '<button class="ui-button w3-blue">Action</button>' +
+                '<input class="ui-input" value="value">' +
+                '<div class="ui-extension-notice">Help text</div>' +
+                '<div class="ui-extension-notice ui-extension-warning">Warning text</div>' +
+                '<div class="w3-background-pale-aqua w3-text-black">Legacy help text</div>' +
+                '<div class="w3-text-output">Decoded text</div>' +
+                '<table><tbody><tr><td>row one</td></tr><tr><td>row two</td></tr></tbody></table>';
+            content.appendChild(fixture);
+
+            const color = element => getComputedStyle(element).color;
+            const background = element => getComputedStyle(element).backgroundColor;
+            const themes = [];
+            for (const theme of ['midnight', 'ember', 'classic']) {
+                select.value = theme;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                await new Promise(resolve => setTimeout(resolve, 180));
+                const panel = document.getElementById('id-ext-controls');
+                const row = document.querySelector('.sw-row');
+                const title = document.querySelector('.sw-section-title');
+                const button = fixture.querySelector('button');
+                const input = fixture.querySelector('input');
+                const notices = fixture.querySelectorAll('.ui-extension-notice');
+                const legacy = fixture.querySelector('.w3-background-pale-aqua');
+                const output = fixture.querySelector('.w3-text-output');
+                const rows = fixture.querySelectorAll('tr');
+                themes.push({
+                    theme: document.documentElement.dataset.uiTheme,
+                    panel: {
+                        color: color(panel),
+                        background: background(panel),
+                        border: getComputedStyle(panel).borderTopColor
+                    },
+                    contentColor: color(content),
+                    titleColor: color(title),
+                    rowBorder: getComputedStyle(row).borderBottomColor,
+                    button: { color: color(button), background: background(button) },
+                    input: { color: color(input), background: background(input) },
+                    notice: { color: color(notices[0]), background: background(notices[0]) },
+                    warning: { color: color(notices[1]), background: background(notices[1]) },
+                    legacy: { color: color(legacy), background: background(legacy) },
+                    output: { color: color(output), background: background(output) },
+                    rows: Array.from(rows, background)
+                });
+            }
+            fixture.remove();
+            select.value = 'midnight';
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            return themes;
+        });
         const drmThemeAssets = await page.evaluate(async () => {
             const [script, stylesheet] = await Promise.all([
                 fetch('extensions/DRM/DRM.js').then(response => response.text()),
@@ -574,7 +630,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 lightCloseIcon: script.includes("icons/close.24.png") &&
                     !script.includes("icons/close.black.24.png"),
                 themedScheduleMarker:
-                    stylesheet.includes('background-color: var(--ui-border-strong, black)') &&
+                    stylesheet.includes('background-color: var(--ui-border-strong)') &&
                     stylesheet.includes('opacity: 0.55')
             };
         });
@@ -1543,6 +1599,27 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             uiFoundation.extensionOutput.color === 'rgb(0, 0, 0)' ||
             uiFoundation.extensionOutput.fontSize < 13)
             throw new Error(`invalid extension output theme: ${JSON.stringify(uiFoundation.extensionOutput)}`);
+        if (extensionThemes.length !== 3 ||
+            new Set(extensionThemes.map(theme => theme.panel.background)).size !== 3 ||
+            new Set(extensionThemes.map(theme => theme.titleColor)).size !== 3 ||
+            new Set(extensionThemes.map(theme => theme.button.color)).size !== 3 ||
+            new Set(extensionThemes.map(theme => theme.button.background)).size !== 3 ||
+            extensionThemes.some(theme =>
+                theme.theme === '' ||
+                theme.panel.background === 'rgba(0, 0, 0, 0)' ||
+                theme.panel.color === theme.panel.background ||
+                theme.panel.border === theme.panel.background ||
+                theme.contentColor === theme.panel.background ||
+                theme.titleColor === theme.panel.background ||
+                theme.rowBorder === 'rgba(0, 0, 0, 0)' ||
+                theme.button.color === theme.button.background ||
+                theme.input.color === theme.input.background ||
+                theme.notice.color === theme.notice.background ||
+                theme.warning.color === theme.warning.background ||
+                theme.legacy.color === theme.legacy.background ||
+                theme.output.color === theme.output.background ||
+                theme.rows[0] === theme.rows[1]))
+            throw new Error(`invalid extension themes: ${JSON.stringify(extensionThemes)}`);
         if (uiFoundation.controlFocus.some(control =>
             !control.exists || !control.focused || control.height > 34 ||
             parseFloat(control.outlineOffset) >= 0))
@@ -1921,7 +1998,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             throw new Error(errors.join('\n'));
 
         console.log(JSON.stringify({
-            ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
+            ...state, uiFoundation, extensionThemes, drmThemeAssets, extensionFocus,
+            receiverResponsive, faxMobile,
             panelToggle, adminFoundation, adminClassic, adminWarningThemes, adminResponsive,
             adminControl, adminConnect, adminConfig,
             adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,

@@ -554,7 +554,7 @@ function fsk_controls_setup()
       
       w3_div('id-fsk-data|width:100%; height:'+ px(fsk.dataH) +'; overflow:hidden; position:relative; background-color:black;',
          '<canvas id="id-fsk-canvas" width="2048" height='+ dq(fsk.dataH) +' style="left:0; position:absolute; width:100%"></canvas>',
-         w3_div('id-fsk-height-btn|position:absolute; top:2px; left:2px; z-index:101; background:rgba(255,255,255,0.1); color:white; width:22px; height:22px; line-height:20px; text-align:center; cursor:pointer; border:1px solid #555; font-size:14px;',
+         w3_div('id-fsk-height-btn ui-extension-overlay-control|position:absolute; top:2px; left:2px; z-index:101; width:22px; height:22px; line-height:20px; text-align:center; cursor:pointer; font-size:14px;',
             '\u2195\ufe0f'
          ),
 			w3_div('id-fsk-console-msg w3-text-output w3-scroll-down w3-small w3-text-black|left:'+ px(fsk.lhs) +'; right:0; width:auto; position:relative; overflow-x:hidden;',
@@ -648,7 +648,9 @@ function fsk_controls_setup()
 	      if (dataDiv) dataDiv.style.height = px(newH);
 	      var parentDiv = w3_el('id-ext-data-container');
 	      if (parentDiv) parentDiv.style.height = px(newH);
-	      this.style.background = fsk.height_big ? 'rgba(40,167,69,0.9)' : 'rgba(255,255,255,0.1)';
+	      this.style.background = fsk.height_big ?
+	         'color-mix(in srgb, var(--ui-success) 82%, transparent)' :
+	         'color-mix(in srgb, var(--ui-bg-raised) 88%, transparent)';
 	   };
 	}
 

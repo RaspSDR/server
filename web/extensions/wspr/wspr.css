@@ -87,7 +87,7 @@
 
 .id-wspr-controls
 {
-	color: var(--ui-text, black);
+	color: var(--ui-text);
 	width: auto;
 }
 
@@ -112,6 +112,6 @@
 	margin-top: 5px;
 	margin-left: 5px;
 	text-align: center;
-	color: var(--ui-text, black);
-	background-color: var(--ui-surface-2, lightGray);
+	color: var(--ui-text);
+	background-color: var(--ui-surface-2);
 }

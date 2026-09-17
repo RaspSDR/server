@@ -100,7 +100,7 @@ function waterfall_controls_setup()
                '&nbsp;', 3, w3_div('id-wfext-aper-param-field')
             ),
             
-            w3_inline('id-wfext-maxmin w3-background-fade w3-margin-T-8 w3-hide w3-text-white w3-small|background:#575757/',
+            w3_inline('id-wfext-maxmin w3-background-fade w3-margin-T-8 w3-hide w3-text-white w3-small|background:var(--ui-surface-2)/',
                'Min/max:&nbsp;', w3_div('id-wfext-min'), '/', w3_div('id-wfext-max'), '&nbsp;=&nbsp;',
                w3_div('id-wfext-min-comp'), '/', w3_div('id-wfext-max-comp'), '&nbsp;(computed) +&nbsp;',
                w3_div('id-wfext-min-floor'), '/', w3_div('id-wfext-max-ceil'), '&nbsp;(floor/ceil)'

@@ -114,7 +114,7 @@ function digi_controls_setup()
    var data_html =
       time_display_html('digi') +
       
-      w3_div('id-digi-data|left:150px; width:1044px; height:300px; overflow:hidden; position:relative; background-color:var(--ui-bg, mediumBlue);',
+      w3_div('id-digi-data|left:150px; width:1044px; height:300px; overflow:hidden; position:relative; background-color:var(--ui-bg);',
 			w3_div('id-digi-console-msg w3-text-output w3-scroll-down w3-small w3-text-black|width:1024px; height:300px; position:absolute; overflow-x:hidden;',
 			   w3_code('id-digi-console-msgs/')
 			)

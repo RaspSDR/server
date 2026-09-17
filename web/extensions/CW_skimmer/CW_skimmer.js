@@ -169,7 +169,7 @@ function cw_skimmer_controls_setup()
    var data_html =
       time_display_html('cw') +
       
-      w3_div('id-cw-data|left:150px; width:1044px; height:'+ px(cws.height) +'; overflow:hidden; position:relative; background-color:var(--ui-bg, mediumBlue);',
+      w3_div('id-cw-data|left:150px; width:1044px; height:'+ px(cws.height) +'; overflow:hidden; position:relative; background-color:var(--ui-bg);',
 			w3_div('id-cw-skimmer-msg w3-text-output w3-scroll-down w3-small w3-text-black|width:1024px; position:absolute; overflow-x:hidden;',
             w3_table('',
                w3_table_row('', 

@@ -2,11 +2,11 @@
    display: flex;
    justify-content: space-between;
    padding: 3px 0;
-   border-bottom: 1px solid rgba(255,255,255,0.1);
+   border-bottom: 1px solid var(--ui-border);
 }
 
 .sw-label {
-   color: var(--ui-text-muted, #aaa);
+   color: var(--ui-text-muted);
 }
 
 .sw-value {
@@ -14,13 +14,13 @@
 }
 
 .sw-section-title {
-   color: var(--ui-accent, #00bcd4);
+   color: var(--ui-accent);
    font-weight: bold;
    margin: 8px 0 3px;
 }
 
 .sw-footer {
-   color: var(--ui-text-muted, #bbb);
+   color: var(--ui-text-muted);
    font-size: 9px;
    margin-top: 6px;
    text-align: right;

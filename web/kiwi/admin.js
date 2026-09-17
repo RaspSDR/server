@@ -767,16 +767,16 @@ function connect_html()
 		   w3_divs('w3-padding-L-16/w3-padding-T-1',
             w3_div('w3-show-inline-block|width:70%;', w3_input_get('', '', 'sdr_hu_dom_name', 'connect_dom_name_cb', '',
                'Enter domain name that you will point to public IP address, e.g. sdr.my_domain.com (don\'t include port number)')),
-            w3_div('id-connect-duc-dom w3-padding-TB-8'),
-            w3_div('id-connect-rev-dom w3-padding-TB-8'),
-            w3_div('id-connect-pub-ip w3-padding-TB-8'),
+            w3_div('id-connect-duc-dom w3-padding-TB-8 ui-admin-connect-source'),
+            w3_div('id-connect-rev-dom w3-padding-TB-8 ui-admin-connect-source'),
+            w3_div('id-connect-pub-ip w3-padding-TB-8 ui-admin-connect-source'),
             w3_div('w3-show-inline-block|width:70%;', w3_input_get('', '', 'sdr_hu_dom_ip', 'connect_dom_ip_cb', '',
                'Enter known public IP address (don\'t include port number or use a local ip address)'))
          ),
          
 		   w3_div('w3-margin-T-16', 
             w3_label('id-connect-url-text-label w3-show-inline-block w3-margin-R-16 w3-text-teal') +
-			   w3_div('id-connect-url w3-show-inline-block w3-text-black w3-background-pale-aqua')
+			   w3_div('id-connect-url w3-show-inline-block ui-admin-connect-value')
          )
       );
 
@@ -946,24 +946,27 @@ function connect_blur()
 
 function connect_update_url()
 {
-   var ok, ok_color;
+   var ok, value_class;
    
    ok = (adm.duc_host && adm.duc_host != '');
-   ok_color = ok? 'w3-background-pale-aqua' : 'w3-override-yellow';
-	w3_el('id-connect-duc-dom').innerHTML = 'Use domain name from DUC configuration below: ' +
-	   w3_div('w3-show-inline-block w3-text-black '+ ok_color, ok? adm.duc_host : '(none currently set)');
+   value_class = ok? ' ui-admin-connect-value-ready' : ' ui-admin-connect-value-missing';
+	w3_el('id-connect-duc-dom').innerHTML =
+      w3_div('ui-admin-connect-source-label', 'Use domain name from DUC configuration below:') +
+	   w3_div('ui-admin-connect-value'+ value_class, ok? adm.duc_host : '(none currently set)');
 
    ok = (adm.rev_host && adm.rev_host != '');
-   ok_color = ok? 'w3-background-pale-aqua' : 'w3-override-yellow';
+   value_class = ok? ' ui-admin-connect-value-ready' : ' ui-admin-connect-value-missing';
    var rev_host_fqdn = ok? (adm.rev_host +'.'+ adm.proxy_server) : '(none currently set)';
-	w3_el('id-connect-rev-dom').innerHTML = 'Use domain name from reverse proxy configuration below: ' +
-	   w3_div('w3-show-inline-block w3-text-black '+ ok_color, rev_host_fqdn);
+	w3_el('id-connect-rev-dom').innerHTML =
+      w3_div('ui-admin-connect-source-label', 'Use domain name from reverse proxy configuration below:') +
+	   w3_div('ui-admin-connect-value'+ value_class, rev_host_fqdn);
 	w3_el('id-connect-proxy_server').innerHTML = '.'+ adm.proxy_server;
 
    ok = config_net.pub_ip;
-   ok_color = ok? 'w3-background-pale-aqua' : 'w3-override-yellow';
-	w3_el('id-connect-pub-ip').innerHTML = 'Public IP address detected by Kiwi: ' +
-	   w3_div('w3-show-inline-block w3-text-black '+ ok_color, ok? config_net.pub_ip : '(no public IP address detected)');
+   value_class = ok? ' ui-admin-connect-value-ready' : ' ui-admin-connect-value-missing';
+	w3_el('id-connect-pub-ip').innerHTML =
+      w3_div('ui-admin-connect-source-label', 'Public IP address detected by Kiwi:') +
+	   w3_div('ui-admin-connect-value'+ value_class, ok? config_net.pub_ip : '(no public IP address detected)');
 
    var host = decodeURIComponent(cfg.server_url);
    var host_and_port = host;
@@ -982,9 +985,10 @@ function connect_update_url()
       }
       w3_set_label('Based on the above selection the URL to connect to your SDR is:', 'connect-url-text');
    }
-   
+
    ok = (host != '');
-   w3_color('id-connect-url', null, ok? 'hsl(180, 100%, 95%)' : '#ffeb3b');   // w3-background-pale-aqua : w3-override-yellow
+   w3_remove_then_add_cond('id-connect-url', ok,
+      'ui-admin-connect-value-ready', 'ui-admin-connect-value-missing');
    w3_el('id-connect-url').innerHTML = ok? ('http://'+ host_and_port) : '(incomplete information)';
 }
 

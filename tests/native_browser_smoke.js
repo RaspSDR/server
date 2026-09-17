@@ -940,10 +940,25 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         const adminWarningThemes = await adminPage.evaluate(() => {
             const select = document.getElementById('id-ui-theme-select');
             const warning = document.querySelector('.ui-admin-connect .ui-admin-warning');
+            const connectValue = document.querySelector(
+                '.ui-admin-connect .ui-admin-connect-value-missing');
+            const luminance = color => {
+                const values = color.match(/[\d.]+/g).slice(0, 3).map(value => {
+                    const channel = +value / 255;
+                    return channel <= 0.03928? channel / 12.92 :
+                        Math.pow((channel + 0.055) / 1.055, 2.4);
+                });
+                return values[0] * 0.2126 + values[1] * 0.7152 + values[2] * 0.0722;
+            };
+            const contrast = (first, second) => {
+                const values = [luminance(first), luminance(second)].sort((a, b) => b - a);
+                return (values[0] + 0.05) / (values[1] + 0.05);
+            };
             const themes = ['midnight', 'ember', 'classic'].map(theme => {
                 select.value = theme;
                 select.dispatchEvent(new Event('change', { bubbles: true }));
                 const style = getComputedStyle(warning);
+                const valueStyle = getComputedStyle(connectValue);
                 return {
                     theme,
                     display: style.display,
@@ -952,7 +967,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     border: style.borderLeftColor,
                     color: style.color,
                     marker: getComputedStyle(warning, '::before').content,
-                    headingMargin: getComputedStyle(warning.querySelector('h5')).margin
+                    headingMargin: getComputedStyle(warning.querySelector('h5')).margin,
+                    connectValueBackground: valueStyle.backgroundColor,
+                    connectValueBorder: valueStyle.borderColor,
+                    connectValueColor: valueStyle.color,
+                    connectValueContrast: Number(
+                        contrast(valueStyle.color, valueStyle.backgroundColor).toFixed(2))
                 };
             });
             select.value = 'midnight';
@@ -960,7 +980,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             return {
                 themes,
                 warningCount: document.querySelectorAll('.ui-admin-warning').length,
-                hardcodedYellow: document.querySelectorAll('.ui-admin-warning.w3-yellow').length
+                hardcodedYellow: document.querySelectorAll('.ui-admin-warning.w3-yellow').length,
+                legacyConnectColors: document.querySelectorAll(
+                    '.ui-admin-connect-value.w3-override-yellow, ' +
+                    '.ui-admin-connect-value.w3-background-pale-aqua').length
             };
         });
         const adminStatus = await adminPage.evaluate(() => {
@@ -1059,12 +1082,28 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             const ducControls = dynamicDns.querySelector('.ui-admin-duc-controls');
             const startButton = Array.from(dynamicDns.querySelectorAll('button'))
                 .find(button => button.textContent.trim() === 'Start or restart DUC');
+            const sourceRows = ['id-connect-duc-dom', 'id-connect-rev-dom', 'id-connect-pub-ip']
+                .map(className => {
+                    const row = page.querySelector('.'+ className);
+                    const value = row.querySelector('.ui-admin-connect-value');
+                    const style = getComputedStyle(value);
+                    return {
+                        display: getComputedStyle(row).display,
+                        columns: getComputedStyle(row).gridTemplateColumns,
+                        missing: value.classList.contains('ui-admin-connect-value-missing'),
+                        emptyText: value.textContent.trim().startsWith('('),
+                        background: style.backgroundColor,
+                        border: style.borderColor,
+                        color: style.color
+                    };
+                });
             return {
                 heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
                 sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
                     heading => heading.textContent),
                 selectorDisplay: getComputedStyle(selector).display,
                 selectorPosition: getComputedStyle(selector).position,
+                sourceRows,
                 dynamicDns: {
                     groups: dynamicDns.querySelectorAll('.ui-admin-duc-group').length,
                     fieldColumns: getComputedStyle(ducFields).gridTemplateColumns,
@@ -1583,6 +1622,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             throw new Error(`invalid classic admin theme: ${JSON.stringify(adminClassic)}`);
         if (adminWarningThemes.warningCount < 7 ||
             adminWarningThemes.hardcodedYellow ||
+            adminWarningThemes.legacyConnectColors ||
             adminWarningThemes.themes.length !== 3 ||
             adminWarningThemes.themes.some(theme =>
                 theme.display !== 'flex' ||
@@ -1591,7 +1631,11 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 theme.border === theme.background ||
                 theme.color === theme.background ||
                 theme.marker !== '"!"' ||
-                theme.headingMargin !== '0px'))
+                theme.headingMargin !== '0px' ||
+                theme.connectValueBackground === 'rgba(0, 0, 0, 0)' ||
+                theme.connectValueBorder === theme.connectValueBackground ||
+                theme.connectValueColor === theme.connectValueBackground ||
+                theme.connectValueContrast < 4.5))
             throw new Error(`invalid admin warning themes: ${JSON.stringify(adminWarningThemes)}`);
         if (adminClassicMobile.control.sectionColumns !== '390px' ||
             adminClassicMobile.control.actionColumns !== '358px' ||
@@ -1659,6 +1703,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 'Public address,Busy-server redirect,Dynamic DNS,Reverse proxy' ||
             adminConnect.selectorDisplay !== 'flex' ||
             adminConnect.selectorPosition !== 'static' ||
+            adminConnect.sourceRows.length !== 3 ||
+            adminConnect.sourceRows.some(row =>
+                row.display !== 'grid' ||
+                !row.columns.includes(' ') ||
+                row.missing !== row.emptyText ||
+                row.background === 'rgba(0, 0, 0, 0)' ||
+                row.border === row.background ||
+                row.color === row.background) ||
             adminConnect.dynamicDns.groups !== 2 ||
             !adminConnect.dynamicDns.fieldColumns.includes(' ') ||
             !adminConnect.dynamicDns.controlColumns.includes(' ') ||

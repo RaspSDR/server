@@ -132,6 +132,7 @@ function fetchRawResponse(headers, path) {
             IBP_scan: '.id-IBP-menu',
             waterfall: '.id-waterfall-controls',
             wspr: '.id-wspr-controls',
+            FT8: '.cl-ft8-text',
             DRM: '.id-drm-controls'
         };
         await targetPage.setViewportSize(viewport);
@@ -166,6 +167,11 @@ function fetchRawResponse(headers, path) {
         if (name === 'Loran_C')
             await targetPage.evaluate(() => Loran_C_blur());
         await targetPage.waitForTimeout(name === 'DRM' ? 1000 : 350);
+        if (name === 'FT8') {
+            await targetPage.evaluate(() =>
+                ft8_mode_cb('ft8.mode', ft8.FST4W_1800, false));
+            await targetPage.waitForTimeout(100);
+        }
 
         return targetPage.evaluate(extensionName => {
             const root = document.querySelector('.id-ext-controls-container');
@@ -227,7 +233,11 @@ function fetchRawResponse(headers, path) {
                 drmRegistered: extint_names.includes('DRM'),
                 drmRendered: extensionName !== 'DRM' ||
                     root.textContent.includes('Digital Radio Mondiale decoder') ||
-                    !!document.querySelector('.id-drm-panel-container')
+                    !!document.querySelector('.id-drm-panel-container'),
+                fstwRendered: extensionName !== 'FT8' ||
+                    root.textContent.includes('FST4W-1800'),
+                fstwSelected: extensionName !== 'FT8' ||
+                    ft8.mode === ft8.FST4W_1800
             };
         }, name);
     }
@@ -1067,7 +1077,7 @@ function fetchRawResponse(headers, path) {
         ]) {
             for (const extension of [
                 'CW_decoder', 'Loran_C', 'SSTV', 'colormap',
-                'IBP_scan', 'waterfall', 'wspr', 'DRM'
+                'IBP_scan', 'waterfall', 'wspr', 'FT8', 'DRM'
             ])
                 extensionLayouts.push(
                     await extensionLayoutState(page, extension, viewport));
@@ -2084,7 +2094,9 @@ function fetchRawResponse(headers, path) {
                     layout.helpButton.paddingTop !== '0px' ||
                     layout.helpButton.paddingBottom !== '0px')) ||
             !layout.drmRegistered ||
-            !layout.drmRendered))
+            !layout.drmRendered ||
+            !layout.fstwRendered ||
+            !layout.fstwSelected))
             throw new Error(
                 `invalid extension control layout: ${JSON.stringify(extensionLayouts)}`);
         if (dxDialogMobile.some(layout =>

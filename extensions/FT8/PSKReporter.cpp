@@ -144,7 +144,7 @@ static const struct _tx_info_desc_t {
 } __attribute__((packed)) tx_info_desc;
 
 // PR_TX_LINK, len, call, freq, snr, mode, grid, isrc, slot_time, pad (max), slop
-#define PR_TX_MAX_LEN   (2 + 2 + (1+14) + 4 + 1 + (1+3) + (1+6) + 1 + 4 + 3 + 16)
+#define PR_TX_MAX_LEN   (2 + 2 + (1+14) + 4 + 1 + (1+6) + (1+6) + 1 + 4 + 3 + 16)
 #define PR_BUF_LEN 2048
 
 typedef struct {

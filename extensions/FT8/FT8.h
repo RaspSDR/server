@@ -9,6 +9,20 @@
 
 #define FT8_PASSBAND_LO     100
 #define FT8_PASSBAND_HI     3100
+#define FST4W_PASSBAND_LO   600
+#define FST4W_PASSBAND_HI   900
+
+typedef enum {
+    FT8_PROTOCOL_FT8,
+    FT8_PROTOCOL_FT4,
+    FT8_PROTOCOL_FST4W_15,
+    FT8_PROTOCOL_FST4W_30,
+    FT8_PROTOCOL_FST4W_60,
+    FT8_PROTOCOL_FST4W_120,
+    FT8_PROTOCOL_FST4W_300,
+    FT8_PROTOCOL_FST4W_900,
+    FT8_PROTOCOL_FST4W_1800
+} ft8_protocol_e;
 
 typedef struct {
     u4_t freq_offset_Hz;

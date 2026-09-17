@@ -73,12 +73,16 @@ typedef struct {
     int freqHz;
 
     ftx_protocol_t protocol;
-    char protocol_s[4];
+    int tr_period;
+    char protocol_s[12];
     int have_call_and_grid;
 
     float slot_period;
     int num_samples;
     TYPEREAL *samples;
+    monitor_shared_t mon_shared;
+    monitor_stream_t mon_stream;
+    bool streaming;
     bool tsync;
     int in_pos;
     int frame_pos;
@@ -338,7 +342,10 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
             char text[FTX_MAX_MESSAGE_LENGTH];
             bool uploaded = false;
             int km = 0;
-            ftx_message_rc_t unpack_status = ftx_message_decode(&message, &hash_if, text);
+            bool fst4w = ft8->protocol == FTX_PROTOCOL_FST4W;
+            ftx_message_rc_t unpack_status = fst4w?
+                fst4w_message_decode(&message, &hash_if, text) :
+                ftx_message_decode(&message, &hash_if, text);
             if (unpack_status != FTX_MESSAGE_RC_OK && unpack_status != FTX_MESSAGE_RC_ERROR_TYPE)
             {
                 snprintf(text, sizeof(text), "Error [%d] while unpacking!", (int)unpack_status);
@@ -353,11 +360,22 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
             float snr = message.snr * 0.5f + ft8_conf.SNR_adj;
             bool pskr_ok = false;
             int age = 0;
+            int tx_power = 0;
             char call_to[14], call_de[14], grid_de[7];
-            if (ftx_message_get_type(&message) == FTX_MESSAGE_TYPE_STANDARD &&
+            call_to[0] = call_de[0] = grid_de[0] = '\0';
+            if (fst4w) {
+                if (sscanf(text, "%13s %6s %d", call_de, grid_de, &tx_power) == 3 &&
+                    call_de[0] != '<' && strlen(call_de) >= 3 &&
+                    (strlen(grid_de) == 4 || strlen(grid_de) == 6)) {
+                    pskr_ok = true;
+                }
+            } else if (ftx_message_get_type(&message) == FTX_MESSAGE_TYPE_STANDARD &&
                 ftx_message_decode_std(&message, &hash_if, call_to, call_de, grid_de) == FTX_MESSAGE_RC_OK &&
                 call_de[0] != '<' && strlen(call_de) >= 3 && strlen(grid_de) == 4 && strcmp(grid_de, "RR73") != 0) {
                 pskr_ok = true;
+            }
+
+            if (pskr_ok) {
                 #ifdef PR_USE_CALLSIGN_HASHTABLE
                     callsign_hashtable_t *ht = hashtable_find(call_de);
                     if (ht != NULL) {
@@ -375,7 +393,7 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
                                 #endif
                                     {
                                         km = PSKReporter_spot(rx_chan, call_de, passband_freq, snr_i,
-                                            (ft8->protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4",
+                                            fst4w? "FST4W" : ((ft8->protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4"),
                                             grid_de, frame->decode_time, ft8->slot);
                                     }
                                 ht->uploaded = 1;
@@ -412,11 +430,15 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
             ks = kstr_asprintf(ks, (km > 0)? " %5d" : "      ", km);
             ks = kstr_asprintf(ks, (age != 0)? "  %02d" : "    ", age);
 
-            uint8_t i3 = ftx_message_get_i3(&message);
-            if (i3)
-                ks = kstr_asprintf(ks, " %d.0 ", i3);
-            else
-                ks = kstr_asprintf(ks, " 0.%d*", ftx_message_get_n3(&message));
+            if (fst4w) {
+                ks = kstr_asprintf(ks, " WSPR ");
+            } else {
+                uint8_t i3 = ftx_message_get_i3(&message);
+                if (i3)
+                    ks = kstr_asprintf(ks, " %d.0 ", i3);
+                else
+                    ks = kstr_asprintf(ks, " 0.%d*", ftx_message_get_n3(&message));
+            }
 
             if (pskr_ok) {
                 char *call_to_s = NULL, *call_de_s, *grid_de_s;
@@ -425,7 +447,9 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
                 bool rr73 = (strcmp(grid_de, "RR73") == 0);
 
                 // call_to
-                if (strcmp(call_to, "&lt;...&gt;") != 0 &&
+                if (fst4w) {
+                    call_to_s = strdup("");
+                } else if (strcmp(call_to, "&lt;...&gt;") != 0 &&
                     strcmp(call_to, "CQ") != 0 &&
                     strncmp(call_to, "CQ ", 3) != 0 &&
                     strcmp(call_to, "DE") != 0 &&
@@ -440,15 +464,21 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
                 asprintf(&grid_de_s, rr73? "(RR73)" : "<a style=\"color:blue\" href=\"http://www.levinecentral.com/ham/grid_square.php?"
                     "Grid=%s\" target=\"_blank\">%s</a>", grid_de, grid_de);
 
-                const char *protocol = (ft8->protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4";
+                const char *protocol = fst4w? "FST4W" : ((ft8->protocol == FTX_PROTOCOL_FT8)? "FT8" : "FT4");
                 conn_t *conn = rx_channels[rx_chan].conn;
                 u4_t freq = conn->freqHz + ft8_conf.freq_offset_Hz + freq_hz;
                 mqtt_publish(protocol, "\"call:\":\"%s\", \"call_to\":\"%s\", \"grid\":\"%s\", \"snr\":%.1f, \"dT\":%.2f, \"freq\":%.3f, \"km\":%d, \"age\":%d",
                     call_de, call_to, grid_de, snr, time_sec, (double) freq / 1e3, km, age);
 
-                ext_send_msg_encoded(rx_chan, false, "EXT", "chars",
-                    "%s %s%s %s%s %s" NONL, kstr_sp(ks), ft8->debug? "3> ":"", call_to_s,
-                    uploaded? GREEN : "", call_de_s, grid_de_s);
+                if (fst4w) {
+                    ext_send_msg_encoded(rx_chan, false, "EXT", "chars",
+                        "%s %s%s %s%s %d dBm\n", kstr_sp(ks), ft8->debug? "W> ":"",
+                        uploaded? GREEN : "", call_de_s, grid_de_s, tx_power);
+                } else {
+                    ext_send_msg_encoded(rx_chan, false, "EXT", "chars",
+                        "%s %s%s %s%s %s" NONL, kstr_sp(ks), ft8->debug? "3> ":"", call_to_s,
+                        uploaded? GREEN : "", call_de_s, grid_de_s);
+                }
 
                 free(call_to_s); free(call_de_s); free(grid_de_s);
             } else {
@@ -519,8 +549,10 @@ void decode_ft8_compute(void *arg) {
 
             CHECK_PADDING(ft8);
 
-            // Reset internal variables for the next time slot
-            monitor_reset(&frame->mon);
+            // Streaming frames are reset when reused so shared FFT state is not
+            // disturbed while the next frame is being captured.
+            if (!ft8->streaming)
+                monitor_reset(&frame->mon);
 
             CHECK_PADDING(ft8);
 
@@ -569,6 +601,23 @@ void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, 
     }
     CHECK_PADDING(ft8);
 
+    if (ft8->streaming) {
+        monitor_stream_process_i16(&ft8->mon_stream, samps, nsamps);
+        if (frame->mon.wf.num_blocks < frame->mon.wf.max_blocks)
+            return;
+
+        *start_test = 0;
+        ft8->frame_idx_fill = (ft8->frame_idx_fill + 1) % FRAME_SIZE;
+        if (!monitor_stream_set_frame(&ft8->mon_stream, &ft8->frames[ft8->frame_idx_fill].mon)) {
+            printf("FST4W: unable to reset streaming monitor on rx%d\n", rx_chan);
+            ft8->init = false;
+            return;
+        }
+        TaskWakeup(ft8->compute_task);
+        ft8->tsync = false;
+        return;
+    }
+
     for (int i = 0; i < nsamps /*&& ft8->in_pos < ft8->num_samples*/; i++) {
         // NB: must normalize to +/- 1.0 or there won't be any decodes
         ft8->samples[ft8->in_pos] = ((TYPEREAL) samps[i]) / 32768.0f;
@@ -601,33 +650,78 @@ void decode_ft8_init(int rx_chan, int proto)
     memset(ft8, 0, sizeof(decode_ft8_t));
     ft8->magic = 0xbeefcafe;
     ft8->rx_chan = rx_chan;
-    ftx_protocol_t protocol = proto? FTX_PROTOCOL_FT4 : FTX_PROTOCOL_FT8;
+    ftx_protocol_t protocol = FTX_PROTOCOL_FT8;
+    int tr_period = 0;
+    if (proto == FT8_PROTOCOL_FT4) {
+        protocol = FTX_PROTOCOL_FT4;
+    } else if (proto >= FT8_PROTOCOL_FST4W_15 && proto <= FT8_PROTOCOL_FST4W_1800) {
+        protocol = FTX_PROTOCOL_FST4W;
+        tr_period = kFST4_TR_periods[proto - FT8_PROTOCOL_FST4W_15];
+    }
     ft8->protocol = protocol;
-    float slot_period = ((protocol == FTX_PROTOCOL_FT8) ? FT8_SLOT_TIME : FT4_SLOT_TIME);
-    sprintf(ft8->protocol_s, "FT%d", (protocol == FTX_PROTOCOL_FT8)? 8:4);
+    ft8->tr_period = tr_period;
+    float slot_period = protocol == FTX_PROTOCOL_FT8? FT8_SLOT_TIME :
+        (protocol == FTX_PROTOCOL_FT4? FT4_SLOT_TIME : (float) tr_period);
+    if (protocol == FTX_PROTOCOL_FST4W)
+        snprintf(ft8->protocol_s, sizeof(ft8->protocol_s), "FST4W-%d", tr_period);
+    else
+        snprintf(ft8->protocol_s, sizeof(ft8->protocol_s), "FT%d", protocol == FTX_PROTOCOL_FT8? 8:4);
     ft8->slot_period = slot_period;
-    int sample_rate = snd_rate;
-    int num_samples = slot_period * sample_rate;
-    ft8->samples = (TYPEREAL *) malloc(num_samples * sizeof(TYPEREAL));
-
-    // active period
-    num_samples = (slot_period - 0.4f) * sample_rate;
-    ft8->num_samples = num_samples;
+    int sample_rate = protocol == FTX_PROTOCOL_FST4W? 6000 : snd_rate;
 
     // Compute FFT over the whole signal and store it
     monitor_config_t mon_cfg = {
-        .f_min = FT8_PASSBAND_LO,
-        .f_max = FT8_PASSBAND_HI,
+        .f_min = protocol == FTX_PROTOCOL_FST4W? FST4W_PASSBAND_LO : FT8_PASSBAND_LO,
+        .f_max = protocol == FTX_PROTOCOL_FST4W? FST4W_PASSBAND_HI : FT8_PASSBAND_HI,
         .sample_rate = sample_rate,
         .time_osr = kTime_osr,
         .freq_osr = kFreq_osr,
-        .protocol = protocol
+        .protocol = protocol,
+        .tr_period = tr_period
     };
 
     hashtable_init(rx_chan);
 
-    for(int i = 0 ; i < FRAME_SIZE; i++)
-        monitor_init(&ft8->frames[i].mon, &mon_cfg);
+    if (protocol == FTX_PROTOCOL_FST4W) {
+        monitor_memory_usage_t memory;
+        if (!monitor_get_memory_usage(&mon_cfg, &memory) ||
+            !monitor_shared_init(&ft8->mon_shared, &mon_cfg)) {
+            printf("FST4W: unable to allocate streaming monitor on rx%d\n", rx_chan);
+            decode_ft8_free(rx_chan);
+            return;
+        }
+        ft8->streaming = true;
+        for (int i = 0; i < FRAME_SIZE; i++) {
+            if (!monitor_frame_init(&ft8->frames[i].mon, &ft8->mon_shared)) {
+                printf("FST4W: unable to allocate waterfall frame on rx%d\n", rx_chan);
+                decode_ft8_free(rx_chan);
+                return;
+            }
+        }
+        if (!monitor_stream_init(&ft8->mon_stream, &ft8->frames[0].mon, snd_rate)) {
+            printf("FST4W: unable to initialize streaming input on rx%d\n", rx_chan);
+            decode_ft8_free(rx_chan);
+            return;
+        }
+        LOG(LOG_INFO, "FST4W-%d streaming memory shared=%zu frame=%zu\n",
+            tr_period, memory.shared_bytes, memory.frame_bytes);
+    } else {
+        int num_samples = slot_period * sample_rate;
+        ft8->samples = (TYPEREAL *) malloc(num_samples * sizeof(TYPEREAL));
+        if (ft8->samples == NULL) {
+            printf("FT8: unable to allocate sample buffer on rx%d\n", rx_chan);
+            decode_ft8_free(rx_chan);
+            return;
+        }
+        ft8->num_samples = (slot_period - 0.4f) * sample_rate;
+        for (int i = 0; i < FRAME_SIZE; i++) {
+            if (!monitor_init(&ft8->frames[i].mon, &mon_cfg)) {
+                printf("FT8: unable to allocate monitor on rx%d\n", rx_chan);
+                decode_ft8_free(rx_chan);
+                return;
+            }
+        }
+    }
 
     ft8->frame_idx_decode = ft8->frame_idx_fill = 0;
 
@@ -647,13 +741,18 @@ void decode_ft8_free(int rx_chan)
     free(ft8->samples);
     ft8->samples = NULL;
 
-    TaskRemove(ft8->compute_task);
+    if (ft8->compute_task)
+        TaskRemove(ft8->compute_task);
 
     free(ft8->callsign_hashtable);
     ft8->callsign_hashtable = NULL;
 
+    if (ft8->streaming)
+        monitor_stream_free(&ft8->mon_stream);
     for(int i = 0 ; i < FRAME_SIZE; i++)
         monitor_free(&ft8->frames[i].mon);
+    if (ft8->streaming)
+        monitor_shared_free(&ft8->mon_shared);
 }
 
 void decode_ft8_protocol(int rx_chan, int freqHz, int proto)

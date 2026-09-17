@@ -12,6 +12,7 @@
 #include "wspr.h"
 #include "FT8.h"
 #include "PSKReporter.h"
+#include "ft8/constants.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -171,13 +172,16 @@ bool ft8_msgs(char *msg, int rx_chan)
 
     int proto;
 	if (sscanf(msg, "SET ft8_start=%d", &proto) == 1) {
+        if (proto < FT8_PROTOCOL_FT8 || proto > FT8_PROTOCOL_FST4W_1800) {
+            rcprintf(rx_chan, "FT8: invalid protocol %d\n", proto);
+            return true;
+        }
 	    e->debug = kiwi.dbgUs;
 	    e->proto = proto;
         conn_t *conn = rx_channels[e->rx_chan].conn;
 		e->last_freq_kHz = conn->freqHz/1e3;
         ft8_conf.freq_offset_Hz = (u4_t) (freq_offset_kHz * 1e3);
-		//rcprintf(rx_chan, "FT8 start %s\n", proto? "FT4" : "FT8");
-		decode_ft8_init(rx_chan, proto? 1:0);
+		decode_ft8_init(rx_chan, proto);
 
 		if (ft8_conf.tsamps != 0) {
             ext_register_receive_real_samps(ft8_file_data, rx_chan);
@@ -194,11 +198,14 @@ bool ft8_msgs(char *msg, int rx_chan)
 	}
 	
 	if (sscanf(msg, "SET ft8_protocol=%d", &proto) == 1) {
+        if (proto < FT8_PROTOCOL_FT8 || proto > FT8_PROTOCOL_FST4W_1800) {
+            rcprintf(rx_chan, "FT8: invalid protocol %d\n", proto);
+            return true;
+        }
 	    e->proto = proto;
         conn_t *conn = rx_channels[e->rx_chan].conn;
 		e->last_freq_kHz = conn->freqHz/1e3;
-		//rcprintf(rx_chan, "FT8 protocol %s freq %.2f\n", proto? "FT4" : "FT8", conn->freqHz/1e3);
-		decode_ft8_protocol(rx_chan, conn->freqHz, proto? 1:0);
+		decode_ft8_protocol(rx_chan, conn->freqHz, proto);
 		return true;
 	}
 
@@ -309,15 +316,31 @@ bool ft8_update_vars_from_config(bool called_at_init_or_restart)
 
 // order matches ft8.autorun_u in FT8.js
 // only add new entries to the end so as not to disturb existing values stored in config
-#define FT4_BAND_IDX 13
 static double ft8_cfs[] = {     // usb carrier/dial freq
     /* FT8 */ 1840, 3573, 5357, 7074,   10136, 14074, 18100, 21074, 24915, 28074, 50313, 40680, 60074,
     /* FT4 */       3575.5,     7047.5, 10140, 14080, 18104, 21140, 24919, 28180, 50318,
+    /* FST4W */ 137.5, 475.7, 137.5, 475.7, 137.5, 475.7, 137.5, 475.7, 137.5, 475.7, 137.5, 475.7, 137.5, 475.7,
 };
 
 static const char* ft8_name[] = {
     "160m", "80m", "60m", "40m", "30m", "20m", "17m", "15m", "12m", "10m", "6m", "8m*", "5m*",
-            "80m",        "40m", "30m", "20m", "17m", "15m", "12m", "10m", "6m"
+            "80m",        "40m", "30m", "20m", "17m", "15m", "12m", "10m", "6m",
+    "LF", "MF", "LF", "MF", "LF", "MF", "LF", "MF", "LF", "MF", "LF", "MF", "LF", "MF"
+};
+
+static ft8_protocol_e ft8_arun_proto[] = {
+    FT8_PROTOCOL_FT8, FT8_PROTOCOL_FT8, FT8_PROTOCOL_FT8, FT8_PROTOCOL_FT8, FT8_PROTOCOL_FT8,
+    FT8_PROTOCOL_FT8, FT8_PROTOCOL_FT8, FT8_PROTOCOL_FT8, FT8_PROTOCOL_FT8, FT8_PROTOCOL_FT8,
+    FT8_PROTOCOL_FT8, FT8_PROTOCOL_FT8, FT8_PROTOCOL_FT8,
+    FT8_PROTOCOL_FT4, FT8_PROTOCOL_FT4, FT8_PROTOCOL_FT4, FT8_PROTOCOL_FT4, FT8_PROTOCOL_FT4,
+    FT8_PROTOCOL_FT4, FT8_PROTOCOL_FT4, FT8_PROTOCOL_FT4, FT8_PROTOCOL_FT4,
+    FT8_PROTOCOL_FST4W_15, FT8_PROTOCOL_FST4W_15,
+    FT8_PROTOCOL_FST4W_30, FT8_PROTOCOL_FST4W_30,
+    FT8_PROTOCOL_FST4W_60, FT8_PROTOCOL_FST4W_60,
+    FT8_PROTOCOL_FST4W_120, FT8_PROTOCOL_FST4W_120,
+    FT8_PROTOCOL_FST4W_300, FT8_PROTOCOL_FST4W_300,
+    FT8_PROTOCOL_FST4W_900, FT8_PROTOCOL_FST4W_900,
+    FT8_PROTOCOL_FST4W_1800, FT8_PROTOCOL_FST4W_1800
 };
 
 void ft8_update_spot_count(int rx_chan, u4_t spot_count)
@@ -334,20 +357,26 @@ static void ft8_autorun(int instance, bool initial)
     rx_util_t *r = &rx_util;
     int band = ft8_arun_band[instance]-1;
     double dial_freq_kHz = ft8_cfs[band];
-    bool ft4 = (band >= FT4_BAND_IDX);
+    ft8_protocol_e proto = ft8_arun_proto[band];
+    bool fst4w = (proto >= FT8_PROTOCOL_FST4W_15);
     bool preempt = (ft8_arun_preempt[instance] != ARUN_PREEMPT_NO);
     char *ident_user;
-    asprintf(&ident_user, "FT%d-%s", ft4? 4:8, ft8_name[band]);
+    if (fst4w) {
+        asprintf(&ident_user, "FST4W-%d-%s", kFST4_TR_periods[proto - FT8_PROTOCOL_FST4W_15], ft8_name[band]);
+    } else {
+        asprintf(&ident_user, "FT%d-%s", proto == FT8_PROTOCOL_FT4? 4:8, ft8_name[band]);
+    }
     char *geoloc;
     asprintf(&geoloc, "0%%20decoded%s", preempt? ",%20preemptible" : "");
 
 	bool ok = internal_conn_setup(ICONN_WS_SND | ICONN_WS_EXT, &iconn[instance], instance, PORT_BASE_INTERNAL_FT8,
 	    WS_FL_IS_AUTORUN | (initial? WS_FL_INITIAL : 0),
-        "usb", FT8_PASSBAND_LO, FT8_PASSBAND_HI, dial_freq_kHz, ident_user, geoloc, "FT8");
-    free(ident_user); free(geoloc);
-    if (!ok) {
+        "usb", fst4w? FST4W_PASSBAND_LO : FT8_PASSBAND_LO, fst4w? FST4W_PASSBAND_HI : FT8_PASSBAND_HI,
+        dial_freq_kHz, ident_user, geoloc, "FT8");
+	if (!ok) {
+	    free(ident_user); free(geoloc);
         //printf("FT8 autorun: internal_conn_setup() FAILED instance=%d band=%d %s %.2f\n",
-	    //    instance, band, ft4? "FT4" : "FT8", dial_freq_kHz);
+	    //    instance, band, ident_user, dial_freq_kHz);
         return;
     }
 
@@ -364,13 +393,14 @@ static void ft8_autorun(int instance, bool initial)
     e->arun_dial_freq_kHz = dial_freq_kHz;
 
 	clprintf(csnd, "FT8 autorun: START instance=%d rx_chan=%d band=%d %s %.2f preempt=%d\n",
-	    instance, rx_chan, band, ft4? "FT4" : "FT8", dial_freq_kHz, preempt);
+	    instance, rx_chan, band, ident_user, dial_freq_kHz, preempt);
+    free(ident_user); free(geoloc);
 	
     conn_t *cext = iconn[instance].cext;
     e->arun_cext = cext;
     input_msg_internal(cext, (char *) "SET autorun");
     input_msg_internal(cext, (char *) "SET dialfreq=%.2f", dial_freq_kHz);
-    input_msg_internal(cext, (char *) "SET ft8_start=%d", ft4? 1:0);    // ext task created here
+    input_msg_internal(cext, (char *) "SET ft8_start=%d", proto);    // ext task created here
 }
 
 void ft8_autorun_start(bool initial)

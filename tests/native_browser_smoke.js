@@ -1150,6 +1150,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 .find(item => item.querySelector('h3')?.textContent === title);
             const clockingRows = Array.from(section('Clocking')
                 ?.querySelector('.ui-admin-section-body > div')?.children || []);
+            const clockingWidths = clockingRows.map(row => row.getBoundingClientRect().width);
             const adcDescriptions = Array.from(section('ADC behavior')
                 ?.querySelectorAll('.ui-admin-section-body > .w3-row > .w3-col .w3-text-black') || []);
             const slider = className => {
@@ -1167,6 +1168,16 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
                     heading => heading.textContent),
                 fields: page.querySelectorAll('.ui-field').length,
+                clockingLabels: clockingRows.map(row =>
+                    row.querySelector('.ui-label')?.textContent),
+                clockingLayout: {
+                    rows: clockingRows.length,
+                    display: clockingRows.map(row => getComputedStyle(row).display),
+                    columns: clockingRows.map(row => getComputedStyle(row).gridTemplateColumns),
+                    aligned: Math.max(...clockingWidths) - Math.min(...clockingWidths) <= 1,
+                    descriptions: clockingRows.filter(row =>
+                        row.querySelector('.ui-admin-config-option-desc')).length
+                },
                 clockingOverlap: clockingRows.some((row, index) =>
                     index && row.getBoundingClientRect().top <
                         clockingRows[index - 1].getBoundingClientRect().bottom),
@@ -1753,6 +1764,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminConfig.sections.join(',') !==
                 'Startup defaults,Default passbands,Display & calibration,External interfaces,Clocking,ADC behavior' ||
             adminConfig.fields < 20 ||
+            adminConfig.clockingLabels.join(',') !==
+                'External Reference clock?,GPS correction of ADC clock,' +
+                'External output clock frequency (enter in Hz)' ||
+            adminConfig.clockingLayout.rows !== 3 ||
+            adminConfig.clockingLayout.display.some(display => display !== 'grid') ||
+            adminConfig.clockingLayout.columns.some(columns => !columns.includes(' ')) ||
+            !adminConfig.clockingLayout.aligned ||
+            adminConfig.clockingLayout.descriptions !== 3 ||
             adminConfig.clockingOverlap ||
             !adminConfig.adcCentered ||
             JSON.stringify(adminConfig.sliders) !== JSON.stringify({

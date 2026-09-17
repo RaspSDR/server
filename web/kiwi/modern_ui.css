@@ -307,6 +307,35 @@
    color: var(--ui-warning-text);
 }
 
+.ui-admin-config-options {
+   display: grid;
+   gap: var(--ui-space-3);
+}
+
+.ui-admin-config-option {
+   display: grid;
+   grid-template-columns: minmax(190px, 0.9fr) minmax(0, 1.1fr);
+   align-items: center;
+   gap: var(--ui-space-3);
+   min-width: 0;
+   padding: var(--ui-space-3);
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-bg-raised);
+}
+
+.ui-admin-config-option-control,
+.ui-admin-config-option-control .ui-field {
+   min-width: 0;
+   width: 100%;
+}
+
+.ui-admin-config-option-desc {
+   color: var(--ui-text-muted) !important;
+   font-size: var(--ui-font-size-meta);
+   line-height: 1.45;
+}
+
 .ui-classic .ui-admin-control .ui-admin-section-grid {
    display: grid;
    grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2807,6 +2836,10 @@
 
    .ui-admin-connect-value {
       justify-self: start;
+   }
+
+   .ui-admin-config-option {
+      grid-template-columns: minmax(0, 1fr);
    }
 
    .ui-modern .ui-admin-shell {

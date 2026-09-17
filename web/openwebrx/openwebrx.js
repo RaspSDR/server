@@ -8207,8 +8207,8 @@ function dx_label_render_cb(arr)
 		
 	   var _class = w3_sb('w3-custom-events w3-hold cl-dx-label', has_ext? 'dx-has-ext':'',
 	      filtered? 'cl-dx-label-filtered':'', (has_ext && !filtered)? 'cl-dx-label-ext':'');
-	   var _style_attr = sprintf('|left:%s; z-index:%d; background:%s|id="id-dx-label_%s"',
-	      px(x-10), dx_z, color, dx_idx);
+	   var _style_attr = sprintf('|left:%s; z-index:%d; --dx-label-bg:%s; background:%s|id="id-dx-label_%s"',
+	      px(x-10), dx_z, color, color, dx_idx);
 		s_a[dx_idx] =
 		   w3_button_path(_class + _style_attr, 'dx-'+ gid, '', 'dx_evt', w3_sbc(',', gid, cmkr_x)) +
 		   w3_div(sprintf('cl-dx-line|left:%s; z-index:110|id="id-dx-line_%s"', px(x), dx_idx));
@@ -8363,6 +8363,7 @@ function dx_label_render_cb(arr)
          var sparse = dx.color_fixup[dx_idx];
          if (sparse) {
             el.style.backgroundColor = sparse;
+            el.style.setProperty('--dx-label-bg', sparse);
             //console.log('COLOR FIXUP dx_idx='+ dx_idx +' '+ sparse);
             //console.log(el);
          }

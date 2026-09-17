@@ -1611,6 +1611,28 @@
    background: var(--ui-surface-2);
 }
 
+.ui-modern .cl-dx-label.ui-button {
+   min-height: 0;
+   padding: 3px;
+   border: 1px solid black !important;
+   border-radius: 3px !important;
+   background: var(--dx-label-bg) !important;
+   color: black !important;
+   font-family: inherit;
+   font-size: 11px;
+   font-weight: normal;
+   line-height: normal;
+   box-shadow: none;
+   transition: none;
+}
+
+.ui-modern .cl-dx-label.ui-button:hover,
+.ui-modern .cl-dx-label.ui-button:active {
+   background: var(--dx-label-bg) !important;
+   color: black !important;
+   transform: none;
+}
+
 .ui-modern .class-overlay-container {
    background: rgba(4, 10, 13, 0.78);
    color: var(--ui-text);

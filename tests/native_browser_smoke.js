@@ -410,17 +410,26 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             })(),
             dxLabelRows: (() => {
                 const rows = [0, 1, 2, 3].map(i => dx_label_top_px(i));
-                const label = document.createElement('div');
-                label.className = 'cl-dx-label';
+                const label = document.createElement('button');
+                label.className = 'w3-btn w3-ext-btn ui-button w3-round-large cl-dx-label';
                 label.textContent = 'DX';
+                label.style.setProperty('--dx-label-bg', '#123456');
+                label.style.backgroundColor = '#123456';
                 document.body.appendChild(label);
                 const style = getComputedStyle(label);
                 const labelHeight = label.getBoundingClientRect().height;
                 const labelFontSize = parseFloat(style.fontSize);
                 const labelPadding = parseFloat(style.paddingTop);
                 const labelRadius = parseFloat(style.borderTopLeftRadius);
+                const firstTypeColor = style.backgroundColor;
+                label.style.setProperty('--dx-label-bg', '#abcdef');
+                label.style.backgroundColor = '#abcdef';
+                const secondTypeColor = getComputedStyle(label).backgroundColor;
                 label.remove();
-                return { rows, labelHeight, labelFontSize, labelPadding, labelRadius };
+                return {
+                    rows, labelHeight, labelFontSize, labelPadding, labelRadius,
+                    firstTypeColor, secondTypeColor
+                };
             })()
         }));
 
@@ -2069,7 +2078,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             dxRows.rows[2] + dxRows.labelHeight > 70 ||
             dxRows.labelFontSize !== 11 ||
             dxRows.labelPadding !== 3 ||
-            dxRows.labelRadius !== 3)
+            dxRows.labelRadius !== 3 ||
+            dxRows.firstTypeColor !== 'rgb(18, 52, 86)' ||
+            dxRows.secondTypeColor !== 'rgb(171, 205, 239)' ||
+            dxRows.firstTypeColor === dxRows.secondTypeColor)
             throw new Error(`invalid three-row DX label layout: ${JSON.stringify(dxRows)}`);
 
         const passband = state.spectrumPassband;

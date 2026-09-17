@@ -56,6 +56,7 @@ function acars_recv(data)
             break;
 
          case 'decoder':
+            acars.in_test_output = (param[1] == 'test');
             acars_status('w3-text-lime', param[1] == 'test'? 'Decoding sample...' : 'Listening');
             break;
 
@@ -65,10 +66,12 @@ function acars_recv(data)
             break;
 
          case 'test_done':
+            acars_flush_stream();
+            acars.in_test_output = false;
+            acars.sample_until = Date.now() + 2000;
             acars.testing = false;
             w3_remove('id-acars-test', 'w3-disabled');
             acars_status('w3-text-lime', 'Sample complete; listening');
-            acars_flush_stream();
             break;
 
          case 'error':
@@ -181,7 +184,8 @@ function acars_add_block(block)
 {
    var msg = acars_parse_block(block);
    if (!msg) return;
-   msg.freq = acars.current_freq || (+ext_get_freq_kHz() / 1000);
+   msg.sample = !!acars.in_test_output || Date.now() < (acars.sample_until || 0);
+   msg.freq = msg.sample? null : (acars.current_freq || (+ext_get_freq_kHz() / 1000));
    acars.messages.unshift(msg);
    if (acars.messages.length > acars.max_messages)
       acars.messages.length = acars.max_messages;
@@ -226,7 +230,8 @@ function acars_render_messages()
       var header = document.createElement('div');
       header.className = 'ui-acars-card-header';
       acars_add_text(header, 'ui-acars-time', msg.time || 'live');
-      acars_add_text(header, 'ui-acars-frequency', msg.freq.toFixed(3) +' MHz');
+      acars_add_text(header, 'ui-acars-frequency',
+         msg.sample? 'sample audio' : msg.freq.toFixed(3) +' MHz');
       if (msg.direction)
          acars_add_text(header, 'ui-acars-badge ui-acars-'+ msg.direction, msg.direction);
       acars_add_text(header, 'ui-acars-badge', 'label '+ (msg.label || '--'));
@@ -417,7 +422,8 @@ function ACARS_blur()
 {
    kiwi_clearTimeout(acars.flush_timer);
    ext_send('SET stop');
-   ext_set_mode(acars.saved_mode);
+   if (isDefined(acars.saved_mode))
+      ext_set_mode(acars.saved_mode);
    if (acars.saved_passband)
       ext_set_passband(acars.saved_passband.low, acars.saved_passband.high);
 }
@@ -431,7 +437,7 @@ function ACARS_help(show)
             'Select an active ACARS channel for your region, then leave the receiver in AM mode. ' +
             'The decoder displays aircraft identity, flight ID, label, block direction, error count, and payload. ' +
             'Use the raw view when troubleshooting weak or unusual messages.' +
-            '<br><br>The Test button decodes <i>Acars_sample.ogg</i>. ' +
+            '<br><br>The Test button injects a 12 kHz signed-16-bit PCM sample through the live audio path. ' +
             'URL parameters: <span style="color:orange">frequency &nbsp; raw &nbsp; test</span>.'
          );
       confirmation_show_content(s, 600, 260);

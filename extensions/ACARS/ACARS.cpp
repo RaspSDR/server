@@ -10,9 +10,11 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
+static acars_t acars;
 static acars_chan_t acars_chan[MAX_RX_CHANS];
 
 static void acars_process_clear(acars_chan_t *e)
@@ -43,12 +45,12 @@ static void acars_process_stop(acars_chan_t *e)
     }
 }
 
-static bool acars_process_start(acars_chan_t *e, bool test)
+static bool acars_process_start(acars_chan_t *e)
 {
     int in_pipe[2] = { -1, -1 };
     int out_pipe[2] = { -1, -1 };
 
-    if ((!test && pipe(in_pipe) < 0) || pipe(out_pipe) < 0) {
+    if (pipe(in_pipe) < 0 || pipe(out_pipe) < 0) {
         rcprintf(e->rx_chan, "ACARS: pipe failed: %s\n", strerror(errno));
         if (in_pipe[0] >= 0) close(in_pipe[0]);
         if (in_pipe[1] >= 0) close(in_pipe[1]);
@@ -68,42 +70,47 @@ static bool acars_process_start(acars_chan_t *e, bool test)
     }
 
     if (pid == 0) {
-        if (test) {
-            int null_fd = open("/dev/null", O_RDONLY);
-            if (null_fd >= 0) {
-                dup2(null_fd, STDIN_FILENO);
-                close(null_fd);
-            }
-        } else {
-            close(in_pipe[1]);
-            dup2(in_pipe[0], STDIN_FILENO);
-            close(in_pipe[0]);
-        }
+        close(in_pipe[1]);
+        dup2(in_pipe[0], STDIN_FILENO);
+        close(in_pipe[0]);
 
         close(out_pipe[0]);
         dup2(out_pipe[1], STDOUT_FILENO);
         close(out_pipe[1]);
 
-        if (test) {
-            execl(ACARSDEC_BIN, ACARSDEC_BIN,
-                "--sndfile", DIR_SAMPLES "/Acars_sample.ogg",
-                "--output", "full:file:path=-", NULL);
-        } else {
-            execl(ACARSDEC_BIN, ACARSDEC_BIN,
-                "--sndfile", "file=/dev/stdin,subtype=0x02,channels=1,endian=cpu",
-                "--output", "full:file:path=-", NULL);
-        }
+        execl(ACARSDEC_BIN, ACARSDEC_BIN,
+            "--sndfile", "file=/dev/stdin,subtype=0x02,channels=1,endian=cpu",
+            "--output", "full:file:path=-", NULL);
         _exit(127);
     }
 
-    if (!test) {
-        close(in_pipe[0]);
-        e->input_pipe = in_pipe[1];
-    }
+    close(in_pipe[0]);
+    e->input_pipe = in_pipe[1];
     close(out_pipe[1]);
     e->output_pipe = out_pipe[0];
     e->pid = pid;
     return true;
+}
+
+static void acars_test_file_data(int rx_chan, int instance, int nsamps, TYPEMONO16 *samps, int freqHz)
+{
+    (void) instance;
+    (void) freqHz;
+    acars_chan_t *e = &acars_chan[rx_chan];
+    if (!e->test)
+        return;
+
+    for (int i = 0; i < nsamps; i++) {
+        if (e->test_ptr < acars.sample_end)
+            samps[i] = *e->test_ptr++;
+        else
+            samps[i] = 0;
+    }
+
+    if (e->test_ptr >= acars.sample_end) {
+        e->test = false;
+        ext_send_msg(rx_chan, false, "EXT test_done");
+    }
 }
 
 static void acars_feed_task(void *param)
@@ -156,17 +163,14 @@ static void acars_decoder_task(void *param)
     acars_chan_t *e = &acars_chan[rx_chan];
 
     while (e->running) {
-        bool test = e->test_pending;
-        e->test_pending = false;
-
-        if (!acars_process_start(e, test)) {
+        if (!acars_process_start(e)) {
             ext_send_msg_encoded(rx_chan, false, "EXT", "error",
                 "Unable to start %s", ACARSDEC_BIN);
             TaskSleepMsec(1000);
             continue;
         }
 
-        ext_send_msg(rx_chan, false, "EXT decoder=%s", test ? "test" : "live");
+        ext_send_msg(rx_chan, false, "EXT decoder=live");
 
         while (e->running && e->output_pipe >= 0) {
             char buffer[2048];
@@ -187,9 +191,7 @@ static void acars_decoder_task(void *param)
                 ;
         }
 
-        if (test)
-            ext_send_msg(rx_chan, false, "EXT test_done");
-        else if (e->running)
+        if (e->running)
             ext_send_msg_encoded(rx_chan, false, "EXT", "error",
                 "ACARS decoder stopped; restarting");
     }
@@ -200,6 +202,7 @@ static void acars_close(int rx_chan)
     acars_chan_t *e = &acars_chan[rx_chan];
     e->running = false;
 
+    ext_unregister_receive_real_samps(rx_chan);
     ext_unregister_receive_real_samps_task(rx_chan);
     ext_unregister_receive_cmds(rx_chan);
     acars_process_stop(e);
@@ -273,18 +276,15 @@ static bool acars_msgs(char *msg, int rx_chan)
     }
 
     if (strcmp(msg, "SET test") == 0) {
-        if (access(DIR_SAMPLES "/Acars_sample.ogg", R_OK) != 0) {
+        if (!acars.sample_start) {
             ext_send_msg_encoded(rx_chan, false, "EXT", "error",
                 "Test sample is missing");
             return true;
         }
-        e->test_pending = true;
-        if (e->input_pipe >= 0) {
-            close(e->input_pipe);
-            e->input_pipe = -1;
-        }
-        if (e->pid > 0)
-            kill(e->pid, SIGTERM);
+        e->test_ptr = acars.sample_start;
+        e->test = true;
+        ext_register_receive_real_samps(acars_test_file_data, rx_chan);
+        ext_send_msg(rx_chan, false, "EXT decoder=test");
         return true;
     }
 
@@ -306,6 +306,32 @@ void ACARS_main()
 {
 #ifdef ACARS
     ext_register(&acars_ext);
+
+    const char *fn = DIR_SAMPLES "/Acars_sample.raw";
+    int fd = open(fn, O_RDONLY);
+    if (fd < 0) {
+        printf("ACARS: optional test sample not found: %s\n", fn);
+        return;
+    }
+
+    off_t size = kiwi_file_size(fn);
+    if (size <= 0 || (size & 1)) {
+        printf("ACARS: invalid test sample size: %lld\n", (long long) size);
+        close(fd);
+        return;
+    }
+
+    void *file = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    close(fd);
+    if (file == MAP_FAILED) {
+        printf("ACARS: mmap failed for %s\n", fn);
+        return;
+    }
+
+    acars.sample_start = (s2_t *) file;
+    acars.sample_count = size / sizeof(s2_t);
+    acars.sample_end = acars.sample_start + acars.sample_count;
+    printf("ACARS: loaded %d test samples from %s\n", acars.sample_count, fn);
 #else
     printf("ext_register: \"ACARS\" not configured\n");
 #endif

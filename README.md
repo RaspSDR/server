@@ -66,6 +66,10 @@ run the following commands to install the build tools
 ```
 
 5. Use the compiled binary websdr.bin to replace the one in the root of your TF card.
+   When `ENABLE_ACARS=ON`, also install `build/acarsdec` as
+   `/media/mmcblk0p1/acarsdec` and make it executable. The server feeds this
+   audio-only decoder raw 12 kHz mono PCM; no SDR device backend is enabled in
+   the bundled acarsdec build.
 
 6. Happy hack
 

@@ -7564,14 +7564,10 @@ function admin_pwd_cb2(el, val)
 // dx labels
 ////////////////////////////////
 
-function dx_label_top_px(eibi, dx_idx, gap)
+function dx_label_top_px(dx_idx)
 {
-   if (!eibi && cfg.dx_three_high) {
-      var spacing = Math.floor((dx_sig_top - dx_label_top) / 3);
-      return dx_label_top + spacing * (dx_idx % 3);
-   }
-
-   return dx_label_top + gap * (dx_idx & 1);
+   var spacing = Math.floor((dx_sig_top - dx_label_top) / 3);
+   return dx_label_top + spacing * (dx_idx % 3);
 }
 
 var dx = {
@@ -8178,7 +8174,7 @@ function dx_label_render_cb(arr)
             lock_z = 0;
          }
 		}
-		var top = dx_label_top_px(eibi, dx_idx, gap);
+		var top = dx_label_top_px(dx_idx);
       dx.post_render[dx_idx] = { top: top, ltop: top, x: x /* , f: f_base_label_Hz/1e3, ident: ident */ };
 		dx.last_f_base = f_base_label_Hz;
 
@@ -8211,8 +8207,8 @@ function dx_label_render_cb(arr)
 		
 	   var _class = w3_sb('w3-custom-events w3-hold cl-dx-label', has_ext? 'dx-has-ext':'',
 	      filtered? 'cl-dx-label-filtered':'', (has_ext && !filtered)? 'cl-dx-label-ext':'');
-	   var _style_attr = sprintf('|left:%s; z-index:%d; --dx-label-bg:%s; background:%s|id="id-dx-label_%s"',
-	      px(x-10), dx_z, color, color, dx_idx);
+	   var _style_attr = sprintf('|left:%s; z-index:%d; background:%s|id="id-dx-label_%s"',
+	      px(x-10), dx_z, color, dx_idx);
 		s_a[dx_idx] =
 		   w3_button_path(_class + _style_attr, 'dx-'+ gid, '', 'dx_evt', w3_sbc(',', gid, cmkr_x)) +
 		   w3_div(sprintf('cl-dx-line|left:%s; z-index:110|id="id-dx-line_%s"', px(x), dx_idx));
@@ -8367,7 +8363,6 @@ function dx_label_render_cb(arr)
          var sparse = dx.color_fixup[dx_idx];
          if (sparse) {
             el.style.backgroundColor = sparse;
-            el.style.setProperty('--dx-label-bg', sparse);
             //console.log('COLOR FIXUP dx_idx='+ dx_idx +' '+ sparse);
             //console.log(el);
          }

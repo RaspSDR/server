@@ -409,22 +409,18 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 }
             })(),
             dxLabelRows: (() => {
-                const saved = cfg.dx_three_high;
-                try {
-                    cfg.dx_three_high = true;
-                    const rows = [0, 1, 2, 3].map(i => dx_label_top_px(false, i, 35));
-                    const eibiRows = [0, 1, 2].map(i => dx_label_top_px(true, i, 40));
-                    const label = document.createElement('div');
-                    label.className = 'cl-dx-label';
-                    label.textContent = 'DX';
-                    document.body.appendChild(label);
-                    const labelHeight = label.getBoundingClientRect().height;
-                    const labelFontSize = parseFloat(getComputedStyle(label).fontSize);
-                    label.remove();
-                    return { rows, eibiRows, labelHeight, labelFontSize };
-                } finally {
-                    cfg.dx_three_high = saved;
-                }
+                const rows = [0, 1, 2, 3].map(i => dx_label_top_px(i));
+                const label = document.createElement('div');
+                label.className = 'cl-dx-label';
+                label.textContent = 'DX';
+                document.body.appendChild(label);
+                const style = getComputedStyle(label);
+                const labelHeight = label.getBoundingClientRect().height;
+                const labelFontSize = parseFloat(style.fontSize);
+                const labelPadding = parseFloat(style.paddingTop);
+                const labelRadius = parseFloat(style.borderTopLeftRadius);
+                label.remove();
+                return { rows, labelHeight, labelFontSize, labelPadding, labelRadius };
             })()
         }));
 
@@ -2071,10 +2067,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         if (new Set(dxRows.rows.slice(0, 3)).size !== 3 ||
             dxRows.rows[3] !== dxRows.rows[0] ||
             dxRows.rows[2] + dxRows.labelHeight > 70 ||
-            dxRows.labelFontSize > 17)
+            dxRows.labelFontSize !== 11 ||
+            dxRows.labelPadding !== 3 ||
+            dxRows.labelRadius !== 3)
             throw new Error(`invalid three-row DX label layout: ${JSON.stringify(dxRows)}`);
-        if (dxRows.eibiRows.join(',') !== '5,45,5')
-            throw new Error(`EiBi DX label layout changed: ${dxRows.eibiRows}`);
 
         const passband = state.spectrumPassband;
         if (!state.spectrumPassbandCanvas.present ||

@@ -1617,33 +1617,6 @@
    backdrop-filter: blur(10px);
 }
 
-.ui-modern .cl-dx-label {
-   min-height: 0;
-   border: 1px solid #111 !important;
-   border-radius: 0 !important;
-   padding: 0 2px !important;
-   background: var(--dx-label-bg) !important;
-   color: #111 !important;
-   font-size: 17px !important;
-   font-weight: 300 !important;
-   line-height: 1;
-   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.26);
-}
-
-.ui-modern .cl-dx-label:hover {
-   border-color: #111 !important;
-   background: var(--dx-label-bg) !important;
-   color: #111 !important;
-}
-
-.ui-modern .cl-dx-label.cl-dx-label-filtered {
-   border-style: dashed !important;
-}
-
-.ui-modern .cl-dx-label.cl-dx-label-ext {
-   border-right-width: 4px !important;
-}
-
 .ui-modern .id-kiwi-container[data-type="admin"] {
    min-height: 0;
    height: 100dvh;

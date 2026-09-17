@@ -313,13 +313,6 @@ void update_vars_from_config(bool called_at_init) {
     cfg_default_int("ident_len", IDENT_LEN_MIN, &update_cfg);
     cfg_default_bool("show_geo", true, &update_cfg);
     cfg_default_bool("show_1Hz", false, &update_cfg);
-    cfg_default_bool("dx_three_high", true, &update_cfg);
-    bool dx_three_high_migrated = cfg_default_bool("dx_three_high_migrated", false, &update_cfg);
-    if (!dx_three_high_migrated) {
-        cfg_set_bool("dx_three_high", true);
-        cfg_set_bool("dx_three_high_migrated", true);
-        update_cfg = true;
-    }
     cfg_default_int("dx_default_db", 0, &update_cfg);
 
     bool want_inv = cfg_default_bool("spectral_inversion", false, &update_cfg);

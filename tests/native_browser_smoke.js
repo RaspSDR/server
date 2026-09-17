@@ -165,6 +165,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             const layoutHooks = Array.from(root.querySelectorAll(
                 '.ui-extension-control-row, .ui-extension-control-grid, ' +
                 '.ui-extension-two-column, .ui-cw-metric-card'));
+            const helpButton = w3_el('id-ext-controls-help-btn');
+            const helpStyle = getComputedStyle(helpButton);
+            const helpRect = helpButton.getBoundingClientRect();
             return {
                 name: extensionName,
                 viewport: [window.innerWidth, window.innerHeight],
@@ -172,6 +175,13 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 overlaps,
                 overflowingHooks: layoutHooks.filter(element =>
                     element.scrollWidth > element.clientWidth + 1).map(element => element.className),
+                helpButton: {
+                    visible: helpRect.width > 1 && helpRect.height > 1,
+                    height: Math.round(helpRect.height),
+                    minHeight: helpStyle.minHeight,
+                    paddingTop: helpStyle.paddingTop,
+                    paddingBottom: helpStyle.paddingBottom
+                },
                 drmRegistered: extint_names.includes('DRM'),
                 drmRendered: extensionName !== 'DRM' ||
                     root.textContent.includes('Digital Radio Mondiale decoder') ||
@@ -1759,6 +1769,11 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         if (extensionLayouts.some(layout =>
             layout.overlaps.length ||
             layout.overflowingHooks.length ||
+            (layout.helpButton.visible &&
+                (layout.helpButton.height !== 30 ||
+                    layout.helpButton.minHeight !== '30px' ||
+                    layout.helpButton.paddingTop !== '0px' ||
+                    layout.helpButton.paddingBottom !== '0px')) ||
             !layout.drmRegistered ||
             !layout.drmRendered))
             throw new Error(

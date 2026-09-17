@@ -133,7 +133,8 @@ function fetchRawResponse(headers, path) {
             waterfall: '.id-waterfall-controls',
             wspr: '.id-wspr-controls',
             FT8: '.cl-ft8-text',
-            DRM: '.id-drm-controls'
+            DRM: '.id-drm-controls',
+            ACARS: '.id-acars-controls'
         };
         await targetPage.setViewportSize(viewport);
         await targetPage.waitForTimeout(650);
@@ -1077,7 +1078,7 @@ function fetchRawResponse(headers, path) {
         ]) {
             for (const extension of [
                 'CW_decoder', 'Loran_C', 'SSTV', 'colormap',
-                'IBP_scan', 'waterfall', 'wspr', 'FT8', 'DRM'
+                'IBP_scan', 'waterfall', 'wspr', 'FT8', 'DRM', 'ACARS'
             ])
                 extensionLayouts.push(
                     await extensionLayoutState(page, extension, viewport));
@@ -1091,6 +1092,17 @@ function fetchRawResponse(headers, path) {
             await page.evaluate(() => w3_el('id-ext-controls-close').click());
         }
         await page.evaluate(() => modern_ui_set_theme('midnight', false));
+
+        await page.evaluate(() => extint_open('ACARS'));
+        await page.waitForSelector('.id-acars-test', { timeout: 10000 });
+        await page.waitForTimeout(500);
+        await page.locator('.id-acars-test').click();
+        await page.waitForFunction(() => {
+            const text = document.querySelector('.id-acars-messages')?.textContent || '';
+            return text.includes('B-18722') && text.includes('CI5118') &&
+                text.includes('/KLAX.TI2/024KLAXA91A1');
+        }, null, { timeout: 10000 });
+        await page.locator('#id-ext-controls-close').click();
 
         const panelToggle = { desktop: {}, phone: {}, readme: {} };
         await page.setViewportSize({ width: 1440, height: 1000 });

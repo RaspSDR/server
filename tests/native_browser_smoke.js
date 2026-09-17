@@ -937,6 +937,32 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 document.querySelector('.ui-admin-connect .id-proxy-hdr')).backgroundColor;
             return state;
         });
+        const adminWarningThemes = await adminPage.evaluate(() => {
+            const select = document.getElementById('id-ui-theme-select');
+            const warning = document.querySelector('.ui-admin-connect .ui-admin-warning');
+            const themes = ['midnight', 'ember', 'classic'].map(theme => {
+                select.value = theme;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                const style = getComputedStyle(warning);
+                return {
+                    theme,
+                    display: style.display,
+                    alignItems: style.alignItems,
+                    background: style.backgroundColor,
+                    border: style.borderLeftColor,
+                    color: style.color,
+                    marker: getComputedStyle(warning, '::before').content,
+                    headingMargin: getComputedStyle(warning.querySelector('h5')).margin
+                };
+            });
+            select.value = 'midnight';
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            return {
+                themes,
+                warningCount: document.querySelectorAll('.ui-admin-warning').length,
+                hardcodedYellow: document.querySelectorAll('.ui-admin-warning.w3-yellow').length
+            };
+        });
         const adminStatus = await adminPage.evaluate(() => {
             const status = document.querySelector('.ui-admin-page.id-status[role="tabpanel"]');
             const cards = Array.from(status?.querySelectorAll('.ui-admin-status-card') || []);
@@ -1555,6 +1581,18 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminClassic.connect.modernProxyHeaderColor !== 'rgb(88, 166, 255)' ||
             adminClassic.connect.modernProxyHeaderBackground !== 'rgb(23, 29, 37)')
             throw new Error(`invalid classic admin theme: ${JSON.stringify(adminClassic)}`);
+        if (adminWarningThemes.warningCount < 7 ||
+            adminWarningThemes.hardcodedYellow ||
+            adminWarningThemes.themes.length !== 3 ||
+            adminWarningThemes.themes.some(theme =>
+                theme.display !== 'flex' ||
+                theme.alignItems !== 'flex-start' ||
+                theme.background === 'rgba(0, 0, 0, 0)' ||
+                theme.border === theme.background ||
+                theme.color === theme.background ||
+                theme.marker !== '"!"' ||
+                theme.headingMargin !== '0px'))
+            throw new Error(`invalid admin warning themes: ${JSON.stringify(adminWarningThemes)}`);
         if (adminClassicMobile.control.sectionColumns !== '390px' ||
             adminClassicMobile.control.actionColumns !== '358px' ||
             adminClassicMobile.control.actionDirection !== 'column' ||
@@ -1780,7 +1818,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
 
         console.log(JSON.stringify({
             ...state, uiFoundation, drmThemeAssets, extensionFocus, receiverResponsive, faxMobile,
-            panelToggle, adminFoundation, adminClassic, adminResponsive, adminControl, adminConnect, adminConfig,
+            panelToggle, adminFoundation, adminClassic, adminWarningThemes, adminResponsive,
+            adminControl, adminConnect, adminConfig,
             adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,
             adminLog, adminConsole, consoleOpenOrder, consoleANSI, adminExtensions, adminSecurity,
             adminControlMobile, adminExtensionsMobile, adminClassicMobile,

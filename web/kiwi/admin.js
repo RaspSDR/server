@@ -740,7 +740,7 @@ function connect_html()
    var ci = 0;
    var s1 =
 		w3_div('w3-valign',
-			'<header class="w3-container w3-yellow"><h5>' +
+			'<header class="ui-admin-warning"><h5>' +
 			'If you are not able to make an incoming connection from the Internet to your SDR because ' +
 			'of problems <br> with your router or Internet Service Provider (ISP) then please consider using' +
          '<a href="http://www.rx-888.com/web/manual" target="_blank">reverse proxy service</a>' +
@@ -853,7 +853,7 @@ function connect_html()
       '<hr>' +
       w3_divs('/w3-tspace-8',
          w3_div('w3-container w3-valign',
-            '<header class="w3-container w3-yellow"><h6>' +
+            '<header class="ui-admin-warning"><h6>' +
             'Please read these instructions before use: ' +
             '<a href="http://www.rx-888.com/web/manual" target="_blank">reverse proxy service</a>' +
             '</h6></header>'
@@ -3009,7 +3009,7 @@ function security_html()
 	var s1 =
 	/*
 		w3_div('w3-valign',
-			'<header class="w3-container w3-yellow"><h5>' +
+			'<header class="ui-admin-warning"><h5>' +
 			'Passwords are now stored in an encrypted format. After the page is reloaded the ' +
 			'password fields will show "(encrypted)" instead of showing the passwords in the clear. <br>' +
 			'As before, you may change passwords at any time and also set an empty password if, for example, ' +

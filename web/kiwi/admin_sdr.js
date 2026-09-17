@@ -129,8 +129,8 @@ function config_html()
 		) +
       w3_third('', 'w3-container',
          '',
-         w3_div('id-pbl-error w3-margin-T-8 w3-yellow w3-hide', 'Value creates an invalid passband'),
-         w3_div('id-pbh-error w3-margin-T-8 w3-yellow w3-hide', 'Value creates an invalid passband')
+         w3_div('id-pbl-error w3-margin-T-8 ui-admin-warning ui-admin-warning-compact w3-hide', 'Value creates an invalid passband'),
+         w3_div('id-pbh-error w3-margin-T-8 ui-admin-warning ui-admin-warning-compact w3-hide', 'Value creates an invalid passband')
       ) +
 		w3_third('w3-margin-T-16 w3-text-teal', 'w3-container',
 			w3_divs('/w3-center w3-tspace-8',
@@ -149,8 +149,8 @@ function config_html()
 		) +
       w3_third('', 'w3-container',
          '',
-         w3_div('id-pbc-error w3-margin-T-8 w3-yellow w3-hide', 'Value creates an invalid passband'),
-         w3_div('id-pbw-error w3-margin-T-8 w3-yellow w3-hide', 'Value creates an invalid passband')
+         w3_div('id-pbc-error w3-margin-T-8 ui-admin-warning ui-admin-warning-compact w3-hide', 'Value creates an invalid passband'),
+         w3_div('id-pbw-error w3-margin-T-8 ui-admin-warning ui-admin-warning-compact w3-hide', 'Value creates an invalid passband')
       ) +
       
       w3_div('w3-margin-bottom');
@@ -1022,7 +1022,7 @@ function kiwi_reg_html()
 	var s1 =
 		w3_div('',
          w3_div('w3-margin-T-10 w3-valign',
-            '<header class="w3-container w3-yellow"><h5>' +
+            '<header class="ui-admin-warning"><h5>' +
             'More information on <a href="http://www.rx-888.com/web/guide/admin/public.html" target="_blank">rx-888.com</a><br><br>' +
 
             'To list your SDR on <a href="http://www.rx-888.com/web/rx" target="_blank">www.rx-888.com/web/rx</a> ' +

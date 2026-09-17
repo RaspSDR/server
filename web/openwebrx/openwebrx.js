@@ -3899,7 +3899,7 @@ function spectrum_init()
          wf_chans?
             ('Spectrum not available for rx'+ rx_chan)
          :
-            'Spectrum not allowed on this Kiwi';
+            'Spectrum not allowed on this Device';
       var tw = spec.ctx.measureText(text).width;
       spec.ctx.fillText(text, sw/2-tw/2, sh/2);
    }
@@ -4443,9 +4443,9 @@ function resize_wf_canvases()
          reason = 'when \"no_wf\" URL option used.';
       } else {
          if (wf_chans == 0) {
-            reason = 'because all waterfalls disabled<br>on this Kiwi.';
+            reason = 'because all waterfalls disabled<br>on this Device.';
          } else {
-            reason = 'on channels '+ wf_chans_real +'-'+ (rx_chans-1) +' of Kiwis<br>' +
+            reason = 'on channels '+ wf_chans_real +'-'+ (rx_chans-1) +' of Devices<br>' +
                'configured for '+ rx_chans +' channels.';
          }
       }
@@ -6480,7 +6480,7 @@ function freq_memory_init()
             'If <x1>mode save</x1> is enabled the current mode is saved and restored along with ' +
             'the frequency.<br><br>' +
             
-            'These two save modes are remembered in browser storage and used when this Kiwi is ' +
+            'These two save modes are remembered in browser storage and used when this Device is ' +
             'visited again.<br><br>' +
             
             'The shortcut keys ^1 thru ^9 (^ means the control key) recall the memory ' +
@@ -8622,7 +8622,7 @@ function dx_show_edit_panel(ev, gid, from_shortcut)
                   ) +
                   w3_div('w3-margin-T-16',
 			            w3_input('//w3-margin-T-8 w3-padding-small|width:80%', 'Admin password', 'dx.pwd', '', 'dx_admin_pwd_cb'),
-			            w3_text('w3-margin-T-4', 'editing the stored DX labels of this Kiwi requires admin privileges')
+			            w3_text('w3-margin-T-4', 'editing the stored DX labels of this Device requires admin privileges')
 			         );
 	            ext_panel_set_name('dx');
                ext_panel_show(s, null, null, null, true);   // true: show help button
@@ -9295,9 +9295,9 @@ function dx_help(show)
          w3_div('w3-margin-T-8 w3-scroll-y|height:90%',
             w3_div('w3-margin-R-8',
                'There are three types of DX labels seen in the area above the frequency scale: <br>' +
-               '1) Labels from a stored database, editable by the Kiwi owner/admin. <br>'+
+               '1) Labels from a stored database, editable by the Device owner/admin. <br>'+
                '2) Labels from a read-only copy of the <a href="http://www.eibispace.de" target="_blank">EiBi database</a> that cannot be modified. <br>' +
-               '3) Labels from a downloaded, read-only, community database aggregated from contributions made on the Kiwi forum. <br>' +
+               '3) Labels from a downloaded, read-only, community database aggregated from contributions made on the Device forum. <br>' +
                '<br>' +
                
                'The DX label control panel has a <i>database</i> menu to select between these three. ' +

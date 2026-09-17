@@ -112,7 +112,7 @@ function iframe_config_html()
             '<li>An arbitrary URL</li>' +
             '<li>The specified HTML/Javascript</li>' +
          '</ul>' +
-         'Both sources are wrapped in a browser iframe for better isolation from the Kiwi user interface.'
+         'Both sources are wrapped in a browser iframe for better isolation from the user interface.'
       ) +
       '<hr>' +
 

@@ -1175,7 +1175,6 @@ function FSK_help(show)
          w3_div('w3-margin-T-8 w3-scroll-y|height:90%',
             w3_div('w3-margin-R-8',
                '<br>Decoding FSK is not always easy because of the many signal parameters involved. <br>' +
-               'Try the stations listed in the menus. Most of these are best heard from Kiwis in Europe. <br><br>' +
 
                'The frequency shift can be set by zooming in sufficiently, centering the passband between <br>' +
                'the two tones, and selecting a menu shift (or setting a custom shift) so that the <br>' +

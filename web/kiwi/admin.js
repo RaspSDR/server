@@ -403,7 +403,7 @@ function control_html()
          w3_div('ui-admin-control-field ui-admin-control-field-wide',
             w3_div('ui-admin-control-field-title', 'External application capacity') +
             w3_div('ui-admin-control-field-desc',
-               'Limit simultaneous channels used by non-Kiwi clients such as kiwirecorder. ' +
+               'Limit simultaneous channels used by Web clients such as kiwirecorder. ' +
                'This overrides the matching TDoA setting.') +
             w3_select('w3-width-auto', '', '', 'ext_api_nchans', ext_api_nchans,
                ext_api_chans_u, 'admin_select_cb')
@@ -968,7 +968,7 @@ function connect_update_url()
    ok = config_net.pub_ip;
    value_class = ok? ' ui-admin-connect-value-ready' : ' ui-admin-connect-value-missing';
 	w3_el('id-connect-pub-ip').innerHTML =
-      w3_div('ui-admin-connect-source-label', 'Public IP address detected by Kiwi:') +
+      w3_div('ui-admin-connect-source-label', 'Public IP address detected by:') +
 	   w3_div('ui-admin-connect-value'+ value_class, ok? config_net.pub_ip : '(no public IP address detected)');
 
    var host = decodeURIComponent(cfg.server_url);
@@ -3098,13 +3098,13 @@ function security_html()
 				'Set to "No" to prevent timestamp information from your GPS ' +
 				'(assuming it is working) from being used by applications on the Internet ' +
 				'such as the TDoA service. You would only do this if you had some concern ' +
-				'about your publicly-listed Kiwi participating in these kinds of projects. '
+				'about your publicly-listed Device participating in these kinds of projects. '
 			), 33,
 
 			w3_div('w3-text-black'), 1,
 
 			w3_div('w3-text-black',
-				'However we expect most Kiwi owners will want to participate and we encourage ' +
+				'However we expect most owners will want to participate and we encourage ' +
 				'you to do so. Your precise GPS location is not revealed by the timestamp information. '
 			), 33
 		);
@@ -3118,7 +3118,7 @@ function security_html()
 			), 25,
 
 			w3_div('w3-text-black',
-			   'Default "Yes". If set to "No" only a warning message will be displayed if the Kiwi server ' +
+			   'Default "Yes". If set to "No" only a warning message will be displayed if the server ' +
 			   'or network closes the connection.'
 			), 33,
 

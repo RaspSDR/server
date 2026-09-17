@@ -296,9 +296,9 @@ function FT8_config_html()
             w3_div('w3-container',
                w3_div('w3-text-black', 'On startup automatically begins running the FT8 decoder on the selected band(s).<br>' +
                   'Channels available for regular use are reduced by one for each FT8 autorun enabled.<br>' +
-                  'If Kiwi has been configured for a mix of channels with and without waterfalls then channels without waterfalls will be used first.<br><br>' +
+                  'If the device has been configured for a mix of channels with and without waterfalls then channels without waterfalls will be used first.<br><br>' +
                   
-                  'Spot decodes are available in the Kiwi log (use "Log" tab above) and are listed on <a href="https://pskreporter.info/pskmap.html" target="_blank">pskreporter.info</a><br>' +
+                  'Spot decodes are available in the log (use "Log" tab above) and are listed on <a href="https://pskreporter.info/pskmap.html" target="_blank">pskreporter.info</a><br>' +
                   'The "Reporter" fields above must be set to valid values for proper spot entry into the <a href="https://pskreporter.info/pskmap.html" target="_blank">pskreporter.info</a> database.'),
                
                w3_div('w3-margin-T-10 w3-valign',
@@ -426,7 +426,7 @@ function FT8_help(show)
          '<br>Spots are uploaded to pskreporter.info if the <i>reporter call</i> and <i>reporter grid</i> ' +
          'fields on the admin page, extensions tab, FT8 subtab have valid entries. ' +
          'Leave the callsign field blank if you do not want any uploads to pskreporter.info ' +
-         'But consider leaving the grid field set so the km distance from the Kiwi to the ' +
+         'But consider leaving the grid field set so the km distance from the Device to the ' +
          'spot will be shown.<br><br>' +
          
          'Uploaded spots are highlighted in green. Spots are only uploaded once every 60 minutes. ' +
@@ -434,7 +434,7 @@ function FT8_help(show)
          '<br>SNR information is currently not uploaded as it is not accurate.<br><br>' +
          
          'Clicking the <i>pskreporter.info</i> link will take you directly to the map with the ' +
-         'reporter callsign of the Kiwi preset.<br><br>' +
+         'reporter callsign.<br><br>' +
          
          'URL parameters:<br>' +
          'The first parameters can select one of the entries in the <i>freq</i> menu<br>' +

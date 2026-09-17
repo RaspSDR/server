@@ -2367,7 +2367,7 @@ function kiwi_too_busy(rx_chans)
 
 function kiwi_exclusive_use()
 {
-	var s = 'Sorry, this Kiwi has been locked for special use. <br>' +
+	var s = 'Sorry, this Device has been locked for special use. <br>' +
 	'This happens when using an extension (e.g. DRM decoder) that requires all available resources. <br>' +
 	'申し訳ありませんが、このキーウィは特別な使用のためにロックされています。 <br>' +
 	'これは、利用可能なすべてのリソースを必要とする拡張機能（DRM デコーダーなど）を使用している場合に発生します。 <br>' +

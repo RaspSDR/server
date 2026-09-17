@@ -434,7 +434,6 @@ function tc_controls_setup()
 			   w3_select_conditional('w3-text-red w3-width-auto', '', '', 'tc.config', tc.config, tc.sig_s, 'tc_signal_menu_cb'),
             w3_button('w3-padding-small w3-css-yellow', 'Re-sync', 'timecode_resync_cb'),
             w3_button('w3-padding-small w3-aqua', 'Reset PLL', 'timecode_reset_pll_cb'),
-            //w3_checkbox('w3-label-inline w3-label-not-bold/', 'update Kiwi<br>date &amp; time', 'tc.update', tc.update, 'w3_bool_cb'),
 			   w3_input('w3-padding-tiny w3-label-inline w3-label-not-bold|width:auto|size=3', 'pll bw:', 'tc.pll_bw', tc.pll_bw, 'timecode_pll_bw_cb'),
             //w3_button('w3-padding-small w3-aqua', 'Test', 'timecode_test_cb'),
 				w3_div('', '<pre id="id-tc-info" style="margin:0"></pre>')

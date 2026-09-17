@@ -323,7 +323,7 @@ function hfdl_controls_setup()
          w3_text('w3-text-aqua w3-bold', 'HFDL options'),
          w3_select('w3-margin-T-4 w3-width-auto '+ hfdl.sfmt, '', 'show', 'hfdl.show', hfdl.show, hfdl.show_s, 'hfdl_show_cb'),
          
-         w3_button('id-hfdl-show-kiwi w3-margin-T-10 w3-btn w3-small w3-cyan w3-text-css-white w3-momentary', 'Show Kiwi', 'hfdl_show_kiwi_cb', 1),
+         w3_button('id-hfdl-show-kiwi w3-margin-T-10 w3-btn w3-small w3-cyan w3-text-css-white w3-momentary', 'Show Device', 'hfdl_show_kiwi_cb', 1),
 
          w3_checkbox('w3-margin-T-10//'+ cbox, 'Show day/night', 'hfdl.day_night_visible', true, 'hfdl_day_night_visible_cb'),
          w3_checkbox(cbox, 'Show graticule', 'hfdl.graticule_visible', true, 'hfdl_graticule_visible_cb'),

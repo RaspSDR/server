@@ -472,12 +472,11 @@ function wspr_help(show)
          w3_text('w3-medium w3-bold w3-text-aqua', 'WSPR viewer help') +
          w3_div('w3-margin-T-8 w3-scroll-y|height:90%',
             w3_div('w3-margin-R-8',
-               'The WSPR viewer was the first Kiwi extension developed. ' +
                'It\'s more of a demonstration than a serious WSPR decoding utility. ' +
                'An older version of the WSJT-X <i>wsprd</i> decoder is used. Together with the limited ' +
                'processing power of the Beagle this means fewer decodes occur compared to the current WSJT-X. ' +
                'For serious decoding try <a href="http://wsprdaemon.org/index.html" target="_blank">wsprdaemon</a> ' +
-               'which runs on a separate computer and makes connections to the Kiwi. ' +
+               'which runs on a separate computer and makes connections to the Device. ' +
                '<br><br>' +
          
                'The <i>band</i> menu contains the standard <a href="http://www.wsprnet.org" target="_blank">ham band frequencies</a> ' +
@@ -486,8 +485,7 @@ function wspr_help(show)
                '<br><br>' +
 
                'About dial frequencies: By default the WSPR extension uses a BFO value of 750 Hz instead of the more traditional 1500 Hz ' +
-               '(this value is set by the Kiwi owner on the admin page). ' +
-               'This lower tone gives less listening fatigue. But it means the number shown in the Kiwi frequency entry box (dial frequency) ' +
+               'This lower tone gives less listening fatigue. But it means the number shown in the Device frequency entry box (dial frequency) ' +
                'must be reduced by 750 Hz to match the dial frequencies mentioned in the references above. ' +
                'The BFO value and center frequency (CF) of the passband are displayed in the WSPR control panel. ' +
                '<br><br>' +
@@ -508,7 +506,7 @@ function wspr_help(show)
                   '<li><i>dB</i> is signal-to-noise ratio (SNR), negative values meaning below the noise floor.</li>' +
                   '<li><i>dt</i> and <i>dF</i> indicate how far off the signal is in time and frequency.</li>' +
                   '<li><i>Freq</i> is the signal\'s passband frequency as seen in the spectrum display.</li>' +
-                  '<li><i>km</i> is the signal\'s distance from the receiving Kiwi.</li>' +
+                  '<li><i>km</i> is the signal\'s distance from the receiving Device.</li>' +
                   '<li><i>dBm</i> is the transmit power reported by the WSPR beacon.</li>' +
                '</ul>' +
 

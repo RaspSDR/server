@@ -28,10 +28,10 @@ function kiwi_monitor()
       'To camp (listen) to the audio of an existing connection <br>' +
       'click on one of the channel links below.'
    :
-      'No audio camping allowed on this Kiwi.';
+      'No audio camping allowed on this Device.';
    var s =
 	   w3_div('',
-	      w3_text('w3-text-black', 'All Kiwi channels busy. Click button to wait in queue for an available channel.'),
+	      w3_text('w3-text-black', 'All channels busy. Click button to wait in queue for an available channel.'),
          w3_inline('w3-margin-L-8 w3-margin-T-4/w3-margin-right w3-valign',
             w3_button('id-queue-button w3-medium w3-padding-smaller w3-green', 'Enter queue', 'kiwi_queue_cb'),
             w3_text('id-queue-pos w3-text-black'),
@@ -59,7 +59,7 @@ function kiwi_monitor()
    var is_are = (pwd_prot == 1)? 'is':'are';
 
    if (pwd_prot) {
-      s = '<br>Note that '+ pwd_prot + channels +' on this Kiwi '+ is_are +' password protected. <br>' +
+      s = '<br>Note that '+ pwd_prot + channels +' on this Device '+ is_are +' password protected. <br>' +
          'This is why you may see empty channels you cannot access.';
       w3_innerHTML('id-queue-status', s);
    } else

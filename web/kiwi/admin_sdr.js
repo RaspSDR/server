@@ -1090,7 +1090,7 @@ function kiwi_reg_html()
 
 		'<hr>' +
 		w3_half('w3-margin-bottom', 'w3-container',
-         w3_switch_label('w3-label-inline w3-label-left', 'Display owner/admin email link on KiwiSDR main page?',
+         w3_switch_label('w3-label-inline w3-label-left', 'Display owner/admin email link on the main page?',
             'Yes', 'No', 'contact_admin', cfg.contact_admin, 'admin_radio_YN_cb'),
 		   ''
 		) +
@@ -1138,7 +1138,7 @@ function kiwisdr_com_register_cb(path, idx, first)
    
    if (idx == w3_SWITCH_YES_IDX && (no_url || bad_ip || no_passwordless_channels || no_rx_gps || autorun_full)) {
       if (no_url)
-         text = 'Error, you must first setup a valid Kiwi connection URL on the admin "connect" tab';
+         text = 'Error, you must first setup a valid connection URL on the admin "connect" tab';
       else
       if (bad_ip)
          text = 'Error, must be a public (not local) IP address on the admin "connect" tab';
@@ -1296,7 +1296,7 @@ function dx_html()
             w3_text('', 'Warning: The configuration file /root/kiwi.config/dxcfg.json is corrupt. <br>' +
                'The error is: '+ dx.dxcfg_parse_error +
                '<br>Please use a text editor to fix the file (for example "nano /root/kiwi.config/dxcfg.json" in the admin console tab), ' +
-               'or restore from backup, and restart the Kiwi. <br> Or ask for help on the Kiwi forum or email support@rx-888.com')
+               'or restore from backup, and restart the Device. <br> Or ask for help on the Device forum or email support@rx-888.com')
          );
       color = ' w3-red';
 	   abort = true;
@@ -1308,7 +1308,7 @@ function dx_html()
             w3_text('', 'Warning: The configuration file /root/kiwi.config/dx_community_config.json is corrupt. <br>' +
                'The error is: '+ dx.dxcomm_cfg_parse_error +
                '<br>Please use a text editor to fix the file (for example "nano /root/kiwi.config/dx_community_config.json" in the admin console tab), ' +
-               'or restore from backup, and restart the Kiwi. <br> Or ask for help on the Kiwi forum or email support@rx-888.com')
+               'or restore from backup, and restart the Device. <br> Or ask for help on the Device forum or email support@rx-888.com')
          );
       color = ' w3-red';
 	}
@@ -1354,9 +1354,9 @@ function dx_html()
       );
 
    dx.export_label = 'Export: '+ w3_icon('id-dx-export-info w3-link-darker-color w3-help' +
-      '||title="Export (download) DX labels from Kiwi\nto a file on this computer.\nFiles can be in JSON or CSV format."', 'fa-info-circle', 20);
+      '||title="Export (download) DX labels from Device\nto a file on this computer.\nFiles can be in JSON or CSV format."', 'fa-info-circle', 20);
    dx.import_label = 'Import: '+ w3_icon('id-dx-import-info w3-link-darker-color w3-help' +
-      '||title="Import (upload) DX labels from a file\non this computer to Kiwi.\nFiles can be in JSON or CSV format."', 'fa-info-circle', 20);
+      '||title="Import (upload) DX labels from a file\non this computer to Device.\nFiles can be in JSON or CSV format."', 'fa-info-circle', 20);
    
    // for search wrap
    s =
@@ -1501,7 +1501,7 @@ function dx_convert_label_foff_cb(path, idx)
             adm.dx_labels_converted = true;
             cfg_save_json('dx_convert_label_foff_cb', 'adm.dx_labels_converted');
             ext_send_after_cfg_save('SET DX_UPD g=-9 f=-1');
-            wait_then_reload_page(10, 'DX labels converted, restarting KiwiSDR server');
+            wait_then_reload_page(10, 'DX labels converted, restarting the server');
 	      }
 	   );
    }

@@ -2867,6 +2867,7 @@
 }
 
 .ui-modern #id-ext-controls-help {
+   top: auto;
    right: var(--ui-space-3);
    bottom: var(--ui-space-3);
 }

@@ -98,19 +98,20 @@ function config_html()
 		w3_third('w3-text-teal', 'w3-container',
 		   w3_div('',
             w3_input_get('id-wf-show-min//', 'Waterfall min (dBFS, fully zoomed-out)', 'init.min_dB', 'config_wfmin_cb'),
-            w3_input_get('id-wf-show-floor//', 'Waterfall floor (dB)', 'init.floor_dB', 'admin_int_cb')
+            w3_slider_get_param('id-wf-show-floor//', 'Waterfall floor', 'init.floor_dB', -30, 0, 1,
+               'config_waterfall_offset_cb')
          ),
 		   w3_div('',
             w3_input_get('id-wf-show-max//', 'Waterfall max (dBFS)', 'init.max_dB', 'config_wfmax_cb'),
-            w3_input_get('id-wf-show-ceil//', 'Waterfall ceil (dB)', 'init.ceil_dB', 'admin_int_cb')
+            w3_slider_get_param('id-wf-show-ceil//', 'Waterfall ceil', 'init.ceil_dB', 0, 30, 1,
+               'config_waterfall_offset_cb')
          ),
-			w3_input_get('', 'Zoom (0-14)', 'init.zoom', 'config_zoom_cb')
+			w3_slider_get_param('', 'Zoom', 'init.zoom', 0, 14, 1, 'config_zoom_cb')
 		) +
 		
       w3_third('', 'w3-container',
          w3_div('id-wfmin-error w3-margin-T-8 w3-red w3-hide', 'Waterfall min must be < max'),
-         w3_div('id-wfmax-error w3-margin-T-8 w3-red w3-hide', 'Waterfall max must be > min'),
-         w3_div('id-zoom-error w3-margin-T-8 w3-red w3-hide', 'Zoom must be 0 to 14')
+         w3_div('id-wfmax-error w3-margin-T-8 w3-red w3-hide', 'Waterfall max must be > min')
       ) +
       
       w3_div('w3-margin-bottom');
@@ -595,12 +596,20 @@ function config_wfmax_cb(path, val, first)
    w3_show_hide('id-wfmax-error', !ok);
 }
 
-function config_zoom_cb(path, val, first)
+function config_waterfall_offset_cb(path, val, complete, first)
 {
    val = +val;
-   var ok = (val >= 0 && val <= 14);
-   if (ok) admin_int_cb(path, val, first);
-   w3_show_hide('id-zoom-error', !ok);
+   var floor = (path == 'init.floor_dB');
+   val = w3_clamp(val, floor? -30 : 0, floor? 0 : 30);
+   admin_int_cb(path, val, first);
+   w3_set_label('Waterfall '+ (floor? 'floor' : 'ceil') +': '+ val +' dB', path);
+}
+
+function config_zoom_cb(path, val, complete, first)
+{
+   val = w3_clamp(+val, 0, 14);
+   admin_int_cb(path, val, first);
+   w3_set_label('Zoom: '+ val, path);
 }
 
 function config_calibration_cb(path, val, complete, first)

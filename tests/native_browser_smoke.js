@@ -1061,7 +1061,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             const adcDescriptions = Array.from(section('ADC behavior')
                 ?.querySelectorAll('.ui-admin-section-body > .w3-row > .w3-col .w3-text-black') || []);
             const slider = className => {
-                const input = page.querySelector(`input[type="range"].${className}`);
+                const input = Array.from(page.getElementsByClassName(className))
+                    .find(element => element.type === 'range');
                 return input && {
                     type: input.type,
                     min: input.min,
@@ -1080,6 +1081,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 adcCentered: adcDescriptions.length === 3 &&
                     adcDescriptions.every(row => getComputedStyle(row).textAlign === 'center'),
                 sliders: {
+                    waterfallFloor: slider('id-init.floor_dB'),
+                    waterfallCeil: slider('id-init.ceil_dB'),
+                    zoom: slider('id-init.zoom'),
                     sMeter: slider('id-S_meter_cal'),
                     waterfall: slider('id-waterfall_cal'),
                     identLength: slider('id-ident_len')
@@ -1631,6 +1635,9 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminConfig.clockingOverlap ||
             !adminConfig.adcCentered ||
             JSON.stringify(adminConfig.sliders) !== JSON.stringify({
+                waterfallFloor: { type: 'range', min: '-30', max: '0', step: '1' },
+                waterfallCeil: { type: 'range', min: '0', max: '30', step: '1' },
+                zoom: { type: 'range', min: '0', max: '14', step: '1' },
                 sMeter: { type: 'range', min: '-50', max: '50', step: '1' },
                 waterfall: { type: 'range', min: '-50', max: '50', step: '1' },
                 identLength: { type: 'range', min: '16', max: '64', step: '1' }

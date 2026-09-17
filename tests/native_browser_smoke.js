@@ -99,6 +99,87 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         });
     }
 
+    async function extensionLayoutState(targetPage, name, viewport) {
+        const markers = {
+            CW_decoder: '.id-cw-controls',
+            Loran_C: '.id-loran_c-controls',
+            SSTV: '.id-sstv-freq-menu',
+            colormap: '.id-colormap-controls',
+            IBP_scan: '.id-IBP-menu',
+            waterfall: '.id-waterfall-controls',
+            wspr: '.id-wspr-controls',
+            DRM: '.id-drm-controls'
+        };
+        await targetPage.setViewportSize(viewport);
+        await targetPage.waitForTimeout(650);
+        await targetPage.evaluate(() => {
+            if (typeof mobile_scale_control_panel !== 'function')
+                return;
+            const mobile = ext_mobile_info();
+            mobile_scale_control_panel(mobile, mobile.narrow);
+        });
+        await targetPage.evaluate(extensionName => extint_open(extensionName), name);
+        await targetPage.waitForFunction(({ extensionName, marker }) =>
+            extint.current_ext_name?.toLowerCase() === extensionName.toLowerCase() &&
+                !!document.querySelector(marker),
+            { extensionName: name, marker: markers[name] }, { timeout: 10000 });
+        await targetPage.waitForTimeout(name === 'DRM' ? 1000 : 350);
+
+        return targetPage.evaluate(extensionName => {
+            const root = document.querySelector('.id-ext-controls-container');
+            const visible = element => {
+                const style = getComputedStyle(element);
+                const rect = element.getBoundingClientRect();
+                return style.display !== 'none' && style.visibility !== 'hidden' &&
+                    rect.width > 1 && rect.height > 1;
+            };
+            const bounds = element => {
+                const rect = element.getBoundingClientRect();
+                return {
+                    left: Number(rect.left.toFixed(1)),
+                    top: Number(rect.top.toFixed(1)),
+                    right: Number(rect.right.toFixed(1)),
+                    bottom: Number(rect.bottom.toFixed(1))
+                };
+            };
+            const controls = Array.from(
+                root.querySelectorAll('button, select, input, textarea')).filter(visible);
+            const overlaps = [];
+            for (let first = 0; first < controls.length; first++) {
+                for (let second = first + 1; second < controls.length; second++) {
+                    const a = bounds(controls[first]);
+                    const b = bounds(controls[second]);
+                    const width = Math.max(0,
+                        Math.min(a.right, b.right) - Math.max(a.left, b.left));
+                    const height = Math.max(0,
+                        Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+                    if (width * height > 2) {
+                        overlaps.push({
+                            first: controls[first].className || controls[first].tagName,
+                            second: controls[second].className || controls[second].tagName
+                        });
+                    }
+                }
+            }
+
+            const layoutHooks = Array.from(root.querySelectorAll(
+                '.ui-extension-control-row, .ui-extension-control-grid, ' +
+                '.ui-extension-two-column, .ui-cw-metric-card'));
+            return {
+                name: extensionName,
+                viewport: [window.innerWidth, window.innerHeight],
+                controls: controls.length,
+                overlaps,
+                overflowingHooks: layoutHooks.filter(element =>
+                    element.scrollWidth > element.clientWidth + 1).map(element => element.className),
+                drmRegistered: extint_names.includes('DRM'),
+                drmRendered: extensionName !== 'DRM' ||
+                    root.textContent.includes('Digital Radio Mondiale decoder') ||
+                    !!document.querySelector('.id-drm-panel-container')
+            };
+        }, name);
+    }
+
     const geolocationFixture = {
         city: 'Test City',
         country_name: 'Test Country',
@@ -701,6 +782,20 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 actionOverflow: actionRows.some(row => row.scrollWidth > row.clientWidth + 1)
             };
         });
+        await page.locator('#id-ext-controls-close').click();
+
+        const extensionLayouts = [];
+        for (const viewport of [
+            { width: 1440, height: 1000 },
+            { width: 390, height: 844 }
+        ]) {
+            for (const extension of [
+                'CW_decoder', 'Loran_C', 'SSTV', 'colormap',
+                'IBP_scan', 'waterfall', 'wspr', 'DRM'
+            ])
+                extensionLayouts.push(
+                    await extensionLayoutState(page, extension, viewport));
+        }
         await page.locator('#id-ext-controls-close').click();
 
         const panelToggle = { desktop: {}, phone: {}, readme: {} };
@@ -1661,6 +1756,13 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             faxMobile.data.overflowX !== 'auto' ||
             faxMobile.actionOverflow)
             throw new Error(`invalid FAX mobile layout: ${JSON.stringify(faxMobile)}`);
+        if (extensionLayouts.some(layout =>
+            layout.overlaps.length ||
+            layout.overflowingHooks.length ||
+            !layout.drmRegistered ||
+            !layout.drmRendered))
+            throw new Error(
+                `invalid extension control layout: ${JSON.stringify(extensionLayouts)}`);
         const invalidPanelToggle = state =>
             state.hidden.shown ||
             state.hidden.panelLeft < state.hidden.viewportWidth - 10 ||
@@ -1999,7 +2101,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
 
         console.log(JSON.stringify({
             ...state, uiFoundation, extensionThemes, drmThemeAssets, extensionFocus,
-            receiverResponsive, faxMobile,
+            receiverResponsive, faxMobile, extensionLayouts,
             panelToggle, adminFoundation, adminClassic, adminWarningThemes, adminResponsive,
             adminControl, adminConnect, adminConfig,
             adminWebpage, adminPublic, adminDX, adminUpdate, adminNetwork, adminGPS,

@@ -254,13 +254,13 @@ function sstv_controls_setup()
 				   w3_div('w3-medium w3-text-aqua', '<b>SSTV decoder</b>'), 30,
 					w3_div('', 'From <b><a href="http://windytan.github.io/slowrx" target="_blank">slowrx</a></b> by Oona Räisänen, OH2EIQ')
 				),
-				w3_inline('',
+				w3_inline('ui-extension-control-row ui-sstv-control-row/',
                w3_select('id-sstv-freq-menu w3-text-red', '', 'freq', 'sstv.freq', W3_SELECT_SHOW_TITLE, sstv.freqs_s, 'sstv_freq_cb'),
-               w3_checkbox('id-sstv-cbox-auto w3-margin-left w3-label-inline w3-label-not-bold', 'auto adjust', 'sstv.auto', true, 'sstv_auto_cbox_cb'),
-				   w3_button('id-sstv-btn-auto w3-margin-left w3-padding-smaller', 'Undo adjust', 'sstv_auto_cb'),
-				   w3_button('w3-margin-left w3-padding-smaller w3-css-yellow', 'Reset', 'sstv_reset_cb'),
-				   w3_button('w3-margin-left w3-padding-smaller w3-blue', 'Save images', 'sstv_save_cb'),
-				   w3_button('w3-margin-left w3-padding-smaller w3-aqua', 'Test', 'sstv_test_cb', 0),
+               w3_checkbox('id-sstv-cbox-auto/w3-label-inline w3-label-not-bold/', 'auto adjust', 'sstv.auto', true, 'sstv_auto_cbox_cb'),
+				   w3_button('id-sstv-btn-auto w3-padding-smaller', 'Undo adjust', 'sstv_auto_cb'),
+				   w3_button('w3-padding-smaller w3-css-yellow', 'Reset', 'sstv_reset_cb'),
+				   w3_button('w3-padding-smaller w3-blue', 'Save images', 'sstv_save_cb'),
+				   w3_button('w3-padding-smaller w3-aqua', 'Test', 'sstv_test_cb', 0),
 				   dbgUs?
 				         w3_button('w3-margin-L-8 w3-padding-smaller w3-aqua', 'T2', 'sstv_test_cb', 1)
 				      :

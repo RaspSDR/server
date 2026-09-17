@@ -2778,6 +2778,79 @@
    scrollbar-color: var(--ui-border-strong) transparent;
 }
 
+.ui-modern .ui-extension-control-row {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   justify-content: flex-start;
+   gap: var(--ui-space-2) var(--ui-space-3);
+   width: 100% !important;
+}
+
+.ui-modern .ui-extension-control-row > * {
+   flex: 0 0 auto;
+   min-width: 0;
+}
+
+.ui-modern .ui-extension-control-grid {
+   display: grid;
+   grid-template-columns:
+      minmax(56px, 0.7fr)
+      minmax(72px, 0.85fr)
+      minmax(120px, 1.6fr)
+      minmax(8px, 0.15fr)
+      minmax(42px, 0.7fr);
+   column-gap: var(--ui-space-2);
+}
+
+.ui-modern .ui-extension-control-grid::before,
+.ui-modern .ui-extension-control-grid::after,
+.ui-modern .ui-extension-two-column::before,
+.ui-modern .ui-extension-two-column::after {
+   display: none;
+}
+
+.ui-modern .ui-extension-control-grid > .w3-col,
+.ui-modern .ui-extension-control-grid > .w3-rest {
+   float: none;
+   width: auto !important;
+   min-width: 0;
+}
+
+.ui-modern .ui-extension-control-grid .ui-field,
+.ui-modern .ui-extension-control-grid :where(.ui-input, .ui-select, .ui-slider) {
+   width: 100%;
+   max-width: 100%;
+}
+
+.ui-modern .ui-extension-two-column {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: var(--ui-space-3);
+}
+
+.ui-modern .ui-extension-two-column > .w3-half {
+   float: none;
+   width: auto;
+   min-width: 0;
+   margin-right: 0 !important;
+   overflow: hidden;
+}
+
+.ui-modern .ui-extension-two-column > .w3-half > [w3d-divso] {
+   margin-right: 0 !important;
+}
+
+.ui-modern .ui-extension-two-column .ui-field,
+.ui-modern .ui-extension-two-column :where(.ui-input, .ui-select, .ui-slider) {
+   width: 100%;
+   max-width: 100%;
+}
+
+.ui-modern .ui-cw-metric-card {
+   width: 160px !important;
+}
+
 .ui-modern .ui-extension-content .w3-text-output,
 .ui-modern #id-ext-data-container .w3-text-output {
    border: 1px solid var(--ui-border);
@@ -3284,6 +3357,12 @@
 
    .ui-modern .ui-extension-content {
       padding-right: 0;
+   }
+}
+
+@media (max-width: 480px) {
+   .ui-modern .ui-extension-two-column {
+      grid-template-columns: minmax(0, 1fr);
    }
 }
 

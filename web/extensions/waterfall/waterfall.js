@@ -91,7 +91,7 @@ function waterfall_controls_setup()
 		   w3_divs('',
             w3_div('w3-medium w3-text-aqua w3-margin-B-16', '<b>Waterfall control</b>'),
 
-            w3_col_percent('w3-valign w3-margin-T-8/',
+            w3_col_percent('ui-extension-control-grid ui-extension-level-row w3-valign w3-margin-T-8/',
                w3_text('w3-text-css-orange', '<b>Aperture<br>auto<br>mode</b>'), 17,
                w3_select('id-wfext-aper-algo w3-text-red', 'Averaging', '', 'wfext.aper_algo', wfext.aper_algo, wfext.aper_algo_s, 'waterfall_aper_algo_cb'), 20,
                w3_div('id-wfext-aper-param',

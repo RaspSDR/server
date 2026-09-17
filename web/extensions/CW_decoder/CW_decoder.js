@@ -203,7 +203,7 @@ function cw_decoder_controls_setup()
 				),
 				
 				w3_inline('w3-margin-T-10/w3-margin-between-16',
-               w3_inline('w3-round-large w3-padding-small w3-text-white w3-grey|width:146px;height:58px/',
+               w3_inline('ui-cw-metric-card w3-round-large w3-padding-small w3-text-white w3-grey|width:146px;height:58px/',
                   w3_div('|width:65px',
                      w3_input('id-cw-fixed-wpm w3-up-down w3-margin-R-8 w3-hide/w3-label-not-bolx/|padding:0;width:auto|size=3', 'WPM', 'cw.fixed_wpm', cw.fixed_wpm, 'cw_decoder_wpm_cb'),
                      w3_inline('id-cw-auto-wpm', '<x0>0</x0> <b>WPM</b>')
@@ -225,7 +225,7 @@ function cw_decoder_controls_setup()
             ),
             
 				w3_inline('w3-margin-T-10/w3-margin-between-16',
-               w3_inline('w3-round-large w3-padding-small w3-text-white w3-grey|width:146px;height:58px/',
+               w3_inline('ui-cw-metric-card w3-round-large w3-padding-small w3-text-white w3-grey|width:146px;height:58px/',
                   w3_input('id-cw-fixed-thresh w3-up-down/w3-label-not-bolx/|padding:0;width:auto|size=4', 'Threshold', 'cw.threshold_dB', cw.threshold_dB, 'cw_decoder_threshold_cb'),
                   w3_checkbox('w3-margin-L-8/w3-label-inline w3-label-not-bold/', 'auto', 'cw.is_auto_thresh', cw.is_auto_thresh, 'cw_decoder_auto_thresh_cb')
                ),

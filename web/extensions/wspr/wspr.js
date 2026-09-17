@@ -362,7 +362,7 @@ function wspr_controls_setup()
 	var controls_html =
 	w3_div('id-wspr-controls',
 	   w3_div('id-wspr-controls-top',
-         w3_inline('w3-halign-space-between w3-margin-B-4|width:83%/',
+         w3_inline('ui-extension-control-row w3-halign-space-between w3-margin-B-4|width:83%/',
             w3_div('w3-medium w3-text-aqua cl-viewer-label', '<b>WSPR<br>viewer</b>'),
             w3_select('w3-text-red', '', 'band', 'wspr_init_band', wspr_init_band, wspr_freqs_m, 'wspr_band_select_cb'),
             w3_button('w3-ext-btn w3-padding-smaller', 'stop', 'wspr_stop_start_cb'),

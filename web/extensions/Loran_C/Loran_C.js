@@ -384,7 +384,7 @@ function loran_c_controls_setup()
 					'See also <b><a href="http://df6nm.bplaced.net/LoranView/LoranGrabber.htm" target="_blank">LoranView</a></b> by DF6NM'), 60
 			),
 			
-			w3_half('', '',
+			w3_half('ui-extension-two-column', '',
 				w3_divs('w3-margin-T-8 w3-margin-R-10',
 					w3_col_percent('',
 						w3_input('w3-padding-smaller', 'GRI', 'loran_c.gri0', loran_c.gri0, 'loran_c_gri_cb'), 25

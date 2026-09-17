@@ -85,7 +85,7 @@ function ibp_controls_setup()
             '', 10
          ),
          
-         w3_inline('w3-halign-space-between w3-margin-T-8|width:90%;/',
+         w3_inline('ui-extension-control-row w3-halign-space-between w3-margin-T-8|width:90%;/',
             w3_select('id-IBP-menu w3-left w3-margin-right w3-show-inline', '', '', '', 0, select, 'IBP_set'),
             w3_checkbox('w3-label-inline w3-label-not-bold', 'Annotate Waterfall', 'ibp.annotate', true, 'w3_bool_cb'),
             w3_checkbox('w3-label-inline w3-label-not-bold', 'Autosave PNG', 'ibp.autosave', false, 'IBP_Autosave')

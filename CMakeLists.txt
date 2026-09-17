@@ -127,16 +127,6 @@ SET(EXTENSIONS
     wspr
 )
 
-if(NATIVE_HARNESS)
-    # DRM starts per-channel decoder processes during server initialization and
-    # depends on the target-specific FDK-AAC runtime.
-    list(REMOVE_ITEM EXTENSIONS DRM)
-    list(APPEND EXT_SRCS
-        "${UPSTREAM_DIR}/extensions/DRM/dream/resample/AudioResample.cpp"
-        "${UPSTREAM_DIR}/extensions/DRM/dream/resample/ResampleFilter.cpp"
-    )
-endif()
-
 if(ENABLE_HDFL)
     list(APPEND EXTENSIONS HFDL)
 endif(ENABLE_HDFL)

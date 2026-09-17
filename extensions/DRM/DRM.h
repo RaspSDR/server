@@ -103,7 +103,7 @@ typedef struct {
 
 #include "shmem_config.h"
 
-#ifdef DRM
+#if defined(DRM) && !defined(NATIVE_HARNESS)
     //#define DRM_SHMEM_DISABLE_TEST
     #ifdef DRM_SHMEM_DISABLE_TEST
         #warning do not forget to remove DRM_SHMEM_DISABLE_TEST

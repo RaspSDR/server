@@ -145,7 +145,10 @@ bool DRM_msgs(char *msg, int rx_chan)
         
 		if (rv == DRM_OK_LOCKED) {
             if (!d->tid) {
-                #ifdef DRM_SHMEM_DISABLE
+                #ifdef NATIVE_HARNESS
+                    // The browser harness validates the DRM UI only. Do not run
+                    // the target decoder or its FDK-AAC path on the native host.
+                #elif defined(DRM_SHMEM_DISABLE)
                     d->tid = CreateTaskF(drm_task, TO_VOID_PARAM(rx_chan), EXT_PRIORITY, CTF_STACK_LARGE | CTF_RX_CHANNEL | (rx_chan & CTF_CHANNEL));
                 #else
                     rcprintf(rx_chan, "DRM ext_server_init shmem_ipc_invoke rx_chan=%d\n", rx_chan);
@@ -201,7 +204,7 @@ bool DRM_msgs(char *msg, int rx_chan)
     int lpf = 0;
     if (sscanf(msg, "SET lpf=%d", &lpf) == 1) {
         d->use_LPF = lpf;
-        rcprintf(rx_chan, "DRM lpf=%d rx_chan=%d\n", lpf);
+        rcprintf(rx_chan, "DRM lpf=%d rx_chan=%d\n", lpf, rx_chan);
         return true;
     }
 
@@ -364,8 +367,7 @@ void DRM_main()
             d->rx_chan = i;
             d->info = &drm_info;
 
-            #ifdef DRM_SHMEM_DISABLE
-            #else
+            #ifndef DRM_SHMEM_DISABLE
                 // Needs to be done as separate Linux process per channel because DRM_loop() is
                 // long-running and there would be no time-slicing otherwise, i.e. no NextTask() equivalent.
                 shmem_ipc_setup(stprintf("websdr.drm-%02d", i), SIG_IPC_DRM + i, DRM_loop);

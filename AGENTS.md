@@ -127,8 +127,8 @@ from `native/`. The harness:
 - disables GPS, public registration, updates, LED control, and other external
   target services;
 - ignores reboot, halt, and power-off requests;
-- excludes DRM because its decoder processes depend on the target FDK-AAC
-  runtime.
+- registers DRM for browser UI validation, but does not start its decoder
+  tasks or target FDK-AAC execution path.
 
 Install the browser dependency and Playwright Chromium once:
 

@@ -1,1 +1,18 @@
 /* waterfall.css */
+
+.ui-modern .ui-waterfall-aperture-grid {
+   grid-template-columns:
+      minmax(56px, 0.7fr)
+      minmax(72px, 0.85fr)
+      minmax(120px, 1.6fr)
+      minmax(8px, 0.15fr)
+      minmax(104px, 1.2fr);
+}
+
+.ui-modern .ui-waterfall-aperture-grid > .w3-rest {
+   overflow: visible;
+}
+
+.ui-modern #id-wfext-aper-param-field {
+   overflow-wrap: anywhere;
+}

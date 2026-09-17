@@ -351,6 +351,13 @@ function control_html()
                admin.c_rates, 'airband_rx_rate_cb')
          ) +
          w3_div('ui-admin-control-field w3-restart',
+            w3_div('ui-admin-control-field-title', 'User-selectable band mode') +
+            w3_div('ui-admin-control-field-desc',
+               'Expose the Airband/HF mode selector to receiver users.') +
+            w3_switch_label('w3-center', '', 'Air', 'HF',
+               'adm.airband', adm.airband, 'airband_switch_cb')
+         ) +
+         w3_div('ui-admin-control-field w3-restart',
             w3_div('ui-admin-control-field-title', 'Airband ADC clock') +
             w3_div('ui-admin-control-field-desc',
                'Choose the ADC reference used for Airband mode.') +
@@ -378,13 +385,6 @@ function control_html()
                'Allow new users to connect to the receiver.') +
             w3_switch_label('w3-center', '', 'Yes', 'No',
                'adm.server_enabled', adm.server_enabled, 'server_enabled_cb')
-         ) +
-         w3_div('ui-admin-control-field w3-restart',
-            w3_div('ui-admin-control-field-title', 'User-selectable band mode') +
-            w3_div('ui-admin-control-field-desc',
-               'Expose the Airband/HF mode selector to receiver users.') +
-            w3_switch_label('w3-center', '', 'Air', 'HF',
-               'adm.airband', adm.airband, 'airband_switch_cb')
          ) +
          w3_div('ui-admin-control-field w3-restart',
             w3_div('ui-admin-control-field-title', 'Waterfall channel assignment') +

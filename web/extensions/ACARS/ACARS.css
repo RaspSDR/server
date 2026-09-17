@@ -1,0 +1,91 @@
+/* ACARS.css */
+
+.ui-acars-data {
+    position: relative;
+    overflow: hidden;
+    background: var(--ui-bg);
+    color: var(--ui-text);
+}
+
+.ui-acars-messages,
+.ui-acars-raw {
+    position: absolute;
+    inset: 0;
+    overflow: auto;
+}
+
+.ui-acars-messages {
+    padding: 10px;
+}
+
+.ui-acars-card {
+    margin-bottom: 9px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    background: var(--ui-bg-raised);
+    box-shadow: var(--ui-shadow);
+}
+
+.ui-acars-card-header,
+.ui-acars-identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+}
+
+.ui-acars-card-header {
+    border-bottom: 1px solid var(--ui-border);
+    background: var(--ui-surface-2);
+}
+
+.ui-acars-time {
+    color: var(--ui-text-muted);
+}
+
+.ui-acars-frequency,
+.ui-acars-tail,
+.ui-acars-flight {
+    font-weight: 700;
+}
+
+.ui-acars-frequency {
+    color: #00bcd4;
+}
+
+.ui-acars-badge {
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #455a64;
+    color: white;
+    font-size: 11px;
+}
+
+.ui-acars-downlink {
+    background: #1565c0;
+}
+
+.ui-acars-uplink {
+    background: #6a1b9a;
+}
+
+.ui-acars-meta {
+    margin-left: auto;
+    color: var(--ui-text-muted);
+}
+
+.ui-acars-payload {
+    margin: 0;
+    padding: 9px 10px;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    color: var(--ui-text);
+    font-family: monospace;
+    font-size: 13px;
+}
+
+.ui-acars-empty {
+    padding: 30px;
+    text-align: center;
+    color: var(--ui-text-muted);
+}

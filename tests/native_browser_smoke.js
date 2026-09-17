@@ -779,6 +779,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                 adm.airband_adc_clock = 0;
                 adm.snd_rate = 1;
                 airband_adc_clock_status();
+                const shownInAirband = !w3_el('id-airband-adc-clock-field')
+                    .classList.contains('w3-hide');
                 const preferred = w3_el('id-airband-adc-clock-status').textContent;
 
                 adm.snd_rate = 2;
@@ -804,7 +806,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
 
                 adm.airband = false;
                 airband_adc_clock_status();
-                const disabled = w3_el('id-airband-adc-clock').disabled;
+                const hiddenInHF = w3_el('id-airband-adc-clock-field')
+                    .classList.contains('w3-hide');
+                const hiddenStatusCleared =
+                    w3_el('id-airband-adc-clock-status').textContent === '';
 
                 return {
                     effective: [
@@ -813,6 +818,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                         airband_adc_clock_effective(0, 2),
                         airband_adc_clock_effective(1, 2)
                     ],
+                    shownInAirband,
                     preferred,
                     forced,
                     forcedDisabled,
@@ -820,7 +826,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     advanced,
                     restoredEnabled,
                     staleFirstIgnored,
-                    disabled
+                    hiddenInHF,
+                    hiddenStatusCleared
                 };
             } finally {
                 adm.airband = saved.airband;
@@ -1053,6 +1060,20 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             };
             const lifecycleButtons = buttons.filter(button =>
                 ['Restart server', 'Reboot device'].includes(button.textContent.trim()));
+            const fieldSection = title => Array.from(
+                page.querySelectorAll('.ui-admin-control-field-title'))
+                .find(field => field.textContent === title)
+                ?.closest('.ui-admin-section')?.querySelector('h3')?.textContent;
+            const savedAirband = adm.airband;
+            adm.airband = true;
+            airband_adc_clock_status();
+            const radioSection = Array.from(page.querySelectorAll('.ui-admin-section'))
+                .find(section => section.querySelector('h3')?.textContent === 'Radio configuration');
+            const radioFields = Array.from(radioSection.querySelectorAll('.ui-admin-control-field'))
+                .filter(field => getComputedStyle(field).display !== 'none');
+            const radioWidths = radioFields.map(field => field.getBoundingClientRect().width);
+            adm.airband = savedAirband;
+            airband_adc_clock_status();
             return {
                 heading: page.querySelector('.ui-admin-page-header h2')?.textContent,
                 sections: Array.from(page.querySelectorAll('.ui-admin-section > header h3'),
@@ -1063,6 +1084,12 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     reboot: buttonSection('Reboot device'),
                     kick: buttonSection('Kick all users'),
                     measure: buttonSection('Measure SNR now')
+                },
+                radioConfiguration: {
+                    bandModeSection: fieldSection('User-selectable band mode'),
+                    airbandClockSection: fieldSection('Airband ADC clock'),
+                    visibleFields: radioFields.length,
+                    aligned: Math.max(...radioWidths) - Math.min(...radioWidths) <= 1
                 },
                 lifecycleAligned: lifecycleButtons.length === 2 &&
                     Math.abs(lifecycleButtons[0].getBoundingClientRect().width -
@@ -1691,6 +1718,10 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             adminControl.actionSections.reboot !== 'Service lifecycle' ||
             adminControl.actionSections.kick !== 'Session management' ||
             adminControl.actionSections.measure !== 'SNR monitoring' ||
+            adminControl.radioConfiguration.bandModeSection !== 'Radio configuration' ||
+            adminControl.radioConfiguration.airbandClockSection !== 'Radio configuration' ||
+            adminControl.radioConfiguration.visibleFields !== 4 ||
+            !adminControl.radioConfiguration.aligned ||
             !adminControl.lifecycleAligned)
             throw new Error(`invalid modern admin control page: ${JSON.stringify(adminControl)}`);
         if (!adminControlMobile.fits ||
@@ -1846,6 +1877,7 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             recording.preCaptured)
             throw new Error(`invalid squelch recording periods: ${JSON.stringify(recording)}`);
         if (airbandClockAdmin.effective.join(',') !== '0,0,1,1' ||
+            !airbandClockAdmin.shownInAirband ||
             !airbandClockAdmin.preferred.includes('98.304-147.456 MHz') ||
             !airbandClockAdmin.preferred.includes('Best rejection') ||
             !airbandClockAdmin.forced.includes('36 kHz audio requires') ||
@@ -1854,7 +1886,8 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !airbandClockAdmin.advanced.includes('108-110.592 MHz is unavailable') ||
             !airbandClockAdmin.restoredEnabled ||
             !airbandClockAdmin.staleFirstIgnored ||
-            !airbandClockAdmin.disabled)
+            !airbandClockAdmin.hiddenInHF ||
+            !airbandClockAdmin.hiddenStatusCleared)
             throw new Error(`invalid airband clock admin UI: ${JSON.stringify(airbandClockAdmin)}`);
         if (JSON.stringify(passband.visible) !== '{"left":400,"right":700,"width":300}' ||
             JSON.stringify(passband.clipped) !== '{"left":0,"right":100,"width":100}' ||

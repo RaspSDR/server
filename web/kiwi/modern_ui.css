@@ -2829,6 +2829,156 @@
    color: var(--ui-warning);
 }
 
+.ui-extension-panel {
+   border-color: color-mix(in srgb, var(--ui-accent) 28%, var(--ui-border)) !important;
+   background: var(--ui-bg-raised) !important;
+   color: var(--ui-text);
+}
+
+.ui-extension-content {
+   color: var(--ui-text-soft);
+   scrollbar-color: var(--ui-border-strong) transparent;
+}
+
+.ui-extension-content a {
+   color: var(--ui-accent);
+}
+
+.ui-extension-content :where(h1, h2, h3, h4, h5, h6, legend, th) {
+   color: var(--ui-text);
+}
+
+.ui-extension-content :where(.w3-text-black, .w3-text-white) {
+   color: var(--ui-text) !important;
+}
+
+.ui-extension-content :where(.w3-text-aqua, .w3-text-cyan, .w3-text-blue, .w3-text-teal,
+   .w3-text-purple, .w3-text-deep-purple, .w3-text-indigo, .w3-text-magenta) {
+   color: var(--ui-accent) !important;
+}
+
+.ui-extension-content :where(.w3-text-green, .w3-text-lime) {
+   color: var(--ui-success) !important;
+}
+
+.ui-extension-content :where(.w3-text-yellow, .w3-text-orange, .w3-text-amber) {
+   color: var(--ui-warning) !important;
+}
+
+.ui-extension-content :where(.w3-text-red, .w3-text-pink) {
+   color: var(--ui-danger) !important;
+}
+
+.ui-extension-content :where(.w3-grey-white, .w3-background-pale-aqua,
+   .w3-background-pale-indigo) {
+   border-color: var(--ui-border) !important;
+   background: var(--ui-surface-2) !important;
+   color: var(--ui-text) !important;
+}
+
+.ui-extension-content .w3-progress-container {
+   background: var(--ui-surface-3) !important;
+}
+
+.ui-extension-content .ui-button {
+   border-color: var(--ui-border) !important;
+   background: var(--ui-surface) !important;
+   color: var(--ui-text-soft) !important;
+}
+
+.ui-extension-content .ui-button:hover {
+   border-color: var(--ui-border-strong) !important;
+   background: var(--ui-surface-2) !important;
+   color: var(--ui-text) !important;
+}
+
+.ui-extension-content .ui-button.w3-selection-green,
+.ui-extension-content .ui-button.w3int-cur-sel,
+.ui-extension-content .ui-button:is(.w3-blue, .w3-teal, .w3-aqua, .w3-cyan, .w3-purple, .w3-pink) {
+   border-color: color-mix(in srgb, var(--ui-accent) 48%, var(--ui-border)) !important;
+   background: var(--ui-accent-soft) !important;
+   color: var(--ui-accent) !important;
+}
+
+.ui-extension-content .ui-button:is(.w3-green, .w3-lime) {
+   border-color: color-mix(in srgb, var(--ui-success) 48%, var(--ui-border)) !important;
+   background: color-mix(in srgb, var(--ui-success) 12%, var(--ui-surface)) !important;
+   color: var(--ui-success) !important;
+}
+
+.ui-extension-content .ui-button:is(.w3-yellow, .w3-orange) {
+   border-color: color-mix(in srgb, var(--ui-warning) 48%, var(--ui-border)) !important;
+   background: color-mix(in srgb, var(--ui-warning) 13%, var(--ui-surface)) !important;
+   color: var(--ui-warning) !important;
+}
+
+.ui-extension-content .ui-button.w3-red {
+   border-color: color-mix(in srgb, var(--ui-danger) 48%, var(--ui-border)) !important;
+   background: color-mix(in srgb, var(--ui-danger) 13%, var(--ui-surface)) !important;
+   color: var(--ui-danger) !important;
+}
+
+.ui-extension-content :where(.ui-input, .ui-select, .ui-textarea) {
+   border-color: var(--ui-border) !important;
+   background: var(--ui-surface) !important;
+   color: var(--ui-text) !important;
+}
+
+.ui-extension-content :where(table, th, td) {
+   border-color: var(--ui-border);
+}
+
+.ui-extension-content table {
+   background: var(--ui-surface);
+   color: var(--ui-text);
+}
+
+.ui-extension-content tbody tr:nth-child(even) {
+   background: var(--ui-surface-2);
+}
+
+.ui-extension-content :where(.ui-extension-notice, .w3-pale-blue, .w3-pale-green) {
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-surface-2) !important;
+   color: var(--ui-text-soft) !important;
+}
+
+.ui-extension-content :where(.ui-extension-warning, .w3-pale-yellow, .w3-pale-red) {
+   border-color: var(--ui-warning-border) !important;
+   background: var(--ui-warning-surface) !important;
+   color: var(--ui-warning-text) !important;
+}
+
+.ui-extension-content .ui-extension-notice {
+   padding: var(--ui-space-3);
+}
+
+.ui-extension-content .ui-extension-heading {
+   color: var(--ui-accent);
+}
+
+.ui-extension-content .ui-extension-overlay-control {
+   border: 1px solid var(--ui-border-strong) !important;
+   background: color-mix(in srgb, var(--ui-bg-raised) 88%, transparent) !important;
+   color: var(--ui-text) !important;
+}
+
+.ui-extension-content .w3-text-output,
+#id-ext-data-container .w3-text-output {
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-surface) !important;
+   color: var(--ui-text) !important;
+   font-size: 13px !important;
+   scrollbar-color: var(--ui-border-strong) transparent;
+}
+
+.ui-extension-content .w3-text-output-striped pre:nth-child(even),
+#id-ext-data-container .w3-text-output-striped pre:nth-child(even) {
+   background: var(--ui-surface-2) !important;
+}
+
 @media (max-width: 980px) {
    .ui-admin-connect-source {
       grid-template-columns: minmax(0, 1fr);

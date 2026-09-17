@@ -824,7 +824,7 @@ function ext_panel_init()
 		w3_div('id-ext-controls-container ui-extension-content w3-relative|width:100%;height:100%;') +
 		w3_div('id-ext-controls-vis class-vis') +
 		w3_div('id-ext-controls-help cl-ext-help',
-		   w3_button('id-ext-controls-help-btn w3-green w3-small w3-padding-small w3-disabled||onclick="extint_help_click()"', 'help')
+		   w3_button('id-ext-controls-help-btn class-button-small w3-green w3-disabled||onclick="extint_help_click()"', 'help')
 		);
 	
 	// close ext panel if escape key while input field has focus

@@ -97,17 +97,22 @@ if(ENABLE_HDFL)
 endif(ENABLE_HDFL)
 
 if(ENABLE_ACARS)
-    pkg_check_modules(SNDFILE REQUIRED sndfile)
-    set(ALSA OFF CACHE BOOL "" FORCE)
-    set(AIRSPY OFF CACHE BOOL "" FORCE)
-    set(CJSON OFF CACHE BOOL "" FORCE)
-    set(LIBACARS OFF CACHE BOOL "" FORCE)
-    set(MQTT OFF CACHE BOOL "" FORCE)
-    set(RTLSDR OFF CACHE BOOL "" FORCE)
-    set(SDRPLAY OFF CACHE BOOL "" FORCE)
-    set(SOAPYSDR OFF CACHE BOOL "" FORCE)
-    set(SNDFILE ON CACHE BOOL "" FORCE)
-    add_subdirectory(${UPSTREAM_DIR}/externals/acarsdec)
+    set(ACARSDEC_DIR ${UPSTREAM_DIR}/externals/acarsdec)
+    add_executable(acarsdec
+        ${UPSTREAM_DIR}/externals/acarsdec_raw.c
+        ${ACARSDEC_DIR}/acars.c
+        ${ACARSDEC_DIR}/fileout.c
+        ${ACARSDEC_DIR}/label.c
+        ${ACARSDEC_DIR}/lib.c
+        ${ACARSDEC_DIR}/msk.c
+        ${ACARSDEC_DIR}/netout.c
+        ${ACARSDEC_DIR}/output.c
+        ${ACARSDEC_DIR}/statsd.c
+    )
+    set_target_properties(acarsdec PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
+    target_compile_definitions(acarsdec PRIVATE _DEFAULT_SOURCE _FILE_OFFSET_BITS=64)
+    target_include_directories(acarsdec PRIVATE ${ACARSDEC_DIR})
+    target_link_libraries(acarsdec PRIVATE m pthread)
     set_target_properties(acarsdec PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 endif()
 ###########################################################

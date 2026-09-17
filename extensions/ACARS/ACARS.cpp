@@ -78,9 +78,7 @@ static bool acars_process_start(acars_chan_t *e)
         dup2(out_pipe[1], STDOUT_FILENO);
         close(out_pipe[1]);
 
-        execl(ACARSDEC_BIN, ACARSDEC_BIN,
-            "--sndfile", "file=/dev/stdin,subtype=0x02,channels=1,endian=cpu",
-            "--output", "full:file:path=-", NULL);
+        execl(ACARSDEC_BIN, ACARSDEC_BIN, NULL);
         _exit(127);
     }
 

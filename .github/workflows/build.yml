@@ -22,8 +22,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential cmake ninja-build libconfig++-dev \
             libfftw3-dev zlib1g-dev libfdk-aac-dev libgps-dev libunwind-dev \
-            libsqlite3-dev libcurl4-openssl-dev libssl-dev libcrypt-dev minify \
-            libsndfile1-dev
+            libsqlite3-dev libcurl4-openssl-dev libssl-dev libcrypt-dev minify
 
       - name: Install native test dependencies
         run: |
@@ -47,8 +46,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential cmake ninja-build libconfig++-dev \
             libfftw3-dev zlib1g-dev libfdk-aac-dev libgps-dev libunwind-dev \
-            libsqlite3-dev libcurl4-openssl-dev libssl-dev libcrypt-dev minify \
-            libsndfile1-dev
+            libsqlite3-dev libcurl4-openssl-dev libssl-dev libcrypt-dev minify
 
       - name: Build production sources in Release mode
         run: |

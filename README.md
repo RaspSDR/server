@@ -50,7 +50,7 @@ sudo chroot alpine-root /bin/sh --login
 run the following commands to install the build tools
 ```
 # apk update
-# apk add openssh-server wpa_supplicant git dhcpcd dnsmasq u-boot-tools hostapd iptables avahi dbus chrony gpsd curl-dev htop frp jq libunwind zlib noip2 noip2-openrc netpbm musl-dev linux-headers g++ gcc cmake make minify fftw-dev fdk-aac-dev pkgconf perl gpsd-dev libunwind-dev zlib-dev sqlite-dev sqlite-static libconfig-static libconfig-dev libsndfile-dev patch automake autoconf
+# apk add openssh-server wpa_supplicant git dhcpcd dnsmasq u-boot-tools hostapd iptables avahi dbus chrony gpsd curl-dev htop frp jq libunwind zlib noip2 noip2-openrc netpbm musl-dev linux-headers g++ gcc cmake make minify fftw-dev fdk-aac-dev pkgconf perl gpsd-dev libunwind-dev zlib-dev sqlite-dev sqlite-static libconfig-static libconfig-dev patch automake autoconf
 ```
 
 4. Inside the virtual enviroment, it is like a normal linux. You can use git to enlist the code, update submodules and use cmake to build the binary.
@@ -68,8 +68,8 @@ run the following commands to install the build tools
 5. Use the compiled binary websdr.bin to replace the one in the root of your TF card.
    When `ENABLE_ACARS=ON`, also install `build/acarsdec` as
    `/media/mmcblk0p1/acarsdec` and make it executable. The server feeds this
-   audio-only decoder raw 12 kHz mono PCM; no SDR device backend is enabled in
-   the bundled acarsdec build.
+   audio-only decoder raw 12 kHz mono PCM. The bundled frontend links directly
+   to the acarsdec decoder core and does not require SDR or audio-file libraries.
 
 6. Happy hack
 

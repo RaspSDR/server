@@ -8,6 +8,7 @@ set(UPSTREAM_DIR ${CMAKE_SOURCE_DIR})
 find_program(MINIFY_COMMAND NAMES minify)
 
 option(ZYNQ "Build for Zynq7000 serial based WebSDR" ON)
+option(ENABLE_ACARS "Enable VHF ACARS decoder" ON)
 option(ENABLE_HDFL "Enable HFDL" ON)
 option(NATIVE_HARNESS "Build a native fake-hardware browser test harness" OFF)
 
@@ -94,11 +95,27 @@ if(ENABLE_HDFL)
 
     add_subdirectory(${UPSTREAM_DIR}/externals/dumphfdl)
 endif(ENABLE_HDFL)
+
+if(ENABLE_ACARS)
+    pkg_check_modules(SNDFILE REQUIRED sndfile)
+    set(ALSA OFF CACHE BOOL "" FORCE)
+    set(AIRSPY OFF CACHE BOOL "" FORCE)
+    set(CJSON OFF CACHE BOOL "" FORCE)
+    set(LIBACARS OFF CACHE BOOL "" FORCE)
+    set(MQTT OFF CACHE BOOL "" FORCE)
+    set(RTLSDR OFF CACHE BOOL "" FORCE)
+    set(SDRPLAY OFF CACHE BOOL "" FORCE)
+    set(SOAPYSDR OFF CACHE BOOL "" FORCE)
+    set(SNDFILE ON CACHE BOOL "" FORCE)
+    add_subdirectory(${UPSTREAM_DIR}/externals/acarsdec)
+    set_target_properties(acarsdec PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+endif()
 ###########################################################
 
 SET(EXT_SRCS ${PROJECT_BINARY_DIR}/extint.cpp ${UPSTREAM_DIR}/extensions/ext.cpp)
 
 SET(EXTENSIONS
+    ACARS
     ALE_2G
     ant_switch
     colormap
@@ -126,6 +143,10 @@ SET(EXTENSIONS
     waterfall
     wspr
 )
+
+if(NOT ENABLE_ACARS)
+    list(REMOVE_ITEM EXTENSIONS ACARS)
+endif()
 
 if(ENABLE_HDFL)
     list(APPEND EXTENSIONS HFDL)
@@ -283,6 +304,10 @@ if(ENABLE_HDFL)
     add_dependencies(websdr.bin dumphfdl)
 endif(ENABLE_HDFL)
 
+if(ENABLE_ACARS)
+    add_dependencies(websdr.bin acarsdec)
+endif()
+
 cmake_host_system_information(RESULT _host_name QUERY HOSTNAME)
 string(TIMESTAMP CURRENT_YEAR "%Y")
 string(TIMESTAMP CURRENT_MONTH_DAY "%m%d")
@@ -331,6 +356,18 @@ target_compile_definitions(websdr.bin PUBLIC
     HAVE_LIBFDK_AAC HAVE_USAC
     HFDL
 )
+
+if(ENABLE_ACARS)
+    if(NATIVE_HARNESS)
+        set(ACARSDEC_RUNTIME_BIN "${PROJECT_BINARY_DIR}/acarsdec")
+    else()
+        set(ACARSDEC_RUNTIME_BIN "/media/mmcblk0p1/acarsdec")
+    endif()
+    target_compile_definitions(websdr.bin PUBLIC
+        ACARS
+        ACARSDEC_BIN="${ACARSDEC_RUNTIME_BIN}"
+    )
+endif()
 
 target_compile_options(websdr.bin PUBLIC ${PLATFORM_FLAGS})
 

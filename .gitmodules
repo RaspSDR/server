@@ -7,3 +7,6 @@
 [submodule "externals/dumphfdl"]
 	path = externals/dumphfdl
 	url = https://github.com/RaspSDR/dumphfdl
+[submodule "externals/acarsdec"]
+	path = externals/acarsdec
+	url = https://github.com/f00b4r0/acarsdec.git

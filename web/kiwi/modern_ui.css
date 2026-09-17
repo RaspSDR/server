@@ -274,6 +274,39 @@
    padding: var(--ui-space-2) var(--ui-space-3);
 }
 
+.ui-admin-connect-source {
+   display: grid;
+   grid-template-columns: minmax(0, 1fr) auto;
+   align-items: center;
+   gap: var(--ui-space-2);
+}
+
+.ui-admin-connect-source-label {
+   min-width: 0;
+   color: var(--ui-text-soft);
+}
+
+.ui-admin-connect-value {
+   display: inline-flex;
+   align-items: center;
+   max-width: 100%;
+   padding: 3px var(--ui-space-2);
+   box-sizing: border-box;
+   border: 1px solid var(--ui-border-strong);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-surface-2);
+   color: var(--ui-text);
+   font-weight: 700;
+   line-height: 1.35;
+   overflow-wrap: anywhere;
+}
+
+.ui-admin-connect-value-missing {
+   border-color: var(--ui-warning-border);
+   background: var(--ui-warning-surface);
+   color: var(--ui-warning-text);
+}
+
 .ui-classic .ui-admin-control .ui-admin-section-grid {
    display: grid;
    grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2768,6 +2801,14 @@
 }
 
 @media (max-width: 980px) {
+   .ui-admin-connect-source {
+      grid-template-columns: minmax(0, 1fr);
+   }
+
+   .ui-admin-connect-value {
+      justify-self: start;
+   }
+
    .ui-modern .ui-admin-shell {
       padding-right: var(--ui-space-3);
       padding-left: var(--ui-space-3);

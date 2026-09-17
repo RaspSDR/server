@@ -357,7 +357,7 @@ function control_html()
             w3_switch_label('w3-center', '', 'Air', 'HF',
                'adm.airband', adm.airband, 'airband_switch_cb')
          ) +
-         w3_div('ui-admin-control-field w3-restart',
+         w3_div('id-airband-adc-clock-field ui-admin-control-field w3-restart',
             w3_div('ui-admin-control-field-title', 'Airband ADC clock') +
             w3_div('ui-admin-control-field-desc',
                'Choose the ADC reference used for Airband mode.') +
@@ -557,15 +557,18 @@ function airband_adc_clock_status()
    var el = w3_el('id-airband-adc-clock');
    if (!el) return;
 
+   w3_hide2('id-airband-adc-clock-field', !adm.airband);
+   if (!adm.airband) {
+      w3_innerHTML('id-airband-adc-clock-status', '');
+      return;
+   }
+
    var requested = isNumber(adm.airband_adc_clock)? +adm.airband_adc_clock : 0;
    var effective = airband_adc_clock_effective(requested, +adm.snd_rate);
    var forced = (+adm.snd_rate == 2);
    el.value = effective;
-   w3_disable(el, !adm.airband || forced);
+   w3_disable(el, forced);
    var s;
-   if (!adm.airband) {
-      s = 'Used only in Air Band mode.';
-   } else
    if (requested != effective) {
       s = '<b>Effective: 110.592 MHz</b><br>36 kHz audio requires this clock.';
    } else

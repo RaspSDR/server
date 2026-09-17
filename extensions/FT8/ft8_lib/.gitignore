@@ -1,9 +1,12 @@
 gen_ft8
 decode_ft8
 test_ft8
+test_monitor
+bench
 libft8.a
 wsjtx2/
 .build/
+.build_bench/
 .DS_Store
 .vscode/
 __pycache__/

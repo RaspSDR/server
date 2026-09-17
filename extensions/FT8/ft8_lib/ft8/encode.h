@@ -34,6 +34,16 @@ void ft8_encode(const uint8_t* payload, uint8_t* tones);
 /// @param[out] tones  - array of FT4_NN (105) bytes to store the generated tones (encoded as 0..3)
 void ft4_encode(const uint8_t* payload, uint8_t* tones);
 
+/// Generate FST4 tone sequence from 77-bit payload
+/// @param[in] payload - 10 byte array consisting of 77 bit payload
+/// @param[out] tones  - array of FST4_NN (160) bytes to store the generated tones (encoded as 0..3)
+void fst4_encode(const uint8_t* payload, uint8_t* tones);
+
+/// Generate FST4W tone sequence from 50-bit payload
+/// @param[in] payload - 7 byte array consisting of 50 bit payload (MSB first)
+/// @param[out] tones  - array of FST4_NN (160) bytes to store the generated tones (encoded as 0..3)
+void fst4w_encode(const uint8_t* payload, uint8_t* tones);
+
 #ifdef __cplusplus
 }
 #endif

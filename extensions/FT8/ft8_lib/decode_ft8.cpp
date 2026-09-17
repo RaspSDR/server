@@ -671,13 +671,13 @@ void decode_ft8_init(int rx_chan, int proto)
 
     // Compute FFT over the whole signal and store it
     monitor_config_t mon_cfg = {
-        .f_min = protocol == FTX_PROTOCOL_FST4W? FST4W_PASSBAND_LO : FT8_PASSBAND_LO,
-        .f_max = protocol == FTX_PROTOCOL_FST4W? FST4W_PASSBAND_HI : FT8_PASSBAND_HI,
+        .f_min = (float) (protocol == FTX_PROTOCOL_FST4W? FST4W_PASSBAND_LO : FT8_PASSBAND_LO),
+        .f_max = (float) (protocol == FTX_PROTOCOL_FST4W? FST4W_PASSBAND_HI : FT8_PASSBAND_HI),
         .sample_rate = sample_rate,
         .time_osr = kTime_osr,
         .freq_osr = kFreq_osr,
         .protocol = protocol,
-        .tr_period = tr_period
+        .tr_period = (float) tr_period
     };
 
     hashtable_init(rx_chan);

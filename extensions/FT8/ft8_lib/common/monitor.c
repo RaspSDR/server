@@ -6,6 +6,7 @@
 #include <ft8/debug.h>
 
 #include <limits.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -21,7 +22,6 @@ typedef struct
     int max_bin;
     int num_bins;
     int block_stride;
-    size_t fft_work_size;
     monitor_memory_usage_t memory;
 } monitor_plan_t;
 
@@ -114,26 +114,20 @@ static bool monitor_make_plan(const monitor_config_t* cfg, monitor_plan_t* plan)
     plan->block_stride = (int)block_stride;
 
     size_t waterfall_elems;
-    if (!checked_mul_size((size_t)plan->max_blocks, block_stride, &waterfall_elems) ||
-        !checked_mul_size(waterfall_elems, sizeof(WF_ELEM_T), &plan->memory.waterfall_bytes) ||
-        !checked_mul_size((size_t)plan->nfft, sizeof(float), &plan->memory.window_bytes) ||
-        !checked_mul_size((size_t)plan->nfft, sizeof(float), &plan->memory.last_frame_bytes) ||
-        !checked_mul_size((size_t)plan->nfft, sizeof(kiss_fft_scalar), &plan->memory.timedata_bytes) ||
-        !checked_mul_size((size_t)(plan->nfft / 2 + 1), sizeof(kiss_fft_cpx), &plan->memory.freqdata_bytes))
-        return false;
-
-    kiss_fftr_alloc(plan->nfft, 0, NULL, &plan->fft_work_size);
-    if (plan->fft_work_size == 0)
-        return false;
-    plan->memory.fft_work_bytes = plan->fft_work_size;
+    if (    !checked_mul_size((size_t)plan->max_blocks, block_stride, &waterfall_elems) ||
+    !checked_mul_size(waterfall_elems, sizeof(WF_ELEM_T), &plan->memory.waterfall_bytes) ||
+    !checked_mul_size((size_t)plan->nfft, sizeof(float), &plan->memory.window_bytes) ||
+    !checked_mul_size((size_t)plan->nfft, sizeof(float), &plan->memory.last_frame_bytes) ||
+    !checked_mul_size((size_t)plan->nfft, sizeof(float), &plan->memory.timedata_bytes) ||
+    !checked_mul_size((size_t)(plan->nfft / 2 + 1), sizeof(fftwf_complex), &plan->memory.freqdata_bytes))
+    return false;
 
     size_t shared = 0;
     const size_t shared_sizes[] = {
-        plan->memory.window_bytes,
-        plan->memory.last_frame_bytes,
-        plan->memory.timedata_bytes,
-        plan->memory.freqdata_bytes,
-        plan->memory.fft_work_bytes
+    plan->memory.window_bytes,
+    plan->memory.last_frame_bytes,
+    plan->memory.timedata_bytes,
+    plan->memory.freqdata_bytes
     };
     for (size_t i = 0; i < sizeof(shared_sizes) / sizeof(shared_sizes[0]); ++i)
     {
@@ -232,11 +226,10 @@ bool monitor_shared_init(monitor_shared_t* shared, const monitor_config_t* cfg)
 
     shared->window = (float*)malloc(plan.memory.window_bytes);
     shared->last_frame = (float*)calloc((size_t)shared->nfft, sizeof(shared->last_frame[0]));
-    shared->timedata = (kiss_fft_scalar*)malloc(plan.memory.timedata_bytes);
-    shared->freqdata = (kiss_fft_cpx*)malloc(plan.memory.freqdata_bytes);
-    shared->fft_work = malloc(plan.memory.fft_work_bytes);
+    shared->timedata = (float*)fftwf_malloc(plan.memory.timedata_bytes);
+    shared->freqdata = (fftwf_complex*)fftwf_malloc(plan.memory.freqdata_bytes);
     if (shared->window == NULL || shared->last_frame == NULL || shared->timedata == NULL ||
-        shared->freqdata == NULL || shared->fft_work == NULL)
+        shared->freqdata == NULL)
     {
         monitor_shared_free(shared);
         return false;
@@ -266,33 +259,14 @@ bool monitor_shared_init(monitor_shared_t* shared, const monitor_config_t* cfg)
     LOG(LOG_INFO, "Block size = %d\n", shared->block_size);
     LOG(LOG_INFO, "Subblock size = %d\n", shared->subblock_size);
 
-    size_t fft_work_size = plan.fft_work_size;
-    shared->fft_cfg = kiss_fftr_alloc(shared->nfft, 0, shared->fft_work, &fft_work_size);
-    if (shared->fft_cfg == NULL)
+    shared->fft_plan = fftwf_plan_dft_r2c_1d(shared->nfft, shared->timedata, shared->freqdata, FFTW_ESTIMATE);
+    if (shared->fft_plan == NULL)
     {
         monitor_shared_free(shared);
         return false;
     }
 
     LOG(LOG_INFO, "N_FFT = %d\n", shared->nfft);
-    LOG(LOG_DEBUG, "FFT work area = %zu\n", fft_work_size);
-
-#ifdef WATERFALL_USE_PHASE
-    shared->nifft = 64;
-
-    size_t ifft_work_size = 0;
-    kiss_fft_alloc(shared->nifft, 1, 0, &ifft_work_size);
-    shared->ifft_work = malloc(ifft_work_size);
-    shared->ifft_cfg = kiss_fft_alloc(shared->nifft, 1, shared->ifft_work, &ifft_work_size);
-    if (shared->ifft_work == NULL || shared->ifft_cfg == NULL)
-    {
-        monitor_shared_free(shared);
-        return false;
-    }
-
-    LOG(LOG_INFO, "N_iFFT = %d\n", shared->nifft);
-    LOG(LOG_DEBUG, "iFFT work area = %zu\n", ifft_work_size);
-#endif
     return true;
 }
 
@@ -306,12 +280,9 @@ void monitor_shared_free(monitor_shared_t* shared)
 {
     if (shared == NULL)
         return;
-    free(shared->fft_work);
-#ifdef WATERFALL_USE_PHASE
-    free(shared->ifft_work);
-#endif
-    free(shared->freqdata);
-    free(shared->timedata);
+    fftwf_destroy_plan(shared->fft_plan);
+    fftwf_free(shared->freqdata);
+    fftwf_free(shared->timedata);
     free(shared->last_frame);
     free(shared->window);
     memset(shared, 0, sizeof(*shared));
@@ -320,7 +291,7 @@ void monitor_shared_free(monitor_shared_t* shared)
 bool monitor_frame_init(monitor_t* me, monitor_shared_t* shared)
 {
     monitor_plan_t plan;
-    if (me == NULL || shared == NULL || shared->fft_cfg == NULL ||
+    if (me == NULL || shared == NULL || shared->fft_plan == NULL ||
         !monitor_make_plan(&shared->config, &plan))
         return false;
 
@@ -483,7 +454,7 @@ void monitor_process(monitor_t* me, const float* frame)
         {
             shared->timedata[pos] = shared->window[pos] * shared->last_frame[pos];
         }
-        kiss_fftr(shared->fft_cfg, shared->timedata, shared->freqdata);
+        fftwf_execute(shared->fft_plan);
 
         // Loop over possible frequency OSR offsets
         for (int freq_sub = 0; freq_sub < me->wf.freq_osr; ++freq_sub)
@@ -491,13 +462,13 @@ void monitor_process(monitor_t* me, const float* frame)
             for (int bin = me->min_bin; bin < me->max_bin; ++bin)
             {
                 int src_bin = (bin * me->wf.freq_osr) + freq_sub;
-                float mag2 = (shared->freqdata[src_bin].i * shared->freqdata[src_bin].i) +
-                    (shared->freqdata[src_bin].r * shared->freqdata[src_bin].r);
+                float mag2 = (shared->freqdata[src_bin][0] * shared->freqdata[src_bin][0]) +
+                    (shared->freqdata[src_bin][1] * shared->freqdata[src_bin][1]);
                 float db = 10.0f * log10f(1E-12f + mag2);
 
 #ifdef WATERFALL_USE_PHASE
                 // Save the magnitude in dB and phase in radians
-                float phase = atan2f(freqdata[src_bin].i, freqdata[src_bin].r);
+                float phase = atan2f(shared->freqdata[src_bin][1], shared->freqdata[src_bin][0]);
                 me->wf.mag[offset].mag = db;
                 me->wf.mag[offset].phase = phase;
 #else
@@ -530,7 +501,7 @@ void monitor_process(monitor_t* me, const float* frame)
  */
 void monitor_resynth(const monitor_t* me, const ftx_candidate_t* candidate, float* signal)
 {
-    const int num_ifft = me->nifft;
+    const int num_ifft = 64;
     const int num_shift = num_ifft / 2;
     const int taper_width = 4;
     const int num_tones = 8;
@@ -544,11 +515,11 @@ void monitor_resynth(const monitor_t* me, const ftx_candidate_t* candidate, floa
     WF_ELEM_T* el = me->wf.mag + offset;
 
     // DFT frequency data - initialize to zero
-    kiss_fft_cpx freqdata[num_ifft];
+    fftwf_complex freqdata[num_ifft];
     for (int i = 0; i < num_ifft; ++i)
     {
-        freqdata[i].r = 0;
-        freqdata[i].i = 0;
+        freqdata[i][0] = 0;
+        freqdata[i][1] = 0;
     }
 
     int pos = 0;
@@ -572,23 +543,27 @@ void monitor_resynth(const monitor_t* me, const ftx_candidate_t* candidate, floa
 
                 // Convert (dB magnitude, phase) to (real, imaginary)
                 float mag = powf(10.0f, el[i].mag / 20) / 2 * weight;
-                freqdata[tgt_bin].r = mag * cosf(el[i].phase);
-                freqdata[tgt_bin].i = mag * sinf(el[i].phase);
+                freqdata[tgt_bin][0] = mag * cosf(el[i].phase);
+                freqdata[tgt_bin][1] = mag * sinf(el[i].phase);
 
                 int i2 = i + me->wf.num_bins;
                 tgt_bin = (tgt_bin + 1) % num_ifft;
                 float mag2 = powf(10.0f, el[i2].mag / 20) / 2 * weight;
-                freqdata[tgt_bin].r = mag2 * cosf(el[i2].phase);
-                freqdata[tgt_bin].i = mag2 * sinf(el[i2].phase);
+                freqdata[tgt_bin][0] = mag2 * cosf(el[i2].phase);
+                freqdata[tgt_bin][1] = mag2 * sinf(el[i2].phase);
             }
         }
 
         // Compute inverse DFT and overlap-add the waveform
-        kiss_fft_cpx timedata[num_ifft];
-        kiss_fft(me->ifft_cfg, freqdata, timedata);
+        fftwf_complex timedata[num_ifft];
+        fftwf_plan ifft_plan = fftwf_plan_dft_1d(num_ifft, freqdata, timedata, FFTW_BACKWARD, FFTW_ESTIMATE);
+        if (ifft_plan == NULL)
+            return;
+        fftwf_execute(ifft_plan);
+        fftwf_destroy_plan(ifft_plan);
         for (int i = 0; i < num_ifft; ++i)
         {
-            signal[pos + i] += timedata[i].i;
+            signal[pos + i] += timedata[i][1];
         }
 
         // Move to the next symbol

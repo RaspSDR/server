@@ -133,7 +133,6 @@ You can decode WAV files with ```decode_ft8```. For FT8/FT4, use 15-second (or s
 Thanks goes out to:
 * my contributors who have provided me with various improvements which have often been beyond my skill set.
 * Robert Morris, AB1HL, whose Python code (https://github.com/rtmrtmrtmrtm/weakmon) inspired this and helped to test various parts of the code.
-* Mark Borgerding for his FFT implementation (https://github.com/mborgerding/kissfft). I have included a portion of his code.
 * WSJT-X authors, who developed a very interesting and novel communications protocol
 
 The details of FT4 and FT8 procotols and decoding/encoding are described here: https://physics.princeton.edu/pulsar/k1jt/FT4_FT8_QEX.pdf

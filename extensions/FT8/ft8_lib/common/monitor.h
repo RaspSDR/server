@@ -7,7 +7,7 @@ extern "C"
 #endif
 
 #include <ft8/decode.h>
-#include <fft/kiss_fftr.h>
+#include <fftw3.h>
 #include <stddef.h>
 
 /// Configuration options for FT4/FT8/FST4/FST4W monitor
@@ -29,7 +29,6 @@ typedef struct
     size_t last_frame_bytes;
     size_t timedata_bytes;
     size_t freqdata_bytes;
-    size_t fft_work_bytes;
     size_t shared_bytes;
     size_t frame_bytes;
     size_t total_bytes;
@@ -44,16 +43,9 @@ typedef struct
     float fft_norm;
     float* window;
     float* last_frame;
-    kiss_fft_scalar* timedata;
-    kiss_fft_cpx* freqdata;
-
-    void* fft_work;
-    kiss_fftr_cfg fft_cfg;
-#ifdef WATERFALL_USE_PHASE
-    int nifft;
-    void* ifft_work;
-    kiss_fft_cfg ifft_cfg;
-#endif
+    float* timedata;
+    fftwf_complex* freqdata;
+    fftwf_plan fft_plan;
 } monitor_shared_t;
 
 /// One independently decodable waterfall frame using shared FFT processing state.

@@ -260,11 +260,20 @@ if(NATIVE_HARNESS)
     target_link_libraries(websdr.bin PRIVATE ${CRYPT_LIBRARY})
     target_compile_definitions(websdr.bin PUBLIC NATIVE_HARNESS)
 
+    enable_testing()
     add_executable(test_airband_si5351
         tests/test_airband_si5351.cpp
         si5351/si5351.cpp
     )
     target_include_directories(test_airband_si5351 PRIVATE "${UPSTREAM_DIR}")
+    add_test(NAME airband_si5351 COMMAND test_airband_si5351)
+
+    find_program(NODE_COMMAND NAMES node REQUIRED)
+    add_test(
+        NAME native_mqtt
+        COMMAND ${NODE_COMMAND} ${UPSTREAM_DIR}/tests/native_mqtt_test.js
+            --binary $<TARGET_FILE:websdr.bin>
+    )
 endif()
 
 if(ENABLE_HDFL)

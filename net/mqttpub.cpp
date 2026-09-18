@@ -168,7 +168,15 @@ void mqtt_publish(const char* topic, const char* payload, ...) {
     char timestamp_buf[64];
     snprintf(timestamp_buf, sizeof(timestamp_buf), "%d", (int)time(NULL));
 
-    snprintf(payload_buf, sizeof(payload_buf), "{\"timestamp\": \"%s\", \"server\": \"%s\", %s}", timestamp_buf, mqtt_client_id, body_buf);
+    if (body_buf[0] != '\0') {
+        snprintf(payload_buf, sizeof(payload_buf),
+            "{\"timestamp\": \"%s\", \"server\": \"%s\", %s}",
+            timestamp_buf, mqtt_client_id, body_buf);
+    } else {
+        snprintf(payload_buf, sizeof(payload_buf),
+            "{\"timestamp\": \"%s\", \"server\": \"%s\"}",
+            timestamp_buf, mqtt_client_id);
+    }
     lock_enter(&mqtt_lock);
     /* publish a message */
     mqtt_publish(&mqtt_client, topic_buf, payload_buf, strlen(payload_buf), MQTT_PUBLISH_QOS_0);

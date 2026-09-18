@@ -2,27 +2,32 @@ name: Server Build
 on: [push, pull_request]
 
 jobs:
-  test:
+  native-host-verification:
     runs-on: ubuntu-latest
-    env:
-      alpine_url: http://dl-cdn.alpinelinux.org/alpine/v3.20
-      SKIP_MODLOOP: 1
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: setup packages
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install native build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake ninja-build libconfig++-dev \
             libfftw3-dev zlib1g-dev libfdk-aac-dev libgps-dev libunwind-dev \
-            libsqlite3-dev libcurl4-openssl-dev libssl-dev libconfig++-dev minify
+            libsqlite3-dev libcurl4-openssl-dev libssl-dev minify
 
-      - name: Build
+      - name: Install native test dependencies
         run: |
-          mkdir -p build && cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_HDFL=OFF ..
-          cmake --build . --config Release
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Build and verify native host harness
+        run: npm run test:regression

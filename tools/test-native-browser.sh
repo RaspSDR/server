@@ -42,4 +42,12 @@ while ! curl --fail --silent --max-time 2 "http://127.0.0.1:$port/status" >/dev/
     sleep 1
 done
 
-WEBSDR_HARNESS_URL="http://127.0.0.1:$port/" node tests/native_browser_smoke.js
+if ! WEBSDR_HARNESS_URL="http://127.0.0.1:$port/" node tests/native_browser_smoke.js; then
+    if kill -0 "$server_pid" 2>/dev/null; then
+        echo "native server is still running after browser test failure"
+    else
+        wait "$server_pid" || echo "native server exited with status $?"
+    fi
+    tail -200 "$log_file"
+    exit 1
+fi

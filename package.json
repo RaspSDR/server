@@ -1,7 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "test:native-browser": "tools/test-native-browser.sh"
+    "test:native-browser": "tools/test-native-browser.sh",
+    "test:regression": "node tests/test_ctc.js && npm run test:native-browser"
   },
   "devDependencies": {
     "playwright": "1.55.0"

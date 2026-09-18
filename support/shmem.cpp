@@ -36,7 +36,9 @@ void shmem_init() {
     u4_t rsize = round_up(size, sysconf(_SC_PAGE_SIZE));
     shmem = (shmem_t*)mmap((caddr_t)0, rsize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     assert(shmem != MAP_FAILED);
+#ifndef NATIVE_HARNESS
     scall("mlock", mlock(shmem, rsize));
+#endif
     memset(shmem, 0, rsize);
 
     // printf_init() hasn't been called yet

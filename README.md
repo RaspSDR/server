@@ -88,6 +88,19 @@ Run the complete build and browser smoke test:
 npm run test:native-browser
 ```
 
+The native build runs its CTest regressions before opening Chromium. These
+include a dependency-free JavaScript MQTT broker that verifies the server's
+credentials, client ID, topics, QoS, and JSON payloads for startup and status
+publications. Run all JavaScript and native browser regressions with:
+
+```sh
+npm run test:regression
+```
+
+GitHub Actions runs this native host regression command on every push and pull
+request instead of attempting to validate the Zynq hardware build on an x86
+runner.
+
 Set `WEBSDR_HARNESS_PORT` to use a port other than 8073. The native harness
 does not start GPS, update, registration, LED, or other target-only services.
 DRM is excluded because its decoder processes depend on the target FDK-AAC

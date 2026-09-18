@@ -143,10 +143,28 @@ function fetchRawResponse(headers, path) {
             mobile_scale_control_panel(mobile, mobile.narrow);
         });
         await targetPage.evaluate(extensionName => extint_open(extensionName), name);
-        await targetPage.waitForFunction(({ extensionName, marker }) =>
-            extint.current_ext_name?.toLowerCase() === extensionName.toLowerCase() &&
-                !!document.querySelector(marker),
-            { extensionName: name, marker: markers[name] }, { timeout: 10000 });
+        try {
+            await targetPage.waitForFunction(({ extensionName, marker }) =>
+                extint.current_ext_name?.toLowerCase() === extensionName.toLowerCase() &&
+                    !!document.querySelector(marker),
+                { extensionName: name, marker: markers[name] }, { timeout: 10000 });
+        } catch (error) {
+            const state = await targetPage.evaluate(({ extensionName, marker }) => ({
+                currentExtension: extint.current_ext_name,
+                markerPresent: !!document.querySelector(marker),
+                panelDisplayed: extint.displayed,
+                soundSocketState: window.ws_snd?.readyState,
+                waterfallSocketState: window.ws_wf?.readyState,
+                extensionSocketState: extint.ws?.readyState,
+                socketCloses: window.nativeSocketCloses,
+                extensionNamesReady: Array.isArray(extint_names),
+                selectedExtension: w3_el('id-select-ext')?.value
+            }), { extensionName: name, marker: markers[name] });
+            throw new Error(`extension ${name} did not become ready: ${JSON.stringify(state)}\n` +
+                error.message);
+        }
+        if (name === 'Loran_C')
+            await targetPage.evaluate(() => Loran_C_blur());
         await targetPage.waitForTimeout(name === 'DRM' ? 1000 : 350);
 
         return targetPage.evaluate(extensionName => {
@@ -381,6 +399,21 @@ function fetchRawResponse(headers, path) {
                 window.ws_snd && window.ws_snd.readyState === WebSocket.OPEN &&
                 window.ws_wf && window.ws_wf.readyState === WebSocket.OPEN;
         }, null, { timeout: 30000 });
+        await page.evaluate(() => {
+            window.nativeSocketCloses = {};
+            for (const [name, socket] of [
+                ['sound', window.ws_snd],
+                ['waterfall', window.ws_wf]
+            ]) {
+                socket.addEventListener('close', event => {
+                    window.nativeSocketCloses[name] = {
+                        code: event.code,
+                        reason: event.reason,
+                        wasClean: event.wasClean
+                    };
+                }, { once: true });
+            }
+        });
 
         const initialLine = await page.evaluate(() => window.wf_canvas_actual_line);
         await page.waitForFunction(line => {
@@ -397,7 +430,15 @@ function fetchRawResponse(headers, path) {
             focusReturn.style.left = '-10000px';
             document.body.appendChild(focusReturn);
             focusReturn.focus();
+            window.nativeSocketCloses.extension = null;
             extint_open('space_weather');
+            extint.ws.addEventListener('close', event => {
+                window.nativeSocketCloses.extension = {
+                    code: event.code,
+                    reason: event.reason,
+                    wasClean: event.wasClean
+                };
+            }, { once: true });
         });
         await page.waitForFunction(() => {
             const el = w3_el('id-sw-data');
@@ -410,7 +451,6 @@ function fetchRawResponse(headers, path) {
         await page.waitForFunction(() =>
             document.activeElement?.id === 'id-ext-controls-close',
             null, { timeout: 30000 });
-
         const state = await page.evaluate(() => ({
             title: document.title,
             soundSocket: window.ws_snd.readyState,
@@ -753,6 +793,8 @@ function fetchRawResponse(headers, path) {
                     const button = w3_el('id-button-9-10');
                     const savedFrequency = freq_displayed_Hz;
                     const savedMode = cur_mode;
+                    const findBand = find_band;
+                    window.find_band = () => ({ name: 'MW' });
                     freq_displayed_Hz = 1000000;
                     cur_mode = 'am';
                     freq_step_update_ui(true);
@@ -766,6 +808,7 @@ function fetchRawResponse(headers, path) {
                     const enabled = !cell.classList.contains('w3-disabled');
                     freq_displayed_Hz = savedFrequency;
                     cur_mode = savedMode;
+                    window.find_band = findBand;
                     freq_step_update_ui(true);
                     return {
                         enabled,

@@ -269,6 +269,12 @@ common_return:
 
 // called at update check TOD, on each user logout in case update is pending or on demand by admin UI
 void check_for_update(update_check_e type, conn_t* conn) {
+#ifdef NATIVE_HARNESS
+    (void) type;
+    (void) conn;
+    return;
+#endif
+
     bool force = (type != WAIT_UNTIL_NO_USERS);
 
     if (!force && admcfg_bool("update_check", NULL, CFG_REQUIRED) == false) {

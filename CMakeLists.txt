@@ -115,12 +115,14 @@ if(ENABLE_ACARS)
     target_link_libraries(acarsdec PRIVATE m pthread)
     set_target_properties(acarsdec PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 endif()
+
 ###########################################################
 
 SET(EXT_SRCS ${PROJECT_BINARY_DIR}/extint.cpp ${UPSTREAM_DIR}/extensions/ext.cpp)
 
 SET(EXTENSIONS
     ACARS
+    AIS
     ALE_2G
     ant_switch
     colormap
@@ -359,7 +361,7 @@ target_compile_definitions(websdr.bin PUBLIC
     HAVE_STRING_H STDC_HEADERS HAVE_INTTYPES_H HAVE_SYS_STAT_H
     HAVE_SYS_TYPES_H HAVE_UNISTD_H HAVE_LIBZ
     HAVE_LIBFDK_AAC HAVE_USAC
-    HFDL
+    HFDL AIS
 )
 
 if(ENABLE_ACARS)
@@ -368,6 +370,7 @@ if(ENABLE_ACARS)
     else()
         set(ACARSDEC_RUNTIME_BIN "/media/mmcblk0p1/acarsdec")
     endif()
+
     target_compile_definitions(websdr.bin PUBLIC
         ACARS
         ACARSDEC_BIN="${ACARSDEC_RUNTIME_BIN}"

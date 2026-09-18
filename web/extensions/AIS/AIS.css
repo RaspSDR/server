@@ -1,0 +1,11 @@
+/* AIS.css */
+
+.ui-ais-data { position: relative; height: 445px; background: var(--ui-bg); color: var(--ui-text); }
+#id-ais-map-kiwi { position: absolute; inset: 0; }
+.ui-ais-list { position: absolute; right: 10px; top: 10px; width: 285px; max-height: 425px; overflow: auto; padding: 8px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); background: color-mix(in srgb, var(--ui-bg-raised) 92%, transparent); box-shadow: var(--ui-shadow); }
+.ui-ais-vessel { padding: 7px; border-bottom: 1px solid var(--ui-border); cursor: pointer; }
+.ui-ais-vessel:last-child { border-bottom: 0; }
+.ui-ais-vessel-name { font-weight: 700; color: #00bcd4; }
+.ui-ais-vessel-meta { margin-top: 2px; color: var(--ui-text-muted); font-size: 12px; }
+.ui-ais-empty { padding: 20px 8px; color: var(--ui-text-muted); text-align: center; }
+.leaflet-tooltip.id-ais-vessel { background: #00695c; color: white; padding: 0 3px; }

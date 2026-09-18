@@ -134,7 +134,8 @@ function fetchRawResponse(headers, path) {
             wspr: '.id-wspr-controls',
             FT8: '.cl-ft8-text',
             DRM: '.id-drm-controls',
-            ACARS: '.id-acars-controls'
+            ACARS: '.id-acars-controls',
+            AIS: '.id-ais-controls'
         };
         await targetPage.setViewportSize(viewport);
         await targetPage.waitForTimeout(650);
@@ -171,6 +172,14 @@ function fetchRawResponse(headers, path) {
         if (name === 'FT8') {
             await targetPage.evaluate(() =>
                 ft8_mode_cb('ft8.mode', ft8.FST4W_1800, false));
+            await targetPage.waitForTimeout(100);
+        }
+        if (name === 'AIS') {
+            await targetPage.waitForFunction(() => ais.kmap && ais.kmap.map,
+                null, { timeout: 10000 });
+            await targetPage.evaluate(() =>
+                ais_report('type=1|mmsi=123456789|lat=37.774900|lon=-122.419400|' +
+                    'sog=12.3|cog=270.0|hdg=270|name=TEST VESSEL|call=TEST123|payload=15MuqP0000'));
             await targetPage.waitForTimeout(100);
         }
 
@@ -238,7 +247,12 @@ function fetchRawResponse(headers, path) {
                 fstwRendered: extensionName !== 'FT8' ||
                     root.textContent.includes('FST4W-1800'),
                 fstwSelected: extensionName !== 'FT8' ||
-                    ft8.mode === ft8.FST4W_1800
+                    ft8.mode === ft8.FST4W_1800,
+                aisMapRendered: extensionName !== 'AIS' ||
+                    !!ais.kmap?.map,
+                aisVesselRendered: extensionName !== 'AIS' ||
+                    (document.querySelectorAll('.id-ais-vessel').length === 1 &&
+                        document.querySelector('.id-ais-list')?.textContent.includes('TEST VESSEL'))
             };
         }, name);
     }
@@ -1078,7 +1092,7 @@ function fetchRawResponse(headers, path) {
         ]) {
             for (const extension of [
                 'CW_decoder', 'Loran_C', 'SSTV', 'colormap',
-                'IBP_scan', 'waterfall', 'wspr', 'FT8', 'DRM', 'ACARS'
+                'IBP_scan', 'waterfall', 'wspr', 'FT8', 'DRM', 'ACARS', 'AIS'
             ])
                 extensionLayouts.push(
                     await extensionLayoutState(page, extension, viewport));
@@ -2108,7 +2122,9 @@ function fetchRawResponse(headers, path) {
             !layout.drmRegistered ||
             !layout.drmRendered ||
             !layout.fstwRendered ||
-            !layout.fstwSelected))
+            !layout.fstwSelected ||
+            !layout.aisMapRendered ||
+            !layout.aisVesselRendered))
             throw new Error(
                 `invalid extension control layout: ${JSON.stringify(extensionLayouts)}`);
         if (dxDialogMobile.some(layout =>

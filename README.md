@@ -70,6 +70,9 @@ run the following commands to install the build tools
    `/media/mmcblk0p1/acarsdec` and make it executable. The server feeds this
    audio-only decoder raw 12 kHz mono PCM. The bundled frontend links directly
    to the acarsdec decoder core and does not require SDR or audio-file libraries.
+   The AIS decoder is built into `websdr.bin`; no separate AIS executable is
+   installed. The extension receives one selected NFM channel:
+   AIS 1 at 161.975 MHz or AIS 2 at 162.025 MHz.
 
 6. Happy hack
 

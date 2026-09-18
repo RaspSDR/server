@@ -15,6 +15,15 @@
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
 #include <arm_neon.h>
 #define USE_NEON 1
+
+// ARMv7 NEON has reciprocal-estimate instructions but no vector divide.
+static inline float32x4_t fast_divq_f32(float32x4_t numerator, float32x4_t denominator)
+{
+    float32x4_t reciprocal = vrecpeq_f32(denominator);
+    reciprocal = vmulq_f32(vrecpsq_f32(denominator, reciprocal), reciprocal);
+    reciprocal = vmulq_f32(vrecpsq_f32(denominator, reciprocal), reciprocal);
+    return vmulq_f32(numerator, reciprocal);
+}
 #endif
 
 // Rational polynomial approximation of tanh(x).
@@ -59,7 +68,7 @@ static inline void fast_tanh4(float out[4], const float in[4])
     b = vmlaq_f32(vdupq_n_f32(945.0f), x2, b);
 
     // Polynomial ratio
-    float32x4_t result = vdivq_f32(a, b);
+    float32x4_t result = fast_divq_f32(a, b);
 
     // Clamp output to [-1, 1] — the polynomial overshoots slightly near ±4.97
     result = vminq_f32(result, vdupq_n_f32(1.0f));
@@ -91,7 +100,7 @@ static inline void fast_atanh4(float out[4], const float in[4])
     float32x4_t b = vmlaq_f32(vdupq_n_f32(-1050.0f), x2, vdupq_n_f32(225.0f));
     b = vmlaq_f32(vdupq_n_f32(945.0f), x2, b);
 
-    float32x4_t result = vdivq_f32(a, b);
+    float32x4_t result = fast_divq_f32(a, b);
     vst1q_f32(out, result);
 #else
     out[0] = fast_atanh(in[0]);

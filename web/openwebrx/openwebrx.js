@@ -10155,12 +10155,18 @@ function panels_setup()
          ),
 
          w3_div('id-step-freq',
-            '<img id="id-step-0" src="icons/stepdn.20.png" onclick="freqstep(0, event.shiftKey)" />',
-            '<img id="id-step-1" src="icons/stepdn.18.png" onclick="freqstep(1, event.shiftKey)" style="padding-bottom:1px" />',
-            '<img id="id-step-2" src="icons/stepdn.16.png" onclick="freqstep(2, event.shiftKey)" style="padding-bottom:2px" />',
-            '<img id="id-step-3" src="icons/stepup.16.png" onclick="freqstep(3, event.shiftKey)" style="padding-bottom:2px" />',
-            '<img id="id-step-4" src="icons/stepup.18.png" onclick="freqstep(4, event.shiftKey)" style="padding-bottom:1px" />',
-            '<img id="id-step-5" src="icons/stepup.20.png" onclick="freqstep(5, event.shiftKey)" />'
+            w3_div('ui-frequency-step||onclick="freqstep(0, event.shiftKey)"',
+               '<img id="id-step-0" src="icons/stepdn.20.png" />'),
+            w3_div('ui-frequency-step||onclick="freqstep(1, event.shiftKey)"',
+               '<img id="id-step-1" src="icons/stepdn.18.png" style="padding-bottom:1px" />'),
+            w3_div('ui-frequency-step||onclick="freqstep(2, event.shiftKey)"',
+               '<img id="id-step-2" src="icons/stepdn.16.png" style="padding-bottom:2px" />'),
+            w3_div('ui-frequency-step||onclick="freqstep(3, event.shiftKey)"',
+               '<img id="id-step-3" src="icons/stepup.16.png" style="padding-bottom:2px" />'),
+            w3_div('ui-frequency-step||onclick="freqstep(4, event.shiftKey)"',
+               '<img id="id-step-4" src="icons/stepup.18.png" style="padding-bottom:1px" />'),
+            w3_div('ui-frequency-step||onclick="freqstep(5, event.shiftKey)"',
+               '<img id="id-step-5" src="icons/stepup.20.png" />')
          ),
 
          w3_div('',

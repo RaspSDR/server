@@ -64,6 +64,31 @@
    --ui-focus: #f0a563;
 }
 
+:root[data-ui-theme="cloud"] {
+   color-scheme: light;
+   --ui-bg: #e7e7e7;
+   --ui-bg-raised: #f1f1f1;
+   --ui-surface: #f1f1f1;
+   --ui-surface-2: #e7e7e7;
+   --ui-surface-3: #ccc;
+   --ui-border: #ccc;
+   --ui-border-strong: #999;
+   --ui-text: #000;
+   --ui-text-soft: #333;
+   --ui-text-muted: #555555;
+   --ui-accent: #2196f3;
+   --ui-accent-soft: rgba(33, 150, 243, 0.12);
+   --ui-success: #4caf50;
+   --ui-warning: #ff9800;
+   --ui-warning-surface: #fff4ce;
+   --ui-warning-border: #c47a00;
+   --ui-warning-text: #5f3b00;
+   --ui-danger: #f44336;
+   --ui-on-accent: #ffffff;
+   --ui-focus: #2196f3;
+   --ui-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+}
+
 :root[data-ui-theme="classic"] {
    color-scheme: light;
    --ui-bg: #ffffff;
@@ -1504,6 +1529,74 @@
 .ui-modern .class-button-small {
    min-height: 30px;
    font-size: var(--ui-panel-small-size, var(--ui-font-size-meta));
+}
+
+:root[data-ui-theme="cloud"] .ui-modern #id-control
+   :is(.class-button, .class-button-small)[style*="color: white"] {
+   color: var(--ui-text-soft) !important;
+}
+
+:root[data-ui-theme="cloud"] .ui-modern #id-control .id-control-zoom .class-icon {
+   display: inline-flex;
+   border: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-surface);
+}
+
+:root[data-ui-theme="cloud"] .ui-modern #id-control .id-control-zoom img {
+   padding: 5px !important;
+   border: 0;
+   border-radius: 0;
+   background: transparent !important;
+   filter: invert(1);
+}
+
+:root[data-ui-theme="cloud"] .ui-modern #id-control .id-control-zoom .class-icon:hover {
+   border-color: var(--ui-border-strong);
+   background: var(--ui-surface-2);
+}
+
+:root[data-ui-theme="cloud"] .ui-modern #id-control .id-control-zoom .class-icon:active {
+   background: var(--ui-accent-soft);
+}
+
+.ui-frequency-step {
+   display: inline-block;
+}
+
+:root[data-ui-theme="cloud"] .ui-modern #id-control .ui-frequency-step {
+   display: inline-flex;
+   margin-right: 3px;
+   vertical-align: bottom;
+   outline: 1px solid var(--ui-border);
+   border-radius: var(--ui-radius-sm);
+   background: var(--ui-surface);
+   cursor: pointer;
+}
+
+:root[data-ui-theme="cloud"] .ui-modern #id-control .ui-frequency-step img {
+   margin: 0;
+   background: transparent !important;
+   filter: invert(1);
+}
+
+:root[data-ui-theme="cloud"] .ui-modern #id-control .ui-frequency-step:hover {
+   outline-color: var(--ui-border-strong);
+   background: var(--ui-surface-2);
+}
+
+:root[data-ui-theme="cloud"] .ui-modern #id-control .ui-frequency-step:active {
+   background: var(--ui-accent-soft);
+}
+
+:root[data-ui-theme="cloud"] .ui-modern .class-vis-button {
+   border-radius: 7px;
+   background: var(--ui-surface-2);
+}
+
+:root[data-ui-theme="cloud"] .ui-modern .class-vis img {
+   background: transparent !important;
+   filter: invert(1);
 }
 
 .ui-modern #id-control .ui-button,

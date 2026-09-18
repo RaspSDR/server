@@ -5,6 +5,7 @@ var modern_ui = {
    themes: [
       { id:'midnight', label:'Midnight' },
       { id:'ember', label:'Ember' },
+      { id:'cloud', label:'Cloud' },
       { id:'classic', label:'Classic' }
    ]
 };

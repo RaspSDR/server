@@ -590,7 +590,7 @@ function fetchRawResponse(headers, path) {
                 return (Math.max(first, second) + 0.05) /
                     (Math.min(first, second) + 0.05);
             };
-            for (const theme of ['midnight', 'ember', 'classic']) {
+            for (const theme of ['midnight', 'ember', 'cloud', 'classic']) {
                 select.value = theme;
                 select.dispatchEvent(new Event('change', { bubbles: true }));
                 const style = getComputedStyle(document.documentElement);
@@ -797,6 +797,88 @@ function fetchRawResponse(headers, path) {
                 })()
             };
         });
+        const cloudControlContrast = await page.evaluate(() => {
+            const luminance = color => {
+                const values = color.match(/[\d.]+/g).slice(0, 3).map(value => {
+                    const channel = +value / 255;
+                    return channel <= 0.03928? channel / 12.92 :
+                        Math.pow((channel + 0.055) / 1.055, 2.4);
+                });
+                return values[0] * 0.2126 + values[1] * 0.7152 + values[2] * 0.0722;
+            };
+            const contrast = (first, second) => {
+                const values = [luminance(first), luminance(second)].sort((a, b) => b - a);
+                return (values[0] + 0.05) / (values[1] + 0.05);
+            };
+            const fixture = document.createElement('div');
+            fixture.innerHTML =
+                '<div class="class-button" style="color: white">Button</div>' +
+                '<div class="class-button-small" style="color: white">Button</div>';
+            modern_ui_set_theme('cloud', false);
+            document.getElementById('id-control').appendChild(fixture);
+            const buttons = Array.from(fixture.children).map(button => {
+                const style = getComputedStyle(button);
+                return {
+                    className: button.className,
+                    color: style.color,
+                    background: style.backgroundColor,
+                    contrast: Number(contrast(style.color, style.backgroundColor).toFixed(2))
+                };
+            });
+            fixture.remove();
+            const zoomFixture = document.createElement('div');
+            zoomFixture.className = 'id-control-zoom';
+            zoomFixture.innerHTML =
+                '<div class="class-icon"><img src="icons/zoomin.png" width="32" height="32"></div>' +
+                '<div class="class-icon"><img src="icons/zoomout.png" width="32" height="32"></div>';
+            document.getElementById('id-control').appendChild(zoomFixture);
+            const zoomIcons = Array.from(zoomFixture.querySelectorAll('.class-icon')).map(icon => {
+                const image = icon.querySelector('img');
+                return {
+                    background: getComputedStyle(icon).backgroundColor,
+                    imageBackground: getComputedStyle(image).backgroundColor,
+                    imageFilter: getComputedStyle(image).filter
+                };
+            });
+            zoomFixture.remove();
+            const stepFixture = document.createElement('div');
+            stepFixture.id = 'id-step-freq';
+            stepFixture.innerHTML =
+                '<div class="ui-frequency-step"><img src="icons/stepdn.20.png" ' +
+                    'width="20" height="20"></div>' +
+                '<div class="ui-frequency-step"><img src="icons/stepup.16.png" ' +
+                    'width="16" height="16" style="padding-bottom:2px"></div>';
+            document.getElementById('id-control').appendChild(stepFixture);
+            const stepButtons = Array.from(stepFixture.children).map(button => {
+                const image = button.querySelector('img');
+                return {
+                    background: getComputedStyle(button).backgroundColor,
+                    imageBackground: getComputedStyle(image).backgroundColor,
+                    imageFilter: getComputedStyle(image).filter,
+                    width: Math.round(button.getBoundingClientRect().width),
+                    height: Math.round(button.getBoundingClientRect().height)
+                };
+            });
+            stepFixture.remove();
+            const visibilityFixture = document.createElement('div');
+            visibilityFixture.className = 'class-vis';
+            visibilityFixture.innerHTML =
+                '<button class="class-vis-button"><img src="icons/hideleft.24.png" ' +
+                    'width="24" height="24"></button>';
+            document.getElementById('id-control').appendChild(visibilityFixture);
+            const visibilityButton = visibilityFixture.querySelector('.class-vis-button');
+            const visibilityImage = visibilityButton.querySelector('img');
+            const visibilityArrow = {
+                buttonBackground: getComputedStyle(visibilityButton).backgroundColor,
+                imageBackground: getComputedStyle(visibilityImage).backgroundColor,
+                imageFilter: getComputedStyle(visibilityImage).filter,
+                width: Math.round(visibilityButton.getBoundingClientRect().width),
+                height: Math.round(visibilityButton.getBoundingClientRect().height)
+            };
+            visibilityFixture.remove();
+            modern_ui_set_theme('midnight', false);
+            return { buttons, zoomIcons, stepButtons, visibilityArrow };
+        });
         const extensionThemes = await page.evaluate(async () => {
             const select = document.getElementById('id-ui-theme-select');
             const content = document.querySelector('.id-ext-controls-container');
@@ -816,7 +898,7 @@ function fetchRawResponse(headers, path) {
             const color = element => getComputedStyle(element).color;
             const background = element => getComputedStyle(element).backgroundColor;
             const themes = [];
-            for (const theme of ['midnight', 'ember', 'classic']) {
+            for (const theme of ['midnight', 'ember', 'cloud', 'classic']) {
                 select.value = theme;
                 select.dispatchEvent(new Event('change', { bubbles: true }));
                 await new Promise(resolve => setTimeout(resolve, 180));
@@ -1271,7 +1353,7 @@ function fetchRawResponse(headers, path) {
                 const values = [luminance(first), luminance(second)].sort((a, b) => b - a);
                 return (values[0] + 0.05) / (values[1] + 0.05);
             };
-            const themes = ['midnight', 'ember', 'classic'].map(theme => {
+            const themes = ['midnight', 'ember', 'cloud', 'classic'].map(theme => {
                 select.value = theme;
                 select.dispatchEvent(new Event('change', { bubbles: true }));
                 const style = getComputedStyle(warning);
@@ -1801,11 +1883,15 @@ function fetchRawResponse(headers, path) {
                 { theme: 'ember', accent: '#e58a3a', mutedContrast: 6.3,
                     modern: true, classic: false, actionsDisplay: 'flex',
                     actionsJustify: 'flex-end' },
+                { theme: 'cloud', accent: '#2196f3', mutedContrast: 6.6,
+                    modern: true, classic: false, actionsDisplay: 'flex',
+                    actionsJustify: 'flex-end' },
                 { theme: 'classic', accent: '#2196f3', mutedContrast: 7.46,
                     modern: false, classic: true, actionsDisplay: 'flex',
                     actionsJustify: 'flex-end' }
             ]) ||
-            JSON.stringify(uiFoundation.themeOptions) !== JSON.stringify(['midnight', 'ember', 'classic']) ||
+            JSON.stringify(uiFoundation.themeOptions) !==
+                JSON.stringify(['midnight', 'ember', 'cloud', 'classic']) ||
             uiFoundation.semanticShell.header !== 'HEADER' ||
             uiFoundation.semanticShell.main !== 'MAIN' ||
             uiFoundation.semanticShell.panels !== 'ASIDE' ||
@@ -1853,7 +1939,38 @@ function fetchRawResponse(headers, path) {
             uiFoundation.extensionOutput.color === 'rgb(0, 0, 0)' ||
             uiFoundation.extensionOutput.fontSize < 13)
             throw new Error(`invalid extension output theme: ${JSON.stringify(uiFoundation.extensionOutput)}`);
-        if (extensionThemes.length !== 3 ||
+        if (cloudControlContrast.buttons.some(button =>
+            button.color === button.background || button.contrast < 4.5))
+            throw new Error(
+                `invalid Cloud control-button contrast: ${JSON.stringify(cloudControlContrast)}`);
+        if (cloudControlContrast.zoomIcons.length !== 2 ||
+            cloudControlContrast.zoomIcons.some(icon =>
+                icon.background === 'rgba(0, 0, 0, 0)' ||
+                icon.imageBackground !== 'rgba(0, 0, 0, 0)' ||
+                icon.imageFilter !== 'invert(1)'))
+            throw new Error(
+                `invalid Cloud zoom-control contrast: ${JSON.stringify(cloudControlContrast)}`);
+        if (cloudControlContrast.stepButtons.length !== 2 ||
+            cloudControlContrast.stepButtons.some(button =>
+                button.background === 'rgba(0, 0, 0, 0)' ||
+                button.imageBackground !== 'rgba(0, 0, 0, 0)' ||
+                button.imageFilter !== 'invert(1)') ||
+            cloudControlContrast.stepButtons[0].width !== 20 ||
+            cloudControlContrast.stepButtons[0].height !== 20 ||
+            cloudControlContrast.stepButtons[1].width !== 16 ||
+            cloudControlContrast.stepButtons[1].height !== 16)
+            throw new Error(
+                `invalid Cloud frequency-step contrast: ${JSON.stringify(cloudControlContrast)}`);
+        if (cloudControlContrast.visibilityArrow.buttonBackground ===
+                'rgba(0, 0, 0, 0)' ||
+            cloudControlContrast.visibilityArrow.imageBackground !==
+                'rgba(0, 0, 0, 0)' ||
+            cloudControlContrast.visibilityArrow.imageFilter !== 'invert(1)' ||
+            cloudControlContrast.visibilityArrow.width !== 24 ||
+            cloudControlContrast.visibilityArrow.height !== 25)
+            throw new Error(
+                `invalid Cloud visibility-arrow contrast: ${JSON.stringify(cloudControlContrast)}`);
+        if (extensionThemes.length !== 4 ||
             new Set(extensionThemes.map(theme => theme.panel.background)).size !== 3 ||
             new Set(extensionThemes.map(theme => theme.titleColor)).size !== 3 ||
             new Set(extensionThemes.map(theme => theme.button.color)).size !== 3 ||
@@ -2012,7 +2129,7 @@ function fetchRawResponse(headers, path) {
         if (adminWarningThemes.warningCount < 7 ||
             adminWarningThemes.hardcodedYellow ||
             adminWarningThemes.legacyConnectColors ||
-            adminWarningThemes.themes.length !== 3 ||
+            adminWarningThemes.themes.length !== 4 ||
             adminWarningThemes.themes.some(theme =>
                 theme.display !== 'flex' ||
                 theme.alignItems !== 'flex-start' ||
@@ -2276,6 +2393,7 @@ function fetchRawResponse(headers, path) {
 
         console.log(JSON.stringify({
             ...state, uiFoundation, extensionThemes, drmThemeAssets, extensionFocus,
+            cloudControlContrast,
             receiverResponsive, faxMobile, extensionLayouts,
             panelToggle, adminFoundation, adminClassic, adminWarningThemes, adminResponsive,
             adminControl, adminConnect, adminConfig,

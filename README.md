@@ -108,7 +108,8 @@ WebSocket, canvas, and embedded-asset behavior.
 - `web/web.cpp` and `CMakeLists.txt` must both include any new UI asset so
   development loading and release embedding stay consistent.
 
-The built-in themes are **Midnight** (default) and **Ember**.
+The built-in modern themes are **Midnight** (default), **Ember**, and
+**Cloud**. **Classic** retains the legacy layout and palette.
 They override semantic tokens through `data-ui-theme` on the document root.
 Each uses neutral surfaces, one primary accent, and semantic status colors
 instead of the legacy per-control rainbow palette. New themes should change

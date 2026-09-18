@@ -8763,7 +8763,7 @@ function dx_show_edit_panel2()
 
 	   s2 =
          w3_divs('w3-text-white/w3-margin-T-8',
-            w3_inline('w3-halign-space-between/',
+            w3_inline('id-dx-fields w3-halign-space-between/',
                w3_input('w3-padding-small||size=10', 'Freq', 'dx.o.fr', dx.o.fr, 'dx_freq_cb'),
                w3_select('w3-text-red', 'Mode', '', 'dx.o.mm', dx.o.mm, kiwi.mode_menu, 'dx_sel_cb'),
                w3_input('w3-padding-small||size=10', 'Passband', 'dx.o.pb', dx.o.pb, 'dx_passband_cb'),
@@ -8774,19 +8774,23 @@ function dx_show_edit_panel2()
             w3_input('w3-label-inline/w3-padding-small', 'Ident', 'dx.o.i', '', 'dx_string_cb'),
             w3_input('w3-label-inline/w3-padding-small', 'Notes', 'dx.o.n', '', 'dx_string_cb'),
             
-            w3_inline('w3-halign-space-between/',
+            w3_inline('id-dx-extension w3-halign-space-between/',
                w3_input('w3-label-inline/w3-padding-small||size=40', 'Extension', 'dx.o.p', '', 'dx_string_cb'),
                w3_input('/w3-flex-noshrink w3-label-inline/w3-padding-small||size=5', 'Sig bw', 'dx.o.s', dx.o.s, 'dx_num_cb')
             ),
       
-            w3_inline('w3-hspace-16',
-               w3_text('w3-text-white w3-bold', 'Schedule (UTC)'),
-               dow_s,
-               w3_input('w3-label-inline/w3-padding-small', 'Begin', 'dx.o.begin', begin_s, 'dx_sched_time_cb'),
-               w3_input('w3-label-inline/w3-padding-small', 'End', 'dx.o.end', end_s, 'dx_sched_time_cb')
+            w3_div('id-dx-schedule',
+               w3_text('id-dx-schedule-title w3-text-white w3-bold', 'Schedule (UTC)') +
+               w3_div('id-dx-schedule-days', dow_s) +
+               w3_div('id-dx-schedule-times',
+                  w3_div('id-dx-schedule-time',
+                     w3_input('w3-label-inline/w3-padding-small', 'Begin', 'dx.o.begin', begin_s, 'dx_sched_time_cb')) +
+                  w3_div('id-dx-schedule-time',
+                     w3_input('w3-label-inline/w3-padding-small', 'End', 'dx.o.end', end_s, 'dx_sched_time_cb')))
             ),
 
-            w3_inline('w3-hspace-16',
+            w3_div('id-dx-actions',
+               w3_inline('w3-hspace-16',
                w3_button('id-dx-modify w3-yellow', 'Modify', 'dx_modify_cb'),
                w3_button('id-dx-add w3-green', 'Add', 'dx_add_cb'),
                w3_button('w3-red', 'Delete', 'dx_delete_cb'),
@@ -8794,7 +8798,7 @@ function dx_show_edit_panel2()
                   w3_checkbox('/w3-label-inline w3-label-not-bold w3-text-white/',
                      'filter by time/day-of-week', dx.DB_STORED.toString() +'-filter-tod', dx.filter_tod[dx.DB_STORED], 'dx_time_dow_cb'),
                   w3_text('id-dxcfg-err w3-margin-T-4', 'Create new label with Add button')
-               )
+               ))
             )
          );
    } else
@@ -8892,7 +8896,7 @@ function dx_show_edit_panel2()
 	
 	// can't do this as initial val passed to w3_input above when string contains quoting
 	ext_panel_set_name('dx');
-	ext_panel_show(s1 + s2, null,
+	ext_panel_show(w3_div('id-dx-edit-panel', w3_div('id-dx-header', s1) + s2), null,
 	   function() {      //show func
          if (dx.db == dx.DB_STORED) {
             var el = w3_el('dx.o.i');

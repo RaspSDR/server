@@ -288,6 +288,93 @@ x2
 	z-index: 110;
 }
 
+@media (max-width: 760px)
+{
+   .class-panel
+   {
+      box-sizing: border-box;
+      max-width: calc(100vw - 12px);
+   }
+
+   .id-dx-edit-panel
+   {
+      min-width: 0;
+   }
+
+   .id-dx-header > .w3-show-inline-new,
+   .id-dx-fields,
+   .id-dx-extension,
+   .id-dx-actions > .w3-show-inline-new
+   {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+   }
+
+   .id-dx-header .ui-field
+   {
+      width: 100%;
+   }
+
+   .id-dx-fields > *,
+   .id-dx-extension > *,
+   .id-dx-actions > .w3-show-inline-new > *
+   {
+      max-width: 100%;
+      margin-left: 0 !important;
+   }
+
+   .id-dx-header .ui-field select
+   {
+      max-width: 100%;
+   }
+
+   .id-dx-schedule
+   {
+      display: grid;
+      gap: 8px;
+   }
+
+   .id-dx-schedule > *
+   {
+      min-width: 0;
+      margin-left: 0 !important;
+   }
+
+   .id-dx-schedule-title,
+   .id-dx-schedule-days
+   {
+      width: 100%;
+   }
+
+   .id-dx-schedule-days
+   {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+   }
+
+   .id-dx-schedule-days > *
+   {
+      margin-left: 0 !important;
+   }
+
+   .id-dx-schedule-times
+   {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: end;
+      gap: 8px;
+   }
+
+   .id-dx-schedule .id-dx-schedule-time input
+   {
+      box-sizing: border-box;
+      min-width: 0;
+      width: 100%;
+   }
+}
+
 .cl-dx-sig
 {
 	position: relative;

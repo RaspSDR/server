@@ -190,6 +190,64 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
         }, name);
     }
 
+    async function dxDialogLayoutState(targetPage, viewport) {
+        await targetPage.setViewportSize(viewport);
+        await targetPage.waitForTimeout(650);
+        await targetPage.evaluate(() => {
+            const mobile = ext_mobile_info();
+            mobile_scale_control_panel(mobile, mobile.narrow);
+            dx.db = dx.DB_STORED;
+            dx.o.gid = -1;
+            dx_show_edit_panel2();
+        });
+        await targetPage.waitForFunction(() =>
+            !!document.querySelector('.id-dx-edit-panel') &&
+            !!document.getElementById('id-dx.o.begin') &&
+            !!document.getElementById('id-dx.o.end'));
+        await targetPage.waitForTimeout(100);
+
+        return targetPage.evaluate(() => {
+            const form = document.querySelector('.id-dx-edit-panel');
+            const begin = document.getElementById('id-dx.o.begin');
+            const end = document.getElementById('id-dx.o.end');
+            const bounds = element => {
+                const rect = element.getBoundingClientRect();
+                return {
+                    left: rect.left,
+                    top: rect.top,
+                    right: rect.right,
+                    bottom: rect.bottom,
+                    width: rect.width,
+                    height: rect.height
+                };
+            };
+            const visibleAndTappable = element => {
+                const rect = bounds(element);
+                const hit = document.elementFromPoint(
+                    rect.left + rect.width / 2, rect.top + rect.height / 2);
+                return rect.width > 1 && rect.height > 1 &&
+                    rect.left >= 0 && rect.right <= window.innerWidth &&
+                    rect.top >= 0 && rect.bottom <= window.innerHeight &&
+                    (hit === element || element.contains(hit));
+            };
+            const beginRect = bounds(begin);
+            const endRect = bounds(end);
+            const rows = ['id-dx-fields', 'id-dx-extension', 'id-dx-schedule', 'id-dx-actions']
+                .map(className => document.querySelector(`.${className}`));
+            return {
+                documentOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+                formOverflow: form.scrollWidth > form.clientWidth + 1,
+                rowOverflow: rows.some(row => row.scrollWidth > row.clientWidth + 1),
+                beginTappable: visibleAndTappable(begin),
+                endTappable: visibleAndTappable(end),
+                timeInputsOverlap: beginRect.left < endRect.right &&
+                    beginRect.right > endRect.left &&
+                    beginRect.top < endRect.bottom &&
+                    beginRect.bottom > endRect.top
+            };
+        });
+    }
+
     const geolocationFixture = {
         city: 'Test City',
         country_name: 'Test Country',
@@ -812,6 +870,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
                     await extensionLayoutState(page, extension, viewport));
         }
         await page.locator('#id-ext-controls-close').click();
+
+        const dxDialogMobile = [];
+        for (const theme of ['midnight', 'classic']) {
+            await page.evaluate(selectedTheme => modern_ui_set_theme(selectedTheme, false), theme);
+            dxDialogMobile.push(await dxDialogLayoutState(page, { width: 390, height: 844 }));
+            await page.evaluate(() => w3_el('id-ext-controls-close').click());
+        }
+        await page.evaluate(() => modern_ui_set_theme('midnight', false));
 
         const panelToggle = { desktop: {}, phone: {}, readme: {} };
         await page.setViewportSize({ width: 1440, height: 1000 });
@@ -1783,6 +1849,14 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
             !layout.drmRendered))
             throw new Error(
                 `invalid extension control layout: ${JSON.stringify(extensionLayouts)}`);
+        if (dxDialogMobile.some(layout =>
+            layout.documentOverflow ||
+            layout.formOverflow ||
+            layout.rowOverflow ||
+            !layout.beginTappable ||
+            !layout.endTappable ||
+            layout.timeInputsOverlap))
+            throw new Error(`invalid mobile DX dialog layout: ${JSON.stringify(dxDialogMobile)}`);
         const invalidPanelToggle = state =>
             state.hidden.shown ||
             state.hidden.panelLeft < state.hidden.viewportWidth - 10 ||

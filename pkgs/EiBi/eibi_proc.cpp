@@ -100,6 +100,26 @@ const char *types2_s[64] = {
     "BCST", "UTIL", "TIME", "ALE", "HFDL", "MIL", "CW_", "FSK", "FAX", "AERO", "MAR", "SPY"
 };
 
+// EiBi distributes its schedule as ISO-8859-1. Convert station names before
+// emitting C++ string literals so web clients receive valid UTF-8 after URL decoding.
+void eibi_latin1_to_utf8(const char *src, char *dst, size_t dst_len)
+{
+    const u1_t *sp = (const u1_t *) src;
+    char *dp = dst;
+    char *end = dst + dst_len - 1;
+
+    while (*sp && dp < end) {
+        if (*sp < 0x80) {
+            *dp++ = *sp++;
+        } else {
+            if (dp + 2 > end) break;
+            *dp++ = 0xc0 | (*sp >> 6);
+            *dp++ = 0x80 | (*sp++ & 0x3f);
+        }
+    }
+    *dp = '\0';
+}
+
 const char * const mode_s[] = {
     "AM", "AMN", "USB", "LSB", "CW", "CWN", "FM", "IQ", "DRM",
     "USN", "LSN", "SAM", "SAU", "SAL", "SAS", "QAM", "FMN"
@@ -274,6 +294,9 @@ int main(int argc, char *argv[])
         char *ident = fields[2];
         char *lang = fields[3];
         char *target = fields[4];
+        char ident_utf8[sizeof(lbuf) * 2];
+        eibi_latin1_to_utf8(ident, ident_utf8, sizeof(ident_utf8));
+        ident = ident_utf8;
         int sl_iden = strlen(ident);
         
         if (strlen(country) > 3 || strlen(lang) > 3 || strlen(target) > 3) {

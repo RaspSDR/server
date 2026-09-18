@@ -1,6 +1,30 @@
 const { chromium } = require('playwright');
+const http = require('http');
+const zlib = require('zlib');
 
 const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
+
+function fetchRawResponse(headers, path) {
+    const url = new URL(baseUrl);
+    return new Promise((resolve, reject) => {
+        const request = http.request({
+            host: url.hostname,
+            port: url.port || 80,
+            path: path || `${url.pathname}${url.search}`,
+            headers
+        }, response => {
+            const chunks = [];
+            response.on('data', chunk => chunks.push(chunk));
+            response.on('end', () => resolve({
+                statusCode: response.statusCode,
+                headers: response.headers,
+                body: Buffer.concat(chunks)
+            }));
+        });
+        request.on('error', reject);
+        request.end();
+    });
+}
 
 (async () => {
     const browser = await chromium.launch({
@@ -297,6 +321,60 @@ const baseUrl = process.env.WEBSDR_HARNESS_URL || 'http://127.0.0.1:8073/';
     page.on('pageerror', error => errors.push(`page: ${error.message}`));
 
     try {
+        const identityResponse = await fetchRawResponse({ 'Accept-Encoding': 'identity' });
+        const gzipResponse = await fetchRawResponse({ 'Accept-Encoding': 'gzip' });
+        const disabledGzipResponse = await fetchRawResponse({ 'Accept-Encoding': 'gzip;q=0' });
+        const gzipVersionResponse = await fetchRawResponse({ 'Accept-Encoding': 'gzip' }, '/VER');
+        const pngResponse = await fetchRawResponse({ 'Accept-Encoding': 'gzip' },
+            '/gfx/openwebrx-play-button.png');
+        const vary = gzipResponse.headers.vary || '';
+        let versionResponse;
+        try {
+            versionResponse = JSON.parse(zlib.gunzipSync(gzipVersionResponse.body));
+        } catch (error) {
+            versionResponse = { error: error.message };
+        }
+        if (identityResponse.statusCode !== 200 || gzipResponse.statusCode !== 200 ||
+            disabledGzipResponse.statusCode !== 200 ||
+            gzipResponse.headers['content-encoding'] !== 'gzip' ||
+            !vary.toLowerCase().split(',').map(value => value.trim()).includes('accept-encoding') ||
+            identityResponse.headers['content-encoding'] ||
+            disabledGzipResponse.headers['content-encoding'] ||
+            !zlib.gunzipSync(gzipResponse.body).equals(identityResponse.body) ||
+            !disabledGzipResponse.body.equals(identityResponse.body) ||
+            gzipVersionResponse.statusCode !== 200 ||
+            gzipVersionResponse.headers['content-encoding'] !== 'gzip' ||
+            !Number.isInteger(versionResponse.maj) ||
+            !Number.isInteger(versionResponse.min) ||
+            !Number.isInteger(versionResponse.ts) ||
+            pngResponse.statusCode !== 200 ||
+            pngResponse.headers['content-encoding']) {
+            throw new Error(`invalid gzip HTTP response: ${JSON.stringify({
+                identity: {
+                    statusCode: identityResponse.statusCode,
+                    contentEncoding: identityResponse.headers['content-encoding']
+                },
+                gzip: {
+                    statusCode: gzipResponse.statusCode,
+                    contentEncoding: gzipResponse.headers['content-encoding'],
+                    vary: gzipResponse.headers.vary
+                },
+                disabledGzip: {
+                    statusCode: disabledGzipResponse.statusCode,
+                    contentEncoding: disabledGzipResponse.headers['content-encoding']
+                },
+                gzipVersion: {
+                    statusCode: gzipVersionResponse.statusCode,
+                    contentEncoding: gzipVersionResponse.headers['content-encoding'],
+                    body: versionResponse
+                },
+                png: {
+                    statusCode: pngResponse.statusCode,
+                    contentEncoding: pngResponse.headers['content-encoding']
+                }
+            })}`);
+        }
+
         await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
         await page.waitForFunction(() => {
             return window.waterfall_setup_done === 1 &&

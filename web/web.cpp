@@ -39,11 +39,15 @@ Boston, MA  02110-1301, USA.
 
 #include <string.h>
 #include <ctype.h>
+#include <strings.h>
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+
+#include <zlib.h>
 
 // This file is compiled twice into two different object files:
 // Once with EDATA_EMBED defined when installed as the production server in /usr/local/bin
@@ -600,6 +604,119 @@ void web_served_clear_cache(conn_t* c) {
 
 bool webserver_caching, web_nocache;
 
+static bool web_client_accepts_gzip(const char* accept_encoding) {
+    if (accept_encoding == NULL) return false;
+
+    double gzip_quality = -1.0, wildcard_quality = -1.0;
+    const char* cp = accept_encoding;
+
+    while (*cp) {
+        while (*cp == ' ' || *cp == '\t' || *cp == ',') cp++;
+        const char* token = cp;
+        while (*cp && *cp != ';' && *cp != ',') cp++;
+        const char* token_end = cp;
+        while (token_end > token && (token_end[-1] == ' ' || token_end[-1] == '\t')) token_end--;
+
+        double quality = 1.0;
+        const char* parameter_end = strchr(cp, ',');
+        if (parameter_end == NULL) parameter_end = cp + strlen(cp);
+        while (cp < parameter_end) {
+            if (*cp++ != ';') continue;
+            while (cp < parameter_end && (*cp == ' ' || *cp == '\t')) cp++;
+            const char* parameter = cp;
+            while (cp < parameter_end && *cp != '=' && *cp != ';') cp++;
+            const char* name_end = cp;
+            while (name_end > parameter && (name_end[-1] == ' ' || name_end[-1] == '\t')) name_end--;
+            if (cp == parameter_end || *cp != '=') continue;
+
+            cp++;
+            while (cp < parameter_end && (*cp == ' ' || *cp == '\t')) cp++;
+            char* value_end;
+            double value = strtod(cp, &value_end);
+            if (value_end != cp && value_end <= parameter_end) {
+                if ((name_end - parameter) == 1 && tolower((unsigned char)parameter[0]) == 'q')
+                    quality = (value >= 0.0 && value <= 1.0) ? value : 0.0;
+                cp = value_end;
+            }
+        }
+
+        if ((token_end - token) == 4 && strncasecmp(token, "gzip", 4) == 0)
+            gzip_quality = quality;
+        else if ((token_end - token) == 1 && token[0] == '*')
+            wildcard_quality = quality;
+
+        cp = parameter_end;
+    }
+
+    return (gzip_quality >= 0.0) ? (gzip_quality > 0.0) : (wildcard_quality > 0.0);
+}
+
+static bool web_gzip_payload(const char* data, size_t data_size, const char* suffix, size_t suffix_size,
+                             char** compressed_data, size_t* compressed_size) {
+    if (data_size > UINT_MAX || suffix_size > UINT_MAX || data_size > UINT_MAX - suffix_size)
+        return false;
+
+    z_stream stream;
+    memset(&stream, 0, sizeof(stream));
+    if (deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, MAX_WBITS + 16, 8, Z_DEFAULT_STRATEGY) != Z_OK)
+        return false;
+
+    uLong bound = deflateBound(&stream, data_size + suffix_size);
+    if (bound > UINT_MAX) {
+        deflateEnd(&stream);
+        return false;
+    }
+
+    char* output = (char*)kiwi_imalloc("web_gzip", bound);
+    stream.next_out = (Bytef*)output;
+    stream.avail_out = bound;
+
+    const char* inputs[] = { data, suffix };
+    size_t input_sizes[] = { data_size, suffix_size };
+    int result = Z_OK;
+    for (int i = 0; i < ARRAY_LEN(inputs) && result == Z_OK; i++) {
+        stream.next_in = (Bytef*)inputs[i];
+        stream.avail_in = input_sizes[i];
+        while (stream.avail_in != 0 && result == Z_OK)
+            result = deflate(&stream, Z_NO_FLUSH);
+    }
+
+    while (result == Z_OK)
+        result = deflate(&stream, Z_FINISH);
+
+    if (result != Z_STREAM_END) {
+        deflateEnd(&stream);
+        kiwi_ifree(output, "web_gzip");
+        return false;
+    }
+
+    *compressed_data = output;
+    *compressed_size = stream.total_out;
+    deflateEnd(&stream);
+    return true;
+}
+
+static bool web_response_is_compressible(const char* mime_type, const char* suffix, bool is_ajax) {
+    if (suffix && (strcmp(suffix, ".png") == 0 || strcmp(suffix, ".jpg") == 0 || strcmp(suffix, ".jpeg") == 0 ||
+                   strcmp(suffix, ".gif") == 0 || strcmp(suffix, ".webp") == 0 || strcmp(suffix, ".ico") == 0 ||
+                   strcmp(suffix, ".avif") == 0 || strcmp(suffix, ".mp3") == 0 || strcmp(suffix, ".ogg") == 0 ||
+                   strcmp(suffix, ".opus") == 0 || strcmp(suffix, ".wav") == 0 || strcmp(suffix, ".flac") == 0 ||
+                   strcmp(suffix, ".mp4") == 0 || strcmp(suffix, ".webm") == 0 || strcmp(suffix, ".woff") == 0 ||
+                   strcmp(suffix, ".woff2") == 0 || strcmp(suffix, ".zip") == 0 || strcmp(suffix, ".gz") == 0 ||
+                   strcmp(suffix, ".pdf") == 0))
+        return false;
+
+    if (is_ajax || strncmp(mime_type, "text/", 5) == 0)
+        return true;
+
+    return strcmp(mime_type, "application/javascript") == 0 ||
+           strcmp(mime_type, "application/x-javascript") == 0 ||
+           strcmp(mime_type, "application/json") == 0 ||
+           strcmp(mime_type, "application/xml") == 0 ||
+           strcmp(mime_type, "application/manifest+json") == 0 ||
+           strcmp(mime_type, "image/svg+xml") == 0;
+}
+
 int web_request(struct mg_connection* mc, enum mg_event evt) {
     int i, n;
     size_t edata_size = 0;
@@ -1103,14 +1220,17 @@ int web_request(struct mg_connection* mc, enum mg_event evt) {
     if (!isAJAX) assert(mtime != 0);
     mc->cache_info.st.st_mtime = mtime;
 
+    const char* response_mime = mg_get_mime_type(isAJAX ? mc->uri : uri, "text/plain");
     if (!(isAJAX && evt == MG_CACHE_INFO)) { // don't print for isAJAX + MG_CACHE_INFO nop case
         web_printf_all("%-16s %s:%05d size=%6d dirty=%d mtime=[%s] %s %s %s%s\n", (evt == MG_CACHE_INFO) ? "MG_CACHE_INFO" : "MG_REQUEST",
                        ip_forwarded, mc->remote_port,
-                       mc->cache_info.st.st_size, dirty, var_ctime_r(&mtime, ctimebuf), isAJAX ? mc->uri : uri, mg_get_mime_type(isAJAX ? mc->uri : uri, "text/plain"),
+                       mc->cache_info.st.st_size, dirty, var_ctime_r(&mtime, ctimebuf), isAJAX ? mc->uri : uri, response_mime,
                        (mc->query_string != NULL) ? "qs:" : "", (mc->query_string != NULL) ? mc->query_string : "");
     }
 
-    bool isImage = (suffix && (strcmp(suffix, ".png") == 0 || strcmp(suffix, ".jpg") == 0 || strcmp(suffix, ".ico") == 0));
+    bool isImage = (suffix && (strcmp(suffix, ".png") == 0 || strcmp(suffix, ".jpg") == 0 || strcmp(suffix, ".jpeg") == 0 ||
+                               strcmp(suffix, ".gif") == 0 || strcmp(suffix, ".webp") == 0 || strcmp(suffix, ".ico") == 0));
+    bool is_compressible = web_response_is_compressible(response_mime, suffix, isAJAX);
     int rtn = MG_TRUE;
     if (evt == MG_CACHE_INFO) {
         if (dirty || isAJAX || web_nocache || !webserver_caching) {
@@ -1123,6 +1243,18 @@ int web_request(struct mg_connection* mc, enum mg_event evt) {
     else {
         // evt == MG_REQUEST
         const char* hdr_type;
+        const char* response_data = kstr_sp((char*)edata_data);
+        char* gzip_data = NULL;
+        size_t response_size = edata_size;
+        bool response_is_gzip = is_gzip && is_compressible;
+        if (!response_is_gzip && is_compressible && web_client_accepts_gzip(mg_get_header(mc, "Accept-Encoding"))) {
+            if (web_gzip_payload(response_data, edata_size, ver, ver_size, &gzip_data, &response_size)) {
+                response_is_gzip = true;
+            }
+            else {
+                lprintf("webserver: gzip compression failed for %s\n", isAJAX ? mc->uri : uri);
+            }
+        }
 
         // NB: prevent AJAX responses from getting cached by not sending standard headers which include etag etc!
         if (isAJAX) {
@@ -1152,12 +1284,13 @@ int web_request(struct mg_connection* mc, enum mg_event evt) {
             hdr_type = isImage ? "CACHE-IMAGE" : "CACHE-REVAL";
         }
 
-        if (is_gzip) mg_send_header(mc, "Content-Encoding", "gzip");
+        if (!is_gzip && is_compressible) mg_send_header(mc, "Vary", "Accept-Encoding");
+        if (response_is_gzip) mg_send_header(mc, "Content-Encoding", "gzip");
 
-        web_printf_all("%-16s %11s %s%s\n", "sending", hdr_type, is_min ? "MIN " : "", is_gzip ? "GZIP" : "");
+        web_printf_all("%-16s %11s %s%s\n", "sending", hdr_type, is_min ? "MIN " : "", response_is_gzip ? "GZIP" : "");
 
-        web_printf_sent("%-16s %7d %11s %4s %3s %4s %c%c|%c%c %5d%5s ", "webserver:", edata_size, hdr_type,
-                        is_file ? "FILE" : "", is_min ? "MIN" : "", is_gzip ? "GZIP" : "",
+        web_printf_sent("%-16s %7d %11s %4s %3s %4s %c%c|%c%c %5d%5s ", "webserver:", response_size, hdr_type,
+                        is_file ? "FILE" : "", is_min ? "MIN" : "", response_is_gzip ? "GZIP" : "",
                         mc->cache_info.if_none_match ? 'T' : 'F', mc->cache_info.etag_match ? 'T' : 'F',
                         mc->cache_info.if_mod_since ? 'T' : 'F', mc->cache_info.not_mod_since ? 'T' : 'F',
                         mc->local_port, mc->is_ssl ? "(SSL)" : "");
@@ -1176,12 +1309,14 @@ int web_request(struct mg_connection* mc, enum mg_event evt) {
         mg_send_header(mc, "Server", web_server_hdr);
 
         evWS(EC_EVENT, EV_WS, 0, "WEB_SERVER", "mg_send_data..");
-        mg_send_data(mc, kstr_sp((char*)edata_data), edata_size);
+        mg_send_data(mc, gzip_data ? gzip_data : response_data, response_size);
         evWS(EC_EVENT, EV_WS, 0, "WEB_SERVER", "..mg_send_data");
 
-        if (ver != NULL) {
+        if (ver != NULL && gzip_data == NULL) {
             mg_send_data(mc, ver, ver_size);
         }
+
+        if (gzip_data != NULL) kiwi_ifree(gzip_data, "web_gzip");
 
         /*
             if (isIndex) {

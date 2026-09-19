@@ -30,9 +30,9 @@ typedef struct {
     float SNR_adj;
     float dT_adj;
 
-    int test;
-    s2_t *s2p_start, *s2p_end;
-    int tsamps;
+    bool test;
+    s2_t *fst4w_test_start;
+    int fst4w_test_samples;
 
     int num_autorun;
     char *rcall;
@@ -50,6 +50,7 @@ C_LINKAGE(void decode_ft8_free(int rx_chan));
 C_LINKAGE(void decode_ft8_setup(int rx_chan, int debug));
 C_LINKAGE(void decode_ft8_protocol(int rx_chan, int freqHz, int proto));
 C_LINKAGE(void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, u1_t *start_test));
+void ft8_test_complete(int rx_chan);
 
 bool ft8_update_vars_from_config(bool called_at_init_or_restart);
 void ft8_autorun_start(bool initial);

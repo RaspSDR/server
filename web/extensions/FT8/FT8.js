@@ -114,6 +114,19 @@ function ft8_recv(data)
             if (dbgUs) console.log(kiwi_decodeURIComponent('FT8', param[1]));
 				break;
 
+         case "error":
+            ft8_error(kiwi_decodeURIComponent('FT8', param[1]));
+            break;
+
+         case "test_status":
+            ft8_test_state(param[1], ft8.test_progress);
+            break;
+
+         case "test_progress":
+            ft8.test_progress = +param[1];
+            ft8_test_state(ft8.test_status, ft8.test_progress);
+            break;
+
 			default:
 				console.log('ft8_recv: UNKNOWN CMD '+ param[0]);
 				break;
@@ -188,7 +201,7 @@ function ft8_controls_setup()
                w3_div('cl-ft8-text', 'reporter call '+ callsign),
                w3_div('cl-ft8-text', 'reporter grid '+ grid),
                w3_button('w3-padding-smaller w3-css-yellow', 'Clear', 'ft8_clear_button_cb'),
-               (dbgUs? w3_button('w3-padding-smaller w3-aqua', 'Test', 'ft8_test_cb') : '')
+               w3_button('id-ft8-test w3-padding-smaller w3-aqua', 'Test FST4W-120', 'ft8_fst4w_test_cb')
             )
 			)
 		);
@@ -199,6 +212,7 @@ function ft8_controls_setup()
    ext_set_data_height(300);
 	ext_set_controls_width_height(525, 90);
    ft8_clear_button_cb();
+   ft8_test_state('ready', 0);
 
    ext_send('SET ft8_start='+ ft8.FT8 +' debug='+ (dbgUs? 1:0));
 
@@ -281,7 +295,51 @@ function ft8_clear_button_cb(path, idx, first)
 
 function ft8_test_cb()
 {
+   ft8_fst4w_test_cb();
+}
+
+function ft8_fst4w_test_cb(path, idx, first)
+{
+   if (first) return;
+   ft8_clear_button_cb();
+   ft8_error('');
+   ft8_test_state('waiting', 0);
+   if (ft8.mode != ft8.FST4W_120)
+      ft8_mode_cb('ft8.mode', ft8.FST4W_120);
    ext_send('SET ft8_test');
+}
+
+function ft8_test_state(state, progress)
+{
+   ft8.test_status = state;
+   ft8.test_progress = isNumber(progress)? progress : 0;
+
+   var text = '';
+   if (state == 'waiting')
+      text = 'Syncing...';
+   else
+   if (state == 'feeding')
+      text = 'Feeding: '+ ft8.test_progress +'%';
+   else
+   if (state == 'decoding')
+      text = 'Decoding...';
+   else
+      text = 'Test FST4W-120';
+
+   w3_innerHTML('id-ft8-test', text);
+   if (state == 'waiting' || state == 'feeding' || state == 'decoding')
+      w3_add('id-ft8-test', 'w3-disabled');
+   else
+      w3_remove('id-ft8-test', 'w3-disabled');
+}
+
+function ft8_error(message)
+{
+   var el = w3_el('id-ft8-err');
+   if (!el) return;
+   el.textContent = message;
+   w3_hide2(el, message == '');
+   if (message != '') ft8_test_state('ready', 0);
 }
 
 // called to display HTML for configuration parameters in admin interface

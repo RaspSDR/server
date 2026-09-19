@@ -24,6 +24,9 @@
 //#define DEBUG_MSG	true
 #define DEBUG_MSG	false
 
+#define FST4W_TEST_SAMPLE_RATE 12000
+#define FST4W_TEST_PERIOD      120
+
 // rx_chan is the receiver channel number we've been assigned, 0..rx_chans
 // We need this so the extension can support multiple users, each with their own ft8[] data structure.
 
@@ -48,7 +51,9 @@ typedef struct {
 
 	bool test;
 	u1_t start_test;
-    s2_t *s2p;
+    int test_out_pos;
+    int test_progress;
+    bool test_feeding;
 } ft8_t;
 
 static ft8_t ft8[MAX_RX_CHANS];
@@ -63,32 +68,26 @@ static void ft8_file_data(int rx_chan, int chan, int nsamps, TYPEMONO16 *samps, 
 {
     ft8_t *e = &ft8[rx_chan];
 
-    if (!e->test) {
-        return;
-    }
-    if (e->s2p >= ft8_conf.s2p_end) {
-        e->test = false;
-        e->start_test = 0;
-        return;
-    }
-    
-    if (e->test && e->start_test) {
-        for (int i = 0; i < nsamps; i++) {
-            if (e->s2p < ft8_conf.s2p_end) {
-                *samps++ = (s2_t) FLIP16(*e->s2p);
-            }
-            e->s2p++;
-        }
-
-        #if 0
-        int pct = e->nsamps * 100 / ft8_conf.tsamps;
-        e->nsamps += nsamps;
-        pct += 3;
-        if (pct > 100) pct = 100;
-        ext_send_msg(rx_chan, false, "EXT bar_pct=%d", pct);
-        #endif
+    if (!e->test || !e->start_test) return;
+    if (!e->test_feeding) {
+        e->test_feeding = true;
+        ext_send_msg(rx_chan, false, "EXT test_status=feeding test_progress=0");
     }
 
+    for (int i = 0; i < nsamps; i++) {
+        int sample = (int) (((u64_t) e->test_out_pos * FST4W_TEST_SAMPLE_RATE) / snd_rate);
+        if (sample >= ft8_conf.fst4w_test_samples) return;
+        *samps++ = (s2_t) FLIP16(ft8_conf.fst4w_test_start[sample]);
+        e->test_out_pos++;
+    }
+
+    int sample = (int) (((u64_t) e->test_out_pos * FST4W_TEST_SAMPLE_RATE) / snd_rate);
+    int progress = MIN(100, sample * 100 / ft8_conf.fst4w_test_samples);
+    if (progress > e->test_progress) {
+        e->test_progress = progress;
+        ext_send_msg(rx_chan, false, "EXT test_status=%s test_progress=%d",
+            progress == 100? "decoding" : "feeding", progress);
+    }
 }
 
 static void ft8_task(void *param)
@@ -183,7 +182,7 @@ bool ft8_msgs(char *msg, int rx_chan)
         ft8_conf.freq_offset_Hz = (u4_t) (freq_offset_kHz * 1e3);
 		decode_ft8_init(rx_chan, proto);
 
-		if (ft8_conf.tsamps != 0) {
+		if (ft8_conf.fst4w_test_samples != 0) {
             ext_register_receive_real_samps(ft8_file_data, rx_chan);
 		}
 
@@ -229,10 +228,22 @@ bool ft8_msgs(char *msg, int rx_chan)
 	}
 	
 	if (strcmp(msg, "SET ft8_test") == 0) {
-		//rcprintf(rx_chan, "FT8 test\n");
+        if (e->proto != FT8_PROTOCOL_FST4W_120) {
+            ext_send_msg_encoded(rx_chan, false, "EXT", "error",
+                "Select FST4W-120 before starting the test");
+            return true;
+        }
+        if (ft8_conf.fst4w_test_samples == 0) {
+            ext_send_msg_encoded(rx_chan, false, "EXT", "error",
+                "FST4W-120 test sample is unavailable");
+            return true;
+        }
 		e->start_test = 0;
-        e->s2p = ft8_conf.s2p_start;
+        e->test_out_pos = 0;
+        e->test_progress = 0;
+        e->test_feeding = false;
 		e->test = true;
+        ext_send_msg(rx_chan, false, "EXT test_status=waiting test_progress=0");
 		return true;
 	}
 
@@ -473,6 +484,47 @@ void ft8_autorun_restart()
 
 void FT8_main();
 
+void ft8_test_complete(int rx_chan)
+{
+    ft8_t *e = &ft8[rx_chan];
+    if (!e->test) return;
+
+    e->test = false;
+    e->start_test = 0;
+    e->test_feeding = false;
+    e->test_progress = 100;
+    ext_send_msg(rx_chan, false, "EXT test_status=complete test_progress=100");
+}
+
+static void ft8_load_fst4w_test()
+{
+    const char *fn = DIR_SAMPLES "/FST4W-120.raw";
+    int fd = open(fn, O_RDONLY);
+    if (fd < 0) {
+        printf("FT8: optional FST4W-120 test sample not found: %s\n", fn);
+        return;
+    }
+
+    off_t size = kiwi_file_size(fn);
+    if (size != FST4W_TEST_PERIOD * FST4W_TEST_SAMPLE_RATE * (int) sizeof(s2_t)) {
+        printf("FT8: invalid FST4W-120 test sample size: %lld\n", (long long) size);
+        close(fd);
+        return;
+    }
+
+    void *file = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    close(fd);
+    if (file == MAP_FAILED) {
+        printf("FT8: mmap failed for %s\n", fn);
+        return;
+    }
+
+    ft8_conf.fst4w_test_start = (s2_t *) file;
+    ft8_conf.fst4w_test_samples = size / sizeof(s2_t);
+    printf("FT8: loaded %d FST4W-120 test samples from %s\n",
+        ft8_conf.fst4w_test_samples, fn);
+}
+
 ext_t ft8_ext = {
 	"FT8",
 	FT8_main,
@@ -486,37 +538,7 @@ void FT8_main()
 {
 	ext_register(&ft8_ext);
     ft8_update_vars_from_config(false);
-	PSKReporter_init();
+    PSKReporter_init();
     ft8_autorun_start(true);
-
-    //const char *fn = cfg_string("FT8.test_file", NULL, CFG_OPTIONAL);
-    const char *fn = "FT8.test.au";
-    if (!fn || *fn == '\0') return;
-    char *fn2;
-    asprintf(&fn2, "%s/%s", DIR_SAMPLES, fn);
-    //cfg_string_free(fn);
-    printf("FT8: mmap %s\n", fn2);
-    int fd = open(fn2, O_RDONLY);
-    if (fd < 0) {
-        printf("FT8: open failed\n");
-        return;
-    }
-    off_t fsize = kiwi_file_size(fn2);
-    kiwi_asfree(fn2);
-    char *file = (char *) mmap(NULL, fsize, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (file == MAP_FAILED) {
-        printf("FT8: mmap failed\n");
-        return;
-    }
-    close(fd);
-    int words = fsize/2;
-    ft8_conf.s2p_start = (s2_t *) file;
-    u4_t off = *(ft8_conf.s2p_start + 3);
-    off = FLIP16(off);
-    printf("FT8: off=%d size=%lld\n", off, fsize);
-    off /= 2;
-    ft8_conf.s2p_start += off;
-    words -= off;
-    ft8_conf.s2p_end = ft8_conf.s2p_start + words;
-    ft8_conf.tsamps = words / NIQ;
+    ft8_load_fst4w_test();
 }

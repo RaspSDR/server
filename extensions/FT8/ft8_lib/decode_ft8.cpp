@@ -60,6 +60,7 @@ typedef struct {
     struct tm tm_slot_start;
 
     u4_t decode_time;
+    bool test;
 
 } frame_ft8_t;
 
@@ -389,7 +390,7 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
                                 s1_t snr_i = (s1_t) roundf(snr);
                                 #ifdef PR_TESTING
                                 #else
-                                    if (!ft8_conf.test)
+                                    if (!frame->test)
                                 #endif
                                     {
                                         km = PSKReporter_spot(rx_chan, call_de, passband_freq, snr_i,
@@ -546,6 +547,8 @@ void decode_ft8_compute(void *arg) {
             LOG(LOG_INFO, "FT8 Max magnitude: %.1f dB\n", frame->mon.max_mag);
 
             decode(ft8->rx_chan, frame, ft8->freqHz);
+            if (frame->test)
+                ft8_test_complete(ft8->rx_chan);
 
             CHECK_PADDING(ft8);
 
@@ -584,7 +587,8 @@ void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, 
         clock_gettime(CLOCK_REALTIME, &spec);
         double time_sec = (double) spec.tv_sec + (spec.tv_nsec / 1e9);
         double time_within_slot = fmod(time_sec - time_shift, ft8->slot_period);
-        if (time_within_slot > ft8->slot_period / 4) {
+        double start_window = ft8_conf.test? 1.0 : ft8->slot_period / 4;
+        if (time_within_slot > start_window) {
             *start_test = 0;
             return;     // wait for beginning of slot
         }
@@ -594,6 +598,7 @@ void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, 
         LOG(LOG_INFO, "FT8 Time within slot %02d:%02d:%02d %.3f s\n", frame->tm_slot_start.tm_hour,
             frame->tm_slot_start.tm_min, frame->tm_slot_start.tm_sec, time_within_slot);
         ft8->in_pos = ft8->frame_pos = 0;
+        frame->test = ft8_conf.test;
         *start_test = 1;
         frame->decode_time = spec.tv_sec;
         ft8->slot++;

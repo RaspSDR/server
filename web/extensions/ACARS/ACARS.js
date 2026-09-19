@@ -61,7 +61,7 @@ function acars_recv(data)
             break;
 
          case 'freq':
-            acars.current_freq = +param[1];
+            acars.current_freq = acars_rf_freq_MHz(+param[1] * 1000);
             acars_update_frequency();
             break;
 
@@ -180,12 +180,18 @@ function acars_parse_block(block)
    return msg;
 }
 
+function acars_rf_freq_MHz(tuned_freq_kHz)
+{
+   return (tuned_freq_kHz + kiwi.freq_offset_kHz) / 1000;
+}
+
 function acars_add_block(block)
 {
    var msg = acars_parse_block(block);
    if (!msg) return;
    msg.sample = !!acars.in_test_output || Date.now() < (acars.sample_until || 0);
-   msg.freq = msg.sample? null : (acars.current_freq || (+ext_get_freq_kHz() / 1000));
+   msg.freq = msg.sample? null : (acars.current_freq ||
+      acars_rf_freq_MHz(+ext_get_freq_kHz()));
    acars.messages.unshift(msg);
    if (acars.messages.length > acars.max_messages)
       acars.messages.length = acars.max_messages;
@@ -264,7 +270,7 @@ function acars_render_messages()
 
 function acars_controls_setup()
 {
-   acars.current_freq = +ext_get_freq_kHz() / 1000;
+   acars.current_freq = acars_rf_freq_MHz(+ext_get_freq_kHz());
    var freq_s = acars.freqs.map(function(freq) { return freq.toFixed(3) +' MHz'; });
    acars.freq_i = 0;
 
@@ -413,7 +419,7 @@ function acars_update_frequency()
 function ACARS_environment_changed(changed)
 {
    if (changed.freq || changed.mode) {
-      acars.current_freq = +ext_get_freq_kHz() / 1000;
+      acars.current_freq = acars_rf_freq_MHz(+ext_get_freq_kHz());
       acars_update_frequency();
    }
 }

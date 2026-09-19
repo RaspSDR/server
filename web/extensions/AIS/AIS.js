@@ -22,7 +22,10 @@ function ais_recv(data)
       switch (param[0]) {
          case 'ready': ais_controls_setup(); break;
          case 'report': ais_report(kiwi_decodeURIComponent('AIS', param[1])); break;
-         case 'freq': ais_update_status(); break;
+         case 'freq':
+            ais.current_freq = ais_rf_freq_MHz(+param[1] * 1000);
+            ais_update_status();
+            break;
          case 'decoder': ais_status('w3-text-lime', 'Listening for AIS reports'); break;
          case 'error': ais_status('w3-text-red', kiwi_decodeURIComponent('', param[1])); break;
       }
@@ -156,6 +159,11 @@ function ais_tune(freq)
    ext_set_passband(ais.pb.lo, ais.pb.hi);
    ais.current_freq = freq;
    ais_update_status();
+}
+
+function ais_rf_freq_MHz(tuned_freq_kHz)
+{
+   return (tuned_freq_kHz + kiwi.freq_offset_kHz) / 1000;
 }
 
 function ais_freq_cb(path, idx, first)

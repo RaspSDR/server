@@ -49,4 +49,30 @@ assert.strictEqual(live.time, '17/09/2026 09:35:12.123');
 assert.strictEqual(live.direction, 'uplink');
 assert.strictEqual(live.text, 'POSITION REPORT\nSECOND LINE');
 
+context.acars.stream =
+`[#1 (L:-10.9/-165.6 E:0)  --------------------------------
+Mode : 2 Label : B9 Id : 2 Nak
+`;
+assert.strictEqual(context.acars_take_blocks(false).length, 0);
+
+context.acars.stream +=
+`Aircraft reg: B-18722 Flight id: CI5118
+No: L05A
+FIRST MESSAGE
+[#2 (L:-12.0/-166.0 E:0)  --------------------------------
+`;
+const complete = context.acars_take_blocks(false);
+assert.strictEqual(complete.length, 1);
+assert.strictEqual(context.acars_parse_block(complete[0]).text, 'FIRST MESSAGE');
+
+context.acars.stream +=
+`Mode : 2 Label : B9 Id : 2 Nak
+Aircraft reg: B-18723 Flight id: CI5119
+No: L05B
+SECOND MESSAGE
+`;
+const final = context.acars_take_blocks(true);
+assert.strictEqual(final.length, 1);
+assert.strictEqual(context.acars_parse_block(final[0]).text, 'SECOND MESSAGE');
+
 console.log('ACARS parser tests passed');

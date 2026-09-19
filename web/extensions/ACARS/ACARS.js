@@ -11,6 +11,7 @@ var acars = {
    pb: { lo: -5000, hi: 5000 },
    stream: '',
    flush_timer: null,
+   flush_delay_msec: 500,
    messages: [],
    max_messages: 200,
    filter: '',
@@ -95,7 +96,36 @@ function acars_output_chars(encoded)
    kiwi_output_msg('id-acars-console-msgs', 'id-acars-console-msg', acars.console_status_msg_p);
 
    kiwi_clearTimeout(acars.flush_timer);
-   acars.flush_timer = setTimeout(acars_flush_stream, 100);
+   acars.flush_timer = setTimeout(acars_flush_stream, acars.flush_delay_msec);
+}
+
+function acars_take_blocks(flush_last)
+{
+   var blocks = [];
+
+   var start = acars.stream.indexOf('[#');
+   if (start < 0) {
+      if (acars.stream.length > 8192) acars.stream = '';
+      return blocks;
+   }
+   if (start > 0) acars.stream = acars.stream.substring(start);
+
+   while (true) {
+      var next = acars.stream.indexOf('\n[#', 2);
+      if (next < 0) break;
+      blocks.push(acars.stream.substring(0, next));
+      acars.stream = acars.stream.substring(next + 1);
+   }
+
+   // acarsdec has no end-of-record marker. Only submit its final record after
+   // a quiet interval, otherwise a WebSocket frame can end in the middle of it.
+   if (flush_last && /\nMode\s*:/.test(acars.stream) &&
+      acars.stream.charAt(acars.stream.length - 1) == '\n') {
+      blocks.push(acars.stream);
+      acars.stream = '';
+   }
+
+   return blocks;
 }
 
 function acars_flush_stream()
@@ -103,24 +133,7 @@ function acars_flush_stream()
    kiwi_clearTimeout(acars.flush_timer);
    acars.flush_timer = null;
 
-   var start = acars.stream.indexOf('[#');
-   if (start < 0) {
-      if (acars.stream.length > 8192) acars.stream = '';
-      return;
-   }
-   if (start > 0) acars.stream = acars.stream.substring(start);
-
-   while (true) {
-      var next = acars.stream.indexOf('\n[#', 2);
-      if (next < 0) break;
-      acars_add_block(acars.stream.substring(0, next));
-      acars.stream = acars.stream.substring(next + 1);
-   }
-
-   if (acars.stream.indexOf('\n') >= 0) {
-      acars_add_block(acars.stream);
-      acars.stream = '';
-   }
+   acars_take_blocks(true).forEach(acars_add_block);
 }
 
 function acars_parse_block(block)
@@ -289,6 +302,10 @@ function acars_controls_setup()
             w3_div('w3-medium w3-text-aqua', '<b>VHF ACARS decoder</b>'), 27,
             w3_div('', 'Based on <b><a href="https://github.com/f00b4r0/acarsdec" target="_blank">acarsdec</a></b> (GPLv2)')
          ),
+         w3_div('ui-acars-device-note',
+            'Each device uses its own receiver channel; mobile has no two-message limit. ' +
+            'For a fair comparison, use the same frequency, Quality setting, and Filter on both devices.'
+         ),
          w3_inline('w3-tspace-6 w3-valign/w3-margin-between-12',
             w3_select(acars.sfmt, 'Frequency', '', 'acars.freq_i', acars.freq_i, freq_s, 'acars_freq_cb'),
             w3_select(acars.sfmt, 'View', '', 'acars.view', acars.view, acars.view_s, 'acars_view_cb'),
@@ -306,7 +323,7 @@ function acars_controls_setup()
 
    ext_panel_show(controls_html, data_html, null);
    ext_set_data_height(acars.dataH);
-   ext_set_controls_width_height(acars.ctrlW, acars.ctrlH);
+   ext_set_controls_width_height(acars.ctrlW, acars.ctrlH + 20);
    time_display_setup('acars');
    acars_render_messages();
 
@@ -443,10 +460,13 @@ function ACARS_help(show)
             'Select an active ACARS channel for your region, then leave the receiver in AM mode. ' +
             'The decoder displays aircraft identity, flight ID, label, block direction, error count, and payload. ' +
             'Use the raw view when troubleshooting weak or unusual messages.' +
+            '<br><br>Each browser device runs its own decoder on a separate receiver channel. ' +
+            'There is no mobile message limit. If a phone and computer show different counts, ' +
+            'first confirm they use the same frequency, Quality setting, Filter, and listening interval.' +
             '<br><br>The Test button injects a 12 kHz signed-16-bit PCM sample through the live audio path. ' +
             'URL parameters: <span style="color:orange">frequency &nbsp; raw &nbsp; test</span>.'
          );
-      confirmation_show_content(s, 600, 260);
+      confirmation_show_content(s, 600, 320);
    }
    return true;
 }

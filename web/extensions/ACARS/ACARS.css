@@ -89,3 +89,10 @@
     text-align: center;
     color: var(--ui-text-muted);
 }
+
+.ui-acars-device-note {
+    margin-top: 6px;
+    color: var(--ui-text-muted);
+    font-size: 12px;
+    line-height: 1.35;
+}

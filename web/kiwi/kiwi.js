@@ -2624,8 +2624,10 @@ function update_cb(fail_reason, pending, in_progress, rx_chans, gps_chans, vmaj,
 			   case 2: r = 'No Internet connection? (can\'t ping 1.1.1.1 or 8.8.8.8)'; break;
 			   case 3: r = 'No connection to github.com?'; break;
 			   case 4: r = 'Git clone damaged!'; break;
-			   case 5: r = 'Makefile update failed -- check /root/build.log file'; break;
-			   case 6: r = 'Build failed, check /root/build.log file'; break;
+			   case 5: r = 'Unable to retrieve valid version information from the update server'; break;
+			   case 6: r = 'Unable to download one or more update files'; break;
+			   case 7: r = 'Downloaded update files failed checksum verification'; break;
+			   case 8: r = 'Unable to install update files to the SD card'; break;
 			   default: r = 'Unknown reason, code='+ fail_reason; break;
 			}
 			s += '<br>'+ r;

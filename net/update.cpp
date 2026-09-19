@@ -34,6 +34,7 @@ Boston, MA  02110-1301, USA.
 #include "peri.h"
 
 #include <types.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -45,14 +46,19 @@ static int pending_maj = -1, pending_min = -1;
 static bool file_auto_download_check = false;
 static bool file_auto_download_oneshot = false;
 
+static const long update_download_timeout_s = 120;
+static const char* update_files[] = { "websdr.bin", "websdr_hf.bit", "websdr_vhf.bit" };
+
 enum fail_reason_e {
     FAIL_NONE = 0,
     FAIL_FS_FULL = 1,
     FAIL_NO_INET = 2,
     FAIL_NO_GITHUB = 3,
     FAIL_GIT = 4,
-    FAIL_MAKEFILE = 5,
-    FAIL_BUILD = 6
+    FAIL_VERSION = 5,
+    FAIL_DOWNLOAD = 6,
+    FAIL_CHECKSUM = 7,
+    FAIL_INSTALL = 8
 };
 fail_reason_e fail_reason;
 
@@ -79,35 +85,81 @@ static void report_progress(conn_t* conn, const char* msg) {
     kiwi_ifree(msg_m, "msg_m");
 }
 
-static int update_build(conn_t* conn, bool report, const char* channel, bool force_build) {
-    bool no_fpga = false;
+static bool install_update_file(const char* filename)
+{
+    std::string active = "/media/mmcblk0p1/" + std::string(filename);
+    std::string staged = "/media/mmcblk0p1/update/" + std::string(filename);
+    std::string backup = active + ".old";
+
+    if (unlink(backup.c_str()) != 0 && errno != ENOENT) {
+        lprintf("UPDATE: unable to remove backup %s: %s\n", backup.c_str(), strerror(errno));
+        return false;
+    }
+
+    if (rename(active.c_str(), backup.c_str()) != 0) {
+        lprintf("UPDATE: unable to back up %s: %s\n", active.c_str(), strerror(errno));
+        return false;
+    }
+
+    if (rename(staged.c_str(), active.c_str()) != 0) {
+        lprintf("UPDATE: unable to install %s: %s\n", staged.c_str(), strerror(errno));
+        if (rename(backup.c_str(), active.c_str()) != 0)
+            lprintf("UPDATE: unable to restore %s: %s\n", active.c_str(), strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
+static void restore_update_file(const char* filename)
+{
+    std::string active = "/media/mmcblk0p1/" + std::string(filename);
+    std::string backup = active + ".old";
+
+    if (unlink(active.c_str()) != 0 && errno != ENOENT) {
+        lprintf("UPDATE: unable to remove incomplete update %s: %s\n", active.c_str(), strerror(errno));
+        return;
+    }
+
+    if (rename(backup.c_str(), active.c_str()) != 0)
+        lprintf("UPDATE: unable to restore %s: %s\n", active.c_str(), strerror(errno));
+}
+
+static int update_build(conn_t* conn, bool report, const char* channel) {
     std::string url_base = "https://downloads.rx-888.com/web-888/" + std::string(channel) + "/";
     sd_enable(true);
 
     // Fetch the binary
     int status = system("mkdir -p /media/mmcblk0p1/update; rm -Rf /media/mmcblk0p1/update/*");
+    int installed = 0;
     if (status != 0) {
         lprintf("UPDATE: create folder status=0x%08x\n", status);
+        fail_reason = FAIL_INSTALL;
         goto exit;
     }
 
-    if (report) report_progress(conn, "Download FPGA firmware");
-
-    status = curl_get_file((url_base + "websdr_hf.bit").c_str(), "/media/mmcblk0p1/update/websdr_hf.bit", 15);
+    if (report) report_progress(conn, "Download HF FPGA firmware");
+    status = curl_get_file((url_base + "websdr_hf.bit").c_str(), "/media/mmcblk0p1/update/websdr_hf.bit", update_download_timeout_s);
     if (status != 0) {
-        no_fpga = true;
+        lprintf("UPDATE: fetch HF FPGA firmware status=0x%08x\n", status);
+        fail_reason = FAIL_DOWNLOAD;
+        goto exit;
     }
 
-    status = curl_get_file((url_base + "websdr_vhf.bit").c_str(), "/media/mmcblk0p1/update/websdr_vhf.bit", 15);
+    if (report) report_progress(conn, "Download VHF FPGA firmware");
+    status = curl_get_file((url_base + "websdr_vhf.bit").c_str(), "/media/mmcblk0p1/update/websdr_vhf.bit", update_download_timeout_s);
     if (status != 0) {
-        no_fpga = true;
+        lprintf("UPDATE: fetch VHF FPGA firmware status=0x%08x\n", status);
+        fail_reason = FAIL_DOWNLOAD;
+        goto exit;
     }
 
     if (report) report_progress(conn, "Download Web-888 Server");
 
-    status = curl_get_file((url_base + "websdr.bin").c_str(), "/media/mmcblk0p1/update/websdr.bin", 15);
+    status = curl_get_file((url_base + "websdr.bin").c_str(), "/media/mmcblk0p1/update/websdr.bin", update_download_timeout_s);
     if (status != 0) {
         lprintf("UPDATE: fetch binary status=0x%08x\n", status);
+        fail_reason = FAIL_DOWNLOAD;
         goto exit;
     }
 
@@ -115,29 +167,27 @@ static int update_build(conn_t* conn, bool report, const char* channel, bool for
     status = curl_get_file((url_base + "checksum").c_str(), "/media/mmcblk0p1/update/checksum", 15);
     if (status != 0) {
         lprintf("UPDATE: fetch checksum status=0x%08x\n", status);
+        fail_reason = FAIL_DOWNLOAD;
         goto exit;
     }
 
-    if (report) report_progress(conn, "Checksum the downloaded files");
-    status = system("cd /media/mmcblk0p1/update; sed '/web-888-alpine/d' /media/mmcblk0p1/update/checksum | sha256sum -c -");
+    if (report) report_progress(conn, "Verify downloaded files");
+    status = system("cd /media/mmcblk0p1/update && sed '/web-888-alpine/d' checksum | sha256sum -c -");
     if (status != 0) {
         lprintf("UPDATE: checksum failed status=0x%08x\n", status);
-        if (report) report_progress(conn, "Checksum failed");
-
+        fail_reason = FAIL_CHECKSUM;
         goto exit;
     }
 
     if (report) report_progress(conn, "Install update to SD card");
 
-    system("rm /media/mmcblk0p1/websdr.bin.old");
-    system("mv /media/mmcblk0p1/websdr.bin /media/mmcblk0p1/websdr.bin.old; mv /media/mmcblk0p1/update/websdr.bin /media/mmcblk0p1/websdr.bin");
-
-    if (!no_fpga) {
-        system("rm /media/mmcblk0p1/websdr_hf.bit.old");
-        system("mv /media/mmcblk0p1/websdr_hf.bit /media/mmcblk0p1/websdr_hf.bit.old; mv /media/mmcblk0p1/update/websdr_hf.bit /media/mmcblk0p1/websdr_hf.bit");
-
-        system("rm /media/mmcblk0p1/websdr_vhf.bit.old");
-        system("mv /media/mmcblk0p1/websdr_vhf.bit /media/mmcblk0p1/websdr_vhf.bit.old; mv /media/mmcblk0p1/update/websdr_vhf.bit /media/mmcblk0p1/websdr_vhf.bit");
+    for (; installed < ARRAY_LEN(update_files); installed++) {
+        if (!install_update_file(update_files[installed])) {
+            for (int i = 0; i < installed; i++)
+                restore_update_file(update_files[i]);
+            fail_reason = FAIL_INSTALL;
+            goto exit;
+        }
     }
 
     status = EXIT_SUCCESS;
@@ -192,15 +242,22 @@ static void _update_task(void* param) {
 
     if (ver == NULL || status != 0) {
         lprintf("UPDATE: failed to get latest version information from server\n");
-        fail_reason = FAIL_MAKEFILE;
+        fail_reason = FAIL_VERSION;
         if (report) report_result(conn);
         goto common_return;
     }
 
     {
         int n = sscanf(kstr_sp(ver), "%d.%d", &pending_maj, &pending_min);
+        if (n != 2) {
+            lprintf("UPDATE: invalid latest version information from server\n");
+            kstr_free(ver);
+            fail_reason = FAIL_VERSION;
+            if (report) report_result(conn);
+            goto common_return;
+        }
 
-        ver_changed = (n == 2 && (pending_maj > version_maj || (pending_maj == version_maj && pending_min > version_min)));
+        ver_changed = (pending_maj > version_maj || (pending_maj == version_maj && pending_min > version_min));
         update_install = (admcfg_bool("update_install", NULL, CFG_REQUIRED) == true);
         kstr_free(ver);
     }
@@ -237,11 +294,10 @@ static void _update_task(void* param) {
         lprintf("UPDATE: installing new version..\n");
 
         u4_t build_time = timer_sec();
-        status = update_build(conn, report, ch ? "alpha" : "stable", force_build);
+        status = update_build(conn, report, ch ? "alpha" : "stable");
 
         if (status) {
-            lprintf("UPDATE: Build failed, check /root/build.log file\n");
-            fail_reason = FAIL_BUILD;
+            lprintf("UPDATE: installation failed\n");
             if (force_build && report) report_result(conn);
             goto common_return;
         }

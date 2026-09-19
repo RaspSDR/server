@@ -901,6 +901,7 @@ kstr_t* curl_get(const char* url, long timeout_s, int *status)
 
     // Set the URL for the operation
     curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
 
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteToBuffer);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ret);
@@ -953,6 +954,7 @@ int curl_get_file(const char* url, const char* output_filename, long timeout_s)
 
     // Set the URL for the operation
     curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
 
     // Set the write function and file pointer as the destination for the data
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);

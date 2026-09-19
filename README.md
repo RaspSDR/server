@@ -97,9 +97,11 @@ publications. Run all JavaScript and native browser regressions with:
 npm run test:regression
 ```
 
-GitHub Actions runs this native host regression command on every push and pull
-request instead of attempting to validate the Zynq hardware build on an x86
-runner.
+GitHub Actions runs two verification jobs on every push and pull request. One
+runs the native host regressions, while a separate job performs a non-harness
+Release build that compiles and links the production Zynq source path. The
+latter is still an x86 compile check and does not replace validation on Zynq
+hardware.
 
 Set `WEBSDR_HARNESS_PORT` to use a port other than 8073. The native harness
 does not start GPS, update, registration, LED, or other target-only services.

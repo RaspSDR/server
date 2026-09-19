@@ -78,7 +78,7 @@ else()
     set(CONFIG_LIBRARIES "/usr/lib/libconfig++.a")
 endif()
 
-if(NATIVE_HARNESS)
+if(EMULATOR)
     find_library(CRYPT_LIBRARY crypt REQUIRED)
 endif()
 
@@ -256,8 +256,11 @@ target_link_libraries(websdr.bin PRIVATE
     ${SSL_LIBRARIES}
 )
 
-if(NATIVE_HARNESS)
+if(EMULATOR)
     target_link_libraries(websdr.bin PRIVATE ${CRYPT_LIBRARY})
+endif()
+
+if(NATIVE_HARNESS)
     target_compile_definitions(websdr.bin PUBLIC NATIVE_HARNESS)
 
     enable_testing()

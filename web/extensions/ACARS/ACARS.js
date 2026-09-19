@@ -326,7 +326,7 @@ function acars_controls_setup()
 function acars_tune(freq_MHz)
 {
    acars.current_freq = freq_MHz;
-   ext_tune(freq_MHz * 1000, 'am', ext_zoom.CUR);
+   ext_tune(freq_MHz * 1000 - kiwi.freq_offset_kHz, 'am', ext_zoom.CUR);
    ext_set_passband(acars.pb.lo, acars.pb.hi);
    acars_update_frequency();
 }

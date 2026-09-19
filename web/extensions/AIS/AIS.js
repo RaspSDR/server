@@ -132,14 +132,27 @@ function ais_controls_setup()
    ext_set_mode('nnfm');
    ext_set_passband(ais.pb.lo, ais.pb.hi);
    ext_send('SET start');
-   ais_tune(ais.freqs[ais.freq_i]);
+   ais_tune(ais_select_frequency(ext_param()));
    kiwi_clearInterval(ais.age_timer);
    ais.age_timer = setInterval(ais_age_vessels, 60000);
 }
 
+function ais_select_frequency(param)
+{
+   var freq = param? +param.split(',')[0] : NaN;
+   if (isNumber(freq)) {
+      ais.freq_i = ais.freqs.reduce(function(closest, candidate, index) {
+         return Math.abs(candidate - freq) < Math.abs(ais.freqs[closest] - freq)? index : closest;
+      }, 0);
+   } else {
+      freq = ais.freqs[ais.freq_i];
+   }
+   return freq;
+}
+
 function ais_tune(freq)
 {
-   ext_tune(freq * 1000, 'nnfm', ext_zoom.CUR);
+   ext_tune(freq * 1000 - kiwi.freq_offset_kHz, 'nnfm', ext_zoom.CUR);
    ext_set_passband(ais.pb.lo, ais.pb.hi);
    ais.current_freq = freq;
    ais_update_status();

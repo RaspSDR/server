@@ -132,7 +132,7 @@ void cRsId::reset() {
     found1 = found2 = false;
 
     memset(aInputSamples, 0, RSID_BUFFER_SIZE * sizeof(float));
-    memset(aFFTcmplx, 0, RSID_ARRAY_SIZE * sizeof(rs_cpx_type));
+    for (int i = 0; i < RSID_ARRAY_SIZE; i++) aFFTcmplx[i] = rs_cpx_type();
     memset(aFFTAmpl, 0, RSID_FFT_SIZE * sizeof(rs_fft_type));
     memset(fft_buckets, 0, RSID_NTIMES * RSID_FFT_SIZE * sizeof(int));
 

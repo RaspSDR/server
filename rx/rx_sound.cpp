@@ -469,9 +469,7 @@ void c2s_sound(void* param) {
         bool IQ_or_DRM_or_stereo = (mode_flags[s->mode] & IS_STEREO);
 
         u1_t* bp_real_u1 = s->out_pkt_real.u1;
-        s2_t* bp_real_s2 = s->out_pkt_real.s2;
         u1_t* bp_iq_u1 = s->out_pkt_iq.u1;
-        s2_t* bp_iq_s2 = s->out_pkt_iq.s2;
         u1_t* flags = (IQ_or_DRM_or_stereo ? &s->out_pkt_iq.h.flags : &s->out_pkt_real.h.flags);
         u1_t* seq = (IQ_or_DRM_or_stereo ? s->out_pkt_iq.h.seq : s->out_pkt_real.h.seq);
         u1_t* smeter = (IQ_or_DRM_or_stereo ? s->out_pkt_iq.h.smeter : s->out_pkt_real.h.smeter);
@@ -1091,8 +1089,10 @@ void c2s_sound(void* param) {
                     for (j = 0; j < ns_out; j++) {
                         // can cast TYPEREAL directly to s2_t due to choice of CUTESDR_SCALE
                         s2_t re = (s2_t)out_samps_c->re, im = (s2_t)out_samps_c->im;
-                        *bp_iq_s2++ = re; // arm native little-endian (put any swap burden on client)
-                        *bp_iq_s2++ = im;
+                        memcpy(bp_iq_u1, &re, sizeof(re)); // arm native little-endian (put any swap burden on client)
+                        bp_iq_u1 += sizeof(re);
+                        memcpy(bp_iq_u1, &im, sizeof(im));
+                        bp_iq_u1 += sizeof(im);
                         out_samps_c++;
                     }
                 }
@@ -1151,7 +1151,9 @@ void c2s_sound(void* param) {
                         if (s->little_endian) {
                             bc += ns_out * sizeof(s2_t);
                             for (j = 0; j < ns_out; j++) {
-                                *bp_real_s2++ = *out_samps_s2++; // arm native little-endian (put any swap burden on client)
+                                s2_t sample = *out_samps_s2++;
+                                memcpy(bp_real_u1, &sample, sizeof(sample)); // arm native little-endian (put any swap burden on client)
+                                bp_real_u1 += sizeof(sample);
                             }
                         }
                         else {
@@ -1195,8 +1197,11 @@ void c2s_sound(void* param) {
                         if (s->little_endian) {
                             bc += pkt_remain * NIQ * sizeof(s2_t);
                             for (j = 0; j < pkt_remain; j++) {
-                                *bp_iq_s2++ = SILENCE_VALUE; // arm native little-endian (put any swap burden on client)
-                                *bp_iq_s2++ = SILENCE_VALUE;
+                                s2_t silence = SILENCE_VALUE;
+                                memcpy(bp_iq_u1, &silence, sizeof(silence)); // arm native little-endian (put any swap burden on client)
+                                bp_iq_u1 += sizeof(silence);
+                                memcpy(bp_iq_u1, &silence, sizeof(silence));
+                                bp_iq_u1 += sizeof(silence);
                             }
                         }
                         else {
@@ -1220,8 +1225,10 @@ void c2s_sound(void* param) {
                             if (s->little_endian) {
                                 bc += samps * NIQ * sizeof(s2_t);
                                 for (j = 0; j < samps; j++) {
-                                    *bp_iq_s2++ = o_samps_s->left; // arm native little-endian (put any swap burden on client)
-                                    *bp_iq_s2++ = o_samps_s->right;
+                                    memcpy(bp_iq_u1, &o_samps_s->left, sizeof(o_samps_s->left)); // arm native little-endian (put any swap burden on client)
+                                    bp_iq_u1 += sizeof(o_samps_s->left);
+                                    memcpy(bp_iq_u1, &o_samps_s->right, sizeof(o_samps_s->right));
+                                    bp_iq_u1 += sizeof(o_samps_s->right);
                                     o_samps_s++;
                                     pkt_remain--;
                                 }

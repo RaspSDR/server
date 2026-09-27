@@ -214,7 +214,7 @@ static const char* edata(const char* uri, bool cache_check, size_t* size, time_t
                 ssize_t rsize = read(fd, (void*)data, *size);
                 close(fd);
                 evWS(EC_EVENT, EV_WS, 0, "WEB_SERVER", evprintf("read %d", rsize));
-                if (rsize != *size) {
+                if (rsize < 0 || (size_t) rsize != *size) {
                     fail = true;
                 }
                 else {

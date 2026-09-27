@@ -504,10 +504,12 @@ void c2s_waterfall(void* param) {
                 break;
 
             case CMD_INTERPOLATE:
-                if (sscanf(cmd, "SET interp=%d", &wf->interp) == 1) {
-                    if ((int)wf->interp >= WF_CIC_COMP) {
+                int interp;
+                if (sscanf(cmd, "SET interp=%d", &interp) == 1) {
+                    wf->interp = (wf_interp_t) interp;
+                    if (interp >= WF_CIC_COMP) {
                         wf->cic_comp = true;
-                        wf->interp = (wf_interp_t)((int)wf->interp - WF_CIC_COMP);
+                        wf->interp = (wf_interp_t) (interp - WF_CIC_COMP);
                     }
                     else {
                         wf->cic_comp = false;

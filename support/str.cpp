@@ -574,7 +574,7 @@ char* kiwi_str_ASCII_static(char* src, int which) {
     char* dp = dst_static[which];
     *dp = '\0';
     for (char* sp = src; *sp; sp++) {
-        kiwi_strncat(dp, ASCII[*sp], N_DST_STATIC_BUF);
+        kiwi_strncat(dp, ASCII[(u1_t)*sp], N_DST_STATIC_BUF);
     }
 
     return dst_static[which];

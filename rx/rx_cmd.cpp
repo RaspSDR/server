@@ -1904,7 +1904,7 @@ bool rx_common_cmd(int stream_type, conn_t* conn, char* cmd) {
                 kiwi_str_redup(&conn->ident_user, "ident_user", ident_user_m);
                 int len = cfg_int("ident_len", NULL, CFG_REQUIRED);
                 len = MAX(len, IDENT_LEN_MIN);
-                if (strlen(conn->ident_user) > len)
+                if (strlen(conn->ident_user) > (size_t) len)
                     conn->ident_user[len] = '\0';
                 // printf("ident <%s> len=%d\n", conn->ident_user, len);
                 conn->isUserIP = FALSE;

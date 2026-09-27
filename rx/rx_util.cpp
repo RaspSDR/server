@@ -378,25 +378,21 @@ void rx_autorun_clear() {
  * @return The channel number of the victim for autorun preemption, or -1 if no victim is found.
  */
 int rx_autorun_find_victim() {
-    conn_t *c, *lowest_eviction_conn;
+    conn_t *c;
     u4_t lowest_eviction_count = (u4_t)-1;
-    int lowest_eviction_ch = -1, highest_eviction_ch = -1;
+    int lowest_eviction_ch = -1;
 
     for (int ch = 0; ch < rx_chans; ch++) {
         rx_chan_t* rx = &rx_channels[ch];
         if (!rx->busy) continue;
         c = rx->conn;
         if (!c->arun_preempt) continue;
-        int evictions = rx_util.arun_evictions[ch];
+        u4_t evictions = rx_util.arun_evictions[ch];
         // rcprintf(ch, "AUTORUN: rx_autorun_find_victim %s rx_chan=%d evictions=%d\n",
         //     c->ident_user, ch, evictions);
         if (evictions < lowest_eviction_count) {
             lowest_eviction_count = evictions;
             lowest_eviction_ch = ch;
-            lowest_eviction_conn = c;
-        }
-        if (evictions > highest_eviction_ch) {
-            highest_eviction_ch = evictions;
         }
     }
     if (lowest_eviction_ch != -1) {

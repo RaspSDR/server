@@ -246,8 +246,8 @@ void c2s_sound(void* param) {
     float sMeterAlpha = 1.0 - expf(-1.0 / ((float)frate * ATTACK_TIMECONST));
     float sMeterAvg_dB = 0, sMeter_dBm;
 
-    strncpy(s->out_pkt_real.h.id, "SND", 3);
-    strncpy(s->out_pkt_iq.h.id, "SND", 3);
+    memcpy(s->out_pkt_real.h.id, "SND", sizeof(s->out_pkt_real.h.id));
+    memcpy(s->out_pkt_iq.h.id, "SND", sizeof(s->out_pkt_iq.h.id));
 
     s->seq = 0;
 

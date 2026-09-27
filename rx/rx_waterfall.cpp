@@ -249,7 +249,7 @@ void c2s_waterfall(void* param) {
     wf->snd = &snd_inst[rx_chan];
 
     wf->check_overlapped_sampling = true;
-    strncpy(wf->out.id4, "W/F ", 4);
+    memcpy(wf->out.id4, "W/F ", sizeof(wf->out.id4));
 
 #define WF_IQ_T 4
     assert(sizeof(iq_t) == WF_IQ_T);

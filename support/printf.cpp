@@ -45,8 +45,10 @@ void kiwi_exit(int err) {
 #define exit ALT_EXIT
 }
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winline-asm"
+#endif
 void kiwi_backtrace(const char* id, u4_t printf_type) {
     unw_cursor_t cursor;
     unw_context_t context;
@@ -85,7 +87,9 @@ void kiwi_backtrace(const char* id, u4_t printf_type) {
                static_cast<uintptr_t>(off));
     }
 }
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 void _panic(const char* str, bool coreFile, const char* file, int line) {
     char* buf;

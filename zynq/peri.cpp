@@ -83,19 +83,6 @@ void peri_init() {
         if (ret != 0 || si5351->io_error_detected())
             sys_panic("i2c si5351 ADC clock setup failed\n\n");
 
-        if (kiwi.airband) {
-            int retries;
-            for (retries = 0; retries < 10; retries++) {
-                usleep(10000);
-                si5351->update_status();
-                if (si5351->io_error_detected())
-                    sys_panic("i2c si5351 status read failed\n\n");
-                if (!si5351->dev_status.SYS_INIT && !si5351->dev_status.LOL_B)
-                    break;
-            }
-            if (retries == 10)
-                sys_panic("i2c si5351 ADC PLL failed to lock\n\n");
-        }
         printf("i2c si5351 initialized, error=%d\n", ret);
     }
 
@@ -119,7 +106,23 @@ void peri_init() {
     }
 
     fcntl(ad8370_fd, F_SETFD, FD_CLOEXEC);
-    ioctl(ad8370_fd, CLK_SET, int_clk);
+    if (ioctl(ad8370_fd, CLK_SET, int_clk) < 0)
+        sys_panic("Failed to select ADC reference clock");
+
+    // The PLL cannot lock until the board reference input is selected.
+    if (kiwi.airband) {
+        int retries;
+        for (retries = 0; retries < 10; retries++) {
+            usleep(10000);
+            si5351->update_status();
+            if (si5351->io_error_detected())
+                sys_panic("i2c si5351 status read failed\n\n");
+            if (!si5351->dev_status.SYS_INIT && !si5351->dev_status.LOL_B)
+                break;
+        }
+        if (retries == 10)
+            sys_panic("i2c si5351 ADC PLL failed to lock\n\n");
+    }
 
     // set airband mode
     rf_enable_airband(kiwi.airband);

@@ -323,6 +323,13 @@ if(NATIVE_HARNESS)
     target_include_directories(test_airband_si5351 PRIVATE "${UPSTREAM_DIR}")
     add_test(NAME airband_si5351 COMMAND test_airband_si5351)
 
+    add_executable(test_fst4w_reporter tests/test_fst4w_reporter.cpp
+        extensions/FT8/FST4WReporter.cpp)
+    target_include_directories(test_fst4w_reporter PRIVATE
+        "${UPSTREAM_DIR}/extensions/FT8" ${CURL_INCLUDE_DIRS})
+    target_link_libraries(test_fst4w_reporter PRIVATE ${CURL_LIBRARIES} pthread)
+    add_test(NAME fst4w_reporter COMMAND test_fst4w_reporter)
+
     add_executable(test_cw_skimmer_replay
         tests/test_cw_skimmer_replay.cpp
     )

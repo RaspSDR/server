@@ -7,6 +7,8 @@
 #include "coroutines.h"
 #include "FT8.h"
 #include "PSKReporter.h"
+#include "FST4WReporter.h"
+#include "non_block.h"
 #include "printf.h"
 #include "ext.h"
 #include "mqttpub.h"
@@ -60,6 +62,7 @@ typedef struct {
     struct tm tm_slot_start;
 
     u4_t decode_time;
+    int freqHz;
     bool test;
 
 } frame_ft8_t;
@@ -259,6 +262,9 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
 
     // Hash table for decoded messages (to check for duplicates)
     int num_decoded = 0, num_spots = 0;
+    fst4w_upload_t wsprnet_upload;
+    wsprnet_upload.rx_chan = rx_chan;
+    wsprnet_upload.spot_log = ft8_conf.spot_log;
 
     // Initialize hash table pointers
     for (int i = 0; i < kMax_decoded_messages; ++i)
@@ -359,6 +365,14 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
             ++num_decoded;
 
             float snr = message.snr * 0.5f + ft8_conf.SNR_adj;
+            if (fst4w && !frame->test) {
+                std::string url;
+                if (fst4w_report_url(ft8_conf.rcall, ft8_conf.rgrid,
+                    (double) frame->freqHz + ft8_conf.freq_offset_Hz, ft8->tr_period,
+                    frame->tm_slot_start, freq_hz, snr, time_sec + ft8_conf.dT_adj,
+                    text, url))
+                    wsprnet_upload.urls.push_back(url);
+            }
             bool pskr_ok = false;
             int age = 0;
             int tx_power = 0;
@@ -528,6 +542,10 @@ static void decode(int rx_chan, const frame_ft8_t* frame, int freqHz)
     if (frame->tm_slot_start.tm_sec == 0) {
         hashtable_cleanup(rx_chan, CALLSIGN_AGE_MAX);
     }
+    if (!wsprnet_upload.urls.empty()) {
+        // The child has a private snapshot; HTTP must not stall receiver tasks.
+        child_task("FST4W.upload", fst4w_report_upload, NO_WAIT, &wsprnet_upload);
+    }
 }
 
 void decode_ft8_compute(void *arg) {
@@ -599,6 +617,7 @@ void decode_ft8_samples(int rx_chan, TYPEMONO16 *samps, int nsamps, int freqHz, 
             frame->tm_slot_start.tm_min, frame->tm_slot_start.tm_sec, time_within_slot);
         ft8->in_pos = ft8->frame_pos = 0;
         frame->test = ft8_conf.test;
+        frame->freqHz = freqHz;
         *start_test = 1;
         frame->decode_time = spec.tv_sec;
         ft8->slot++;

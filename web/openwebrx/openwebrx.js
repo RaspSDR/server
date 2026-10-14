@@ -10370,7 +10370,7 @@ function panels_setup()
 
    // audio & nb
    var nb_algo_s = [ ['off',1], ['std',1], ['Wild',1] ];
-   var nr_algo_s = [ ['off',1], ['wdsp',1], ['LMS',1], ['spec',1] ];
+   var nr_algo_s = [ ['off',1], ['wdsp',1], ['LMS',1], ['spec',1], ['Super NR',1] ];
 	de_emphasis = readCookie('last_de_emphasis', 0);
 	de_emphasis = w3_clamp(de_emphasis, 0, 2, 0);
 	de_emphasis_nfm = readCookie('last_de_emphasis_nfm', 0);

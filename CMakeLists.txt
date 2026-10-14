@@ -225,7 +225,17 @@ file(GLOB_RECURSE KIWI_SRCS
     "${UPSTREAM_DIR}/pkgs/mqtt-c/*.c"
 )
 
+set(SUPER_NR_SOURCES
+    "${UPSTREAM_DIR}/rx/super_nr/super_nr.c"
+    "${UPSTREAM_DIR}/rx/super_nr/audio.cpp"
+)
+# Finite checks and the recovered single-precision equations require IEEE math.
+set_source_files_properties(${SUPER_NR_SOURCES} PROPERTIES
+    COMPILE_OPTIONS "-fno-fast-math;-ffp-contract=off"
+)
+
 add_executable(websdr.bin ${KIWI_SRCS} ${EXT_SRCS}
+    "${UPSTREAM_DIR}/rx/super_nr/super_nr.c"
     ${CMAKE_BINARY_DIR}/edata_always.cpp ${CMAKE_BINARY_DIR}/edata_always2.cpp ${CMAKE_BINARY_DIR}/edata_embed.cpp
 )
 #add_dependencies(websdr.bin kiwi_gen_h)
@@ -292,6 +302,20 @@ if(NATIVE_HARNESS)
     target_compile_definitions(websdr.bin PUBLIC NATIVE_HARNESS)
 
     enable_testing()
+    add_executable(test_super_nr tests/test_super_nr.c
+        "${UPSTREAM_DIR}/rx/super_nr/super_nr.c")
+    target_include_directories(test_super_nr PRIVATE
+        "${UPSTREAM_DIR}/rx/super_nr" ${FFTW3_INCLUDE_DIRS})
+    target_compile_options(test_super_nr PRIVATE -fno-fast-math -ffp-contract=off)
+    target_link_libraries(test_super_nr PRIVATE libfftw3f.a m)
+    add_test(NAME super_nr COMMAND test_super_nr)
+
+    add_executable(test_super_nr_audio tests/test_super_nr_audio.cpp ${SUPER_NR_SOURCES})
+    target_include_directories(test_super_nr_audio PRIVATE
+        "${UPSTREAM_DIR}/rx/super_nr" ${FFTW3_INCLUDE_DIRS})
+    target_compile_options(test_super_nr_audio PRIVATE -fno-fast-math -ffp-contract=off)
+    target_link_libraries(test_super_nr_audio PRIVATE libfftw3f.a m)
+    add_test(NAME super_nr_audio COMMAND test_super_nr_audio)
     add_executable(test_airband_si5351
         tests/test_airband_si5351.cpp
         si5351/si5351.cpp

@@ -164,3 +164,4 @@ enum snd_cmd_key_e {
 };
 
 bool specAF_FFT(int rx_chan, int instance, int flags, int ratio, int ns_out, TYPECPX* samps);
+void nr_super_init(int rx_chan);

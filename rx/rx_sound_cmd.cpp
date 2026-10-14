@@ -414,9 +414,16 @@ void rx_sound_cmd(conn_t* conn, double frate, int n, char* cmd) {
         break;
 
     case CMD_NR_ALGO:
-        n = sscanf(cmd, "SET nr algo=%d", &s->nr_algo);
+        int nr_algo;
+        n = sscanf(cmd, "SET nr algo=%d", &nr_algo);
         if (n == 1) {
             did_cmd = true;
+            if (nr_algo < NR_OFF_ || nr_algo > NR_SUPER) {
+                cprintf(conn, "Invalid NR algorithm: %d\n", nr_algo);
+                break;
+            }
+            s->nr_algo = nr_algo;
+            if (nr_algo == NR_SUPER) nr_super_init(rx_chan);
             // cprintf(conn, "nr: algo=%d\n", s->nr_algo);
             memset(s->nr_enable, 0, sizeof(s->nr_enable));
         }
@@ -462,6 +469,10 @@ void rx_sound_cmd(conn_t* conn, double frate, int n, char* cmd) {
     case CMD_NR_TYPE:
         if (sscanf(cmd, "SET nr type=%d en=%d", &n_type, &n_en) == 2) {
             did_cmd = true;
+            if (n_type < NR_DENOISE || n_type > NR_AUTONOTCH || (n_en != 0 && n_en != 1)) {
+                cprintf(conn, "Invalid NR enable: type=%d en=%d\n", n_type, n_en);
+                break;
+            }
             // cprintf(conn, "nr: type=%d en=%d\n", n_type, n_en);
             s->nr_enable[n_type] = n_en;
         }
@@ -470,6 +481,14 @@ void rx_sound_cmd(conn_t* conn, double frate, int n, char* cmd) {
             if (sscanf(cmd, "SET nr type=%d param=%d pval=%f", &n_type, &n_param, &n_pval) == 3) {
             did_cmd = true;
             // cprintf(conn, "nr: type=%d param=%d pval=%.9f\n", n_type, n_param, n_pval);
+            if (n_type < NR_DENOISE || n_type > NR_AUTONOTCH ||
+                n_param < 0 || n_param >= NOISE_PARAMS ||
+                (s->nr_algo == NR_SUPER && (n_type != NR_DENOISE || n_param > 1 ||
+                    (n_param == 0 && (!(n_pval >= 0 && n_pval <= 30) || n_pval != floorf(n_pval))) ||
+                    (n_param == 1 && !(n_pval > 0 && n_pval <= 32))))) {
+                cprintf(conn, "Invalid NR parameter: type=%d param=%d value=%f\n", n_type, n_param, n_pval);
+                break;
+            }
             s->nr_param[n_type][n_param] = n_pval;
 
             switch (s->nr_algo) {

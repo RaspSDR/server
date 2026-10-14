@@ -352,6 +352,8 @@ void update_vars_from_config(bool called_at_init) {
     cfg_default_int("nr_specGain", 0, &update_cfg);
     cfg_default_float("nr_specAlpha", 0.95, &update_cfg);
     cfg_default_int("nr_specSNR", 30, &update_cfg);
+    cfg_default_int("nr_superLevel", 15, &update_cfg);
+    cfg_default_int("nr_superGain", 0, &update_cfg);
 
 
     if (wspr_update_vars_from_config(called_at_init)) update_cfg = true;

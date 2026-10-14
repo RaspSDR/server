@@ -563,6 +563,85 @@ function fetchJson(url) {
                 window.wf_canvas_actual_line !== line;
         }, initialLine, { timeout: 30000 });
 
+        await page.waitForFunction(() => typeof window.noise_filter_init === 'function');
+        await page.evaluate(() => {
+            window.nativeNRCommands = [];
+            const send = window.ws_snd.send.bind(window.ws_snd);
+            window.ws_snd.send = command => {
+                if (typeof command === 'string' && command.startsWith('SET nr '))
+                    window.nativeNRCommands.push(command);
+                send(command);
+            };
+            w3_el('id-nav-optbar-audio')?.click();
+        });
+        await page.locator('select.id-nr_algo').selectOption('4');
+        await page.evaluate(() => extint_open('noise_filter'));
+        await page.waitForFunction(() =>
+            extint.current_ext_name === 'noise_filter' &&
+            !!w3_el('noise_filter.super_level'));
+        const nrSlider = page.locator('input[class~="id-noise_filter.super_level"]');
+        await page.waitForTimeout(600);
+        if (await nrSlider.getAttribute('min') !== '0' ||
+            await nrSlider.getAttribute('max') !== '30' ||
+            await nrSlider.getAttribute('step') !== '1')
+            throw new Error('Super NR slider must expose all integer levels 0-30');
+        for (const level of [0, 15, 30]) {
+            await nrSlider.evaluate((element, value) => {
+                element.value = String(value);
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+                element.dispatchEvent(new Event('change', { bubbles: true }));
+            }, level);
+            await page.waitForTimeout(350);
+            const nrState = await page.evaluate(() => ({
+                algo: noise_filter.algo,
+                level: noise_filter.super_level,
+                stored: kiwi_storeGet('last_nr_SuperLevel'),
+                enabled: noise_filter.denoise,
+                commands: window.nativeNRCommands,
+                sound: window.ws_snd.readyState,
+                waterfall: window.ws_wf.readyState
+            }));
+            if (nrState.algo !== 4 || nrState.level !== level ||
+                nrState.stored !== String(level) || !nrState.enabled ||
+                !nrState.commands.includes(`SET nr type=0 param=0 pval=${level}`) ||
+                nrState.sound !== 1 || nrState.waterfall !== 1)
+                throw new Error(`Super NR control failed: ${JSON.stringify(nrState)}`);
+        }
+        const nrGainSlider = page.locator('input[class~="id-noise_filter.super_gain"]');
+        if (await nrGainSlider.getAttribute('min') !== '-30' ||
+            await nrGainSlider.getAttribute('max') !== '30' ||
+            await nrGainSlider.getAttribute('step') !== '1')
+            throw new Error('Super NR gain must match spectral NR: -30..30 dB');
+        for (const gain of [-30, 0, 30]) {
+            await nrGainSlider.evaluate((element, value) => {
+                element.value = String(value);
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+                element.dispatchEvent(new Event('change', { bubbles: true }));
+            }, gain);
+            const gainState = await page.evaluate(() => ({
+                gain: noise_filter.super_gain,
+                stored: kiwi_storeGet('last_nr_SuperGain'),
+                commands: window.nativeNRCommands,
+                label: w3_el('noise_filter.super_gain').parentNode.textContent
+            }));
+            if (gainState.gain !== gain || gainState.stored !== String(gain) ||
+                !gainState.commands.includes(`SET nr type=0 param=1 pval=${Math.pow(10, gain/20)}`) ||
+                !gainState.label.includes(`Gain: ${gain} dB`))
+                throw new Error(`Super NR gain failed: ${JSON.stringify(gainState)}`);
+        }
+        await page.evaluate(() => {
+            noise_filter_init();
+            if (noise_filter.algo !== 4 || noise_filter.super_level !== 30 ||
+                noise_filter.super_gain !== 30)
+                throw new Error('Super NR selection/level was not restored');
+            noise_filter_load_defaults();
+            if (noise_filter.super_level !== cfg.nr_superLevel ||
+                noise_filter.super_gain !== cfg.nr_superGain)
+                throw new Error('Super NR server default was not restored');
+            nr_algo_cb('nr_algo', 0, false, 'm');
+            extint_panel_hide();
+        });
+
         await page.evaluate(() => {
             const focusReturn = document.createElement('button');
             focusReturn.id = 'id-test-focus-return';

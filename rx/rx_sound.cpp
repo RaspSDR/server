@@ -60,6 +60,7 @@ Boston, MA  02110-1301, USA.
 #include "wdsp.h"
 #include "peri.h"
 #include "rsid.h"
+#include "super_nr/audio.h"
 
 #ifdef DRM
 #include "DRM.h"
@@ -149,6 +150,14 @@ CFir m_CICF_FIR[MAX_RX_CHANS];
 #endif
 
 CFir m_nfm_deemp_FIR[MAX_RX_CHANS]; // see: tools/FIR.m
+static SuperNR m_SuperNR[MAX_RX_CHANS];
+
+void nr_super_init(int rx_chan) {
+    super_nr_status status = m_SuperNR[rx_chan].init(snd_rate);
+    if (status != SUPER_NR_OK)
+        panic("Super NR initialization failed");
+}
+
 CFir m_am_ssb_deemp_FIR[MAX_RX_CHANS];
 
 CIir m_deemp_Biquad[MAX_RX_CHANS]; // see: tools/biquad.MZT.m
@@ -235,6 +244,9 @@ void c2s_sound(void* param) {
     s->compression = 1;
     s->nb_algo = NB_OFF;
     s->nr_algo = NR_OFF_;
+    s->nr_param[NR_DENOISE][0] = SUPER_NR_DEFAULT_LEVEL;
+    s->nr_param[NR_DENOISE][1] = 1.0f;
+    check(m_SuperNR[rx_chan].reset() == SUPER_NR_OK);
 
     m_RsId[rx_chan].init(rx_chan, FASTFIR_OUTBUF_SIZE);
 
@@ -946,6 +958,19 @@ void c2s_sound(void* param) {
                 case NR_SPECTRAL:
                     nr_spectral_process(rx_chan, ns_out, out_samps_s2, out_samps_s2);
                     break;
+
+                case NR_SUPER:
+                    if (s->nr_enable[NR_DENOISE]) {
+                        super_nr_status status = m_SuperNR[rx_chan].process(ns_out,
+                            out_samps_s2, s->norm_hicut - s->norm_locut,
+                            s->nr_param[NR_DENOISE][0], s->nr_param[NR_DENOISE][1]);
+                        if (status != SUPER_NR_OK) {
+                            cprintf(conn, "Super NR processing failed: %d; disabling denoiser\n", status);
+                            s->nr_enable[NR_DENOISE] = 0;
+                            check(m_SuperNR[rx_chan].reset() == SUPER_NR_OK);
+                        }
+                    }
+                    break;
                 }
             }
 
@@ -1398,6 +1423,8 @@ int c2s_sound_camp(rx_chan_t* rxc, conn_t* conn, u1_t flags, char* bp, int bytes
 
 void c2s_sound_shutdown(void* param) {
     conn_t* c = (conn_t*)(param);
+    if (c && c->rx_channel >= 0 && c->rx_channel < MAX_RX_CHANS)
+        m_SuperNR[c->rx_channel].destroy();
     // cprintf(c, "rx%d c2s_sound_shutdown mc=0x%x\n", c->rx_channel, c->mc);
     if (c && c->mc) {
         rx_server_websocket(WS_MODE_CLOSE, c->mc);

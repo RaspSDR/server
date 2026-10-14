@@ -5,9 +5,9 @@ var noise_filter = {
    first_time: true,
 
    algo: 0,
-   algo_s: [ '(none)', 'wdsp LMS', 'original LMS', 'spectral NR' ],
+   algo_s: [ '(none)', 'wdsp LMS', 'original LMS', 'spectral NR', 'Super NR' ],
    width: 400,
-   height: [ 100, 475, 400, 185 ],
+   height: [ 100, 475, 400, 185, 245 ],
    
    NR_OFF: 0,
    denoise: 0,
@@ -39,6 +39,10 @@ var noise_filter = {
    spec_gain: 0,
    spec_alpha: 0.95,
    active_snr: 30,
+
+   NR_SUPER: 4,
+   super_level: 15,
+   super_gain: 0,
 };
 
 function noise_filter_main()
@@ -152,6 +156,16 @@ function noise_filter_controls_html()
             w3_slider('', 'Active SNR', 'noise_filter.active_snr', noise_filter.active_snr, 2, 30, 1, 'nf_spectral_asnr_cb')
          );
       break;
+
+   case noise_filter.NR_SUPER:
+      s =
+         w3_checkbox('w3-label-inline w3-text-css-orange/', 'Denoiser', 'noise_filter.denoise', noise_filter.denoise, 'noise_filter_cb') +
+         w3_div('w3-section',
+            w3_slider('', 'NR level', 'noise_filter.super_level', noise_filter.super_level, 0, 30, 1, 'nf_super_level_cb'),
+            w3_slider('', 'Gain', 'noise_filter.super_gain', noise_filter.super_gain, -30, 30, 1, 'nf_super_gain_cb'),
+            w3_div('w3-small', 'Higher levels suppress more noise. Below 1 kHz bandwidth, the adaptive time filter does not use NR level.')
+         );
+      break;
    }
    
    if (ext_is_IQ_or_stereo_curmode()) {
@@ -223,6 +237,8 @@ function noise_filter_init()
 	noise_filter.spec_gain = +kiwi_storeGet('last_nr_SpecGain', cfg.nr_specGain);
 	noise_filter.spec_alpha = +kiwi_storeGet('last_nr_SpecAlpha', cfg.nr_specAlpha);
 	noise_filter.active_snr = +kiwi_storeGet('last_nr_SpecSNR', cfg.nr_specSNR);
+   noise_filter.super_level = nf_super_level_value(kiwi_storeGet('last_nr_SuperLevel', cfg.nr_superLevel));
+   noise_filter.super_gain = nf_super_gain_value(kiwi_storeGet('last_nr_SuperGain', cfg.nr_superGain));
 
 	noise_filter.denoise = +kiwi_storeGet('last_nr_de', cfg.nr_de);
 	noise_filter.autonotch = +kiwi_storeGet('last_nr_an', cfg.nr_an);
@@ -254,6 +270,8 @@ function noise_filter_load_defaults()
    noise_filter.spec_gain = cfg.nr_specGain;
    noise_filter.spec_alpha = cfg.nr_specAlpha;
    noise_filter.active_snr = cfg.nr_specSNR;
+   noise_filter.super_level = nf_super_level_value(cfg.nr_superLevel);
+   noise_filter.super_gain = nf_super_gain_value(cfg.nr_superGain);
 
 	noise_filter.denoise = cfg.nr_de;
 	noise_filter.autonotch = cfg.nr_an;
@@ -286,6 +304,8 @@ function noise_filter_save_defaults()
    cfg.nr_specGain = noise_filter.spec_gain;
    cfg.nr_specAlpha = noise_filter.spec_alpha;
    cfg.nr_specSNR = noise_filter.active_snr;
+   cfg.nr_superLevel = noise_filter.super_level;
+   cfg.nr_superGain = noise_filter.super_gain;
 
 	cfg.nr_de = noise_filter.denoise;
 	cfg.nr_an = noise_filter.autonotch;
@@ -297,6 +317,14 @@ function noise_filter_send(type)
    var p0, p1, p2, p3;
 
    if (noise_filter.algo == noise_filter.NR_OFF) return;
+   if (noise_filter.algo == noise_filter.NR_SUPER) {
+      if (type == noise_filter.NR_DENOISE) {
+         snd_send('SET nr type=0 param=0 pval='+ noise_filter.super_level);
+         snd_send('SET nr type=0 param=1 pval='+ Math.pow(10, noise_filter.super_gain/20));
+         snd_send('SET nr type=0 en='+ noise_filter.denoise);
+      }
+      return;
+   }
    
    if (noise_filter.algo == noise_filter.NR_WDSP) {
       if (type == noise_filter.NR_DENOISE) {
@@ -360,11 +388,50 @@ function nr_algo_cb(path, idx, first, from)
       (noise_filter.algo == noise_filter.NR_ORIG || noise_filter.algo == noise_filter.NR_WDSP )) {
       noise_filter.denoise = 1;
    }
+   if (from == 'm' && noise_filter.algo == noise_filter.NR_SUPER)
+      noise_filter.denoise = 1;
 
    snd_send('SET nr algo='+ noise_filter.algo);
    noise_filter_send(noise_filter.NR_DENOISE);
    noise_filter_send(noise_filter.NR_AUTONOTCH);
    noise_filter_controls_refresh();
+}
+
+function nf_super_level_value(value)
+{
+   value = Number(value);
+   return Number.isFinite(value)? Math.max(0, Math.min(30, Math.round(value))) : 15;
+}
+
+function nf_super_level_cb(path, val, complete, first)
+{
+   if (first) val = noise_filter.super_level;
+   val = nf_super_level_value(val);
+   noise_filter.super_level = val;
+   w3_num_cb(path, val);
+   w3_set_label('NR level: '+ val, path);
+   if (complete && !first) {
+      noise_filter_send(noise_filter.NR_DENOISE);
+      kiwi_storeSet('last_nr_SuperLevel', val.toString());
+   }
+}
+
+function nf_super_gain_value(value)
+{
+   value = Number(value);
+   return Number.isFinite(value)? Math.max(-30, Math.min(30, Math.round(value))) : 0;
+}
+
+function nf_super_gain_cb(path, val, complete, first)
+{
+   if (first) val = noise_filter.super_gain;
+   val = nf_super_gain_value(val);
+   w3_num_cb(path, val);
+   w3_set_label('Gain: '+ val +' dB', path);
+   if (complete && !first) {
+      noise_filter_send(noise_filter.NR_DENOISE);
+      kiwi_storeSet('last_nr_SuperGain', val.toString());
+   }
 }
 
 function noise_filter_cb(path, checked, first)

@@ -34,6 +34,9 @@ Boston, MA  02110-1301, USA.
 #include "peri.h"
 #include "sha256.h"
 #include "jsmn.h"
+#ifdef NATIVE_HARNESS
+#include "system.h"
+#endif
 
 #include <types.h>
 #include <ctype.h>
@@ -539,7 +542,7 @@ static void _update_task(void* param) {
     }
     else
 
-        if (release_changed && !update_install) {
+        if (release_changed && !update_install && !force_build) {
         lprintf("UPDATE: release changed (current %d.%d, new %d.%d), automatic install not enabled\n",
                 version_maj, version_min, pending_maj, pending_min);
 
@@ -548,8 +551,11 @@ static void _update_task(void* param) {
             sd_enable(true);
             bool downloaded = update_dir_create() && download_release(NULL, false, release);
             sd_enable(false);
-            if (!downloaded)
+            if (!downloaded) {
+                if (fail_reason == FAIL_NONE)
+                    fail_reason = FAIL_DOWNLOAD;
                 lprintf("UPDATE: automatic release download failed\n");
+            }
         }
     }
     else
@@ -571,7 +577,11 @@ static void _update_task(void* param) {
         bool reboot = force_build? force_build_reboot : admcfg_bool("update_reboot", NULL, CFG_REQUIRED);
         if (reboot) {
             lprintf("UPDATE: rebooting after successful installation\n");
+#ifdef NATIVE_HARNESS
+            system_reboot();
+#else
             system("sleep 3; reboot");
+#endif
         } else {
             lprintf("UPDATE: update installed; reboot is required to activate it\n");
             if (report) {
@@ -600,7 +610,8 @@ common_return:
 // called at update check TOD, on each user logout in case update is pending or on demand by admin UI
 void check_for_update(update_check_e type, conn_t* conn) {
 #ifdef NATIVE_HARNESS
-    if (type == WAIT_UNTIL_NO_USERS)
+    const char* automatic = getenv("WEBSDR_UPDATE_AUTOMATIC");
+    if (type == WAIT_UNTIL_NO_USERS && (automatic == NULL || strcmp(automatic, "1") != 0))
         return;
 #endif
 

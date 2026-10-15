@@ -852,6 +852,9 @@ void services_start() {
     net.mac_valid = true;
     kiwi.allow_admin_conns = true;
     lprintf("native harness: external services disabled\n");
+    const char* automatic = getenv("WEBSDR_UPDATE_AUTOMATIC");
+    if (automatic != NULL && strcmp(automatic, "1") == 0)
+        update_start();
     return;
 #endif
 

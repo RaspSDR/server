@@ -158,6 +158,26 @@ Use `BUILD_JOBS` to override the automatic build parallelism and
 `WEBSDR_HARNESS_BUILD_DIR` to select a different generated build directory.
 Do not commit `build-native/` or `node_modules/`.
 
+Run the native updater integration tests independently:
+
+```sh
+npm run test:native-update
+```
+
+These tests drive the real native server through an admin browser, with a
+loopback release API and generated ZIP packages. They cover channel selection,
+manual and automatic update policies, cached packages, retry/resume and mirror
+fallback, invalid metadata and archives, configuration preservation, and reboot
+request ordering. The suite also runs through CTest during the complete native
+browser test. It restores the admin configuration and removes its temporary
+installation directory.
+
+Only native builds accept `WEBSDR_UPDATE_AUTOMATIC=1` to exercise automatic
+startup checks; they remain disabled by default. `WEBSDR_REBOOT_EVENTS` records
+mock reboot requests to an absolute file path. Native reboot requests never
+reboot the host. These tests verify the install/reboot decision sequence, not
+the target bootloader, actual reboot, or activation of an installed image.
+
 ## Validation
 
 Use the smallest relevant checks, but complete target validation on Alpine

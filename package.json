@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "test:native-update": "sh tools/test-native-update.sh",
     "test:native-browser": "tools/test-native-browser.sh",
     "test:regression": "node tests/test_ctc.js && npm run test:native-browser"
   },

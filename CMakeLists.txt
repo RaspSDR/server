@@ -363,6 +363,13 @@ if(NATIVE_HARNESS)
         COMMAND ${NODE_COMMAND} ${UPSTREAM_DIR}/tests/native_mqtt_test.js
             --binary $<TARGET_FILE:websdr.bin>
     )
+    add_test(
+        NAME native_update
+        COMMAND ${NODE_COMMAND} ${UPSTREAM_DIR}/tests/native_update_test.js
+            --binary $<TARGET_FILE:websdr.bin>
+    )
+    set_tests_properties(native_mqtt native_update PROPERTIES RUN_SERIAL TRUE)
+    set_tests_properties(native_update PROPERTIES TIMEOUT 300)
 endif()
 
 if(ENABLE_HDFL)

@@ -209,6 +209,10 @@ bool rx_common_cmd(int stream_type, conn_t* conn, char* cmd) {
                 ext_send_msg(conn->rx_channel, false, "MSG keepalive");
             }
 
+            if (conn->type == STREAM_SOUND) {
+                send_msg(conn, false, "MSG keepalive");
+            }
+
             // for STREAM_ADMIN and STREAM_MFG send a roundtrip keepalive so admin client can tell
             // when server has gone away
             if (conn->type == STREAM_ADMIN || conn->type == STREAM_MFG) {

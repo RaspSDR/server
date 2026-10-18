@@ -574,7 +574,26 @@ function fetchJson(url) {
             };
             w3_el('id-nav-optbar-audio')?.click();
         });
-        await page.locator('select.id-nr_algo').selectOption('4');
+        const nrSelect = page.locator('select.id-nr_algo');
+        const nrOptions = await nrSelect.locator('option:not(:disabled)').evaluateAll(options =>
+            options.map(option => [option.textContent, option.value]));
+        const expectedNROptions = [
+            ['off', '0'], ['Super NR', '4'], ['wdsp', '1'], ['LMS', '2'], ['spec', '3']
+        ];
+        if (JSON.stringify(nrOptions) !== JSON.stringify(expectedNROptions))
+            throw new Error(`invalid NR menu order or algorithm IDs: ${JSON.stringify(nrOptions)}`);
+        for (const algo of ['1', '2', '3', '0']) {
+            await nrSelect.selectOption(algo);
+            const nrSelection = await page.evaluate(() => ({
+                algo: noise_filter.algo,
+                stored: kiwi_storeGet('last_nr_algo'),
+                commands: window.nativeNRCommands
+            }));
+            if (nrSelection.algo !== Number(algo) || nrSelection.stored !== algo ||
+                !nrSelection.commands.includes(`SET nr algo=${algo}`))
+                throw new Error(`NR menu algorithm mismatch: ${JSON.stringify(nrSelection)}`);
+        }
+        await nrSelect.selectOption({ label: 'Super NR' });
         await page.evaluate(() => extint_open('noise_filter'));
         await page.waitForFunction(() =>
             extint.current_ext_name === 'noise_filter' &&

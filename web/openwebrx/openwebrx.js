@@ -10370,7 +10370,13 @@ function panels_setup()
 
    // audio & nb
    var nb_algo_s = [ ['off',1], ['std',1], ['Wild',1] ];
-   var nr_algo_s = [ ['off',1], ['wdsp',1], ['LMS',1], ['spec',1], ['Super NR',1] ];
+   var nr_algo_s = {
+      off: { value: 0 },
+      'Super NR': { value: 4 },
+      wdsp: { value: 1 },
+      LMS: { value: 2 },
+      spec: { value: 3 }
+   };
 	de_emphasis = readCookie('last_de_emphasis', 0);
 	de_emphasis = w3_clamp(de_emphasis, 0, 2, 0);
 	de_emphasis_nfm = readCookie('last_de_emphasis_nfm', 0);
@@ -10385,7 +10391,7 @@ function panels_setup()
 			w3_text('w3-text-css-orange cl-closer-spaced-label-text', 'Noise'), 17,
          w3_select_conditional('w3-text-red||title="noise blanker selection"', '', 'blanker', 'nb_algo', 0, nb_algo_s, 'nb_algo_cb', 'm'), 24,
 			w3_div('w3-hcenter', w3_div('class-button w3-text-orange||onclick="extint_open(\'noise_blank\'); freqset_select();" title="noise blanker parameters"', 'More')), 19,
-         w3_div('w3-hcenter ', w3_select_conditional('w3-text-red||title="noise filter selection"', '', 'filter', 'nr_algo', 0, nr_algo_s, 'nr_algo_cb', 'm')), 27,
+         w3_div('w3-hcenter ', w3_select('w3-text-red||title="noise reduction selection"', '', 'NR', 'nr_algo', 0, nr_algo_s, 'nr_algo_cb', 'm')), 27,
 			w3_div('class-button w3-text-orange||onclick="extint_open(\'noise_filter\'); freqset_select();" title="noise filter parameters"', 'More')
 		) +
 		w3_inline_percent('id-vol w3-valign w3-margin-T-2 w3-hide/class-slider w3-last-halign-end',
